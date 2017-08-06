@@ -1,0 +1,10 @@
+{
+	"AUTHOR" : "El Laggron",
+	"INSTALL_MSG" : "Thanks for downloading this useless cog !",
+	"NAME" : "avatar",
+	"SHORT" : "Gives the user avatar's url without borders",
+	"DESCRIPTION" : "This cog can give you the user's avatar without the borders (not like !userinfo) and you can easily save it to your computer",
+	"TAGS" : [],
+	"REQUIREMENTS" : [],
+	"HIDDEN" : false
+}
