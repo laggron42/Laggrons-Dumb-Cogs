@@ -22,15 +22,21 @@ class Say:
         
         message = ctx.message
         await self.bot.say(text)
-        await self.bot.delete_message(message)
-
+        try:
+            await self.bot.delete_message(message)
+        except:
+            await self.bot.send_message(ctx.message.author, "I couldn't delete your message, check my permissions")
+            
     @send.command(pass_context=True)
     async def channel(self, ctx, channel : discord.Channel, *, text):
         """Say a message in the chosen channel and auto delete"""
 
         message = ctx.message
         await self.bot.send_message(channel, text)
-        await self.bot.delete_message(message)
+        try:
+            await self.bot.delete_message(message)
+        except:
+            await self.bot.send_message(ctx.message.author, "I couldn't delete your message, check my permissions")
 
     @send.command(pass_context=True)
     async def upload(self, ctx, file, *, comment = None):
