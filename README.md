@@ -12,11 +12,11 @@ If you like these cogs, please consider donating at [Twentysix](https://www.patr
 
 Type the following command (if not responding, make sure you are the bot owner, the bot has access to your channel and the cog `downloader.py` is loaded (`[p]load downloader` if not):
 
-`!cog repo add Laggrons-Dumb-Cogs https://github.com/retke/Laggrons-Dumb-Cogs`
+`[p]cog repo add Laggrons-Dumb-Cogs https://github.com/retke/Laggrons-Dumb-Cogs`
 
 Then to install a cog type this command:
 
-`!cog install Laggrons-Dumb-Cogs <cog name>`
+`[p]cog install Laggrons-Dumb-Cogs <cog name>`
 
 ## Usage
 
@@ -36,4 +36,4 @@ For file upload, you need to put your files in `/data/say/` and don't forget to 
 
 `[p]send upload my_zelda_wallpaper.png` `[p]send upload random_dead_meme.gif`
 
-And try to don't add spaces in your file's name, or you will have to type this : (file is `screenshot from random date.png`) `[p]send upload "screenshot\ from\ random\ date.png" [comment]`
+Also **don't put files with spaces in its name or it won't work**
