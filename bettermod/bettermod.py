@@ -101,7 +101,7 @@ class BetterMod:
             mod.set_footer(text=str(user.name), icon_url = user.avatar_url)
             
             try:
-                invite = self.bot.create_invite(server, max_uses=1)
+                invite = await self.bot.create_invite(server, max_uses=1)
                 target = discord.Embed(color = user.color, description = "You have received a level 2 warning (kick). You can now join back the server with [this invite](" + invite + ")")
 
             except:
@@ -125,7 +125,7 @@ class BetterMod:
 
         if level is 3:
 
-            mod = discord.Embed(color=user.color, description = "A moderator has give a level 2 warning (kick) to a user")
+            mod = discord.Embed(color=user.color, description = "A moderator has give a level 3 warning (ban) to a user")
             mod.title = "Warning"
             mod.add_field(name = "Moderator", value = author.mention, inline = True)
             mod.add_field(name = "User", value = user.mention, inline = True)
@@ -133,7 +133,7 @@ class BetterMod:
             mod.set_thumbnail(url = "https://cdn.discordapp.com/attachments/303988901570150401/342427198269030402/Revitlink2BDamien2BWArnings.png")
             mod.set_footer(text=str(user.name), icon_url = user.avatar_url)
 
-            target = discord.Embed(color = user.color, description = "You have received a level 2 warning (kick). You now cannot go back to the server")
+            target = discord.Embed(color = user.color, description = "You have received a level 3 warning (ban). You now cannot go back to the server")
 
             target.title = "Warning"
             target.add_field(name = "Reason", value = reason)
