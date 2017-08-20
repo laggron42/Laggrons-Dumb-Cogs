@@ -20,6 +20,7 @@ class BetterMod:
 
     def __init__(self, bot):
         self.bot = bot
+        self.settings = dataIO.load_json('data/bettermod/settings.json')
 
     @commands.command(pass_context=True)
     async def report(self, ctx, user : discord.Member, *, reason):
@@ -152,7 +153,7 @@ class BetterMod:
             await self.bot.send_message(channel, embed=mod)
 
 def check_folders():
-    folders = ("data", "data/mod/")
+    folders = ("data", "data/bettermod/")
     for folder in folders:
         if not os.path.exists(folder):
             print("Creating " + folder + " folder...")
@@ -163,7 +164,7 @@ def check_files():
     ignore_list = {"SERVERS": [], "CHANNELS": []}
 
     files = {
-        "modlog.json"         : {}
+        "settings.json"         : {}
         }
 
     for filename, value in files.items():
@@ -173,4 +174,6 @@ def check_files():
 
 
 def setup(bot):
+    check_folders()
+    check_files()
     bot.add_cog(BetterMod(bot))
