@@ -7,7 +7,7 @@ class Avatar:
         self.bot = bot
 
     @commands.command(pass_context=True, no_pm=True)
-    async def avatar(self, ctx, user: discord.Member):
+    async def avatar(self, ctx, user: discord.Member=None):
         """User Avatar"""
         author = ctx.message.author
     
