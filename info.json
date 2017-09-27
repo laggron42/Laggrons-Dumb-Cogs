@@ -1,7 +1,7 @@
 {
 	"AUTHOR" : "El Laggron",
-	"INSTALL_MSG" : "Hi, thanks for installing my repo, you won't be disappointed of my cogs, I promise (ok maybe). You can contact me in DM on Red's official server in case of any question, problem or suggestion :D",
+	"INSTALL_MSG" : "**This repo is not officially released.** Bug are frequents and you are more than welcome to share them to me, to let me correct them. Please update frequently the repo as lot of features are updated before release. Use `[p]cog update`.",
 	"NAME" : "Laggron's dumb cogs",
 	"SHORT" : "Utility cogs",
-	"DESCRIPTION" : "This repo will contain utility cogs for your server. As of now there's not a lot but more will be coming (hint : Supercell)"
+	"DESCRIPTION" : "lol need to update this"
 }
