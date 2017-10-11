@@ -1,10 +1,10 @@
 {
 	"AUTHOR" : "El Laggron",
-	"INSTALL_MSG" : "Thanks for downloading this uploading cog ! Credits to **UltimatePancake** and **Sentry** who helped me for this cog. Also the commands are default accessible by everyone. If you want to change that, you should use the permissions cog.",
+    "INSTALL_MSG" : "Thanks for downloading this message cog! The commands are default accessible by everyone. If you want to change that, you should use the permissions cog. If you need a quick guide, check this", //need to add github link
 	"NAME" : "say",
 	"SHORT" : "Allows you to make your bot say or upload something",
-	"DESCRIPTION" : "This cog will allow you to make your bot say your message, with auto-deletion of the command message, channel argument, DM or even file upload, like .gif or .png",
-	"TAGS" : ["autodelete", "upload", "say"],
+	"DESCRIPTION" : "This cog will allow you to make your bot say your message, with auto-deletion of the command message, channel argument, DM or even file upload, like gif or png",
+	"TAGS" : ["upload", "say", "message"],
 	"REQUIREMENTS" : [],
 	"HIDDEN" : false
 }
