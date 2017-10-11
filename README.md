@@ -32,11 +32,7 @@ Here is a short tuto on how to use my cogs. `[p]` is your prefix.
 
 `[p]send dm <user.mention> <message>` Send the exact message you gave to a user in private message (instead of whisper which add the message author)
 
-For file upload, you need to put your files in `/data/say/upload`. Then type the following command:
-
-```
-[p]send upload myfile.png
-```
+For file upload, you need to put your files in `/data/say/upload`. Then type the following command `[p]send upload myfile.png`
 
 You can remove `.png`, the bot should find it, except if two files has the same name! Also **don't put files with spaces in its name or it won't work**
 
