@@ -1,6 +1,6 @@
 {
 	"AUTHOR" : "El Laggron",
-    "INSTALL_MSG" : "Thanks for downloading this message cog! The commands are default accessible by everyone. If you want to change that, you should use the permissions cog. If you need a quick guide, check this", //need to add github link
+    "INSTALL_MSG" : "Thanks for downloading this message cog! The commands are default accessible by everyone. If you want to change that, you should use the permissions cog. If you need a quick guide, check this If you have any bug, question of suggestion, join my cog support server! https://discord.gg/WsTGeQM", //need to add github link
 	"NAME" : "say",
 	"SHORT" : "Allows you to make your bot say or upload something",
 	"DESCRIPTION" : "This cog will allow you to make your bot say your message, with auto-deletion of the command message, channel argument, DM or even file upload, like gif or png",
