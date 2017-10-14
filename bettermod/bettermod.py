@@ -731,7 +731,7 @@ class BetterMod:
         except:
             await self.bot.say("I cannot kick this user, he higher than me in the role hierarchy. Aborting...")
             await self.bot.send_message(channel, content="The user was not kicked. Check my permissions and verify I can kick users.", embed=modlog)
-", embed=modlogmodlo
+
             await self.add_case(level='Kick', user=user, reason=reason, timestamp=ctx.message.timestamp.strftime("%d %b %Y %H:%M"), server=server, applied=0, ctx=ctx)
             return
 
