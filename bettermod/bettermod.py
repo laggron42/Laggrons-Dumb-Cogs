@@ -741,7 +741,8 @@ class BetterMod:
             await self.bot.kick(user)
         except:
             await self.bot.say("I cannot kick this user, he higher than me in the role hierarchy. Aborting...")
-            await self.bot.send_message(channel, content="The user was not kick. Check my permissions", embed=modlog)
+            await self.bot.send_message(channel, content="The user was not kicked. Check my permissions and verify I can kick users.", embed=modlog)
+
             await self.add_case(level='Kick', user=user, reason=reason, timestamp=ctx.message.timestamp.strftime("%d %b %Y %H:%M"), server=server, applied=0, ctx=ctx)
             return
 
@@ -810,13 +811,13 @@ class BetterMod:
         try:
             await self.bot.send_message(user, embed=target)
         except:
-            modlog.set_footer(text="I couldn't send a message to this user. He may has blocked messages from this server.")
+            modlog.set_footer(text="I couldn't send a message to this user. He may have blocked messages from this server.")
 
         try:
             await self.bot.ban(user)
         except:
             await self.bot.say("I cannot ban this user, he higher than me in the role hierarchy. Aborting...")
-            await self.bot.send_message(channel, content="The user was not ban. Check my permissions", embed=modlog)
+            await self.bot.send_message(channel, content="The user was not banned. Check my permissions and confirm I can ban users.", embed=modlog)
             await self.add_case(level='Ban', user=user, reason=reason, timestamp=ctx.message.timestamp.strftime("%d %b %Y %H:%M"), server=server, applied=0, ctx=ctx)
             return
 
