@@ -14,7 +14,7 @@ class Say:
         self.settings = dataIO.load_json('data/say/settings.json')
 
     @commands.group(pass_context=True)
-    async def send(self, ctx):
+    async def send(self, ctx): # Had to choose something else than say :c have a better idea ?
         if ctx.invoked_subcommand is None:
             pages = self.bot.formatter.format_help_for(ctx, ctx.command)
             for page in pages:

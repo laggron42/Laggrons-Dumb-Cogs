@@ -7,6 +7,7 @@ import asyncio
 from discord.ext import commands
 from .utils.dataIO import dataIO
 from .utils import checks
+from __main__ import settings as set_roles
 
 
 class BetterMod:
@@ -15,7 +16,7 @@ class BetterMod:
     def __init__(self, bot):
         self.bot = bot
         self.settings = dataIO.load_json('data/bettermod/settings.json')
-    
+
     async def error(self, ctx):
         
         bot_member = ctx.message.server.get_member(self.bot.user.id)
@@ -86,7 +87,11 @@ class BetterMod:
     async def add_case(self, level, user, reason, timestamp, server, applied, ctx):
         if not os.path.isfile('data/bettermod/history/{}.json'.format(server.id)):
             print("Creating empty {}".format(server.id))
-            dataIO.save_json('data/bettermod/history/{}.json'.format(server.id), data={})
+            try:
+                dataIO.save_json('data/bettermod/history/{}.json'.format(server.id), data={})
+            except:
+                await self.error(ctx)
+                return
         
         history = dataIO.load_json('data/bettermod/history/{}.json'.format(server.id))
         
@@ -144,7 +149,11 @@ class BetterMod:
         
         if not os.path.isfile('data/bettermod/history/{}.json'.format(server.id)):
             print("Creating empty {}".format(server.id))
-            dataIO.save_json('data/bettermod/history/{}.json'.format(server.id), data={})
+            try:
+                dataIO.save_json('data/bettermod/history/{}.json'.format(server.id), data={})
+            except:
+                await self.error(ctx)
+                return
         
         try:
             history = dataIO.load_json('data/bettermod/history/{}.json'.format(server.id))
@@ -199,7 +208,7 @@ class BetterMod:
                 try:
                     await self.bot.clear_reactions(msg)
                 except:
-                    await self.error(ctx)
+                    pass
                 return
                 
             if response.reaction.emoji == '❌':
@@ -303,7 +312,7 @@ class BetterMod:
             await self.error(ctx)
 
         self.settings[server.id]['mod-log'] = channel.id
-        await self.bot.say("Log messages and reports will be send to **" + channel.name + "**.")
+        await self.bot.say("Log messages and reports will be sent to **" + channel.name + "**.")
         try:
             dataIO.save_json('data/bettermod/settings.json', self.settings)
         except:
@@ -383,7 +392,7 @@ class BetterMod:
             
 
     @color.command(pass_context=True, no_pm=True, name="kick", aliases="2")
-    async def simple_warn_color(self, ctx, color: str = '000000'):
+    async def kick_warn_color(self, ctx, color: str = '000000'):
         """Set the warning embed color bar in the log channel for the kick type
         
         Please provide an hexadecimal color (same color character chain as discord roles). Example: #ffff = cyan
@@ -413,7 +422,7 @@ class BetterMod:
         await self.bot.say("New embed color has been registered. If the value is invalid, the color will not change.")
             
     @color.command(pass_context=True, no_pm=True, name="ban", aliases="3")
-    async def simple_warn_color(self, ctx, color: str = '000000'):
+    async def ban_warn_color(self, ctx, color: str = '000000'):
         """Set the warning embed color bar in the log channel for the ban type
             
             Please provide an hexadecimal color (same color character chain as discord roles). Example: #ffff = cyan
@@ -588,16 +597,18 @@ class BetterMod:
             pass
 
         await self.bot.send_message(channel, embed=report)
-        await self.bot.say("Your report has been send to the moderation team")
+        await self.bot.say("Your report has been sent to the moderation team")
 
 
 
     @commands.group(pass_context=True, no_pm=True)
     @checks.mod()
     async def warn(self, ctx):
+        """Send a warning to a user and store it"""
         if ctx.invoked_subcommand is None:
             await self.bot.send_cmd_help(ctx)
 
+    @checks.mod_or_permissions(administrator=True)
     @warn.command(pass_context=True, no_pm=True, aliases="1")
     async def simple(self, ctx, user: discord.Member, *, reason: str):
         """Send a warning to the user in DM and store it"""
@@ -664,7 +675,7 @@ class BetterMod:
         await self.add_case(level='Simple', user=user, reason=reason, timestamp=ctx.message.timestamp.strftime("%d %b %Y %H:%M"), server=server, applied=1, ctx=ctx)
 
 
-
+    @checks.mod_or_permissions(administrator=True)
     @warn.command(pass_context=True, no_pm=True, aliases="2")
     async def kick(self, ctx, user: discord.Member, *, reason: str):
         """Send a warning to the user in DM and store it, while kicking him"""
@@ -740,7 +751,7 @@ class BetterMod:
         await self.add_case(level='Kick', user=user, reason=reason, timestamp=ctx.message.timestamp.strftime("%d %b %Y %H:%M"), server=server, applied=1, ctx=ctx)
 
 
-
+    @checks.mod_or_permissions(administrator=True)
     @warn.command(pass_context=True, no_pm=True, aliases="3")
     async def ban(self, ctx, user: discord.Member, *, reason: str):
         """Send a warning to the user in DM and store it, while banning him"""
@@ -814,17 +825,24 @@ class BetterMod:
 
         await self.add_case(level='Ban', user=user, reason=reason, timestamp=ctx.message.timestamp.strftime("%d %b %Y %H:%M"), server=server, applied=1, ctx=ctx)
 
+    @commands.group(pass_context=True)
+    async def case(self, ctx):
+        """Check warnings of a user"""
+    
+        if ctx.invoked_subcommand is None:
+            await self.bot.send_cmd_help(ctx)
 
 
-    @commands.command(pass_context=True)
-    async def case(self, ctx, case: int, user: discord.Member = None):
+    @case.command(pass_context=True)
+    async def check(self, ctx, case: int):
         """Give the sanction and the reason of a specific case
             
-            If 0 is given, all of the cases of the user will be given
-            If you are not moderator, you will only see your cases"""
-        # No check because of that
+            If 0 is given, all of the cases of the user will be given"""
         
         server = ctx.message.server
+        author = ctx.message.author
+        user = author
+        
         if not os.path.isfile('data/bettermod/history/{}.json'.format(server.id)):
             print("Creating empty {}".format(server.id))
             try:
@@ -843,14 +861,12 @@ class BetterMod:
             user = ctx.message.author
         
         if user.id not in history:
-            await self.bot.say("That user does not have a warning yet")
+            await self.bot.say("You don't have any warning yet")
             return
 
         if case < 0 or case > history[user.id]['total-warns']:
             await self.bot.say("That case does not exist")
             return
-                
-        # remember to add checks
 
         if case == 0:
 
@@ -868,12 +884,9 @@ class BetterMod:
                 return
             
             i = None
-            
             await self.check_case(msg, i, ctx=ctx, user=user)
-    
 
         else:
-            
             i = case
             await self.check_case(msg=None, i=i, ctx=ctx, user=user)
 
@@ -883,8 +896,14 @@ class BetterMod:
             await self.error(ctx)
             return
 
-    @commands.command(pass_context=True)
-    async def casedelete(self, ctx, case: int, user: discord.Member):
+    @checks.mod_or_permissions(administrator=True)
+    @case.command(pass_context=True)
+    async def sudo(self, ctx, case: int, user: discord.Member = None):
+        """Same as check, except you can check everyone's cases"""
+
+    @case.command(pass_context=True)
+    @checks.mod_or_permissions(administrator=True)
+    async def delete(self, ctx, case: int, user: discord.Member):
         """Delete a case"""
 
         server = ctx.message.server
@@ -969,8 +988,9 @@ class BetterMod:
             return
         
 
-    @commands.command(pass_context=True)
-    async def caseedit(self, ctx, case: int, user: discord.Member, *, reason):
+    @checks.mod_or_permissions(administrator=True)
+    @case.command(pass_context=True)
+    async def edit(self, ctx, case: int, user: discord.Member, *, reason):
         """Edit the reason of the specified case"""
 
         server = ctx.message.server
