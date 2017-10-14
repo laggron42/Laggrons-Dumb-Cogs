@@ -312,7 +312,7 @@ class BetterMod:
             await self.error(ctx)
 
         self.settings[server.id]['mod-log'] = channel.id
-        await self.bot.say("Log messages and reports will be send to **" + channel.name + "**.")
+        await self.bot.say("Log messages and reports will be sent to **" + channel.name + "**.")
         try:
             dataIO.save_json('data/bettermod/settings.json', self.settings)
         except:
@@ -597,7 +597,7 @@ class BetterMod:
             pass
 
         await self.bot.send_message(channel, embed=report)
-        await self.bot.say("Your report has been send to the moderation team")
+        await self.bot.say("Your report has been sent to the moderation team")
 
 
 
