@@ -4,7 +4,7 @@ Hi I'm **El Laggron** from [Twentysix's Discord server](https://discord.gg/red) 
 
 If you have any ideas of cogs I should make, contact me in DM. 
 
-Also I should credit **UltimatePancake** and **Sentry** who helped me a lot on cog creation (not Kowlin who just spit on me).
+Also I should credit **BakersBakeBread** and **Sentry** who helped me a lot on cog creation (not Kowlin who just spit on me).
 
 If you like these cogs, please consider donating at [Twentysix](https://www.patreon.com/Twentysix26) (surprising ?) because he way more deserves it than me C:
 
@@ -24,6 +24,14 @@ Here is a short tuto on how to use my cogs. `[p]` is your prefix.
 
 ### Say
 
+**Permissions:**
+
+- `Upload files` To enable the upload function
+
+- `Manage messages` To enable auto delete
+
+**Commands:**
+
 `[p]send here <message>` Send your message in the actual channel.
 
 `[p]send channel <#channel_mention> <message>` Send your message in the given channel.
@@ -39,6 +47,18 @@ You can remove `.png`, the bot should find it, except if two files has the same 
 `[p]send autodelete` Enable auto deletion of the message that invoked the command. This will only if the bot has the `Manage messages` permission and on the commands of this cog (for autodeletion of all commands, look at `[p]modset deletedelay`)
 
 ### Bettermod
+
+**Recommanded permissions to work correctly:**
+
+- `Manage messages` Optional, but it will delete messages that invoked some command and also manage reactions, which is easier for menu control
+
+- `Embed links` Needed for the cog. Report, warns, delete and edit confimations are using embed.
+
+- `Add reactions` This is needed for the cog, as you move in the menu through reactions
+
+- `Kick menbers` and `Ban members` This is optional, but warns 2 and 3 will obviously don't work (also Red need an upper role than the members he need to has control on, or it won't work)
+
+**Commands:**
 
 `[p]report @user <reason>` This will send a message in the mod log, set before, with the reason. Anyone can use this command and the message that invoked the command will be default auto delete.
 
@@ -59,3 +79,15 @@ You can also set multiple settings, some are required:
 - `[p]bmodset color <report|simple|kick|ban>` This set the color bar of the differents embed messages that can be send in the modlog.
 
 -  `[p]bmodset thumbnail <report|simple|kick|ban>` This set the thumbnail of the differents embed messages (the small picture at the top right) that can be send in the modlog.
+
+You can check warns using this command:
+
+- `[p]case check <case number>` This will show a menu with the selected case. If you select case 0, the total of the cases will be given.
+
+Moderators only:
+
+- `[p]case sudo <case number> <@user>` Check the warns of any user. Works as the previous commands.
+
+- `[p]case edit <case number> <@user> <reason>` Modify the reason of the specified case.
+
+- `[p]case delete <case number> <@user>` Delete the specified case. This will be removed from the UI but still available in the local data.
