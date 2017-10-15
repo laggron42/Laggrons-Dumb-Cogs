@@ -4,7 +4,7 @@
     "NAME" : "bettermod",
     "SHORT" : "Allow moderators to add warnings to users. Can kick and ban, better mod log and case storage!",
 "DESCRIPTION" : "This cog allows you to add warnings on users with 3 different levels: simple, kick and ban. The user get a DM when you give him a warning, with the reason. It also post it in a modlog channel with embeds, and store the warnings into the files, so you can check all of them and see the total, edit and remove some...",
-    "TAGS" : ['moderation', 'warning', 'warn', 'case'],
+    "TAGS" : ["moderation", "warning", "warn", "case"],
     "REQUIREMENTS" : [],
     "HIDDEN" : false
 }
