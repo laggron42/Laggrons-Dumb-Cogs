@@ -72,7 +72,7 @@ You can remove `.png`, the bot should find it, except if two files has the same 
 
 You can also set multiple settings, some are required:
 
-`[p]bmodset` This is the commands that will allow you to set everything:
+`[p]bmodset` This is the command that will allow you to set everything:
 
 - `[p]bmodset channel <channel mention>` This will set the modlog channel.
 
@@ -91,3 +91,21 @@ Moderators only:
 - `[p]case edit <case number> <@user> <reason>` Modify the reason of the specified case.
 
 - `[p]case delete <case number> <@user>` Delete the specified case. This will be removed from the UI but still available in the local data.
+
+### Role Invite
+
+**Permissions:**
+
+- `Create instant invite` The bot won't create any invite but this perm is needed to let the bot access the current invites.
+
+**Commands:**
+
+`[p]roleset` This is the command that will set everything:
+
+- `[p]roleset list` List all of the role-invite links on this server
+
+- `[p]roleset add <invite> <role>` Add a role-invite link to the server. The invite can be `http://discord.gg/xyz` or just `xyz`.
+
+- `[p]roleset remove <invite>` Remove a role-invite link to the server.
+
+Roles will be added when a user join the server. If the user joined with an invite not know by the bot, he will keep the `@everyone` role.
