@@ -3,7 +3,6 @@ import os
 import json
 
 from discord.ext import commands
-from .utils import checks
 from .utils.dataIO import dataIO
 
 class RoleInvite:
@@ -18,8 +17,7 @@ class RoleInvite:
             'invites': {},
                 'len': 0
         }
-
-    @checks.admin()
+    
     @commands.group(pass_context=True)
     async def roleset(self, ctx):
         """Settings for role invite cog"""
@@ -50,7 +48,6 @@ class RoleInvite:
             return
 
         if invite.startswith("https://discord.gg/") or invite.startswith("http://discord.gg/"):
-            print("bb")
             tmp = invite.split('/')
             invite = tmp[3]
         
@@ -101,15 +98,19 @@ class RoleInvite:
         if ctx.message.server.id not in self.settings:
             self.init(ctx.message.server.id)
 
-        if invite.startswith("http://discord.gg/"):
-            invite.replace("http://discord.gg/", "")
+        if invite.startswith("https://discord.gg/") or invite.startswith("http://discord.gg/"):
+            tmp = invite.split('/')
+            invite_sh = tmp[3]
+        else:
+            invite_sh = invite
+            invite = "http://discord.gg/" + invite_sh
 
         if invite not in self.settings[ctx.message.server.id]['invites']:
             await self.bot.say("That invite does not exist or is not registered. Type `{}roleset list` to see all invites registered".format(ctx.prefix))
             return
                 
         e = discord.Embed(description="Deletion of role-invite link")
-        e.add_field(name="Invite", value="http://discord.gg/{}".format(invite), inline=True)
+        e.add_field(name="Invite", value=invite, inline=True)
         e.add_field(name="Role", value=self.settings[ctx.message.server.id]['invites'][invite]['role'], inline=True)
         e.set_author(name=ctx.message.server.name, icon_url=ctx.message.server.icon_url)
         e.set_footer(text="Click on the reaction to confirm changes")
@@ -123,7 +124,7 @@ class RoleInvite:
             await self.bot.remove_reaction(msg, "✅")
             return
                 
-        del self.settings[ctx.message.author]['invites'][invite]
+        del self.settings[ctx.message.server.id]['invites'][invite]
         dataIO.save_json('data/roleinvite/settings.json', self.settings)
 
         try:
