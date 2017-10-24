@@ -56,7 +56,7 @@ You can remove `.png`, the bot should find it, except if two files has the same 
 
 - `Add reactions` This is needed for the cog, as you move in the menu through reactions
 
-- `Kick menbers` and `Ban members` This is optional, but warns 2 and 3 will obviously don't work (also Red need an upper role than the members he need to has control on, or it won't work)
+- `Kick members` and `Ban members` This is optional, but warns 2 and 3 will obviously don't work (also Red need an upper role than the members he need to has control on, or it won't work)
 
 **Commands:**
 
