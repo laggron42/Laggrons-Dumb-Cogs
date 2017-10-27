@@ -54,12 +54,12 @@ class RoleInvite:
         print(invite)
 
         for i in invites:
-            print(i.url)
+            print(i.url) # debug line
             tmp = i.url.split('/')
             name_i = tmp[3]
-            print(name_i)
+            print(name_i) # debug line
             if name_i == invite:
-                print("{} Good".format(i))
+                print("{} Good".format(i)) # debug line
                 self.settings[ctx.message.server.id]['len'] += 1
                 self.settings[ctx.message.server.id]['invites'][i.url] = {"role": str(role), "use": int(i.uses)}
                 
@@ -125,6 +125,8 @@ class RoleInvite:
             return
                 
         del self.settings[ctx.message.server.id]['invites'][invite]
+        self.settings[ctx.message.server.id]['len'] -= 1
+        
         dataIO.save_json('data/roleinvite/settings.json', self.settings)
 
         try:
@@ -137,7 +139,7 @@ class RoleInvite:
     async def on_member_join(self, member):
         
         if member.bot:
-            print("member is bot")
+            print("member is bot") # debug line
             return
     
         if member.server.id not in self.settings:
@@ -149,7 +151,7 @@ class RoleInvite:
         except:
             return
         
-        print(json.dumps(sett, indent=4))
+        print(json.dumps(sett, indent=4)) # debug line
         print(list(invites))
         print("\n\n")
 
@@ -157,20 +159,20 @@ class RoleInvite:
             
             print("""Invite: {}
                 Uses: {}
-                User: {}""".format(i, i.uses, member))
+                User: {}""".format(i, i.uses, member)) # debug line
             
             if i.url in sett['invites']:
-                print("Condition reached! URL {} inside invites list".format(i))
+                print("Condition reached! URL {} inside invites list".format(i)) # debug line
                 if int(i.uses) > int(sett['invites'][str(i)]['use']):
-                    print("Condition reached! Invite uses:{} > Stored invite uses:{}".format(i, sett['invites'][str(i)]['use']))
+                    print("Condition reached! Invite uses:{} > Stored invite uses:{}".format(i, sett['invites'][str(i)]['use'])) # debug line
                     role = discord.utils.get(member.server.roles, name=sett['invites'][str(i)]['role'])
-                    print("Role for {} is {}".format(i, role))
+                    print("Role for {} is {}".format(i, role)) # debug line
                     if role is not None:
                         await self.bot.add_roles(member, role)
                     else:
-                        print("Role not found")
+                        print("Role not found") # debug line
                 sett['invites'][str(i)]['use'] = i.uses
-                print("\nEnd of loop\n\n")
+            print("\nEnd of loop\n\n") # debug line
 
 def check_folders():
     folders = ('data', 'data/roleinvite/')
