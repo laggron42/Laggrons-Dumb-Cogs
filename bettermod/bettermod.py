@@ -597,7 +597,7 @@ class BetterMod:
             pass
 
         await self.bot.send_message(channel, embed=report)
-        await self.bot.say("Your report has been sent to the moderation team")
+        await self.bot.send_message(author, "Your report has been sent to the moderation team") #So the user being reported doesn't know they got reported
 
 
 
@@ -668,7 +668,7 @@ class BetterMod:
         try:
             await self.bot.send_message(user, embed=target)
         except:
-            modlog.set_footer(text="I couldn't send a message to this user. He may has blocked messages from this server.")
+            modlog.set_footer(text="I couldn't send a message to this user. They may have blocked messages from this server.")#It's 2017, can't assume genders lol
 
         await self.bot.send_message(channel, embed=modlog)
 
@@ -678,7 +678,7 @@ class BetterMod:
     @checks.mod_or_permissions(administrator=True)
     @warn.command(pass_context=True, no_pm=True, aliases="2")
     async def kick(self, ctx, user: discord.Member, *, reason: str):
-        """Send a warning to the user in DM and store it, while kicking him"""
+        """Send a warning to the user in DM and store it, while kicking them"""#It's 2017 ;)
         
         try:
             await self.bot.delete_message(ctx.message)
@@ -754,7 +754,7 @@ class BetterMod:
     @checks.mod_or_permissions(administrator=True)
     @warn.command(pass_context=True, no_pm=True, aliases="3")
     async def ban(self, ctx, user: discord.Member, *, reason: str):
-        """Send a warning to the user in DM and store it, while banning him"""
+        """Send a warning to the user in DM and store it, while banning them"""#I think you get it by now
         
         try:
             await self.bot.delete_message(ctx.message)
@@ -811,7 +811,7 @@ class BetterMod:
         try:
             await self.bot.send_message(user, embed=target)
         except:
-            modlog.set_footer(text="I couldn't send a message to this user. He may have blocked messages from this server.")
+            modlog.set_footer(text="I couldn't send a message to this user. They may have blocked messages from this server.")
 
         try:
             await self.bot.ban(user)
