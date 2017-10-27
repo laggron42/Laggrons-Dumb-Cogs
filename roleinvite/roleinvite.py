@@ -40,6 +40,10 @@ class RoleInvite:
         if role is None:
             await self.bot.say("The given role cannot be found.")
             return
+        
+        if role.position >= ctx.message.server.me.top_role.position:
+            await self.bot.say("That role is higher or equal than me. As the Discord's laws says, I can't give users this role. Aborting...")
+            return
 
         try:
             invites = await self.bot.invites_from(ctx.message.server)
