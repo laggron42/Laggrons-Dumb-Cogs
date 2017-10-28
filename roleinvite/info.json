@@ -1,10 +1,10 @@
 {
     "AUTHOR" : "El Laggron",
-    "INSTALL_MSG" : "**This cog is under beta test.** It is __not__ recommanded to use it except for helping me to track bugs. If you meet any bug, tell it to me by joining my cog support server. https://discord.gg/WsTGeQM",
+    "INSTALL_MSG" : "Thanks for installing my cog! You can see a list of commands by typing `[p]roleset`. The bot need the `Manage roles` permissions t work. If you meet any bug or problem, let me know on my support server: https://discord.gg/WsTGeQM",
     "NAME" : "bettermod",
-    "SHORT" : "**BETA TEST**Add a role to a user when he join the server. The role depends on the invite he used. You can set many links, to use many invites linked to different roles.",
-    "DESCRIPTION" : "**BETA TEST**This cog has an autorole feature a bit different: the user who join will get a role depending on the invite he used to join. Just link invite x to role a and users who join using invite x will get role a. You can set as many links as you want.",
-    "TAGS" : ["moderation", "warning", "warn", "case"],
+    "SHORT" : "Autorole for members on-join, linked to invites",
+    "DESCRIPTION" : "Allow to make links between roles and invites. Bot will give a role on-join to users, depending on the invite he used",
+    "TAGS" : ["autorole", "invite"],
     "REQUIREMENTS" : [],
     "HIDDEN" : false
 }
