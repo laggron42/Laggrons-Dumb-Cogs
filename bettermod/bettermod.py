@@ -23,11 +23,10 @@ class BetterMod:
             
             for server in self.settings:
                 if server != "version":
-                    print(server)
+                    
                     # Add here new body
                     self.settings[server]['role'] = None
         
-            print(self.settings)
             dataIO.save_json('data/bettermod/settings.json', self.settings)
             print("Json body of data/bettermod/settings.json was successfully updated")
                 
@@ -36,10 +35,8 @@ class BetterMod:
                 file_json = dataIO.load_json('data/bettermod/history/{}'.format(file))
                 if "version" not in file_json: # a log file is not up-to-date (usually means all the files aren't up-to-date)
                     file_json['version'] = "1.1"
+                    
                     # Add here new body
-                    print("""Hello debug here:
-                        file name: {}
-                        file content: {}""".format(file, json.dumps(file_json, indent=4)))
                     dataIO.save_json('data/bettermod/history/{}'.format(file), file_json)
                     print("Json body of data/bettermod/history/{} was successfully updated".format(file))
 
