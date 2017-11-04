@@ -16,6 +16,32 @@ class BetterMod:
     def __init__(self, bot):
         self.bot = bot
         self.settings = dataIO.load_json('data/bettermod/settings.json')
+    
+        if "version" not in self.settings: # json body not up-to-date
+            
+            self.settings['version'] = "1.1"
+            
+            for server in self.settings:
+                if server != "version":
+                    print(server)
+                    # Add here new body
+                    self.settings[server]['role'] = None
+        
+            print(self.settings)
+            dataIO.save_json('data/bettermod/settings.json', self.settings)
+            print("Json body of data/bettermod/settings.json was successfully updated")
+                
+        for file in os.listdir('data/bettermod/history'):
+            if file.endswith('.json'):
+                file_json = dataIO.load_json('data/bettermod/history/{}'.format(file))
+                if "version" not in file_json: # a log file is not up-to-date (usually means all the files aren't up-to-date)
+                    file_json['version'] = "1.1"
+                    # Add here new body
+                    print("""Hello debug here:
+                        file name: {}
+                        file content: {}""".format(file, json.dumps(file_json, indent=4)))
+                    dataIO.save_json('data/bettermod/history/{}'.format(file), file_json)
+                    print("Json body of data/bettermod/history/{} was successfully updated".format(file))
 
     async def error(self, ctx):
         
@@ -60,29 +86,31 @@ class BetterMod:
             await self.init(ctx.message.server)
                 
     async def init(self, server):
-        self.settings[server.id] = {
-            'mod-log': '0',
+        if server.id not in self.settings:
+            self.settings[server.id] = {
+                'mod-log': '0',
+                'role': None,
             
-            'thumbnail' : {
-                'warning_embed_simple': 'https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png',
-                'warning_embed_kick': 'https://cdn.discordapp.com/attachments/303988901570150401/360466190956494858/kick.png',
-                'warning_embed_ban': 'https://media.discordapp.net/attachments/303988901570150401/360466189979222017/ban.png',
-                'report_embed': 'https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png'
-            },
-            
-            'colour': {
-                'warning_embed_simple': None,
-                'warning_embed_kick': None,
-                'warning_embed_ban': None,
-                'report_embed': None
+                'thumbnail' : {
+                    'warning_embed_simple': 'https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png',
+                    'warning_embed_kick': 'https://cdn.discordapp.com/attachments/303988901570150401/360466190956494858/kick.png',
+                    'warning_embed_ban': 'https://media.discordapp.net/attachments/303988901570150401/360466189979222017/ban.png',
+                    'report_embed': 'https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png'
+                },
+                    
+                'colour': {
+                    'warning_embed_simple': None,
+                    'warning_embed_kick': None,
+                    'warning_embed_ban': None,
+                    'report_embed': None
+                }
             }
-        }
         
-        try:
-            dataIO.save_json('data/bettermod/settings.json', self.settings)
-        except:
-            await self.error(ctx)
-            return
+            try:
+                dataIO.save_json('data/bettermod/settings.json', self.settings)
+            except:
+                await self.error(ctx)
+                return
     
     async def add_case(self, level, user, reason, timestamp, server, applied, ctx):
         if not os.path.isfile('data/bettermod/history/{}.json'.format(server.id)):
@@ -312,12 +340,53 @@ class BetterMod:
             await self.error(ctx)
 
         self.settings[server.id]['mod-log'] = channel.id
-        await self.bot.say("Log messages and reports will be sent to **" + channel.name + "**.")
+        await self.bot.say("Log messages and reports will be send to **" + channel.name + "**.")
         try:
             dataIO.save_json('data/bettermod/settings.json', self.settings)
         except:
             await self.error(ctx)
             return
+
+    @bmodset.command(pass_context=True, no_pm=True)
+    async def mention(self, ctx, role: str = None):
+        """Mention a specific role when a report is done.
+            
+        Give no argument to disable mention."""
+        
+        if ctx.message.server.id not in self.settings:
+            await self.init(ctx.message.server)
+    
+        if role is None:
+            self.settings[ctx.message.server.id]["role"] = None
+            
+            try:
+                dataIO.save_json('data/bettermod/settings.json', self.settings)
+            except:
+                await self.error(ctx)
+            
+            await self.bot.say("The role mention is now disabled")
+
+        else:
+            
+            object = discord.utils.get(ctx.message.server.roles, name=role)
+                
+            if object is None:
+                await self.bot.say("The role cannot be found. Please give exact role name")
+                return
+                               
+            if not object.mentionable or not ctx.message.server.me.server.permissions.administrator:
+                await self.bot.say("The role cannot be mentionned. Please modify its settings to enable `Allow anyone to @mention this role`")
+                return
+            
+            self.settings[ctx.message.server.id]["role"] = object.id
+
+            try:
+                dataIO.save_json('data/bettermod/settings.json', self.settings)
+            except:
+                await self.error(ctx)
+
+            await self.bot.say("The role {} will now be mentionned when a report is send".format(object.name))
+            
 
     @bmodset.group(pass_context=True, no_pm=True)
     async def color(self, ctx):
@@ -595,9 +664,22 @@ class BetterMod:
             report.color = discord.Colour(self.settings[server.id]['colour']['report_embed'])
         except:
             pass
+        
+        if self.settings[server.id]["role"] is None:
 
-        await self.bot.send_message(channel, embed=report)
-        await self.bot.send_message(author, "Your report has been sent to the moderation team") #So the user being reported doesn't know they got reported
+            try:
+                await self.bot.send_message(channel, embed=report)
+            except:
+                await self.error(ctx)
+                    
+        else:
+            role = discord.utils.get(server.roles, id=self.settings[server.id]["role"])
+            try:
+                await self.bot.send_message(channel, embed=report, content=role.mention)
+            except:
+                await self.error(ctx)
+        
+        await self.bot.say("Your report has been send to the moderation team")
 
 
 
@@ -668,7 +750,7 @@ class BetterMod:
         try:
             await self.bot.send_message(user, embed=target)
         except:
-            modlog.set_footer(text="I couldn't send a message to this user. They may have blocked messages from this server.")#It's 2017, can't assume genders lol
+            modlog.set_footer(text="I couldn't send a message to this user. He may has blocked messages from this server.")
 
         await self.bot.send_message(channel, embed=modlog)
 
@@ -678,7 +760,7 @@ class BetterMod:
     @checks.mod_or_permissions(administrator=True)
     @warn.command(pass_context=True, no_pm=True, aliases="2")
     async def kick(self, ctx, user: discord.Member, *, reason: str):
-        """Send a warning to the user in DM and store it, while kicking them"""#It's 2017 ;)
+        """Send a warning to the user in DM and store it, while kicking him"""
         
         try:
             await self.bot.delete_message(ctx.message)
@@ -741,8 +823,7 @@ class BetterMod:
             await self.bot.kick(user)
         except:
             await self.bot.say("I cannot kick this user, he higher than me in the role hierarchy. Aborting...")
-            await self.bot.send_message(channel, content="The user was not kicked. Check my permissions and verify I can kick users.", embed=modlog)
-
+            await self.bot.send_message(channel, content="The user was not kick. Check my permissions", embed=modlog)
             await self.add_case(level='Kick', user=user, reason=reason, timestamp=ctx.message.timestamp.strftime("%d %b %Y %H:%M"), server=server, applied=0, ctx=ctx)
             return
 
@@ -754,7 +835,7 @@ class BetterMod:
     @checks.mod_or_permissions(administrator=True)
     @warn.command(pass_context=True, no_pm=True, aliases="3")
     async def ban(self, ctx, user: discord.Member, *, reason: str):
-        """Send a warning to the user in DM and store it, while banning them"""#I think you get it by now
+        """Send a warning to the user in DM and store it, while banning him"""
         
         try:
             await self.bot.delete_message(ctx.message)
@@ -811,13 +892,13 @@ class BetterMod:
         try:
             await self.bot.send_message(user, embed=target)
         except:
-            modlog.set_footer(text="I couldn't send a message to this user. They may have blocked messages from this server.")
+            modlog.set_footer(text="I couldn't send a message to this user. He may has blocked messages from this server.")
 
         try:
             await self.bot.ban(user)
         except:
             await self.bot.say("I cannot ban this user, he higher than me in the role hierarchy. Aborting...")
-            await self.bot.send_message(channel, content="The user was not banned. Check my permissions and confirm I can ban users.", embed=modlog)
+            await self.bot.send_message(channel, content="The user was not ban. Check my permissions", embed=modlog)
             await self.add_case(level='Ban', user=user, reason=reason, timestamp=ctx.message.timestamp.strftime("%d %b %Y %H:%M"), server=server, applied=0, ctx=ctx)
             return
 
