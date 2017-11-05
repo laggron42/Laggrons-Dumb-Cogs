@@ -371,7 +371,7 @@ class BetterMod:
                 await self.bot.say("The role cannot be found. Please give exact role name")
                 return
                                
-            if not object.mentionable or not ctx.message.server.me.server.permissions.administrator:
+            if not object.mentionable or not ctx.message.server.me.server_permissions.administrator:
                 await self.bot.say("The role cannot be mentionned. Please modify its settings to enable `Allow anyone to @mention this role`")
                 return
             
