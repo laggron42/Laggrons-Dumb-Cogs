@@ -80,6 +80,8 @@ You can also set multiple settings, some are required:
 
 -  `[p]bmodset thumbnail <report|simple|kick|ban>` This set the thumbnail of the differents embed messages (the small picture at the top right) that can be send in the modlog.
 
+- `[p]bmodset mention <role>` Enable the mention of a role when a report is done. The exact name need to be provided.
+
 You can check warns using this command:
 
 - `[p]case check <case number>` This will show a menu with the selected case. If you select case 0, the total of the cases will be given.
