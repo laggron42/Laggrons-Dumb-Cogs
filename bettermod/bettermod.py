@@ -423,7 +423,7 @@ class BetterMod:
         try:
             dataIO.save_json('data/bettermod/settings.json', self.settings)
         except:
-            await self.erro(ctx)
+            await self.error(ctx)
             return
         await self.bot.say("New embed color has been registered. If the value is invalid, the color will not change.")
 
