@@ -740,7 +740,7 @@ class BetterMod:
         target.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         target.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_simple'])
         try:
-            modlog.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_simple'])
+            target.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_simple'])
         except:
             pass
 
@@ -807,7 +807,7 @@ class BetterMod:
         target.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         target.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_kick'])
         try:
-            modlog.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_kick'])
+            target.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_kick'])
         except:
             pass
         
@@ -882,7 +882,7 @@ class BetterMod:
         target.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         target.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_ban'])
         try:
-            modlog.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_ban'])
+            target.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_ban'])
         except:
             pass
         
