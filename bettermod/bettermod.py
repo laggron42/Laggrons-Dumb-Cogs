@@ -729,7 +729,7 @@ class BetterMod:
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         modlog.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_simple'])
         try:
-            report.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_simple'])
+            modlog.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_simple'])
         except:
             pass
 
@@ -740,7 +740,7 @@ class BetterMod:
         target.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         target.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_simple'])
         try:
-            report.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_simple'])
+            modlog.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_simple'])
         except:
             pass
 
@@ -796,7 +796,7 @@ class BetterMod:
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         modlog.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_kick'])
         try:
-            report.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_kick'])
+            modlog.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_kick'])
         except:
             pass
         
@@ -807,7 +807,7 @@ class BetterMod:
         target.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         target.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_kick'])
         try:
-            report.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_kick'])
+            modlog.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_kick'])
         except:
             pass
         
@@ -871,7 +871,7 @@ class BetterMod:
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         modlog.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_ban'])
         try:
-            report.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_ban'])
+            modlog.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_ban'])
         except:
             pass
         
@@ -882,7 +882,7 @@ class BetterMod:
         target.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         target.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_ban'])
         try:
-            report.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_ban'])
+            modlog.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_ban'])
         except:
             pass
         
