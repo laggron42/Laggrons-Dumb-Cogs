@@ -16,6 +16,7 @@ class BetterMod:
     def __init__(self, bot):
         self.bot = bot
         self.settings = dataIO.load_json('data/bettermod/settings.json')
+        self.red = dataIO.load_json('data/red/settings.json')
     
         if "version" not in self.settings: # json body not up-to-date
             
@@ -44,8 +45,8 @@ class BetterMod:
         
         bot_member = ctx.message.server.get_member(self.bot.user.id)
         
-        folders = ['data', 'data/bettermod/', 'data/bettermod/history/']
-        files = ['settings.json', 'history/{}.json'.format(ctx.message.server.id)]
+        folders = ['data', 'data/bettermod/', 'data/bettermod/history/', 'data/red']
+        files = ['data/bettermod/settings.json', 'data/bettermod/history/{}.json'.format(ctx.message.server.id), 'red/settings.json']
         permissions = ['add_reactions', 'embed_links', 'manage_messages']
         message_perm = "Error: missing permissions. I need the following permissions to work:\n"
         message_file = "Error: some files are missing and data might be lost. New files will be recreated. The following files are missing:\n"
@@ -60,9 +61,9 @@ class BetterMod:
                 error_file = 1
 
         for filename in files:
-            if not os.path.isfile('data/bettermod/{}'.format(filename)):
+            if not os.path.isfile(filename):
                 print("Creating empty {}".format(filename))
-                dataIO.save_json('data/bettermod/{}'.format(filename), {})
+                dataIO.save_json(filename, {})
                 message_file += "`{}` is missing\n".format(filename)
                 error_file = 1
                                    
@@ -904,22 +905,24 @@ class BetterMod:
         await self.add_case(level='Ban', user=user, reason=reason, timestamp=ctx.message.timestamp.strftime("%d %b %Y %H:%M"), server=server, applied=1, ctx=ctx)
 
     @commands.group(pass_context=True)
+    @checks.mod_or_permissions(administrator=True)
     async def case(self, ctx):
-        """Check warnings of a user"""
+        """Edit warnings' reasons or remove them"""
     
         if ctx.invoked_subcommand is None:
             await self.bot.send_cmd_help(ctx)
 
 
-    @case.command(pass_context=True)
-    async def check(self, ctx, case: int):
+    @commands.command(pass_context=True)
+    async def bcheck(self, ctx, case: int, user: discord.Member = None):
         """Give the sanction and the reason of a specific case
             
-            If 0 is given, all of the cases of the user will be given"""
+            If 0 is given, all of the cases of the user will be given
+            You need to be at least moderator to see other's warnings"""
         
         server = ctx.message.server
         author = ctx.message.author
-        user = author
+        allowed = False
         
         if not os.path.isfile('data/bettermod/history/{}.json'.format(server.id)):
             print("Creating empty {}".format(server.id))
@@ -932,15 +935,48 @@ class BetterMod:
         try:
             history = dataIO.load_json('data/bettermod/history/{}.json'.format(server.id))
         except:
-            await self.erro(ctx)
+            await self.error(ctx)
             return
         
         if user is None:
             user = ctx.message.author
+            allowed = True
+
         
-        if user.id not in history:
-            await self.bot.say("You don't have any warning yet")
+        if author == server.owner or author.id == self.bot.settings.owner or author.server_permissions.administrator:
+            allowed = True
+        
+        for role in author.roles:
+        
+            if server.id not in self.red:
+                
+                if role.name == self.red['default']['ADMIN_ROLE']:
+                    allowed = True
+                
+                if role.name == self.red['default']['MOD_ROLE']:
+                    allowed = True
+
+            else:
+                
+                if role.name == self.red[server.id]['ADMIN_ROLE']:
+                    allowed = True
+                if role.name == self.red[server.id]['MOD_ROLE']:
+                    allowed = True
+
+                        
+        if allowed is False:
+            await self.bot.say("You are not allowed to check others's warnings")
             return
+        
+
+        if user.id not in history:
+            if user != author:
+                await self.bot.say("That user doesn't have any warnings yet")
+                return
+            
+            else:
+                await self.bot.say("You don't have any warning yet")
+                return
 
         if case < 0 or case > history[user.id]['total-warns']:
             await self.bot.say("That case does not exist")
@@ -974,13 +1010,8 @@ class BetterMod:
             await self.error(ctx)
             return
 
-    @checks.mod_or_permissions(administrator=True)
-    @case.command(pass_context=True)
-    async def sudo(self, ctx, case: int, user: discord.Member = None):
-        """Same as check, except you can check everyone's cases"""
 
     @case.command(pass_context=True)
-    @checks.mod_or_permissions(administrator=True)
     async def delete(self, ctx, case: int, user: discord.Member):
         """Delete a case"""
 
@@ -1066,7 +1097,6 @@ class BetterMod:
             return
         
 
-    @checks.mod_or_permissions(administrator=True)
     @case.command(pass_context=True)
     async def edit(self, ctx, case: int, user: discord.Member, *, reason):
         """Edit the reason of the specified case"""
