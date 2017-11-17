@@ -319,7 +319,36 @@ class BetterMod:
     
         if ctx.invoked_subcommand is None:
             await self.bot.send_cmd_help(ctx)
+
+            server = ctx.message.server
+            
+            try:
+                if server.id not in self.settings:
+                    await self.init(server)
+            except:
+                return
+            
+            set = self.settings[server.id]
+                    
+            message = """Current Bettermod's settings on this server:
+                
+modlog: #{}
+role to mention: {}
+
+colors:
+    report: {}
+    simple warning: {}
+    kick warning: {}
+    ban warning: {}
+                    
+thumbnail's URL pictures:
+    report: {}
+    simple warning: {}
+    kick warning: {}
+    ban warning: {}""".format(self.bot.get_channel(set['mod-log']), discord.utils.get(server.roles, id=set['role']), set['colour']['report_embed'], set['colour']['warning_embed_simple'], set['colour']['warning_embed_kick'], set['colour']['warning_embed_ban'], set['thumbnail']['report_embed'], set['thumbnail']['warning_embed_simple'], set['thumbnail']['warning_embed_kick'], set['thumbnail']['warning_embed_ban'])
                         
+            await self.bot.say("```{}```".format(message))
+
     @bmodset.command(pass_context=True, no_pm=True)
     async def channel(self, ctx, channel : discord.Channel = None):
         """Sets a channel as log"""
