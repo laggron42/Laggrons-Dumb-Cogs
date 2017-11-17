@@ -17,29 +17,6 @@ class BetterMod:
         self.bot = bot
         self.settings = dataIO.load_json('data/bettermod/settings.json')
         self.red = dataIO.load_json('data/red/settings.json')
-    
-        if "version" not in self.settings: # json body not up-to-date
-            
-            self.settings['version'] = "1.1"
-            
-            for server in self.settings:
-                if server != "version":
-                    
-                    # Add here new body
-                    self.settings[server]['role'] = None
-        
-            dataIO.save_json('data/bettermod/settings.json', self.settings)
-            print("Json body of data/bettermod/settings.json was successfully updated")
-                
-        for file in os.listdir('data/bettermod/history'):
-            if file.endswith('.json'):
-                file_json = dataIO.load_json('data/bettermod/history/{}'.format(file))
-                if "version" not in file_json: # a log file is not up-to-date (usually means all the files aren't up-to-date)
-                    file_json['version'] = "1.1"
-                    
-                    # Add here new body
-                    dataIO.save_json('data/bettermod/history/{}'.format(file), file_json)
-                    print("Json body of data/bettermod/history/{} was successfully updated".format(file))
 
     async def error(self, ctx):
         
@@ -90,10 +67,10 @@ class BetterMod:
                 'role': None,
             
                 'thumbnail' : {
-                    'warning_embed_simple': 'https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png',
-                    'warning_embed_kick': 'https://cdn.discordapp.com/attachments/303988901570150401/360466190956494858/kick.png',
-                    'warning_embed_ban': 'https://media.discordapp.net/attachments/303988901570150401/360466189979222017/ban.png',
-                    'report_embed': 'https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png'
+                    'warning_embed_simple': 'https://i.imgur.com/Bl62rGd.png',
+                    'warning_embed_kick': 'https://i.imgur.com/uhrYzyt.png',
+                    'warning_embed_ban': 'https://i.imgur.com/DfBvmic.png',
+                    'report_embed': 'https://i.imgur.com/Bl62rGd.png'
                 },
                     
                 'colour': {
@@ -1208,7 +1185,66 @@ def check_files():
             dataIO.save_json('data/bettermod/{}'.format(filename), value)
 
 
+def check_version_settings():
+    
+    settings = dataIO.load_json('data/bettermod/settings.json')
+    
+    if "version" not in settings: # json body not up-to-date
+        
+        settings['version'] = "1.1"
+        
+        for server in settings:
+            if server != "version":
+                
+                # Add here new body
+                settings[server]['role'] = None
+            
+                dataIO.save_json('data/bettermod/settings.json', settings)
+                print("Json body of data/bettermod/settings.json was successfully updated")
+
+
+    if settings['version'] == "1.1": # json body not up-to-date
+    
+        settings['version'] = "1.2"
+    
+        for server in settings:
+            if server != "version":
+            
+                # Add here new body
+                
+                if settings[server]['thumbnail']['report_embed'] == 'https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png':
+                    settings[server]['thumbnail']['warning_embed_simple'] = 'https://i.imgur.com/Bl62rGd.png'
+                
+                if settings[server]['thumbnail']['warning_embed_simple'] == 'https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png':
+                    settings[server]['thumbnail']['warning_embed_simple'] = 'https://i.imgur.com/Bl62rGd.png'
+                
+                if settings[server]['thumbnail']['warning_embed_kick'] == 'https://cdn.discordapp.com/attachments/303988901570150401/360466190956494858/kick.png':
+                    settings[server]['thumbnail']['warning_embed_simple'] = 'https://i.imgur.com/uhrYzyt.png'
+                
+                if settings[server]['thumbnail']['warning_embed_ban'] == 'https://media.discordapp.net/attachments/303988901570150401/360466189979222017/ban.png':
+                    settings[server]['thumbnail']['warning_embed_ban'] = 'https://i.imgur.com/DfBvmic.png'
+            
+                dataIO.save_json('data/bettermod/settings.json', settings)
+                print("Json body of data/bettermod/settings.json was successfully updated")
+
+
+def check_version_history():
+    
+    for file in os.listdir('data/bettermod/history'):
+        if file.endswith('.json'):
+            file_json = dataIO.load_json('data/bettermod/history/{}'.format(file))
+            if "version" not in file_json: # a log file is not up-to-date (usually means all the files aren't up-to-date)
+                file_json['version'] = "1.1"
+                    
+                # Add here new body
+                
+                dataIO.save_json('data/bettermod/history/{}'.format(file), file_json)
+                print("Json body of data/bettermod/history/{} was successfully updated".format(file))
+
+
 def setup(bot):
     check_folders()
     check_files()
+    check_version_settings()
+    check_version_history()
     bot.add_cog(BetterMod(bot))
