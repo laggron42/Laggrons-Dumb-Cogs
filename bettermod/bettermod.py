@@ -551,7 +551,7 @@ thumbnail's URL pictures:
 
         else:
             try:
-                self.settings[server.id]['report_embed'] = url
+                self.settings[server.id]['thumbnail']['report_embed'] = url
                 dataIO.save_json('data/bettermod/settings.json', self.settings)
                 await self.bot.say("The new thumbnail for the report embed has been set. If the URL is not valid, no thumbnail will be shown in the embed.")
             except:
