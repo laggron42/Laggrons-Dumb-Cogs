@@ -1,12 +1,10 @@
 # Laggron's dumb cogs
 
-Hi I'm **El Laggron** from [Twentysix's Discord server](https://discord.gg/red) and I made this cog because I'm bored. Just that. And don't expect a lot from me, if the cog you're using works, this is mostly luck (or dark magic) because I'm a quite shit dev. 
+Hi I'm **El Laggron** from [Twentysix's Discord server](https://discord.gg/red) and I made this cog because I'm bored. Just that. And don't expect a lot from me, if the cog you're using works, this is mostly luck (or dark magic) because I'm a quite shit dev.
 
-If you have any ideas of cogs I should make, contact me in DM. 
+If you have any ideas of cogs, any bug you meet or any question, you can join my own [Discord server](https://discord.gg/WsTGeQM)
 
-Also I should credit **BakersBakeBread** and **Sentry** who helped me a lot on cog creation (not Kowlin who just spit on me).
-
-If you like these cogs, please consider donating at [Twentysix](https://www.patreon.com/Twentysix26) (surprising ?) because he way more deserves it than me C:
+If you like these cogs, please consider donating to help me code better quality cogs. Everything is very helpful to me and means a lot, if you're interested (yay), visit my [Patreon](https://www.patreon.com/retke)
 
 ## How to install one of my cogs
 
