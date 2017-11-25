@@ -63,8 +63,15 @@ class BetterMod:
     async def init(self, server):
         if server.id not in self.settings:
             self.settings[server.id] = {
-                'mod-log': '0',
                 'role': None,
+                
+                'channels': {
+                    'general': None,
+                    'report': None,
+                    'simple-warn': None,
+                    'kick-warn': None,
+                    'ban-warn': None
+                },
             
                 'thumbnail' : {
                     'warning_embed_simple': 'https://i.imgur.com/Bl62rGd.png',
@@ -343,7 +350,7 @@ thumbnail's URL pictures:
         except:
             await self.error(ctx)
 
-        self.settings[server.id]['mod-log'] = channel.id
+        self.settings[server.id]['channels']['general'] = channel.id
         await self.bot.say("Log messages and reports will be send to **" + channel.name + "**.")
         try:
             dataIO.save_json('data/bettermod/settings.json', self.settings)
@@ -558,6 +565,7 @@ thumbnail's URL pictures:
                 await self.error(ctx)
                 return
 
+
     @thumbnail.command(name="simple", pass_context=True, no_pm=True)
     async def simple_thumbnail(self, ctx, *, url):
         """Set the picture of the simple warning embed in modlog"""
@@ -633,6 +641,116 @@ thumbnail's URL pictures:
                 await self.error(ctx)
                 return
 
+    @bmodset.group(pass_context=True, no_pm=True, hidden=True)
+    async def channels(self, ctx):
+        """Set separately warnings and reports log channels"""
+
+        if not ctx.invoked_subcommand or \
+                isinstance(ctx.invoked_subcommand, commands.Group):
+            await self.bot.send_cmd_help(ctx)
+
+
+    @channels.command(pass_context=True, no_pm=True, name="report")
+    async def report_channel(self, ctx, channel: discord.Channel):
+        """Set a separate modlog for reports"""
+    
+        if channel is None:
+            channel = ctx.message.channel
+        else:
+            pass
+        
+        server = ctx.message.server
+        
+        try:
+            if server.id not in self.settings:
+                await self.init(server)
+        except:
+            await self.error(ctx)
+        
+        self.settings[server.id]['channels']['report'] = channel.id
+        await self.bot.say("Reports will be send to **" + channel.name + "**.")
+        try:
+            dataIO.save_json('data/bettermod/settings.json', self.settings)
+        except:
+            await self.error(ctx)
+            return
+
+    @channels.command(pass_context=True, no_pm=True, name="simple")
+    async def simple_warning_channel(self, ctx, channel: discord.Channel):
+        """Set a separate modlog for simple warnings"""
+        
+        if channel is None:
+            channel = ctx.message.channel
+        else:
+            pass
+        
+        server = ctx.message.server
+        
+        try:
+            if server.id not in self.settings:
+                await self.init(server)
+        except:
+            await self.error(ctx)
+        
+        self.settings[server.id]['channels']['simple-warn'] = channel.id
+        await self.bot.say("Simple warnings will be send to **" + channel.name + "**.")
+        try:
+            dataIO.save_json('data/bettermod/settings.json', self.settings)
+        except:
+            await self.error(ctx)
+            return
+                    
+    @channels.command(pass_context=True, no_pm=True, name="kick")
+    async def kick_warning_channel(self, ctx, channel: discord.Channel):
+        """Set a separate modlog for kick warnings"""
+                            
+        if channel is None:
+            channel = ctx.message.channel
+        else:
+            pass
+        
+        server = ctx.message.server
+        
+        try:
+            if server.id not in self.settings:
+                await self.init(server)
+        except:
+            await self.error(ctx)
+        
+        self.settings[server.id]['channels']['kick-warn'] = channel.id
+        await self.bot.say("Kick warnings will be send to **" + channel.name + "**.")
+        try:
+            dataIO.save_json('data/bettermod/settings.json', self.settings)
+        except:
+            await self.error(ctx)
+            return
+
+    @channels.command(pass_context=True, no_pm=True, name="ban")
+    async def ban_warning_channel(self, ctx, channel: discord.Channel):
+        """Set a separate modlog for simple warnings"""
+        
+        if channel is None:
+            channel = ctx.message.channel
+        else:
+            pass
+        
+        server = ctx.message.server
+        
+        try:
+            if server.id not in self.settings:
+                await self.init(server)
+        except:
+            await self.error(ctx)
+            
+        self.settings[server.id]['channels']['ban-warn'] = channel.id
+        await self.bot.say("Ban warnings will be send to **" + channel.name + "**.")
+        try:
+            dataIO.save_json('data/bettermod/settings.json', self.settings)
+        except:
+            await self.error(ctx)
+            return
+
+
     @commands.command(pass_context=True)
     async def report(self, ctx, user: discord.Member, *, reason):
         """Report a user to the moderation team"""
@@ -651,11 +769,14 @@ thumbnail's URL pictures:
         except:
             await self.error(ctx)
         
-        if self.settings[server.id]['mod-log'] == '0':
+        if not self.settings[server.id]['channels']['general'] and not self.settings[server.id]['channels']['report']:
             await self.bot.say("The log channel is not set yet. Please use `" + ctx.prefix + "bmodset channel` to set it. Aborting...")
             return
         else:
-            channel = self.bot.get_channel(self.settings[server.id]['mod-log'])
+            if not self.settings[server.id]['channels']['report']:
+                channel = discord.utils.get(server.channels, id=self.settings[server.id]['channels']['general'])
+            else:
+                channel = discord.utils.get(server.channels, id=self.settings[server.id]['channels']['report'])
                 
         report = discord.Embed(title="Report", description="A user reported someone for an abusive behaviour")
         report.add_field(name="From", value=author.mention, inline=True)
@@ -713,11 +834,14 @@ thumbnail's URL pictures:
         except:
             await self.error(ctx)
 
-        if self.settings[server.id]['mod-log'] == '0':
+        if not self.settings[server.id]['channels']['general'] and not self.settings[server.id]['channels']['simple-warn']:
             await self.bot.say("The log channel is not set yet. Please use `" + ctx.prefix + "bmodset channel` to set it. Aborting...")
             return
+
+        if not self.settings[server.id]['channels']['simple-warn']:
+            channel = discord.utils.get(server.channels, id=self.settings[server.id]['channels']['general'])
         else:
-            channel = self.bot.get_channel(self.settings[server.id]['mod-log'])
+            channel = discord.utils.get(server.channels, id=self.settings[server.id]['channels']['simple-warn'])
 
         if user == self.bot.user:
             await self.bot.say("Why do you want to report me :C I did nothing wrong (I cannot kick or ban myself)")
@@ -780,12 +904,15 @@ thumbnail's URL pictures:
         except:
             await self.error(ctx)
         
-        if self.settings[server.id]['mod-log'] == '0':
+        if not self.settings[server.id]['channels']['general'] and not self.settings[server.id]['channels']['kick-warn']:
             await self.bot.say("The log channel is not set yet. Please use `" + ctx.prefix + "chanlog` to set it. Aborting...")
             return
         else:
-            channel = self.bot.get_channel(self.settings[server.id]['mod-log'])
-        
+            if not self.settings[server.id]['channels']['kick-warn']:
+                channel = discord.utils.get(server.channels, id=self.settings[server.id]['channels']['general'])
+            else:
+                channel = discord.utils.get(server.channels, id=self.settings[server.id]['channels']['kick-warn'])
+
         if user == self.bot.user:
             await self.bot.say("Why do you want to report me :C I did nothing wrong (I cannot kick or ban myself)")
             return
@@ -855,11 +982,14 @@ thumbnail's URL pictures:
         except:
             await self.error(ctx)
 
-        if self.settings[server.id]['mod-log'] == '0':
+        if not self.settings[server.id]['channels']['general'] and not self.settings[server.id]['channels']['ban-warn']:
             await self.bot.say("The log channel is not set yet. Please use `" + ctx.prefix + "chanlog` to set it. Aborting...")
             return
         else:
-            channel = self.bot.get_channel(self.settings[server.id]['mod-log'])
+            if not self.settings[server.id]['channels']['ban-warn']:
+                channel = discord.utils.get(server.channels, id=self.settings[server.id]['channels']['general'])
+            else:
+                channel = discord.utils.get(server.channels, id=self.settings[server.id]['channels']['ban-warn'])
         
         if user == self.bot.user:
             await self.bot.say("Why do you want to report me :C I did nothing wrong (I cannot kick or ban myself)")
@@ -1213,17 +1343,38 @@ def check_version_settings():
                 # Add here new body
                 
                 if settings[server]['thumbnail']['report_embed'] == 'https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png':
-                    settings[server]['thumbnail']['warning_embed_simple'] = 'https://i.imgur.com/Bl62rGd.png'
+                    settings[server]['thumbnail']['report_embed'] = 'https://i.imgur.com/Bl62rGd.png'
                 
                 if settings[server]['thumbnail']['warning_embed_simple'] == 'https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png':
                     settings[server]['thumbnail']['warning_embed_simple'] = 'https://i.imgur.com/Bl62rGd.png'
                 
                 if settings[server]['thumbnail']['warning_embed_kick'] == 'https://cdn.discordapp.com/attachments/303988901570150401/360466190956494858/kick.png':
-                    settings[server]['thumbnail']['warning_embed_simple'] = 'https://i.imgur.com/uhrYzyt.png'
+                    settings[server]['thumbnail']['warning_embed_kick'] = 'https://i.imgur.com/uhrYzyt.png'
                 
                 if settings[server]['thumbnail']['warning_embed_ban'] == 'https://media.discordapp.net/attachments/303988901570150401/360466189979222017/ban.png':
                     settings[server]['thumbnail']['warning_embed_ban'] = 'https://i.imgur.com/DfBvmic.png'
             
+                dataIO.save_json('data/bettermod/settings.json', settings)
+                print("Json body of data/bettermod/settings.json was successfully updated")
+
+    if settings['version'] == "1.2":
+
+        settings['version'] == "1.3"
+
+        for server in settings:
+            if server != "version":
+                
+                try:
+                    settings[server]['channels'] = {
+                        "general": settings[server]['mod-log'],
+                        "report": None,
+                        "simple-warn": None,
+                        "kick-warn": None,
+                        "ban-warn": None
+                    }
+                except KeyError:
+                    pass
+
                 dataIO.save_json('data/bettermod/settings.json', settings)
                 print("Json body of data/bettermod/settings.json was successfully updated")
 
