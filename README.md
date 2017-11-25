@@ -82,11 +82,9 @@ You can also set multiple settings, some are required:
 
 You can check warns using this command:
 
-- `[p]case check <case number>` This will show a menu with the selected case. If you select case 0, the total of the cases will be given.
+- `[p]bcheck <case number> [@user]` This will show a menu with the selected case. If you select case 0, the total number of warning will be given. If you specify a user, it will show its warnings, but you need to be moderator.
 
 Moderators only:
-
-- `[p]case sudo <case number> <@user>` Check the warns of any user. Works as the previous commands.
 
 - `[p]case edit <case number> <@user> <reason>` Modify the reason of the specified case.
 
