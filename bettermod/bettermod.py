@@ -316,9 +316,15 @@ class BetterMod:
                     
             message = """Current Bettermod's settings on this server:
                 
-modlog: #{}
 role to mention: {}
 
+channels:
+    default: {}
+    report: {}
+    simple warning: {}
+    kick warning: {}
+    ban warning: {}
+    
 colors:
     report: {}
     simple warning: {}
@@ -329,7 +335,7 @@ thumbnail's URL pictures:
     report: {}
     simple warning: {}
     kick warning: {}
-    ban warning: {}""".format(self.bot.get_channel(set['mod-log']), discord.utils.get(server.roles, id=set['role']), set['colour']['report_embed'], set['colour']['warning_embed_simple'], set['colour']['warning_embed_kick'], set['colour']['warning_embed_ban'], set['thumbnail']['report_embed'], set['thumbnail']['warning_embed_simple'], set['thumbnail']['warning_embed_kick'], set['thumbnail']['warning_embed_ban'])
+    ban warning: {}""".format(discord.utils.get(server.roles, id=set['role']), set['channels']['general'], set['channels']['report'],  set['channels']['simple-warn'], set['channels']['kick-warn'], set['channels']['ban-warn'], set['colour']['report_embed'], set['colour']['warning_embed_simple'], set['colour']['warning_embed_kick'], set['colour']['warning_embed_ban'], set['thumbnail']['report_embed'], set['thumbnail']['warning_embed_simple'], set['thumbnail']['warning_embed_kick'], set['thumbnail']['warning_embed_ban'])
                         
             await self.bot.say("```{}```".format(message))
 
