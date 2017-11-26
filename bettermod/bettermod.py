@@ -64,6 +64,7 @@ class BetterMod:
         if server.id not in self.settings:
             self.settings[server.id] = {
                 'role': None,
+                'proof': False,
                 
                 'channels': {
                     'general': None,
@@ -403,6 +404,41 @@ thumbnail's URL pictures:
                 await self.error(ctx)
 
             await self.bot.say("The role {} will now be mentionned when a report is send".format(object.name))
+
+
+    @bmodset.command(pass_context=True, no_pm=True)
+    async def proof(self, ctx):
+        """Enable or disable the proof-needed mode for reports
+            
+            If this mode is enabled, users will have to attach a file/link in order to report"""
+
+        server = ctx.message.server
+        
+        if ctx.message.server.id not in self.settings:
+            await self.init(ctx.message.server)
+                
+        if self.settings[server.id]['proof'] == False:
+            self.settings[server.id]['proof'] = True
+            
+            try:
+                dataIO.save_json('data/bettermod/settings.json', self.settings)
+            except:
+                await self.error(ctx)
+                return
+
+            await self.bot.say("The proof-needed mode is now enabled. Users will need to attach a link/file to their message in order to report. Type {}bmodset proof` again to disable it")
+                
+        else:
+            self.settings[server.id]['proof'] = False
+            
+            try:
+                dataIO.save_json('data/bettermod/settings.json', self.settings)
+            except:
+                await self.error(ctx)
+                return
+        
+            await self.bot.say("The proof-needed mode is now disabled. Users will no longer need to attach a link/file to their message. Type {}bmodset proof` again to enable it")
+            
             
 
     @bmodset.group(pass_context=True, no_pm=True)
@@ -763,6 +799,9 @@ thumbnail's URL pictures:
     
         author = ctx.message.author
         server = ctx.message.server
+        x = "" # empty string for searching any link leading to a URL in the message
+        ok = False # indian coding methods
+        words = ctx.message.content.split(' ')
     
         try:
             await self.bot.delete_message(ctx.message)
@@ -783,11 +822,28 @@ thumbnail's URL pictures:
                 channel = discord.utils.get(server.channels, id=self.settings[server.id]['channels']['general'])
             else:
                 channel = discord.utils.get(server.channels, id=self.settings[server.id]['channels']['report'])
+
+        if self.settings[server.id]['proof'] == True:
+            if ctx.message.attachments == [] and 'http' not in ctx.message.content:
+                await self.bot.send_message(author, "Proof-need mode is enabled on this server. Please attach a file or a link to your report in order to send it (screenshot the proof)")
+                return
+
+            if ctx.message.attachments !=[]:
+                ok = True
+
+            for word in words:
+                if word.startswith('http'):
+                    ok = True
+                    break
+
+            if ok == False:
+                await self.bot.send_message(author, "Proof-need mode is enabled on this server. Please attach a file or a link to your report in order to send it (screenshot the proof)")
+                return
                 
         report = discord.Embed(title="Report", description="A user reported someone for an abusive behaviour")
         report.add_field(name="From", value=author.mention, inline=True)
         report.add_field(name="To", value=user.mention, inline=True)
-        report.add_field(name="Reason", value=reason, inline=False)
+
         report.set_author(name="{}".format(user.name), icon_url=user.avatar_url)
         report.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         report.set_thumbnail(url=self.settings[server.id]['thumbnail']['report_embed'])
@@ -795,6 +851,19 @@ thumbnail's URL pictures:
             report.color = discord.Colour(self.settings[server.id]['colour']['report_embed'])
         except:
             pass
+
+        if ctx.message.attachments != []:
+            report.set_image(url=ctx.message.attachments[0]['url'])
+            report.add_field(name="Reason", value=reason+"\n\n[Click here to see proof URL]({})".format(ctx.message.attachments[0]['url']), inline=False)
+
+        elif 'http' in ctx.message.content:
+
+            for word in words:
+                if word.startswith('http'):
+                    report.set_image(url=word)
+                    report.add_field(name="Reason", value=reason+"\n\n[Click here to see proof URL]({})".format(word), inline=False)
+                    break
+                        
         
         if self.settings[server.id]["role"] is None:
 
@@ -967,6 +1036,9 @@ thumbnail's URL pictures:
         await self.bot.send_message(channel, embed=modlog)
 
         await self.add_case(level='Kick', user=user, reason=reason, timestamp=ctx.message.timestamp.strftime("%d %b %Y %H:%M"), server=server, applied=1, ctx=ctx)
+
+
+# add temp ban warning
 
 
     @checks.mod_or_permissions(administrator=True)
@@ -1335,8 +1407,8 @@ def check_version_settings():
                 # Add here new body
                 settings[server]['role'] = None
             
-                dataIO.save_json('data/bettermod/settings.json', settings)
-                print("Json body of data/bettermod/settings.json was successfully updated")
+        dataIO.save_json('data/bettermod/settings.json', settings)
+        print("Json body of data/bettermod/settings.json was successfully updated")
 
 
     if settings['version'] == "1.1": # json body not up-to-date
@@ -1360,12 +1432,12 @@ def check_version_settings():
                 if settings[server]['thumbnail']['warning_embed_ban'] == 'https://media.discordapp.net/attachments/303988901570150401/360466189979222017/ban.png':
                     settings[server]['thumbnail']['warning_embed_ban'] = 'https://i.imgur.com/DfBvmic.png'
             
-                dataIO.save_json('data/bettermod/settings.json', settings)
-                print("Json body of data/bettermod/settings.json was successfully updated")
+        dataIO.save_json('data/bettermod/settings.json', settings)
+        print("Json body of data/bettermod/settings.json was successfully updated")
 
     if settings['version'] == "1.2":
 
-        settings['version'] == "1.3"
+        settings['version'] = "1.3"
 
         for server in settings:
             if server != "version":
@@ -1381,8 +1453,20 @@ def check_version_settings():
                 except KeyError:
                     pass
 
-                dataIO.save_json('data/bettermod/settings.json', settings)
-                print("Json body of data/bettermod/settings.json was successfully updated")
+        dataIO.save_json('data/bettermod/settings.json', settings)
+        print("Json body of data/bettermod/settings.json was successfully updated")
+
+    if settings['version'] == "1.3":
+
+        settings['version'] == "1.4"
+
+        for server in settings:
+            if server != "version":
+
+                settings[server]['proof'] = False
+
+        dataIO.save_json('data/bettermod/settings.json', settings)
+        print("Json body of data/bettermod/settings.json was successfully updated")
 
 
 def check_version_history():
