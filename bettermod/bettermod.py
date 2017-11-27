@@ -426,7 +426,7 @@ thumbnail's URL pictures:
                 await self.error(ctx)
                 return
 
-            await self.bot.say("The proof-needed mode is now enabled. Users will need to attach a link/file to their message in order to report. Type {}bmodset proof` again to disable it")
+            await self.bot.say("The proof-needed mode is now enabled. Users will need to attach a link/file to their message in order to report. Type {}bmodset proof` again to disable it".format(ctx.prefix))
                 
         else:
             self.settings[server.id]['proof'] = False
@@ -437,7 +437,7 @@ thumbnail's URL pictures:
                 await self.error(ctx)
                 return
         
-            await self.bot.say("The proof-needed mode is now disabled. Users will no longer need to attach a link/file to their message. Type {}bmodset proof` again to enable it")
+            await self.bot.say("The proof-needed mode is now disabled. Users will no longer need to attach a link/file to their message. Type {}bmodset proof` again to enable it".format(ctx.prefix))
             
             
 
