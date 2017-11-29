@@ -863,6 +863,9 @@ thumbnail's URL pictures:
                     report.set_image(url=word)
                     report.add_field(name="Reason", value=reason+"\n\n[Click here to see proof URL]({})".format(word), inline=False)
                     break
+                    
+        elif self.settings[server.id]['proof'] == False:
+            report.add_field(name="Reason", value=reason, inline=False)
                         
         
         if self.settings[server.id]["role"] is None:
