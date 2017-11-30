@@ -1461,7 +1461,7 @@ def check_version_settings():
 
     if settings['version'] == "1.3":
 
-        settings['version'] == "1.4"
+        settings['version'] = "1.4"
 
         for server in settings:
             if server != "version":
