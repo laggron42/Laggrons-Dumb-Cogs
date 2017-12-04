@@ -6,7 +6,9 @@ from discord.ext import commands
 from .utils.dataIO import dataIO
 
 class RoleInvite:
-    """Autorole on users following the invite they used"""
+    """Autorole on users following the invite they used
+    
+    Report a bug or ask a question: https://discord.gg/WsTGeQ"""
 
     def __init__(self, bot):
         self.bot = bot

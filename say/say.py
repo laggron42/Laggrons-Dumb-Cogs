@@ -7,7 +7,9 @@ from .utils.dataIO import dataIO
 from discord.ext import commands
 
 class Say:
-    """Make your bot say or upload something in the channel you want."""
+    """Make your bot say or upload something in the channel you want.
+    
+    Report a bug or ask a question: https://discord.gg/WsTGeQ"""
 
     def __init__(self, bot):
         self.bot = bot

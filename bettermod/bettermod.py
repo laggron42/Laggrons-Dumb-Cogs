@@ -11,7 +11,9 @@ from __main__ import settings as set_roles
 
 
 class BetterMod:
-    """Better moderation commands"""
+    """Better moderation commands
+    
+    Report a bug or ask a question: https://discord.gg/WsTGeQ"""
     
     def __init__(self, bot):
         self.bot = bot
