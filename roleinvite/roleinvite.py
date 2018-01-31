@@ -138,7 +138,10 @@ class RoleInvite:
             
             
     async def on_member_join(self, member):
-    
+        
+        if member.bot:
+            return
+        
         if member.server.id not in self.settings:
             self.init(member.server.id)
 
@@ -158,6 +161,7 @@ class RoleInvite:
                     else:
                         print("Role not found") # debug line
                 sett['invites'][str(i)]['use'] = i.uses
+        dataIO.save_json('data/roleinvite/settings.json', self.settings)
 
 def check_folders():
     folders = ('data', 'data/roleinvite/')
