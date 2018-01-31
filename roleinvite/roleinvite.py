@@ -157,28 +157,28 @@ class RoleInvite:
         except:
             return
         
-        print(json.dumps(sett, indent=4)) # debug line
-        print(list(invites))
-        print("\n\n")
+        #print(json.dumps(sett, indent=4)) # debug line
+        #print(list(invites))
+        #print("\n\n")
 
         for i in invites:
             
-            print("""Invite: {}
-                Uses: {}
-                User: {}""".format(i, i.uses, member)) # debug line
+            #print("""Invite: {}
+            #    Uses: {}
+            #    User: {}""".format(i, i.uses, member)) # debug line
             
             if i.url in sett['invites']:
-                print("Condition reached! URL {} inside invites list".format(i)) # debug line
+                #print("Condition reached! URL {} inside invites list".format(i)) # debug line
                 if int(i.uses) > int(sett['invites'][str(i)]['use']):
-                    print("Condition reached! Invite uses:{} > Stored invite uses:{}".format(i, sett['invites'][str(i)]['use'])) # debug line
                     role = discord.utils.get(member.server.roles, name=sett['invites'][str(i)]['role'])
-                    print("Role for {} is {}".format(i, role)) # debug line
+                    print("\n\nUser {} joined with {} invite, adding the {} role > Stored invite uses: {}".format(member, i, role, sett['invites'][str(i)]['use'])) # debug line
+                    #print("Role for {} is {}".format(i, role)) # debug line
                     if role is not None:
                         await self.bot.add_roles(member, role)
                     else:
                         print("Role not found") # debug line
                 sett['invites'][str(i)]['use'] = i.uses
-            print("\nEnd of loop\n\n") # debug line
+            #print("\nEnd of loop\n\n") # debug line
 
 def check_folders():
     folders = ('data', 'data/roleinvite/')
