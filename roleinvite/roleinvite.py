@@ -56,16 +56,11 @@ class RoleInvite:
         if invite.startswith("https://discord.gg/") or invite.startswith("http://discord.gg/"):
             tmp = invite.split('/')
             invite = tmp[3]
-        
-        print(invite)
 
         for i in invites:
-            print(i.url) # debug line
             tmp = i.url.split('/')
             name_i = tmp[3]
-            print(name_i) # debug line
             if name_i == invite:
-                print("{} Good".format(i)) # debug line
                 self.settings[ctx.message.server.id]['len'] += 1
                 self.settings[ctx.message.server.id]['invites'][i.url] = {"role": str(role), "use": int(i.uses)}
                 
@@ -143,10 +138,6 @@ class RoleInvite:
             
             
     async def on_member_join(self, member):
-        
-        if member.bot:
-            print("member is bot") # debug line
-            return
     
         if member.server.id not in self.settings:
             self.init(member.server.id)
@@ -156,29 +147,17 @@ class RoleInvite:
             invites = await self.bot.invites_from(member.server)
         except:
             return
-        
-        #print(json.dumps(sett, indent=4)) # debug line
-        #print(list(invites))
-        #print("\n\n")
 
         for i in invites:
-            
-            #print("""Invite: {}
-            #    Uses: {}
-            #    User: {}""".format(i, i.uses, member)) # debug line
-            
             if i.url in sett['invites']:
-                #print("Condition reached! URL {} inside invites list".format(i)) # debug line
                 if int(i.uses) > int(sett['invites'][str(i)]['use']):
                     role = discord.utils.get(member.server.roles, name=sett['invites'][str(i)]['role'])
-                    print("\n\nUser {} joined with {} invite, adding the {} role > Stored invite uses: {}".format(member, i, role, sett['invites'][str(i)]['use'])) # debug line
-                    #print("Role for {} is {}".format(i, role)) # debug line
+                    #print("\n\nUser {} joined with {} invite, adding the {} role > Stored invite uses: {}".format(member, i, role, sett['invites'][str(i)]['use']))
                     if role is not None:
                         await self.bot.add_roles(member, role)
                     else:
                         print("Role not found") # debug line
                 sett['invites'][str(i)]['use'] = i.uses
-            #print("\nEnd of loop\n\n") # debug line
 
 def check_folders():
     folders = ('data', 'data/roleinvite/')
