@@ -1311,6 +1311,7 @@ thumbnail's URL pictures:
 
         try:
             dataIO.save_json('data/bettermod/settings.json', self.settings)
+            dataIO.save_json('data/bettermod/history/{}.json'.format(ctx.message.server.id), history)
         except:
             await self.error(ctx)
             return
