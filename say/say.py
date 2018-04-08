@@ -40,7 +40,7 @@ class Say:
 
         await self.bot.say(text)
 
-            
+    @checks.mod()
     @send.command(pass_context=True)
     async def channel(self, ctx, channel : discord.Channel, *, text):
         """Say a message in the chosen channel"""
@@ -100,6 +100,7 @@ class Say:
         else:
             await self.bot.say("That file doesn't seem to exist. Make sure it is the good name, try to add the extention (especially if two files have the same name) and if you just added a new file, make sure to reload the cog by typing `" + ctx.prefix + "reload say`")
 
+    @checks.mod()
     @send.command(pass_context=True)
     async def dm(self, ctx, user : discord.Member, *, text):
         """Send a message to the user in direct message. 
