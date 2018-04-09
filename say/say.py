@@ -21,8 +21,9 @@ class Say:
                 self.interaction.remove(user.id)
                 await channel.send("Session closed")
 
-    async def say(self, ctx, *text):
+    async def say(self, ctx, text):
 
+        text = [x for x in text]
         if ctx.message.attachments != []:
             os.system('wget ' + ctx.message.attachments[0].url)
             file = discord.File(ctx.message.attachments[0].filename)
@@ -31,18 +32,21 @@ class Say:
 
         try: # we try to get a channel object
             channel = await commands.TextChannelConverter().convert(ctx, text[0])
-            
         except commands.BadArgument: # no channel was given
-            await ctx.send(" ".join(text[1:]), file=file)
-
+            channel = ctx.channel
         else:
-            if not isinstance(ctx.channel, discord.DMChannel):
-                await ctx.send(" ".join(text), file=file)
-            else:
-                try:
-                    await channel.send(" ".join(text[1:]), file=file)
-                except discord.errors.Forbidden:
-                    await ctx.send("I cannot send messages in that channel")
+            text.remove(text[0])
+
+        text = " ".join(text)
+
+        try:
+            await channel.send(text, file=file)
+
+        except discord.errors.Forbidden:
+            if not ctx.guild.me.permissions_for(channel).send_messages:
+                await ctx.send("I am not allowed to send messages in "+channel.mention)
+            elif not ctx.guild.me.permissions_for(channel).attach_files:
+                await ctx.send("I am not allowed to upload files in "+channel.mention)
 
         if file is not None:
             os.remove(file.filename)
@@ -72,7 +76,7 @@ class Say:
         await self.say(ctx, text)
 
         if message is not None:
-            await asyncio.sleep(2)
+            await asyncio.sleep(1)
             await message.delete()
 
     @commands.command(name="interact")
@@ -96,8 +100,8 @@ class Say:
 
         while True:
 
-            print("=== New loop ===\n"
-                "self.interaction = {}".format(self.interaction))
+            #print("=== New loop ===\n"
+            #    "self.interaction = {}".format(self.interaction))
 
             if u.id not in self.interaction:
                 return
@@ -109,15 +113,15 @@ class Say:
                 self.interaction.remove(u.id)
                 return
 
-            print("\nmessage :\n"
-                "   author = {}\n"
-                "   content = {}\n"
-                "   channel = {}\n"
-                "   guild = {}\n\n".format(
-                    str(message.author), message.content[20:], str(message.channel), str(message.guild)
-                ))
+            #print("\nmessage :\n"
+            #    "   author = {}\n"
+            #    "   content = {}\n"
+            #    "   channel = {}\n"
+            #    "   guild = {}\n\n".format(
+            #        str(message.author), message.content[20:], str(message.channel), str(message.guild)
+            #    ))
 
-            print(message.channel is discord.DMChannel)
+            #print(message.channel is discord.DMChannel)
             if message.author == u and isinstance(message.channel, discord.DMChannel):
                 print("Message from ctx author and in DM")
 
@@ -131,17 +135,17 @@ class Say:
                 
 
             elif message.channel != channel or message.author == channel.guild.me or message.author == u:
-                print("Message blocked:\n"
-                    "   message.channel != channel : {}\n"
-                    "   message.author == ctx.guild.me : {}\n"
-                    "   message.author == u : {}\n".format(
-                        message.channel != channel, message.author == channel.guild.me, message.author == u
-                    ))
+                #print("Message blocked:\n"
+                #    "   message.channel != channel : {}\n"
+                #    "   message.author == ctx.guild.me : {}\n"
+                #    "   message.author == u : {}\n".format(
+                #        message.channel != channel, message.author == channel.guild.me, message.author == u
+                #    ))
                 pass
             
             else:
                 
-                print("Message good !")
+                #print("Message good !")
 
                 embed = discord.Embed()
                 embed.set_author(name="{} | {}".format(
@@ -155,4 +159,5 @@ class Say:
 
                 await u.send(embed=embed)
 
-            print("\n\n")
+            #print("\n\n")
+
