@@ -30,12 +30,16 @@ class Say:
         else:
             file = None
 
+        if file is None and text == []: # no text, no attachment
+            await ctx.send_help()
+            return
+
         try: # we try to get a channel object
             channel = await commands.TextChannelConverter().convert(ctx, text[0])
-        except commands.BadArgument: # no channel was given
+        except (commands.BadArgument, IndexError): # no channel was given or text is empty (attachment)
             channel = ctx.channel
         else:
-            text.remove(text[0])
+            text.remove(text[0]) # we remove the channel from the text
 
         text = " ".join(text)
 
@@ -160,4 +164,3 @@ class Say:
                 await u.send(embed=embed)
 
             #print("\n\n")
-
