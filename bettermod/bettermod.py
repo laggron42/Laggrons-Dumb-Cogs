@@ -1253,7 +1253,7 @@ thumbnail's URL pictures:
             await self.bot.say("That user does not have any warning yet")
             return
         
-        if case < 0 or case > history[user.id]['total-warns'] or history[user.id]['case{}'.format(str(case))]['deleted'] == 1:
+        if "case"+str(case) not in history[user.id] or history[user.id]['case{}'.format(str(case))]['deleted'] == 1:
             await self.bot.say("That case does not exist or is already deleted")
             return
         
