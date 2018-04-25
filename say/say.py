@@ -104,9 +104,6 @@ class Say:
 
         while True:
 
-            #print("=== New loop ===\n"
-            #    "self.interaction = {}".format(self.interaction))
-
             if u.id not in self.interaction:
                 return
 
@@ -117,15 +114,6 @@ class Say:
                 self.interaction.remove(u.id)
                 return
 
-            #print("\nmessage :\n"
-            #    "   author = {}\n"
-            #    "   content = {}\n"
-            #    "   channel = {}\n"
-            #    "   guild = {}\n\n".format(
-            #        str(message.author), message.content[20:], str(message.channel), str(message.guild)
-            #    ))
-
-            #print(message.channel is discord.DMChannel)
             if message.author == u and isinstance(message.channel, discord.DMChannel):
                 print("Message from ctx author and in DM")
 
@@ -139,17 +127,9 @@ class Say:
                 
 
             elif message.channel != channel or message.author == channel.guild.me or message.author == u:
-                #print("Message blocked:\n"
-                #    "   message.channel != channel : {}\n"
-                #    "   message.author == ctx.guild.me : {}\n"
-                #    "   message.author == u : {}\n".format(
-                #        message.channel != channel, message.author == channel.guild.me, message.author == u
-                #    ))
                 pass
             
             else:
-                
-                #print("Message good !")
 
                 embed = discord.Embed()
                 embed.set_author(name="{} | {}".format(
@@ -162,5 +142,3 @@ class Say:
                     embed.set_image(url=message.attachments[0].url)
 
                 await u.send(embed=embed)
-
-            #print("\n\n")
