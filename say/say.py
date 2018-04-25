@@ -47,9 +47,9 @@ class Say:
             await channel.send(text, file=file)
 
         except discord.errors.Forbidden:
-            if not ctx.guild.me.permissions_for(channel).send_messages:
+            if not ctx.guild.me.permissions_in(channel).send_messages:
                 await ctx.send("I am not allowed to send messages in "+channel.mention)
-            elif not ctx.guild.me.permissions_for(channel).attach_files:
+            elif not ctx.guild.me.permissions_in(channel).attach_files:
                 await ctx.send("I am not allowed to upload files in "+channel.mention)
 
         if file is not None:
