@@ -21,6 +21,7 @@ class Say:
                 self.interaction.remove(user.id)
                 await channel.send("Session closed")
 
+
     async def say(self, ctx, text):
 
         text = [x for x in text]
@@ -55,6 +56,7 @@ class Say:
         if file is not None:
             os.remove(file.filename)
 
+
     @commands.command(name="say")
     @checks.guildowner()
     async def _say(self, ctx, *text: str):
@@ -82,6 +84,7 @@ class Say:
         if message is not None:
             await asyncio.sleep(1)
             await message.delete()
+
 
     @commands.command(name="interact")
     async def _interact(self, ctx, channel: discord.TextChannel = None):
