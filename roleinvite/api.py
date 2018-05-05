@@ -1,5 +1,4 @@
 import discord
-from discord.ext.commands import InviteConverter
 from .errors import Errors
 
 class API:
@@ -43,15 +42,15 @@ class API:
         
         Parameters:
         
-            `guild(discord.Guild)`   : The guild to get the invites from.
-            `roles(list)`            : A list of roles ID to add to the roles list.
-            `invite(discord.Invite or None)` : The invite to extend. Get it using `guild.invites()`. If not given, the roles will be added to the default autorole system.
+            `guild(discord.Guild)` : The guild to get the invites from.
+            `roles(list)`          : A list of roles ID to add to the roles list.
+            `invite(str)`          : The invite link to create/extend. Give `main` or `default` if you want to edit the main/default autorole system.
 
         Raises:
 
+            `NotInvite`         : The invite given is not a discord invite, not is is main/default.
             `CannotGetInvites`  : The bot doesn't have the permission to get the guild's invites
             `EmptyRolesList`    : The list of roles given is empty
-            `WrongInviteObject` : Cannot get the number of uses (due to the use of Client.get_invite())
             `InviteNotFound`    : The invite given doesn't exist in the guild.
         """
         
@@ -99,9 +98,9 @@ class API:
         
         Parameters:
         
-            `guild(discord.Guild)`   : The guild to get the invites from.
-            `roles(list)`            : A list of roles ID to remove from the roles list. If it's empty, it will remove the invite from the autorole system.
-            `invite(discord.Invite)` : The invite to remove roles from. If not given, the default autorole system will be removed (or lose roles)
+            `guild(discord.Guild)` : The guild to get the invites from.
+            `roles(list)`          : A list of roles ID to remove from the roles list. If it's empty, it will remove the invite from the autorole system.
+            `invite(str)`          : The invite to remove roles from. Give `main` or `default` to edit the main/default autorole system.
 
         Raises:
 

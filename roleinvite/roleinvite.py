@@ -31,7 +31,7 @@ class RoleInvite:
         self.api = API(self.bot, self.data) # loading the API
 
     __author__ = "retke (El Laggron)"
-    __version__ = "Laggrons-Dumb-Cogs/roleinvite beta 2"
+    __version__ = "Laggrons-Dumb-Cogs/roleinvite beta 2b"
 
     
     async def check(self, ctx):
@@ -125,8 +125,9 @@ class RoleInvite:
         Link a role to an invite for the autorole system.
 
         Example: `[p]roleset add https://discord.gg/laggron Member`
-        If this message still shows after using the command, you probably gave a wrong role name / invite.
-        If you want to link roles to the default autorole system (user joined with an unknown invite), give `main` instead of a discord invite.
+        If this message still shows after using the command, you probably gave a wrong role name.
+        If you want to link roles to the main autorole system (user joined with an unknown invite), give `main` instead of a discord invite.
+        If you want to link roles to the default autorole system (roles given regardless of the invite used), give `default` instead of a discord invite.
         """
 
         async def roles_iteration(invite: str):
@@ -240,7 +241,7 @@ class RoleInvite:
         
         Specify a `role` to only remove one role from the invite link list.
         Don't specify anything if you want to remove the invite itself.
-        If you want to edit the default autorole system's roles, give `main` instead of a discord invite.
+        If you want to edit the main/default autorole system's roles, give `main`/`default` instead of a discord invite.
         """
 
         bot_invites = await self.data.guild(ctx.guild).invites()
