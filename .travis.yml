@@ -4,3 +4,5 @@ python:
   - "3.6"
 install:
   - pip install --process-dependency-links Red-DiscordBot[voice]
+script:
+  - python3 -m compileall .
