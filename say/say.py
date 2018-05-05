@@ -13,6 +13,9 @@ class Say:
         self.bot = bot
         self.interaction = []
 
+    __author__ = "retke (El Laggron)"
+    __version__ = "Laggrons-Dumb-Cogs/say release 1.0"
+
     
     async def on_reaction_add(self, reaction, user):
         if user.id in self.interaction:
