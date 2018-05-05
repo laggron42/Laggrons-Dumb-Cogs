@@ -35,7 +35,7 @@ class API:
         return False
 
 
-    async def add_invite(self, guild: discord.Guild, roles: list, invite: str):
+    async def add_invite(self, guild: discord.Guild, invite: str, roles: list):
         """
         This is a coroutine.
         Add an invite link to the autorole system.
@@ -43,8 +43,8 @@ class API:
         Parameters:
         
             `guild(discord.Guild)` : The guild to get the invites from.
-            `roles(list)`          : A list of roles ID to add to the roles list.
             `invite(str)`          : The invite link to create/extend. Give `main` or `default` if you want to edit the main/default autorole system.
+            `roles(list)`          : A list of roles ID to add to the roles list.
 
         Raises:
 

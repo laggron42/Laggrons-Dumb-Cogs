@@ -31,7 +31,7 @@ class RoleInvite:
         self.api = API(self.bot, self.data) # loading the API
 
     __author__ = "retke (El Laggron)"
-    __version__ = "Laggrons-Dumb-Cogs/roleinvite beta 2b"
+    __version__ = "Laggrons-Dumb-Cogs/roleinvite beta 2c"
 
     
     async def check(self, ctx):
@@ -209,7 +209,7 @@ class RoleInvite:
         if invite == 'main':
             if not await roles_iteration(invite):
                 return
-            await self.api.add_invite(ctx.guild, [role.id], 'main')
+            await self.api.add_invite(ctx.guild, 'main', [role.id])
             await ctx.send("The role `{}` is now linked to the main autorole system. "
                         "(new members will get it if they join with an invite not registered)".format(role.name))
             return
@@ -217,7 +217,7 @@ class RoleInvite:
         elif invite == 'default':
             if not await roles_iteration(invite):
                 return
-            await self.api.add_invite(ctx.guild, [role.id], 'default')
+            await self.api.add_invite(ctx.guild, 'default', [role.id])
             await ctx.send("The role `{}` is now linked to the default autorole system. "
                         "(new members will always get this role, whatever invite he used.)".format(role.name))
             return
@@ -227,7 +227,7 @@ class RoleInvite:
                 
                 if not await roles_iteration(invite.url):
                     return
-                await self.api.add_invite(ctx.guild, [role.id], invite.url)
+                await self.api.add_invite(ctx.guild, invite.url, [role.id])
                 await ctx.send("The role `{}` is now linked to the invite {}".format(role.name, invite.url))
                 return
 
