@@ -1,3 +1,5 @@
+**If you are looking for the V3 Cogs, please switch to the v3 branch.**
+
 # Laggron's dumb cogs
 
 Hi I'm **El Laggron** from [Twentysix's Discord server](https://discord.gg/red) and I made this cog because I'm bored. Just that. And don't expect a lot from me, if the cog you're using works, this is mostly luck (or dark magic) because I'm a quite shit dev.
