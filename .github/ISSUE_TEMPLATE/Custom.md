@@ -1,20 +1,21 @@
 ---
-name: V3 Bug report
-about: Make a report about a bug in the v3 branch (Red V3)
+name: V2 Bug report
+about: Make a report about a bug in the master branch (Red V2)
 
 ---
 
 -----
 Before reporting a new bug, please make sure this is not already reported or fixed by a pull request
 Make sure the bot and the repo are updated.
-Update again from the launcher (type `redbot-launcher`, then select option 3), then type `[p]cog update`
+Update again from the launcher (option 3), then type `[p]cog update`
 -----
 
 ### Source of the problem
 
 - [ ] Say
 - [ ] RoleInvite
-- [ ] Other
+- [ ] BetterMod
+- [ ] Other
 
 ### Description
 
@@ -39,10 +40,10 @@ If applicable, add screenshots to help explain your problem.
 
 Discord.py's version:
 Red-DiscordBot last commit:
-(accessible with the `[p]info` command)
+(accessible with the `[p]info` and `[p]version` commands)
 
-Your cog's version:
-(get it by typing `[p]debug bot.get_cog('YourCog').__version__` **if the cog is loaded**, and keep the quotes. If you can't load the cog, find the cog path, open the .py file and search for `__version__`)
+Laggrons-Dumb-Cogs last commit:
+(if you're not sure about this, give 'latest')
 
 ### Additional context
 
