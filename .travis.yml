@@ -1,8 +1,8 @@
--language: python
--python:
+language: python
+python:
  - "3.5"
  - "3.6"
--install:
+install:
  - pip install --process-dependency-links Red-DiscordBot[voice]
--script:
+script:
  - python3 -m compileall .
