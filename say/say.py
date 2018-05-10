@@ -14,16 +14,20 @@ class Say:
         self.interaction = []
 
     __author__ = "retke (El Laggron)"
-    __version__ = "Laggrons-Dumb-Cogs/say release 1.0"
+    __version__ = "Laggrons-Dumb-Cogs/say release 1.1"
+
+
+    async def stop_interaction(self, user):
+        self.interaction.remove(user)
+        await user.send("Session closed")
 
     
     async def on_reaction_add(self, reaction, user):
-        if user.id in self.interaction:
+        if user in self.interaction:
             channel = reaction.message.channel
             if isinstance(channel, discord.DMChannel):
-                self.interaction.remove(user.id)
-                await channel.send("Session closed")
-
+                await self.stop_interaction(user.id)
+                
 
     async def say(self, ctx, text):
 
@@ -59,7 +63,6 @@ class Say:
         if file is not None:
             os.remove(file.filename)
 
-
     @commands.command(name="say")
     @checks.guildowner()
     async def _say(self, ctx, *text: str):
@@ -88,7 +91,6 @@ class Say:
             await asyncio.sleep(1)
             await message.delete()
 
-
     @commands.command(name="interact")
     async def _interact(self, ctx, channel: discord.TextChannel = None):
         """Start receiving and sending messages as the bot through DM"""
@@ -106,23 +108,21 @@ class Say:
         "React with ❌ on this message to end the session.\n"
         "If no message was send or received in the last 5 minutes, the request will time out and stop.".format(channel.mention))
         await message.add_reaction('❌')
-        self.interaction.append(u.id)
+        self.interaction.append(u)
 
         while True:
 
-            if u.id not in self.interaction:
+            if u not in self.interaction:
                 return
 
             try:
                 message = await self.bot.wait_for("message", timeout=300)
             except asyncio.TimeoutError:
                 await u.send("Request timed out. Session closed")
-                self.interaction.remove(u.id)
+                self.interaction.remove(u)
                 return
 
             if message.author == u and isinstance(message.channel, discord.DMChannel):
-                print("Message from ctx author and in DM")
-
                 if message.attachments != []:
                     os.system("wget " + message.attachments[0].url)
                     await channel.send(message.content, file=discord.File(message.attachments[0].filename))
@@ -131,12 +131,10 @@ class Say:
                 else:
                     await channel.send(message.content)
                 
-
             elif message.channel != channel or message.author == channel.guild.me or message.author == u:
                 pass
             
             else:
-
                 embed = discord.Embed()
                 embed.set_author(name="{} | {}".format(
                     str(message.author) , message.author.id), icon_url=message.author.avatar_url)
@@ -148,3 +146,7 @@ class Say:
                     embed.set_image(url=message.attachments[0].url)
 
                 await u.send(embed=embed)
+
+    def __unload(self):
+        for user in self.interaction:
+            self.bot.loop.create_task(self.stop_interaction(user))
