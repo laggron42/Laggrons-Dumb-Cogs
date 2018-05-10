@@ -18,7 +18,7 @@ If you want to know in details how to use my cogs, please go check the [Laggron'
 
 ## Contributing
 
-If you want to contribute to my work, I suggest you to read the [contribution guide](https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3/.github/CONTRIBUTION.md) to get started, know the rules, what to do and not to do. Coding skills are not necessarly required, so feel free to check!
+If you want to contribute to my work, I suggest you to read the [contribution guide](https://github.com/retke/Laggrons-Dumb-Cogs/blob/master/.github/CONTRIBUTING.md) to get started, know the rules, what to do and not to do. Coding skills are not necessarly required, so feel free to check!
 
 ## Supporting
 
