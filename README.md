@@ -2,6 +2,8 @@
 
 # Laggron's dumb cogs
 
+![](https://github.com/retke/Laggrons-Dumb-Cogs/blob/master/.github/RESSOURCES/BANNERS/Base_banner.png)
+
 Hi I'm **El Laggron** from [Twentysix's Discord server](https://discord.gg/red) and I made this cog because I'm bored. Just that. And don't expect a lot from me, if the cog you're using works, this is mostly luck (or dark magic) because I'm a quite shit dev.
 
 If you have any ideas of cogs, any bug you meet or any question, you can join my own [Discord server](https://discord.gg/WsTGeQM)
