@@ -1,5 +1,7 @@
 # Laggron's Dumb Cogs - Red V3
 
+![](https://github.com/retke/Laggrons-Dumb-Cogs/blob/master/.github/RESSOURCES/BANNERS/Base_banner.png)
+
 Hello and welcome there, this is the repository for the **Laggron's Dumb Cogs**, a buch of modules for [Red, the modular Discord bot](https://github.com/Cog-Creators/Red-DiscordBot/tree/V3/master) version 3. This is using the rewrite of [Discord.py library](https://github.com/Rapptz/discord.py/tree/rewrite).
 
 If you still don't have Red installed, I suggest you to install it [here](https://red-discordbot.readthedocs.io/en/v3-develop/), there's no coding skill required, it's the best bot you can have, it has everything (including the cogs of that repo)!
