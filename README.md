@@ -23,3 +23,15 @@ If you want to contribute to my work, I suggest you to read the [contribution gu
 ## Supporting
 
 I'm creating these cogs on my free time. If you like my work, please consider donating on my [Patreon](https://patreon.com/retke), you'll get some exclusive rewards for that!
+
+## Contact
+
+My name on Discord is `El Laggron#0260`.
+
+You can contact me on my [Discord server](https://discord.gg/WsTGeQM) or [Red main discord server](https://discord.gg/red). My DMs are open, feel free to contact me!
+
+You can also contact be by email: `laggron42@gmail.com`.
+
+## Comissions
+
+I may accept paid commissions. Please post them on [Red's Cog board](https://github.com/Cog-Creators/Cog-Board/blob/master/README.md). You can ping me (@retke) if you really want it to be made by me. However, motivation is important in a project, and I know that things that I don't like will never end, so I can refuse anything. That's why you should post comissions in the cog board, so everyone can see them and the one which has experience with what you're asking will answer.
