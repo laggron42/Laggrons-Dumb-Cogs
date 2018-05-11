@@ -1,3 +1,6 @@
+# InstantCommands by retke, aka El Laggron
+# Idea by Malarne
+
 import discord
 import asyncio # for coroutine checks
 import inspect # for checking is value is a class
@@ -20,14 +23,42 @@ class InstantCommands:
         self.data = Config.get_conf(self, 260)
 
         def_global = {
-            "commands" : {}
+            "commands" : []
         }
 
         self.data.register_global(**def_global)
+        bot.loop.create_task(self.load_command())
 
     __author__ = "retke (El Laggron)"
     __version__ = "Laggrons-Dumb-Cogs/instantcmd indev"
     # indev means in development
+
+
+    def get_function_from_str(self, command):
+        """
+        Execute a string, and try to get a function from it.
+        """
+
+        old_locals = dict(locals())
+        exec(command)
+
+        new_locals = dict(locals())
+        new_locals.pop('old_locals')
+
+        function = [b for a, b in new_locals.items() if a not in old_locals]
+        return function[0]
+
+
+    async def load_command(self):
+        """
+        Load all instant commands made.
+        This is executed on load with __init__
+        """
+            
+        _commands = await self.data.commands()
+        for command_string in _commands:
+            function = self.get_function_from_str(command_string)
+            self.bot.add_command(function) 
 
 
     # from DEV cog, made by Cog Creators (tekulvw)
@@ -73,7 +104,7 @@ class InstantCommands:
             await ctx.send("Question timed out.")
             return
             
-        function = self.cleanup_code(response.content)
+        function_string = self.cleanup_code(response.content)
 
         # we get all existing functions in this process
         # then we compare to the one after executing the code snippet
@@ -81,7 +112,7 @@ class InstantCommands:
         old_locals = dict(locals()) # we get its dict so it is a static value
 
         try:
-            exec(function)
+            exec(function_string)
         except Exception as e:
             message = ("An exception has occured while compiling your code:\n"
                         "```py\n"
@@ -107,6 +138,7 @@ class InstantCommands:
                 await ctx.send(message + "- You cannot give a class")
             elif not asyncio.iscoroutine(function[0]):
                 await ctx.send(message + "- Function is not a coroutine")
+            return
 
         function = function[0]
 
@@ -120,5 +152,35 @@ class InstantCommands:
             for page in pagify(message):
                 await ctx.send(page)
 
-        await ctx.send("The command {} was successfully added. "
-                        "It will appear under `No category` in the help message.")
+        async with self.data.commands() as _commands:
+            _commands.append(function_string)
+
+        await ctx.send("The command `{}` was successfully added. "
+                        "It will appear under `No category` in the help message.".format(function.name))
+
+    
+    @instantcmd.command(aliases=["del", "remove"])
+    async def delete(self, ctx, command: str):
+        """
+        Remove a command from the registered instant commands.
+        """
+
+        command = self.bot.get_command(command)
+
+        if not command:
+            await ctx.send("That command doesn't exist at all.")
+            return
+        
+        if command.cog_name or command.name == 'help':
+            await ctx.send("That command wasn't made with InstantCommands.")
+            return
+
+        async with self.data.commands() as _commands:
+            for command_string in _commands:
+                function = self.get_function_from_str(command_string)
+                if function.name == command.name:
+                    _commands.remove(command_string)
+
+        name = command.name # we register it before deleting
+        self.bot.remove_command(command.name)
+        await ctx.send("The command `{}` was successfully removed.".format(name))
