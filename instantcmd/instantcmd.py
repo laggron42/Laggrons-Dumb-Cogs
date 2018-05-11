@@ -23,15 +23,14 @@ class InstantCommands:
         self.data = Config.get_conf(self, 260)
 
         def_global = {
-            "commands" : []
+            "commands" : {}
         }
 
         self.data.register_global(**def_global)
         bot.loop.create_task(self.load_command())
 
     __author__ = "retke (El Laggron)"
-    __version__ = "Laggrons-Dumb-Cogs/instantcmd indev"
-    # indev means in development
+    __version__ = "Laggrons-Dumb-Cogs/instantcmd beta 1"
 
 
     def get_function_from_str(self, command):
@@ -56,7 +55,7 @@ class InstantCommands:
         """
             
         _commands = await self.data.commands()
-        for command_string in _commands:
+        for name, command_string in _commands.items():
             function = self.get_function_from_str(command_string)
             self.bot.add_command(function) 
 
@@ -86,6 +85,7 @@ class InstantCommands:
     async def create(self, ctx):
         """
         Instantly generate a new command from a code snippet.
+
         If you want to make a listener, give its name instead of the command name.
         """
 
@@ -151,9 +151,10 @@ class InstantCommands:
                                       e, e.__traceback__))))
             for page in pagify(message):
                 await ctx.send(page)
+            return
 
         async with self.data.commands() as _commands:
-            _commands.append(function_string)
+            _commands[function.name] = function_string
 
         await ctx.send("The command `{}` was successfully added. "
                         "It will appear under `No category` in the help message.".format(function.name))
@@ -165,22 +166,54 @@ class InstantCommands:
         Remove a command from the registered instant commands.
         """
 
-        command = self.bot.get_command(command)
+        _commands = await self.data.commands()
+        
+        if command not in _commands:
+            await ctx.send("That instant command doesn't exist")
+            return
+
+        _commands.pop(command)
+        await self.data.commands.set(_commands)
+        self.bot.remove_command(command)
+        await ctx.send("The command `{}` was successfully removed.".format(command))
+
+    
+    @instantcmd.command()
+    async def info(self, ctx, command: str = None):
+        """
+        List all existing commands made using Instant Commands.
+
+        If a command name is given and found in the Instant commands list, the code will be shown.
+        """
 
         if not command:
-            await ctx.send("That command doesn't exist at all.")
-            return
+            message = ("List of instant commands:\n"
+                        "```Diff\n")
+            _commands = await self.data.commands()
+
+            for name, command in _commands.items():
+                message += "+ {}\n".format(name)
+            message += ("```\n"
+                        "*Hint:* You can show the command source code by typing "
+                        "`{}instacmd info <command>`".format(ctx.prefix))
+
+            if _commands == {}:
+                await ctx.send("No instant command created.")
+                return
+
+            for page in pagify(message):
+                await ctx.send(message)
         
-        if command.cog_name or command.name == 'help':
-            await ctx.send("That command wasn't made with InstantCommands.")
-            return
+        else:
+            _commands = await self.data.commands()
 
-        async with self.data.commands() as _commands:
-            for command_string in _commands:
-                function = self.get_function_from_str(command_string)
-                if function.name == command.name:
-                    _commands.remove(command_string)
+            if command not in _commands:
+                await ctx.send("Command not found.")
+                return
 
-        name = command.name # we register it before deleting
-        self.bot.remove_command(command.name)
-        await ctx.send("The command `{}` was successfully removed.".format(name))
+            message = ("Source code for `{}{}`:\n".format(ctx.prefix, command) +
+                    "```Py\n"
+                    + _commands[command] +
+                    "```")
+            for page in pagify(message):
+                await ctx.send(page)
