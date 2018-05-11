@@ -14,7 +14,7 @@ class Say:
         self.interaction = []
 
     __author__ = "retke (El Laggron)"
-    __version__ = "Laggrons-Dumb-Cogs/say release 1.1"
+    __version__ = "Laggrons-Dumb-Cogs/say release 1.1b"
 
 
     async def stop_interaction(self, user):
@@ -91,7 +91,9 @@ class Say:
             await asyncio.sleep(1)
             await message.delete()
 
+   
     @commands.command(name="interact")
+    @checks.guildowner()
     async def _interact(self, ctx, channel: discord.TextChannel = None):
         """Start receiving and sending messages as the bot through DM"""
 
