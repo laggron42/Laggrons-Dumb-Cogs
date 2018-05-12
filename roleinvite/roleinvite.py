@@ -56,7 +56,6 @@ class RoleInvite:
     async def invite_not_found(self, ctx):
         # used if the invite gave isn't found
         await ctx.send("That invite cannot be found")
-        raise KeyError("fuck you")
         
 
     async def update_invites(self):
