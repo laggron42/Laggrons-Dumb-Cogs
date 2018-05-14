@@ -30,7 +30,7 @@ class InstantCommands:
         bot.loop.create_task(self.resume_commands())
 
     __author__ = "retke (El Laggron)"
-    __version__ = "Laggrons-Dumb-Cogs/instantcmd beta 2"
+    __version__ = "Laggrons-Dumb-Cogs/instantcmd beta 2b"
 
 
     def get_function_from_str(self, command):
@@ -150,7 +150,7 @@ class InstantCommands:
         if inspect.isclass(function[0]):
             await ctx.send(message + "- You cannot give a class")
             return
-        if not asyncio.iscoroutine(function[0]):
+        if not asyncio.iscoroutinefunction(function[0]):
             await ctx.send(message + "- Function is not a coroutine")
             return
 
