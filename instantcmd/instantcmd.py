@@ -27,7 +27,7 @@ class InstantCommands:
         }
 
         self.data.register_global(**def_global)
-        bot.loop.create_task(self.load_command())
+        bot.loop.create_task(self.resume_commands())
 
     __author__ = "retke (El Laggron)"
     __version__ = "Laggrons-Dumb-Cogs/instantcmd beta 1"
@@ -48,7 +48,19 @@ class InstantCommands:
         return function[0]
 
 
-    async def load_command(self):
+    def load_command_or_listener(self, function):
+        """
+        Add a command to discord.py or create a listener
+        """
+
+        if isinstance(function, commands.Command):
+            self.bot.add_command(function)
+        else:
+            self.bot.add_listener(function)
+
+
+
+    async def resume_commands(self):
         """
         Load all instant commands made.
         This is executed on load with __init__
@@ -57,7 +69,7 @@ class InstantCommands:
         _commands = await self.data.commands()
         for name, command_string in _commands.items():
             function = self.get_function_from_str(command_string)
-            self.bot.add_command(function) 
+            self.load_command_or_listener(function)
 
 
     # from DEV cog, made by Cog Creators (tekulvw)
@@ -128,36 +140,51 @@ class InstantCommands:
         function = [b for a, b in new_locals.items() if a not in old_locals]
         # if the user used the command correctly, we should have one async function
 
-        if len(function) != 1:
-            message = "Error: You need to create one async function in your code snippet:\n"
-            if len(function) < 1:
-                await ctx.send(message + "- No function detected")
-            elif len(function) > 1:
-                await ctx.send(message + "- More than one function found")
-            elif inspect.isclass(function[0]):
-                await ctx.send(message + "- You cannot give a class")
-            elif not asyncio.iscoroutine(function[0]):
-                await ctx.send(message + "- Function is not a coroutine")
+        message = "Error: You need to create one async function in your code snippet:\n"
+        if len(function) < 1:
+            await ctx.send(message + "- No function detected")
+            return
+        if len(function) > 1:
+            await ctx.send(message + "- More than one function found")
+            return
+        if inspect.isclass(function[0]):
+            await ctx.send(message + "- You cannot give a class")
+            return
+        if not asyncio.iscoroutine(function[0]):
+            await ctx.send(message + "- Function is not a coroutine")
             return
 
         function = function[0]
-
-        try:
-            self.bot.add_command(function)
-        except Exception as e:
-            message = ("An expetion has occured while adding the command to discord.py:\n"
-                        "```py\n"
-                        "{}```".format("".join(traceback.format_exception(type(e),
-                                      e, e.__traceback__))))
-            for page in pagify(message):
-                await ctx.send(page)
-            return
-
-        async with self.data.commands() as _commands:
-            _commands[function.name] = function_string
-
-        await ctx.send("The command `{}` was successfully added. "
-                        "It will appear under `No category` in the help message.".format(function.name))
+        if isinstance(function, commands.Command):
+            try:
+                self.bot.add_command(function)
+            except Exception as e:
+                message = ("An expetion has occured while adding the command to discord.py:\n"
+                            "```py\n"
+                            "{}```".format("".join(traceback.format_exception(type(e),
+                                          e, e.__traceback__))))
+                for page in pagify(message):
+                    await ctx.send(page)
+                return
+            else:
+                async with self.data.commands() as _commands:
+                    _commands[function.name] = function_string
+                await ctx.send("The command `{}` was successfully added.".format(function.name))
+        else:
+            try:
+                self.bot.add_listener(function)
+            except Exception as e:
+                message = ("An expetion has occured while adding the listener to discord.py:\n"
+                            "```py\n"
+                            "{}```".format("".join(traceback.format_exception(type(e),
+                                          e, e.__traceback__))))
+                for page in pagify(message):
+                    await ctx.send(page)
+                return
+            else:
+                async with self.data.commands() as _commands:
+                    _commands[function.__name__] = function_string
+                await ctx.send("The listener `{}` was successfully added.".format(function.__name__))
 
     
     @instantcmd.command(aliases=["del", "remove"])
@@ -172,10 +199,12 @@ class InstantCommands:
             await ctx.send("That instant command doesn't exist")
             return
 
+        if not self.bot.remove_command(command):
+            function = self.get_function_from_str(_commands[command])
+            self.bot.remove_listener(function)
         _commands.pop(command)
         await self.data.commands.set(_commands)
-        self.bot.remove_command(command)
-        await ctx.send("The command `{}` was successfully removed.".format(command))
+        await ctx.send("The command/listener `{}` was successfully removed.".format(command))
 
     
     @instantcmd.command()
