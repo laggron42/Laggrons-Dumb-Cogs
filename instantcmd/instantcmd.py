@@ -30,7 +30,7 @@ class InstantCommands:
         bot.loop.create_task(self.resume_commands())
 
     __author__ = "retke (El Laggron)"
-    __version__ = "Laggrons-Dumb-Cogs/instantcmd beta 1"
+    __version__ = "Laggrons-Dumb-Cogs/instantcmd beta 2"
 
 
     def get_function_from_str(self, command):
@@ -204,7 +204,10 @@ class InstantCommands:
             self.bot.remove_listener(function)
         _commands.pop(command)
         await self.data.commands.set(_commands)
-        await ctx.send("The command/listener `{}` was successfully removed.".format(command))
+        await ctx.send("The command/listener `{}` was successfully removed.\n\n"
+                        "**WARNING:** Since discord.py is glitchy with listeners, "
+                        "they can't be removed for now. Restart to remove them (if already removed using that command). "
+                        "If you want, join the conversation and refer discord.py#1284's issue.".format(command))
 
     
     @instantcmd.command()
