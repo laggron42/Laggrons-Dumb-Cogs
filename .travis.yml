@@ -1,0 +1,9 @@
+language: python
+python:
+ - "3.5"
+ - "3.6"
+pip:
+ - pip install git+git://github.com/Rapptz/discord.py.git#egg=discord.py[voice]
+ - pip install youtube_dl
+script:
+ - python3 -m compileall .
