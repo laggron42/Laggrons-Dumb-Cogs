@@ -360,7 +360,7 @@ thumbnail's URL pictures:
             await self.error(ctx)
 
         self.settings[server.id]['channels']['general'] = channel.id
-        await self.bot.say("Log messages and reports will be send to **" + channel.name + "**.")
+        await self.bot.say("Log messages and reports will be sent to **" + channel.name + "**.")
         try:
             dataIO.save_json('data/bettermod/settings.json', self.settings)
         except:
@@ -884,7 +884,7 @@ thumbnail's URL pictures:
             except:
                 await self.error(ctx)
         
-        await self.bot.say("Your report has been send to the moderation team")
+        await self.bot.say("Your report has been sent to the moderation team")
 
 
 
