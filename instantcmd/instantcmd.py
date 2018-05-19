@@ -5,6 +5,7 @@ import discord
 import asyncio # for coroutine checks
 import inspect # for checking is value is a class
 import traceback
+import random
 
 from discord.ext import commands
 from redbot.core import checks
@@ -25,21 +26,39 @@ class InstantCommands:
         def_global = {
             "commands" : {}
         }
-
         self.data.register_global(**def_global)
+
+        # these are the availables values when creating an instant cmd
+        self.env= {
+            "bot": self.bot,
+            "discord": discord,
+            "commands": commands,
+            "checks": checks
+        }
+        # resume all commands and listeners
         bot.loop.create_task(self.resume_commands())
 
     __author__ = "retke (El Laggron)"
     __version__ = "Laggrons-Dumb-Cogs/instantcmd beta 2b"
 
+    
+    def get_config_identifier(self, name):
+        """Get a random ID from a string for Config"""
+        
+        random.seed(name)
+        identifier = random.randint(0, 999999)
+        self.env["config"] = Config.get_conf(self, identifier)
 
-    def get_function_from_str(self, command):
+
+    def get_function_from_str(self, command, name):
         """
         Execute a string, and try to get a function from it.
         """
 
+        self.get_config_identifier(name)
+
         old_locals = dict(locals())
-        exec(command)
+        exec(command, self.environement)
 
         new_locals = dict(locals())
         new_locals.pop('old_locals')
@@ -68,7 +87,7 @@ class InstantCommands:
             
         _commands = await self.data.commands()
         for name, command_string in _commands.items():
-            function = self.get_function_from_str(command_string)
+            function = self.get_function_from_str(command_string, name)
             self.load_command_or_listener(function)
 
 
@@ -94,7 +113,7 @@ class InstantCommands:
 
     
     @instantcmd.command()
-    async def create(self, ctx):
+    async def create(self, ctx, name: str):
         """
         Instantly generate a new command from a code snippet.
 
@@ -117,6 +136,7 @@ class InstantCommands:
             return
             
         function_string = self.cleanup_code(response.content)
+        self.get_config_identifier()
 
         # we get all existing functions in this process
         # then we compare to the one after executing the code snippet
@@ -124,7 +144,7 @@ class InstantCommands:
         old_locals = dict(locals()) # we get its dict so it is a static value
 
         try:
-            exec(function_string)
+            exec(function_string, self.environement)
         except Exception as e:
             message = ("An exception has occured while compiling your code:\n"
                         "```py\n"
@@ -140,24 +160,31 @@ class InstantCommands:
         function = [b for a, b in new_locals.items() if a not in old_locals]
         # if the user used the command correctly, we should have one async function
 
-        message = "Error: You need to create one async function in your code snippet:\n"
         if len(function) < 1:
-            await ctx.send(message + "- No function detected")
+            await ctx.send("Error: No function detected")
             return
         if len(function) > 1:
-            await ctx.send(message + "- More than one function found")
+            await ctx.send("Error: More than one function found")
             return
         if inspect.isclass(function[0]):
-            await ctx.send(message + "- You cannot give a class")
-            return
-        if not asyncio.iscoroutinefunction(function[0]):
-            await ctx.send(message + "- Function is not a coroutine")
+            await ctx.send("Error: You cannot give a class")
             return
 
         function = function[0]
         if isinstance(function, commands.Command):
+
+            if name != function.name:
+                await ctx.send("Error: The command's name is different than what you gave when initializing the command.\n")
+                return
+
+            async with self.data.commands() as _commands:
+                if name in _commands:
+                    await ctx.send("Error: That listener is already registered.")
+                    return
+
             try:
                 self.bot.add_command(function)
+
             except Exception as e:
                 message = ("An expetion has occured while adding the command to discord.py:\n"
                             "```py\n"
@@ -166,13 +193,26 @@ class InstantCommands:
                 for page in pagify(message):
                     await ctx.send(page)
                 return
+
             else:
                 async with self.data.commands() as _commands:
                     _commands[function.name] = function_string
                 await ctx.send("The command `{}` was successfully added.".format(function.name))
+
         else:
+
+            if name != function.__name__:
+                await ctx.send("Error: The listener's name is different than what you gave when initializing the command.\n")
+                return
+
+            async with self.data.commands() as _commands:
+                if name in _commands:
+                    await ctx.send("Error: That listener is already registered.")
+                    return
+
             try:
                 self.bot.add_listener(function)
+
             except Exception as e:
                 message = ("An expetion has occured while adding the listener to discord.py:\n"
                             "```py\n"
@@ -181,6 +221,7 @@ class InstantCommands:
                 for page in pagify(message):
                     await ctx.send(page)
                 return
+
             else:
                 async with self.data.commands() as _commands:
                     _commands[function.__name__] = function_string
@@ -200,7 +241,7 @@ class InstantCommands:
             return
 
         if not self.bot.remove_command(command):
-            function = self.get_function_from_str(_commands[command])
+            function = self.get_function_from_str(_commands[command], command)
             self.bot.remove_listener(function)
         _commands.pop(command)
         await self.data.commands.set(_commands)
