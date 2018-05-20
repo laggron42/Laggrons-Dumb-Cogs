@@ -13,7 +13,6 @@ class Errors:
         """
         pass
 
-
     class NotInvite:
         """
         The invite sent is not found as a discord.Invite object.
