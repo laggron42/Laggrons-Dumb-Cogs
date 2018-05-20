@@ -1,6 +1,7 @@
 import discord
 from .errors import Errors
 
+
 class API:
     """
     Interact with roleinvite using these functions.
@@ -12,7 +13,6 @@ class API:
         self.bot = bot
         self.data = config
 
-    
     async def has_invites(self, guild):
         """
         This is a coroutine.
@@ -30,10 +30,9 @@ class API:
 
         invites = await self.data.guild(guild).invites()
         for invite in invites:
-            if invite != 'default':
+            if invite != "default":
                 return True
         return False
-
 
     async def add_invite(self, guild: discord.Guild, invite: str, roles: list):
         """
@@ -53,43 +52,49 @@ class API:
             `EmptyRolesList`    : The list of roles given is empty
             `InviteNotFound`    : The invite given doesn't exist in the guild.
         """
-        
+
         invites = await self.data.guild(guild).invites()
-  
-        if all(invite != x for x in ['default', 'main']): # the invite given is not default
-          
+
+        if all(
+            invite != x for x in ["default", "main"]
+        ):  # the invite given is not default
+
             try:
                 invite_object = await self.bot.get_invite(invite)
             except discord.errors.NotFound:
-                raise Errors.NotInvite("Cannot get discord.Invite object from " + invite)
-        
+                raise Errors.NotInvite(
+                    "Cannot get discord.Invite object from " + invite
+                )
+
             try:
                 guild_invite = await guild.invites()
             except discord.errors.Forbidden:
-                raise Errors.CannotGetInvites("The Manage server permission is needed for this function")
-      
+                raise Errors.CannotGetInvites(
+                    "The Manage server permission is needed for this function"
+                )
+
             invite_object = discord.utils.get(guild_invite, code=invite_object.code)
             if not invite_object:
-                raise Errors.InviteNotFound("The invite given doesn't exist in that guild")
-           
-        elif all(invite != x for i in ['default', 'main']):
-            raise Errors.NotInvite("The invite sent isn't a discord.Invite, not it is main/default")
-        
+                raise Errors.InviteNotFound(
+                    "The invite given doesn't exist in that guild"
+                )
+
+        elif all(invite != x for i in ["default", "main"]):
+            raise Errors.NotInvite(
+                "The invite sent isn't a discord.Invite, not it is main/default"
+            )
+
         if roles == []:
             raise Errors.EmptyRolesList("No roles to add to the invite")
-        
+
         if invite not in invites:
-            invites[invite] = {
-                "roles" : [],
-                "uses"  : None
-            }
-        
-        invites[invite]['roles'].extend(roles)
-        if all(invite != x for x in ['default', 'main']):
-            invites[invite]['uses'] = invite_object.uses
+            invites[invite] = {"roles": [], "uses": None}
+
+        invites[invite]["roles"].extend(roles)
+        if all(invite != x for x in ["default", "main"]):
+            invites[invite]["uses"] = invite_object.uses
 
         await self.data.guild(guild).invites.set(invites)
-
 
     async def remove_invite(self, guild: discord.Guild, invite: str, roles: list = []):
         """
@@ -106,20 +111,21 @@ class API:
 
             `KeyError` : The invite given doesn't exist.
         """
-        
+
         invites = await self.data.guild(guild).invites()
 
         if invite not in invites:
             raise KeyError("That invite was never added.")
-        
+
         if roles == []:
             # all roles will be removed
             del invites[invite]
         else:
-            invites[invite]['roles'] = [x for x in invites[invite]['roles'] if x not in roles]
+            invites[invite]["roles"] = [
+                x for x in invites[invite]["roles"] if x not in roles
+            ]
         await self.data.guild(guild).invites.set(invites)
 
-    
     async def get_invites(self, guild):
         """
         This is a coroutine.
