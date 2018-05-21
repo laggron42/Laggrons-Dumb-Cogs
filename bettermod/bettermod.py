@@ -920,11 +920,13 @@ thumbnail's URL pictures:
                 return
 
         report = discord.Embed(title="Report", description="A user reported someone for a abusive behaviour")
-        report.add_field(name="From", value=author.mention, inline=True)
-        report.add_field(name="To", value=user.mention, inline=True)
+        report.add_field(name="From", value="**Name:** {}\n**ID: {}".format(
+            str(author), author.id), inline=True)
+        report.add_field(name="To", value="**Name:** {}\n**ID: {}".format(
+            str(user), user.id), inline=True)
         report.add_field(name="Channel", value=ctx.message.channel.mention, inline=True)
-        if author.voice.voice_channel is not None:
-            report.add_field(name="Voice Channel", value=author.voice.voice_channel.name, inline=True)
+        if user.voice.voice_channel is not None:
+            report.add_field(name="Reported user voice channel", value=user.voice.voice_channel.name, inline=True)
 
         report.set_author(name="{}".format(user.name), icon_url=user.avatar_url)
         report.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
