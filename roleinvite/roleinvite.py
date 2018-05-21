@@ -15,6 +15,7 @@ from .errors import Errors
 class RoleInvite:
     """
     Server autorole following the invite the user used to join the server
+
     Report a bug or ask a question: https://discord.gg/WsTGeQ
     Full documentation and FAQ: https://github.com/retke/Laggrons-Dumb-Cogs/wiki
     """
@@ -30,6 +31,26 @@ class RoleInvite:
 
     __author__ = "retke (El Laggron)"
     __version__ = "Laggrons-Dumb-Cogs/roleinvite beta 2c"
+    __info__ = {
+        "bot_version": "3.0.0b9",
+        "description": (
+            "Autorole based on the invite the user used.\n"
+            "If the user joined using invite x, he will get "
+            "a list of roles linked to invite x."
+        ),
+        "hidden": False,
+        "install_msg": (
+            "Thanks for installing the cog. Please check the wiki "
+            "for all informations about the cog.\n"
+            "https://github.com/retke/Laggrons-Dumb-Cogs/wiki\n"
+            "Join the discord server for questions or suggestions."
+            "https://discord.gg/WsTGeQ"
+        ),
+        "required_cogs": [],
+        "requirements": [],
+        "short": "Autorole based on server's invites",
+        "tags": ["autorole", "role", "join", "invite"],
+    }
 
     async def check(self, ctx):
         # Used for author confirmation
@@ -73,7 +94,7 @@ class RoleInvite:
                 await self.data.guild(guild_id).clear()
                 continue
 
-            if await api.has_invites(guild):
+            if await self.api.has_invites(guild):
                 # we need to request guild invites, which requires manage server perm
                 # if there's only the default autorole, no need to fetch that
 
@@ -87,7 +108,6 @@ class RoleInvite:
                         "The manage_roles permission was lost. "
                         "RoleInvite is now disabled on this guild."
                     )
-                    return
             else:
                 invites = None
 
@@ -165,9 +185,7 @@ class RoleInvite:
             return True
 
         if role.position >= ctx.guild.me.top_role.position:
-            await ctx.send(
-                "That role is higher than mine. I can't add it to new users."
-            )
+            await ctx.send("That role is higher than mine. I can't add it to new users.")
             return
 
         if await commands.InviteConverter.convert(self, ctx, invite):
@@ -237,9 +255,7 @@ class RoleInvite:
                     return
                 await self.api.add_invite(ctx.guild, invite.url, [role.id])
                 await ctx.send(
-                    "The role `{}` is now linked to the invite {}".format(
-                        role.name, invite.url
-                    )
+                    "The role `{}` is now linked to the invite {}".format(role.name, invite.url)
                 )
                 return
 
@@ -270,34 +286,26 @@ class RoleInvite:
                     roles = [get(ctx.guild.roles, id=x) for x in bot_invite["roles"]]
 
                     if invite == "main":
-                        message = (
-                            "You're about to remove all roles linked to the main autorole.\n"
-                        )
+                        message = "You're about to remove all roles linked to the main autorole.\n"
                     elif invite == "default":
                         message = (
                             "You're about to remove all roles linked to the default autorole.\n"
                         )
                     else:
-                        message = (
-                            "You're about to remove all roles linked to this invite.\n"
-                        )
+                        message = "You're about to remove all roles linked to this invite.\n"
 
                     message += (
                         "```Diff\n"
                         "List of roles:\n\n"
                         "+ {}\n"
                         "```\n\n"
-                        "Proceed? (yes/no)\n\n".format(
-                            "\n+ ".join([x.name for x in roles])
-                        )
+                        "Proceed? (yes/no)\n\n".format("\n+ ".join([x.name for x in roles]))
                     )
 
                     if len(bot_invite["roles"]) > 1:
                         message += (
                             "Remember that you can remove a single role from this list by typing "
-                            "`{}roleset remove {} [role name]`".format(
-                                ctx.prefix, invite
-                            )
+                            "`{}roleset remove {} [role name]`".format(ctx.prefix, invite)
                         )
 
                     await ctx.send(message)
@@ -306,9 +314,7 @@ class RoleInvite:
                         return
 
                     await self.api.remove_invite(ctx.guild, invite=invite)
-                    await ctx.send(
-                        "The invite {} has been removed from the list.".format(invite)
-                    )
+                    await ctx.send("The invite {} has been removed from the list.".format(invite))
                     return  # prevents a RuntimeError because of dict changes
 
                 else:
@@ -382,8 +388,7 @@ class RoleInvite:
                 )
             else:
                 embed.add_field(
-                    name="Roles linked to " + str(i),
-                    value="\n".join([x.name for x in roles]),
+                    name="Roles linked to " + str(i), value="\n".join([x.name for x in roles])
                 )
             embed.set_footer(text="These roles are given if the user joined using " + i)
 
@@ -466,9 +471,7 @@ class RoleInvite:
                     reason = "Joined with " + invite
 
                 try:
-                    await member.add_roles(
-                        role, reason="Roleinvite autorole. " + reason
-                    )
+                    await member.add_roles(role, reason="Roleinvite autorole. " + reason)
 
                 except discord.errors.Forbidden:
 
@@ -481,7 +484,7 @@ class RoleInvite:
                             "Now removed from the list."
                         )
 
-                    if not ctx.guild.me.guild_permissions.manage_roles:
+                    if not member.guild.me.guild_permissions.manage_roles:
                         # manage_roles permission was removed
                         # we disable the autorole to prevent more errors
                         await self.data.guild(guild).enabled.set(False)
@@ -489,7 +492,6 @@ class RoleInvite:
                             "The manage_roles permission was lost. "
                             "RoleInvite is now disabled on this guild."
                         )
-                        return False
             return True
 
         guild = member.guild
@@ -512,7 +514,6 @@ class RoleInvite:
                     "The manage_server permission was lost. "
                     "RoleInvite is now disabled on this guild."
                 )
-                return
         else:
             return
 

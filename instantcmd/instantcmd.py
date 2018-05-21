@@ -29,18 +29,28 @@ class InstantCommands:
         self.data.register_global(**def_global)
 
         # these are the availables values when creating an instant cmd
-        self.env = {
-            "bot": self.bot,
-            "discord": discord,
-            "commands": commands,
-            "checks": checks,
-        }
+        self.env = {"bot": self.bot, "discord": discord, "commands": commands, "checks": checks}
         # resume all commands and listeners
         bot.loop.create_task(self.resume_commands())
 
     __author__ = "retke (El Laggron)"
     __version__ = "Laggrons-Dumb-Cogs/instantcmd beta 2b"
-
+    __info__ = {
+        "bot_version": "3.0.0b9",
+        "description": "Command and listener maker from code snippet through Discord",
+        "hidden": False,
+        "install_msg": (
+            "Thanks for installing the cog. Please check the wiki "
+            "for all informations about the cog.\n"
+            "https://github.com/retke/Laggrons-Dumb-Cogs/wiki\n"
+            "Join the discord server for questions or suggestions."
+            "https://discord.gg/WsTGeQ"
+        ),
+        "required_cogs": [],
+        "requirements": [],
+        "short": "Instant command maker",
+        "tags": ["command", "listener", "code"],
+    }
 
     def get_config_identifier(self, name):
         """
@@ -51,7 +61,7 @@ class InstantCommands:
         identifier = random.randint(0, 999999)
         # self.env["config"] = Config.get_conf(self, identifier)
 
-    def get_function_from_str(self, command, name = None):
+    def get_function_from_str(self, command, name=None):
         """
         Execute a string, and try to get a function from it.
         """
@@ -143,9 +153,7 @@ class InstantCommands:
             message = (
                 "An exception has occured while compiling your code:\n"
                 "```py\n"
-                "{}```".format(
-                    "".join(traceback.format_exception(type(e), e, e.__traceback__))
-                )
+                "{}```".format("".join(traceback.format_exception(type(e), e, e.__traceback__)))
             )
             for page in pagify(message):
                 await ctx.send(page)
@@ -166,9 +174,7 @@ class InstantCommands:
                 message = (
                     "An expetion has occured while adding the command to discord.py:\n"
                     "```py\n"
-                    "{}```".format(
-                        "".join(traceback.format_exception(type(e), e, e.__traceback__))
-                    )
+                    "{}```".format("".join(traceback.format_exception(type(e), e, e.__traceback__)))
                 )
                 for page in pagify(message):
                     await ctx.send(page)
@@ -177,9 +183,7 @@ class InstantCommands:
             else:
                 async with self.data.commands() as _commands:
                     _commands[function.name] = function_string
-                await ctx.send(
-                    "The command `{}` was successfully added.".format(function.name)
-                )
+                await ctx.send("The command `{}` was successfully added.".format(function.name))
 
         else:
 
@@ -195,9 +199,7 @@ class InstantCommands:
                 message = (
                     "An expetion has occured while adding the listener to discord.py:\n"
                     "```py\n"
-                    "{}```".format(
-                        "".join(traceback.format_exception(type(e), e, e.__traceback__))
-                    )
+                    "{}```".format("".join(traceback.format_exception(type(e), e, e.__traceback__)))
                 )
                 for page in pagify(message):
                     await ctx.send(page)
@@ -207,9 +209,7 @@ class InstantCommands:
                 async with self.data.commands() as _commands:
                     _commands[function.__name__] = function_string
                 await ctx.send(
-                    "The listener `{}` was successfully added.".format(
-                        function.__name__
-                    )
+                    "The listener `{}` was successfully added.".format(function.__name__)
                 )
 
     @instantcmd.command(aliases=["del", "remove"])
@@ -233,9 +233,7 @@ class InstantCommands:
             "The command/listener `{}` was successfully removed.\n\n"
             "**WARNING:** Since discord.py is glitchy with listeners, "
             "they can't be removed for now. Restart to remove them (if already removed using that command). "
-            "If you want, join the conversation and refer discord.py#1284's issue.".format(
-                command
-            )
+            "If you want, join the conversation and refer discord.py#1284's issue.".format(command)
         )
 
     @instantcmd.command()
