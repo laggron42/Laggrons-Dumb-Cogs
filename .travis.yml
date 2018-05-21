@@ -3,6 +3,7 @@ python:
  - "3.5"
  - "3.6"
 install:
+ - pip install -U --process-dependency-links Red-DiscordBot[voice]
  - pip install -U pipenv
  - pipenv install --dev
 script:
