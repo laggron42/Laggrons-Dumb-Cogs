@@ -45,15 +45,17 @@ def create_info_json(instance, file_name):
 
 def commit(token, build):
     if os.popen("git diff").read() != "":
-        
+
         os.system('git config user.name "Travis CI Auto-JSON"')
         os.system('git config user.email "travis@travis-ci.org"')
 
         os.system("git checkout v3")
         os.system("git add *.json")
 
-        os.system('git commit -m "Updated info.json files"')
-        os.system('git remote add github https://{}@github.com/retke/Laggrons-Dumb-Cogs.git')
+        os.system('git commit -m "Updated info.json files. Build #{}"'.format(build))
+        os.system(
+            "git remote add github https://{}@github.com/retke/Laggrons-Dumb-Cogs.git".format(token)
+        )
         os.system("git push github v3")
 
 
