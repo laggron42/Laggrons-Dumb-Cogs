@@ -314,6 +314,8 @@ class BetterMod:
 
             setting = self.settings[server.id]
             l_warn_embed_softban = 'None' if 'warning_embed_softban' in setting['thumbnail'] is False else setting['thumbnail']['warning_embed_softban']
+            l_colour_embed_softban = 'None' if 'warning_embed_softban' in setting['colour'] is False else setting['colour']['warning_embed_softban']
+            l_channel_embed_softban = 'None' if 'softban-warn' in setting['channels'] is False else setting['channels']['softban-warn']
 
             message = """Current Bettermod's settings on this server:
 
@@ -341,8 +343,8 @@ thumbnail's URL pictures:
     softban warning: {}
     ban warning: {}""".format(discord.utils.get(server.roles, id=setting['role']), setting['channels']['general'],
                               setting['channels']['report'], setting['channels']['simple-warn'], setting['channels']['kick-warn'],
-                              setting['channels']['softban-warn'], setting['channels']['ban-warn'], setting['colour']['report_embed'],
-                              setting['colour']['warning_embed_simple'],setting['colour']['warning_embed_kick'],
+                              l_channel_embed_softban, setting['channels']['ban-warn'], setting['colour']['report_embed'],
+                              l_colour_embed_softban, setting['colour']['warning_embed_kick'],
                               setting['colour']['warning_embed_softban'], setting['colour']['warning_embed_ban'],
                               setting['thumbnail']['report_embed'], setting['thumbnail']['warning_embed_simple'],
                               setting['thumbnail']['warning_embed_kick'], l_warn_embed_softban, setting['thumbnail']['warning_embed_ban'])
@@ -690,7 +692,7 @@ thumbnail's URL pictures:
                 return
 
     @thumbnail.command(pass_context=True, no_pm=True, name="softban", aliases="3")
-    async def ban_thumbnail(self, ctx, url: str):
+    async def softban_thumbnail(self, ctx, url: str):
         """Set the picture of the softban warning embed in modlog"""
 
         server = ctx.message.server
@@ -1162,7 +1164,10 @@ thumbnail's URL pictures:
         modlog.add_field(name="Reason", value=reason, inline=False)
         modlog.set_author(name=user.name, icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
-        modlog.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_softban'])
+        try:
+            modlog.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_softban'])
+        except:
+            pass
         try:
             modlog.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_softban'])
         except:
@@ -1174,7 +1179,10 @@ thumbnail's URL pictures:
         target.add_field(name="Moderator", value=author.mention, inline=False)
         target.add_field(name="Reason", value=reason, inline=False)
         target.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
-        target.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_softban'])
+        try:
+            target.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_softban'])
+        except:
+            pass
         try:
             target.color = discord.Colour(self.settings[server.id]['colour']['warning_embed_softban'])
         except:
