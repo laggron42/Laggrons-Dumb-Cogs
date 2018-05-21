@@ -37,7 +37,7 @@ class InstantCommands:
     __version__ = "Laggrons-Dumb-Cogs/instantcmd beta 2b"
     __info__ = {
         "bot_version": "3.0.0b9",
-        "description": "Command and listener maker from code snippet through Discord",
+        "description": "Command and listener maker from a code snippet through Discord",
         "hidden": False,
         "install_msg": (
             "Thanks for installing the cog. Please check the wiki "
