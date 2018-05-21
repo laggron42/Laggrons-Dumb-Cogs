@@ -1,11 +1,18 @@
 language: python
+
 python:
  - "3.5"
  - "3.6"
+
+env:
+  global:
+    PIPENV_IGNORE_VIRTUALENVS=1
+
 install:
  - pip install -U --process-dependency-links Red-DiscordBot[voice]
  - pip install -U pipenv
  - pipenv install --dev
+
 script:
  - pipenv run tox
  - python3 -m compileall .
