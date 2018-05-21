@@ -1,2 +1,1 @@
-{}
 {"author": "retke (El Laggron)", "bot_version": "3.0.0b9", "description": "Speak as if you were the bot.\nAllow file upload, rift with DM and specific destinations.", "hidden": false, "install_msg": "Thanks for installing the cog. Please check the wiki for all informations about the cog.\nhttps://github.com/retke/Laggrons-Dumb-Cogs/wiki\nJoin the discord server for questions or suggestions.https://discord.gg/WsTGeQ", "required_cogs": [], "requirements": [], "short": "Speak as if you were the bot", "tags": ["rift", "upload", "interact"]}
