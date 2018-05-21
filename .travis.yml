@@ -11,10 +11,9 @@ env:
 install:
  - pip install -U --process-dependency-links Red-DiscordBot[voice]
  - pip install -U --process-dependency-links git+https://github.com/Rapptz/discord.py@rewrite
- - pip install -U pipenv
- - pipenv install --dev
+ - pip install yarl==0.18.0
 
 script:
- - pipenv run tox
+ - black --check -l 100 .
  - python3 -m compileall .
  - python3 info_deploy.py
