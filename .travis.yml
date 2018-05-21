@@ -3,10 +3,6 @@ language: python
 python:
  - "3.6"
 
-env:
-  global:
-    PIPENV_IGNORE_VIRTUALENVS=1
-
 install:
  - pip install -U --process-dependency-links Red-DiscordBot[voice]
  - pip install -U --process-dependency-links git+https://github.com/Rapptz/discord.py@rewrite

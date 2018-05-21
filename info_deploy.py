@@ -57,6 +57,11 @@ def commit(token, build):
             "git remote add github https://{}@github.com/retke/Laggrons-Dumb-Cogs.git".format(token)
         )
         os.system("git push github v3")
+        print("Created info.json files, successfully pushed to Github")
+        sys.exit(0)
+    else:
+        print("Docstring are the same, nothing to change.")
+        sys.exit(0)
 
 
 if __name__ == "__main__":
