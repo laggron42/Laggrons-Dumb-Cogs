@@ -924,7 +924,7 @@ thumbnail's URL pictures:
         report.add_field(name="To", value=user.mention, inline=True)
         report.add_field(name="Channel", value=ctx.message.channel.mention, inline=True)
         if author.voice.voice_channel is not None:
-            report.add_field(name="Voice Channel", value=author.voice.voice_channel.name, inline=True)
+            report.add_field(name="Voice Channel", value=user.voice.voice_channel.name, inline=True)
 
         report.set_author(name="{}".format(user.name), icon_url=user.avatar_url)
         report.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
