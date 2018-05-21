@@ -1308,9 +1308,6 @@ thumbnail's URL pictures:
             await self.error(ctx)
             return
 
-        if 'softban-warn' not in history[user.id]:
-            history[user.id]['softban-warn'] = 0
-
         if user is None:
             user = ctx.message.author
             allowed = True
@@ -1342,6 +1339,9 @@ thumbnail's URL pictures:
             else:
                 await self.bot.say("You don't have any warning yet")
                 return
+
+        if 'softban-warn' not in history[user.id]:
+            history[user.id]['softban-warn'] = 0
 
         if case < 0 or case > history[user.id]['total-warns']:
             await self.bot.say("That case does not exist")
