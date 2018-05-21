@@ -10,7 +10,7 @@ env:
 
 install:
  - pip install -U --process-dependency-links Red-DiscordBot[voice]
- - pip install -U --process-dependency-links --no-cache-dir discord.py==1.0.0a0
+ - pip install -U --process-dependency-links pip install git+https://github.com/Rapptz/discord.py@rewrite[voice]
  - pip install -U pipenv
  - pipenv install --dev
 
