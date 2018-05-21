@@ -16,6 +16,7 @@ from redbot.core.utils.chat_formatting import pagify
 class InstantCommands:
     """
     Generate a new command from a code snippet, without making a new cog.
+
     Report a bug or ask a question: https://discord.gg/WsTGeQ
     Full documentation and FAQ: https://github.com/retke/Laggrons-Dumb-Cogs/wiki
     """
@@ -40,27 +41,33 @@ class InstantCommands:
     __author__ = "retke (El Laggron)"
     __version__ = "Laggrons-Dumb-Cogs/instantcmd beta 2b"
 
+
     def get_config_identifier(self, name):
-        """Get a random ID from a string for Config"""
+        """
+        Get a random ID from a string for Config
+        """
 
         random.seed(name)
         identifier = random.randint(0, 999999)
-        self.env["config"] = Config.get_conf(self, identifier)
+        # self.env["config"] = Config.get_conf(self, identifier)
 
-    def get_function_from_str(self, command, name):
+    def get_function_from_str(self, command, name = None):
         """
         Execute a string, and try to get a function from it.
         """
 
-        self.get_config_identifier(name)
+        # self.get_config_identifier(name)
 
         old_locals = dict(locals())
-        exec(command, self.environement)
+        exec(command)
 
         new_locals = dict(locals())
         new_locals.pop("old_locals")
 
         function = [b for a, b in new_locals.items() if a not in old_locals]
+
+        if function == []:
+            raise KeyError("Nothing detected.")
         return function[0]
 
     def load_command_or_listener(self, function):
@@ -104,7 +111,7 @@ class InstantCommands:
             await ctx.send_help()
 
     @instantcmd.command()
-    async def create(self, ctx, name: str):
+    async def create(self, ctx):
         """
         Instantly generate a new command from a code snippet.
 
@@ -129,15 +136,9 @@ class InstantCommands:
             return
 
         function_string = self.cleanup_code(response.content)
-        self.get_config_identifier()
-
-        # we get all existing functions in this process
-        # then we compare to the one after executing the code snippet
-        # so we can find the function name
-        old_locals = dict(locals())  # we get its dict so it is a static value
 
         try:
-            exec(function_string, self.environement)
+            function = self.get_function_from_str(function_string)
         except Exception as e:
             message = (
                 "An exception has occured while compiling your code:\n"
@@ -149,34 +150,12 @@ class InstantCommands:
             for page in pagify(message):
                 await ctx.send(page)
             return
-
-        new_locals = dict(locals())
-        new_locals.pop("old_locals")  # we only want the exec() functions
-
-        function = [b for a, b in new_locals.items() if a not in old_locals]
         # if the user used the command correctly, we should have one async function
 
-        if len(function) < 1:
-            await ctx.send("Error: No function detected")
-            return
-        if len(function) > 1:
-            await ctx.send("Error: More than one function found")
-            return
-        if inspect.isclass(function[0]):
-            await ctx.send("Error: You cannot give a class")
-            return
-
-        function = function[0]
         if isinstance(function, commands.Command):
 
-            if name != function.name:
-                await ctx.send(
-                    "Error: The command's name is different than what you gave when initializing the command.\n"
-                )
-                return
-
             async with self.data.commands() as _commands:
-                if name in _commands:
+                if function.name in _commands:
                     await ctx.send("Error: That listener is already registered.")
                     return
 
@@ -204,14 +183,8 @@ class InstantCommands:
 
         else:
 
-            if name != function.__name__:
-                await ctx.send(
-                    "Error: The listener's name is different than what you gave when initializing the command.\n"
-                )
-                return
-
             async with self.data.commands() as _commands:
-                if name in _commands:
+                if function.__name__ in _commands:
                     await ctx.send("Error: That listener is already registered.")
                     return
 
