@@ -16,4 +16,4 @@ install:
 script:
  - black --check -l 100 .
  - python3 -m compileall .
- - python3 info_deploy.py
+ - python3 info_deploy.py $GH_TOKEN $TRAVIS_BUILD_NUMBER

@@ -5,6 +5,7 @@
 
 import os
 import json
+import sys
 
 from instantcmd import InstantCommands
 from roleinvite import RoleInvite
@@ -42,24 +43,22 @@ def create_info_json(instance, file_name):
     file.close()
 
 
-def commit():
+def commit(token, build):
     if os.popen("git diff").read() != "":
-        print(1)
+        
         os.system('git config user.name "Travis CI Auto-JSON"')
-        print(2)
         os.system('git config user.email "travis@travis-ci.org"')
-        print(3)
+
         os.system("git checkout v3")
-        print(4)
         os.system("git add *.json")
-        print(5)
+
         os.system('git commit -m "Updated info.json files"')
-        print(6)
-        os.system("git push")
+        os.system('git remote add github https://{}@github.com/retke/Laggrons-Dumb-Cogs.git')
+        os.system("git push github v3")
 
 
 if __name__ == "__main__":
     create_info_json(InstantCommands, "instantcmd")
     create_info_json(RoleInvite, "roleinvite")
     create_info_json(Say, "say")
-    commit()
+    commit(token=sys.argv[1], build=sys.argv[2])
