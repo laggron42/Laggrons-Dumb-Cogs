@@ -383,7 +383,7 @@ thumbnail's URL pictures:
         Give no argument to disable mention."""
 
         if ctx.message.server.id not in self.settings:
-            await self.init(ctx.message.server)
+            await self.init(ctx.message.server, ctx)
 
         if role is None:
             self.settings[ctx.message.server.id]["role"] = None
@@ -425,7 +425,7 @@ thumbnail's URL pictures:
         server = ctx.message.server
 
         if ctx.message.server.id not in self.settings:
-            await self.init(ctx.message.server)
+            await self.init(ctx.message.server, ctx)
 
         if self.settings[server.id]['proof'] is False:
             self.settings[server.id]['proof'] = True
