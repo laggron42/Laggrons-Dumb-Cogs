@@ -8,7 +8,12 @@ from discord.ext import commands
 
 
 class Say:
-    """Speak as if you were the bot"""
+    """
+    Speak as if you were the bot
+    
+    Report a bug or ask a question: https://discord.gg/WsTGeQ
+    Full documentation and FAQ: https://github.com/retke/Laggrons-Dumb-Cogs/wiki
+    """
 
     def __init__(self, bot):
         self.bot = bot
@@ -16,6 +21,25 @@ class Say:
 
     __author__ = "retke (El Laggron)"
     __version__ = "Laggrons-Dumb-Cogs/say release 1.1b"
+    __info__ = {
+        "bot_version": "3.0.0b9",
+        "description": (
+            "Speak as if you were the bot.\n"
+            "Allow file upload, rift with DM and specific destinations."
+        ),
+        "hidden": False,
+        "install_msg": (
+            "Thanks for installing the cog. Please check the wiki "
+            "for all informations about the cog.\n"
+            "https://github.com/retke/Laggrons-Dumb-Cogs/wiki\n"
+            "Join the discord server for questions or suggestions."
+            "https://discord.gg/WsTGeQ"
+        ),
+        "required_cogs": [],
+        "requirements": [],
+        "short": "Speak as if you were the bot",
+        "tags": ["rift", "upload", "interact"],
+    }
 
     async def stop_interaction(self, user):
         self.interaction.remove(user)
@@ -57,9 +81,7 @@ class Say:
 
         except discord.errors.Forbidden:
             if not ctx.guild.me.permissions_in(channel).send_messages:
-                await ctx.send(
-                    "I am not allowed to send messages in " + channel.mention
-                )
+                await ctx.send("I am not allowed to send messages in " + channel.mention)
             elif not ctx.guild.me.permissions_in(channel).attach_files:
                 await ctx.send("I am not allowed to upload files in " + channel.mention)
 
@@ -135,8 +157,7 @@ class Say:
                 if message.attachments != []:
                     os.system("wget " + message.attachments[0].url)
                     await channel.send(
-                        message.content,
-                        file=discord.File(message.attachments[0].filename),
+                        message.content, file=discord.File(message.attachments[0].filename)
                     )
                     os.remove(message.attachments[0].filename)
 

@@ -55,16 +55,12 @@ class API:
 
         invites = await self.data.guild(guild).invites()
 
-        if all(
-            invite != x for x in ["default", "main"]
-        ):  # the invite given is not default
+        if all(invite != x for x in ["default", "main"]):  # the invite given is not default
 
             try:
                 invite_object = await self.bot.get_invite(invite)
             except discord.errors.NotFound:
-                raise Errors.NotInvite(
-                    "Cannot get discord.Invite object from " + invite
-                )
+                raise Errors.NotInvite("Cannot get discord.Invite object from " + invite)
 
             try:
                 guild_invite = await guild.invites()
@@ -75,14 +71,10 @@ class API:
 
             invite_object = discord.utils.get(guild_invite, code=invite_object.code)
             if not invite_object:
-                raise Errors.InviteNotFound(
-                    "The invite given doesn't exist in that guild"
-                )
+                raise Errors.InviteNotFound("The invite given doesn't exist in that guild")
 
         elif all(invite != x for i in ["default", "main"]):
-            raise Errors.NotInvite(
-                "The invite sent isn't a discord.Invite, not it is main/default"
-            )
+            raise Errors.NotInvite("The invite sent isn't a discord.Invite, not it is main/default")
 
         if roles == []:
             raise Errors.EmptyRolesList("No roles to add to the invite")
@@ -121,9 +113,7 @@ class API:
             # all roles will be removed
             del invites[invite]
         else:
-            invites[invite]["roles"] = [
-                x for x in invites[invite]["roles"] if x not in roles
-            ]
+            invites[invite]["roles"] = [x for x in invites[invite]["roles"] if x not in roles]
         await self.data.guild(guild).invites.set(invites)
 
     async def get_invites(self, guild):
