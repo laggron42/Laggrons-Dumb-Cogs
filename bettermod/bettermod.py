@@ -62,7 +62,7 @@ class BetterMod:
             await self.bot.say(message_file)
 
         if ctx.message.server.id not in self.settings:
-            await self.init(ctx.message.server)
+            await self.init(ctx.message.server, ctx)
 
     async def init(self, server, ctx):
         # called on every command
@@ -315,7 +315,7 @@ class BetterMod:
             setting = self.settings[server.id]
             l_warn_embed_softban = 'None' if 'warning_embed_softban' in setting['thumbnail'] is False else setting['thumbnail']['warning_embed_softban']
             l_colour_embed_softban = 'None' if 'warning_embed_softban' in setting['colour'] is False else setting['colour']['warning_embed_softban']
-            l_channel_embed_softban = 'None' if 'softban-warn' in setting['channels'] is False else setting['channels']['softban-warn']
+            l_channel_embed_softban = 'None' if 'softban_warn' in setting['channels'] is False else setting['channels']['softban_warn']
 
             message = """Current Bettermod's settings on this server:
 
