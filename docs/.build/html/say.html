@@ -1,0 +1,322 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Say &mdash; Laggron&#39;s Dumb Cogs  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to Laggron’s Dumb Cogs’s documentation!" href="index.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Laggron's Dumb Cogs
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Cog guides:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Say</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">say</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#saydelete">saydelete</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#interact">interact</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Laggron's Dumb Cogs</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Say</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/say.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="say">
+<h1>Say<a class="headerlink" href="#say" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">These docs refers to the <strong>release 1.1</strong> version.
+Maje sure you’re under the good version by typing <code class="docutils literal"><span class="pre">[p]cog</span> <span class="pre">update</span></code>.</p>
+</div>
+<p>This is the guide for the <code class="docutils literal"><span class="pre">say</span></code> cog. Everything you need is here.</p>
+<p><code class="docutils literal"><span class="pre">[p]</span></code> is considered as your prefix.</p>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>To install the cog, first load the downloader cog, included
+in core Red.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="n">load</span> <span class="n">downloader</span>
+</pre></div>
+</div>
+<p>Then you will need to install the Laggron’s Dumb Cogs repository:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="n">repo</span> <span class="n">add</span> <span class="n">Laggrons</span><span class="o">-</span><span class="n">Dumb</span><span class="o">-</span><span class="n">Cogs</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">retke</span><span class="o">/</span><span class="n">Laggrons</span><span class="o">-</span><span class="n">Dumb</span><span class="o">-</span><span class="n">Cogs</span> <span class="n">v3</span>
+</pre></div>
+</div>
+<p>Finally, you can install the cog:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="n">cog</span> <span class="n">install</span> <span class="n">Laggrons</span><span class="o">-</span><span class="n">Dumb</span><span class="o">-</span><span class="n">Cogs</span> <span class="n">say</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>The cog is not loaded by default.
+To load it, type this:</p>
+<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="n">load</span> <span class="n">Say</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>Here’s the list of all commands of this cog.</p>
+<div class="section" id="id1">
+<h3>say<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p><strong>Syntax</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="n">say</span> <span class="p">[</span><span class="n">channel</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">text</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p><strong>Description</strong></p>
+<p>Make the bot say <code class="docutils literal"><span class="pre">&lt;text&gt;</span></code> in the channel you want. If specified,
+it is send in a different channel.</p>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p><strong>Examples</strong></p>
+<div class="last highlight-none"><div class="highlight"><pre><span></span>[p]say Hello it&#39;s me, Red bot!
+[p]say #general Hello, it&#39;s still me but from a different channel!
+</pre></div>
+</div>
+</div>
+<p><strong>Arguments</strong></p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">[channel=ctx]</span></code>: The channel where the bot will send a message. Default to where you typed the command.</li>
+<li><code class="docutils literal"><span class="pre">&lt;text&gt;</span></code>: The text that the bot will say in the channel.</li>
+<li><code class="docutils literal"><span class="pre">attachment</span></code>: The file you want to make the bot send. This is optional.</li>
+</ul>
+</div>
+<div class="section" id="saydelete">
+<h3>saydelete<a class="headerlink" href="#saydelete" title="Permalink to this headline">¶</a></h3>
+<p><strong>Syntax</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">p</span><span class="p">][</span><span class="n">sayd</span><span class="o">|</span><span class="n">saydelete</span><span class="p">]</span> <span class="p">[</span><span class="n">channel</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">text</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p><strong>Descripton</strong></p>
+<p>Exact same as <code class="docutils literal"><span class="pre">[p]say</span></code> command, except it deletes your message.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The <code class="docutils literal"><span class="pre">Manage</span> <span class="pre">message</span></code> permission is needed for the bot to use this function.</p>
+</div>
+</div>
+<div class="section" id="interact">
+<h3>interact<a class="headerlink" href="#interact" title="Permalink to this headline">¶</a></h3>
+<p><strong>Syntax</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="n">interact</span> <span class="p">[</span><span class="n">channel</span><span class="p">]</span>
+</pre></div>
+</div>
+<p><strong>Description</strong></p>
+<p>Starts a rift between the channel and your DMs. The messages you send to the bot in DM will make
+him post your messages in the channel. It will also post every message send in that time lapse.</p>
+<p><strong>Arguments</strong></p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">[channel=ctx]</span></code>: The channel where you want to start the interaction. Default to where</li>
+</ul>
+<p>you typed the command.</p>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p class="last">This can be used directly from DM. Then it will be cross-server.
+Just make sure you give an ID as the channel. Giving the channel name can lead to a different server.
+Get the channel ID by enabling the developer mode (under Appearance section in the Discord user parameters),
+then right click on the channel and copy the ID.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to Laggron’s Dumb Cogs’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, El Laggron.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
