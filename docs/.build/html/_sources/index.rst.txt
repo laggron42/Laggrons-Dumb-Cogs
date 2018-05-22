@@ -17,7 +17,7 @@ Welcome to Laggron's Dumb Cogs's documentation!
    :caption: Cog guides:
 
    say
-
+   roleinvite
 
 
 Indices and tables

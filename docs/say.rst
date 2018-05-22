@@ -29,7 +29,7 @@ Finally, you can install the cog::
 .. warning:: The cog is not loaded by default. 
     To load it, type this::
 
-        [p]load Say
+        [p]load say
 
 -----
 Usage
