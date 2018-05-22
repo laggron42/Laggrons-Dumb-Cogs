@@ -6,6 +6,8 @@
 Welcome to Laggron's Dumb Cogs's documentation!
 ===============================================
 
+.. image:: .ressources/BANNERS/wiki.png
+
 .. important:: Please make sure that you first installed 
     `Red DiscordBot V3 <https://red-discordbot.readthedocs.io/en/v3-develop/>`_.
     This is needed if you want to use these cogs.
