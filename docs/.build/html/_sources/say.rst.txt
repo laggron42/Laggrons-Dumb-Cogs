@@ -102,6 +102,7 @@ him post your messages in the channel. It will also post every message send in t
 you typed the command.
 
 .. tip:: This can be used directly from DM. Then it will be cross-server. 
+
     Just make sure you give an ID as the channel. Giving the channel name can lead to a different server. 
     Get the channel ID by enabling the developer mode (under Appearance section in the Discord user parameters), 
     then right click on the channel and copy the ID.
