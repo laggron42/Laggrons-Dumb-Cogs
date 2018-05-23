@@ -123,7 +123,9 @@ It can be a command (you will need to add the ``commands`` decorator) or a liste
 instantcommad delete
 ~~~~~~~~~~~~~~~~~~~~
 
-**Syntax**::
+**Syntax**
+
+.. code_block:: none
 
     [p]instantcommand [delete|del|remove] <name>
     
@@ -147,7 +149,7 @@ instantcommand info
 
 **Syntax**
 
-.. code-block::none
+.. code-block:: none
 
     [p]instantcommand info [command]
     
