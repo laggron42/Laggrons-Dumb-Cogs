@@ -875,6 +875,7 @@ thumbnail's URL pictures:
 
 
     @commands.command(pass_context=True)
+    @commands.cooldown(5, 60, Buckettype.user)
     async def report(self, ctx, user: discord.Member, *, reason):
         """Report a user to the moderation team"""
 
