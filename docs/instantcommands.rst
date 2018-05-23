@@ -90,3 +90,79 @@ It can be a command (you will need to add the ``commands`` decorator) or a liste
         async def on_reaction_add(reaction, user):
             await reaction.message.add_reaction('❤')
             await message.channel.send("Here's some love for " + user.mention)
+            
+.. note::
+
+    Here are the available values for your code snippet:
+    
+    * ``discord``
+    
+      * ``ext.commands``
+    
+    * ``asyncio``
+    
+    * ``inspect``
+    
+    * ``traceback``
+    
+    * ``random``
+    
+    * ``redbot.core``
+    
+      * ``checks``
+      
+      * ``Config``
+      
+      * ``utils.chat_formatting.pagify``
+      
+    It isn't recommanded to use the ``Config`` value for now. 
+    A future release should give a ready ``Config.Config`` object.
+    
+
+~~~~~~~~~~~~~~~~~~~~
+instantcommad delete
+~~~~~~~~~~~~~~~~~~~~
+
+**Syntax**::
+
+    [p]instantcommand [delete|del|remove] <name>
+    
+**Description**
+
+Remove an instant command or a listener from what you registered before.
+
+.. warning::
+
+    Listeners won't be removed from discord.py uneless you restart, since 
+    their function to remove listeners doesn't seem to work. Restart the bot to make 
+    sure the listener is well removed.
+    
+**Arguments**
+
+* ``<name>`` The name of the command/listener.
+
+~~~~~~~~~~~~~~~~~~~
+instantcommand info
+~~~~~~~~~~~~~~~~~~~
+
+**Syntax**
+
+.. code-block::none
+
+    [p]instantcommand info [command]
+    
+**Description**
+
+List all existings commands and listeners created with InstantCommands.
+
+You can give a command/listener name to show its source code.
+
+.. note::
+
+    This only works with InstantCommands' commands and listeners.
+    
+**Arguments**
+
+* ``[commands]`` The command/listener name to get the source code from. 
+  If not given, a list of existing commands and listeners created with the cog
+  is shown.
