@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>&lt;no title&gt; &mdash; Laggron&#39;s Dumb Cogs  documentation</title>
+  <title>InstantCommands &mdash; Laggron&#39;s Dumb Cogs  documentation</title>
   
 
   
@@ -28,7 +28,8 @@
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="RoleInvite" href="roleinvite.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -78,9 +79,20 @@
             
             
               <p class="caption"><span class="caption-text">Cog guides:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="say.html">Say</a></li>
 <li class="toctree-l1"><a class="reference internal" href="roleinvite.html">RoleInvite</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">InstantCommands</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#instantcommand">instantcommand</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#instantcommand-create">instantcommand create</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#instantcommad-delete">instantcommad delete</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#instantcommand-info">instantcommand info</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
             
@@ -126,7 +138,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>&lt;no title&gt;</li>
+      <li>InstantCommands</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -145,12 +157,164 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  
+  <div class="section" id="instantcommands">
+<h1>InstantCommands<a class="headerlink" href="#instantcommands" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">These docs refers to the <strong>beta 2b</strong> version.
+Make sure you’re under the good version by typing <code class="docutils literal"><span class="pre">[p]cog</span> <span class="pre">update</span></code>.</p>
+</div>
+<p>This is the guide for the <code class="docutils literal"><span class="pre">instantcmd</span></code> cog. Everything you need is here.</p>
+<p><code class="docutils literal"><span class="pre">[p]</span></code> is considered as your prefix.</p>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>To install the cog, first load the downloader cog, included
+in core Red.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="n">load</span> <span class="n">downloader</span>
+</pre></div>
+</div>
+<p>Then you will need to install the Laggron’s Dumb Cogs repository:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="n">repo</span> <span class="n">add</span> <span class="n">Laggrons</span><span class="o">-</span><span class="n">Dumb</span><span class="o">-</span><span class="n">Cogs</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">retke</span><span class="o">/</span><span class="n">Laggrons</span><span class="o">-</span><span class="n">Dumb</span><span class="o">-</span><span class="n">Cogs</span> <span class="n">v3</span>
+</pre></div>
+</div>
+<p>Finally, you can install the cog:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="n">cog</span> <span class="n">install</span> <span class="n">Laggrons</span><span class="o">-</span><span class="n">Dumb</span><span class="o">-</span><span class="n">Cogs</span> <span class="n">instantcmd</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>The cog is not loaded by default.
+To load it, type this:</p>
+<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="n">load</span> <span class="n">instantcmd</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>InstantCommands is designed to create new commands and listeners directly
+from Discord. You just need basic Python and discord.py knowledge.</p>
+<p>Here’s an example of his it works:</p>
+<img alt="_images/InstantCommands-example.png" src="_images/InstantCommands-example.png" />
+<p>Here’s a list of all commands of this cog:</p>
+<div class="section" id="instantcommand">
+<h3>instantcommand<a class="headerlink" href="#instantcommand" title="Permalink to this headline">¶</a></h3>
+<p><strong>Syntax</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">p</span><span class="p">][</span><span class="n">instacmd</span><span class="o">|</span><span class="n">instantcmd</span><span class="o">|</span><span class="n">instantcommand</span><span class="p">]</span>
+</pre></div>
+</div>
+<p><strong>Description</strong></p>
+<p>This is the main command used for setting up the code.
+It will be used for all other commands.</p>
+</div>
+<div class="section" id="instantcommand-create">
+<h3>instantcommand create<a class="headerlink" href="#instantcommand-create" title="Permalink to this headline">¶</a></h3>
+<p><strong>Syntax</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="n">instantcommand</span> <span class="n">create</span>
+</pre></div>
+</div>
+<p><strong>Description</strong></p>
+<p>Creates a new command/listener from a code snippet.</p>
+<p>You will be asked to give a code snippet which will contain your function.
+It can be a command (you will need to add the <code class="docutils literal"><span class="pre">commands</span></code> decorator) or a listener
+(your function name must correspond to an existing discord.py listener).</p>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p>Here are some examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="nd">@roleset.command</span><span class="p">()</span>
+<span class="nd">@commands.command</span><span class="p">()</span>
+<span class="n">async</span> <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">argument</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Say your text with some magic&quot;&quot;&quot;</span>
+
+    <span class="n">await</span> <span class="n">ctx</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;You excepted to see your text, &quot;</span>
+                    <span class="s2">&quot;but it was I, Dio!&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="last highlight-python"><div class="highlight"><pre><span></span><span class="n">async</span> <span class="k">def</span> <span class="nf">on_reaction_add</span><span class="p">(</span><span class="n">reaction</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+    <span class="n">await</span> <span class="n">reaction</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">add_reaction</span><span class="p">(</span><span class="s1">&#39;❤&#39;</span><span class="p">)</span>
+    <span class="n">await</span> <span class="n">message</span><span class="o">.</span><span class="n">channel</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;Here&#39;s some love for &quot;</span> <span class="o">+</span> <span class="n">user</span><span class="o">.</span><span class="n">mention</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Here are the available values for your code snippet:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">discord</span></code><ul>
+<li><code class="docutils literal"><span class="pre">ext.commands</span></code></li>
+</ul>
+</li>
+<li><code class="docutils literal"><span class="pre">asyncio</span></code></li>
+<li><code class="docutils literal"><span class="pre">inspect</span></code></li>
+<li><code class="docutils literal"><span class="pre">traceback</span></code></li>
+<li><code class="docutils literal"><span class="pre">random</span></code></li>
+<li><code class="docutils literal"><span class="pre">redbot.core</span></code><ul>
+<li><code class="docutils literal"><span class="pre">checks</span></code></li>
+<li><code class="docutils literal"><span class="pre">Config</span></code></li>
+<li><code class="docutils literal"><span class="pre">utils.chat_formatting.pagify</span></code></li>
+</ul>
+</li>
+</ul>
+<p class="last">It isn’t recommanded to use the <code class="docutils literal"><span class="pre">Config</span></code> value for now.
+A future release should give a ready <code class="docutils literal"><span class="pre">Config.Config</span></code> object.</p>
+</div>
+</div>
+<div class="section" id="instantcommad-delete">
+<h3>instantcommad delete<a class="headerlink" href="#instantcommad-delete" title="Permalink to this headline">¶</a></h3>
+<p><strong>Syntax</strong></p>
+<p><strong>Description</strong></p>
+<p>Remove an instant command or a listener from what you registered before.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Listeners won’t be removed from discord.py uneless you restart, since
+their function to remove listeners doesn’t seem to work. Restart the bot to make
+sure the listener is well removed.</p>
+</div>
+<p><strong>Arguments</strong></p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">&lt;name&gt;</span></code> The name of the command/listener.</li>
+</ul>
+</div>
+<div class="section" id="instantcommand-info">
+<h3>instantcommand info<a class="headerlink" href="#instantcommand-info" title="Permalink to this headline">¶</a></h3>
+<p><strong>Syntax</strong></p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[p]instantcommand info [command]
+</pre></div>
+</div>
+<p><strong>Description</strong></p>
+<p>List all existings commands and listeners created with InstantCommands.</p>
+<p>You can give a command/listener name to show its source code.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This only works with InstantCommands’ commands and listeners.</p>
+</div>
+<p><strong>Arguments</strong></p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">[commands]</span></code> The command/listener name to get the source code from.
+If not given, a list of existing commands and listeners created with the cog
+is shown.</li>
+</ul>
+<dl class="method">
+<dt id="hello">
+<code class="descname">hello</code><span class="sig-paren">(</span><em>penis</em><span class="sig-paren">)</span><a class="headerlink" href="#hello" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+</div>
+
 
            </div>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="roleinvite.html" class="btn btn-neutral" title="RoleInvite" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
