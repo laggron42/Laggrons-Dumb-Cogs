@@ -89,4 +89,4 @@ It can be a command (you will need to add the ``commands`` decorator) or a liste
     
         async def on_reaction_add(reaction, user):
             await reaction.message.add_reaction('❤')
-            await message.channel.send('Here's some love for ' + user.mention)
+            await message.channel.send("Here's some love for " + user.mention)
