@@ -18,6 +18,7 @@ Welcome to Laggron's Dumb Cogs's documentation!
 
    say
    roleinvite
+   instantcommands
 
 
 Indices and tables
