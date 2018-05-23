@@ -73,12 +73,20 @@ You will be asked to give a code snippet which will contain your function.
 It can be a command (you will need to add the ``commands`` decorator) or a listener 
 (your function name must correspond to an existing discord.py listener).
 
-.. tip:: Here are some examples ::
+.. tip:: Here are some examples
+    
+    .. code-block:: python
+    
+        @roleset.command()
+        @commands.command()
+        async def command(ctx, *, argument):
+            """Say your text with some magic"""
 
-    @roleset.command()
-    @commands.command()
-    async def command(ctx, *, argument):
-        """Say your text with some magic"""
-
-        await ctx.send("You excepted to see your text, "
-                        "but it was I, Dio!")
+            await ctx.send("You excepted to see your text, "
+                            "but it was I, Dio!")
+                            
+    .. code-block:: python
+    
+        async def on_reaction_add(reaction, user):
+            await reaction.message.add_reaction('❤')
+            await message.channel.send('Here's some love for ' + user.mention)
