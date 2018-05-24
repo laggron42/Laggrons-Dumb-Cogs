@@ -127,6 +127,9 @@ class BetterMod:
                 'total-warns': 0
             }
 
+        if 'softban-warn' not in history[user.id]:
+            history[user.id]['softban-warn'] = 0
+
         total = history[user.id]['total-warns'] + 1
 
         history[user.id]['case{}'.format(total)] = {
