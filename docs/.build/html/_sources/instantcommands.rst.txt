@@ -168,9 +168,3 @@ You can give a command/listener name to show its source code.
 * ``[commands]`` The command/listener name to get the source code from. 
   If not given, a list of existing commands and listeners created with the cog
   is shown.
-
-.. method:: hello(penis)
-
-    .. name::
-
-        penus
