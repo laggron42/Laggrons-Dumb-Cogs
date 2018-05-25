@@ -11,19 +11,34 @@ from instantcmd import InstantCommands
 from roleinvite import RoleInvite
 from say import Say
 
+class Default:
+    """
+    This contains the documentation of the repository
+    """
+
+    __author__ = "El Laggron"
+    __info__ = {
+        "description": (
+            "A buch of utility and quality cogs "
+            "that brings unique features for your server. "
+            "Made by Laggron."
+        ),
+        "install_msg": (
+            "Thanks for installing the repository! Please check the wiki "
+            "for all informations about the cogs.\n"
+            "https://github.com/retke/Laggrons-Dumb-Cogs/wiki\n"
+            "Join the official discord server for questions or suggestions.\n"
+            "https://discord.gg/WsTGeQ"
+        ),
+        "short": "Utility cogs for your server."
+    }
 
 def get_cog_data(instance):
+
     data = {
-        "author": instance.__author__,
-        "bot_version": instance.__info__["bot_version"],
-        "description": instance.__info__["description"],
-        "hidden": instance.__info__["hidden"],
-        "install_msg": instance.__info__["install_msg"],
-        "required_cogs": instance.__info__["required_cogs"],
-        "requirements": instance.__info__["requirements"],
-        "short": instance.__info__["short"],
-        "tags": instance.__info__["tags"],
+        "author": instance.__author__
     }
+    data.update(instance.__info__)
     return data
 
 
@@ -68,4 +83,5 @@ if __name__ == "__main__":
     create_info_json(InstantCommands, "instantcmd")
     create_info_json(RoleInvite, "roleinvite")
     create_info_json(Say, "say")
+    create_info_json(Default, ".") # repo info.json
     commit(token=sys.argv[1], build=sys.argv[2])
