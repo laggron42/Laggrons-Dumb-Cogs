@@ -34,7 +34,9 @@ class Default:
         "short": "Utility cogs for your server.",
     }
 
+
 to_add = []
+
 
 def get_cog_data(instance):
 
