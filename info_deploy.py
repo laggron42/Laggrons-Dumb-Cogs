@@ -87,4 +87,4 @@ if __name__ == "__main__":
     create_info_json(RoleInvite, "roleinvite")
     create_info_json(Say, "say")
     create_info_json(Default, ".")  # repo info.json
-    commit(token=sys.argv[1], build=sys.argv[2], to_add)
+    commit(token=sys.argv[1], build=sys.argv[2], to_add=to_add)
