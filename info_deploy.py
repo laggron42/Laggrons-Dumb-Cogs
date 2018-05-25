@@ -44,7 +44,7 @@ def get_cog_data(instance):
 
 def create_info_json(instance, file_name):
     path = "{0}/info.json".format(file_name)
-    current_data = json.dumps(get_cog_data(instance))
+    current_data = json.dumps(get_cog_data(instance), indent=4, sort_keys=True)
 
     if not os.path.isfile(path):
         os.system("echo {} > " + path)
