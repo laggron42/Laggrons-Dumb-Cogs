@@ -34,6 +34,7 @@ class Default:
         "short": "Utility cogs for your server.",
     }
 
+to_add = []
 
 def get_cog_data(instance):
 
@@ -55,17 +56,19 @@ def create_info_json(instance, file_name):
         file.close()
         file = open(path, "w")
         file.write(current_data)
+        to_add.append(path)
     file.close()
 
 
-def commit(token, build):
+def commit(token, build, to_add):
     if os.popen("git diff").read() != "":
 
         os.system('git config user.name "Travis CI Auto-JSON"')
         os.system('git config user.email "travis@travis-ci.org"')
 
         os.system("git checkout v3")
-        os.system("git add *.json")
+        for file in to_add:
+            os.system("git add " + file)
 
         os.system('git commit -m "Updated info.json files. Build #{}"'.format(build))
         os.system(
@@ -84,4 +87,4 @@ if __name__ == "__main__":
     create_info_json(RoleInvite, "roleinvite")
     create_info_json(Say, "say")
     create_info_json(Default, ".")  # repo info.json
-    commit(token=sys.argv[1], build=sys.argv[2])
+    commit(token=sys.argv[1], build=sys.argv[2], to_add)
