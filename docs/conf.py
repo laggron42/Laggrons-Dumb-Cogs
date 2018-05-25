@@ -180,5 +180,6 @@ intersphinx_mapping = {"https://docs.python.org/": None}
 # Import cogs modules for docstring
 import os
 import sys
-os.system('cd ..') # goes into main Laggrons-Dumb-Cogs folder
-sys.path.insert(0, os.system('pwd'))
+
+os.system("cd ..")  # goes into main Laggrons-Dumb-Cogs folder
+sys.path.insert(0, os.system("pwd"))
