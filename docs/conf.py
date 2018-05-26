@@ -19,7 +19,8 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
+
+sys.path.insert(0, os.path.abspath(".."))
 
 
 # -- General configuration ------------------------------------------------
@@ -182,4 +183,3 @@ intersphinx_mapping = {
     "discord": ("https://discordpy.readthedocs.io/en/rewrite/", None),
     "redbot": ("https://red-discordbot.readthedocs.io/en/v3-develop/", None),
 }
-
