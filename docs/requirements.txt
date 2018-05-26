@@ -1,1 +1,2 @@
-pip install -U sphinxcontrib-asyncio
+-i https://pypi.org/simple
+sphinxcontrib-asyncio
