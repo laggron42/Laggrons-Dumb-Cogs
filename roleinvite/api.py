@@ -4,9 +4,23 @@ from .errors import Errors
 
 class API:
     """
-    Interact with roleinvite using these functions.
-    Get the full docs on the wiki (https://github.com/retke/Laggrons-Dumb-Cogs/wiki)
-    or by reading the docstrings
+    Interact with RoleInvite from your cog.
+
+    To import the cog and use the functions, type this in your code:
+
+    .. code-block:: python
+
+        roleinvite = bot.get_cog('RoleInvite').api
+
+    .. warning:: If ``roleinvite`` is :py:obj:`None`, the cog is 
+      not loaded/installed. You won't be able to interact with
+      the API at this point.
+
+    .. tip:: You can get the cog version by doing this
+        
+        .. code-block:: python
+
+            version = bot.get_cog('RoleInvite').__version__
     """
 
     def __init__(self, bot, config):
@@ -15,17 +29,19 @@ class API:
 
     async def has_invites(self, guild):
         """
-        This is a coroutine.
         Return a bool telling if there are invites links in the autorole system, or main ones.
-        This can tell if the `manage_guild` permission is needed or not.
+        This can tell if the :attr:`~discord.Permissions.manage_guild`
+        permission is needed or not.
 
-        Parameters:
+        Parameters
+        ----------
+        guild: :class:`discord.Guild`
+            The guild to get the invites from.
 
-            `guild(discord.Guild)` : The guild to get the invites from.
-
-        Returns:
-
-            A `bool` value. `True` if there are invite links, else `False`.
+        Returns
+        -------
+        bool
+            :py:obj:`True` if there are invite links, else :py:obj:`False`.
         """
 
         invites = await self.data.guild(guild).invites()
@@ -36,21 +52,33 @@ class API:
 
     async def add_invite(self, guild: discord.Guild, invite: str, roles: list):
         """
-        This is a coroutine.
         Add an invite link to the autorole system.
         
-        Parameters:
+        Parameters
+        ----------
+        guild: :class:`discord.Guild`
+            The guild to get the invites from.
+        invite: :py:class:`str`
+            The invite link to create/extend. Give ``main`` or ``default`` if
+            you want to edit the main/default autorole system.
+        roles: :py:class:`list` 
+            A list of roles ID to add to the roles list.
+
+        Returns
+        -------
+        bool
+            :py:obj:`True` if successful
         
-            `guild(discord.Guild)` : The guild to get the invites from.
-            `invite(str)`          : The invite link to create/extend. Give `main` or `default` if you want to edit the main/default autorole system.
-            `roles(list)`          : A list of roles ID to add to the roles list.
-
-        Raises:
-
-            `NotInvite`         : The invite given is not a discord invite, not is is main/default.
-            `CannotGetInvites`  : The bot doesn't have the permission to get the guild's invites
-            `EmptyRolesList`    : The list of roles given is empty
-            `InviteNotFound`    : The invite given doesn't exist in the guild.
+        Raises
+        ------
+        :class:`~Errors.NotInvite`
+            The invite given is not a discord invite, not is is main/default.
+        :class:`~Errors.CannotGetInvites`
+            The bot doesn't have the permission to get the guild's invites
+        :class:`~Errors.EmptyRolesList`
+            The list of roles given is empty
+        :class:`~Errors.InviteNotFound`
+            The invite given doesn't exist in the guild.
         """
 
         invites = await self.data.guild(guild).invites()
@@ -87,21 +115,29 @@ class API:
             invites[invite]["uses"] = invite_object.uses
 
         await self.data.guild(guild).invites.set(invites)
+        return True
 
     async def remove_invite(self, guild: discord.Guild, invite: str, roles: list = []):
         """
-        This is a coroutine.
-        Remove a list of roles from the invite links.
+        Remove a :py:class:`list` of roles from the invite links.
         
-        Parameters:
-        
-            `guild(discord.Guild)` : The guild to get the invites from.
-            `roles(list)`          : A list of roles ID to remove from the roles list. If it's empty, it will remove the invite from the autorole system.
-            `invite(str)`          : The invite to remove roles from. Give `main` or `default` to edit the main/default autorole system.
+        Parameters
+        ----------
+        guild: :class:`discord.Guild`
+            The guild to get the invites from.
+        roles: :py:class:list
+            A : py:class:`list` of roles ID to remove from the roles list. If it's empty, it will remove the invite from the autorole system.
+        invite: :py:class`str`
+            The invite to remove roles from. Give `main` or `default` to edit the main/default autorole system.
 
-        Raises:
-
-            `KeyError` : The invite given doesn't exist.
+        Returns
+        -------
+        bool
+            :py:obj:`True` if successful
+        Raises
+        ------
+        :py:class:`KeyError`
+            The invite given doesn't exist.
         """
 
         invites = await self.data.guild(guild).invites()
@@ -115,37 +151,40 @@ class API:
         else:
             invites[invite]["roles"] = [x for x in invites[invite]["roles"] if x not in roles]
         await self.data.guild(guild).invites.set(invites)
+        return True
 
     async def get_invites(self, guild):
         """
-        This is a coroutine.
-        Return a list of the invites linked to the autorole system of the guild.
+        Return a :py:class:`list` of the invites linked to the autorole system of the guild.
         
-        Parameters:
+        Parameters
+        ----------
+        guild: :class:`discord.Guild`
+            The guild to get the invites from.
+        
+        Returns
+        -------
+        dict
+            A :py:class:`dict` of invites linked to any role on the guild.
+            
+            Example
 
-            `guild(discord.Guild)` : The guild to get the invites from.
-        
-        Returns:
-        
-            A `dict` of invites linked to any role on the guild.
-        
-        Example body:
-        ```Json
-        {
-            "main" : {
-                "roles" : [
-                    987654321234567890
-                ]
-            },
-            "https://discord.gg/example" : {
-                "roles" : [
-                    012345678987654321,
-                    987654321234567890
-                ],
-                "uses" : 42
-            }
-        }
-        ```
+            .. code-block:: json
+    
+                {
+                    "main" : {
+                        "roles" : [
+                            987654321234567890
+                        ]
+                    },
+                    "https://discord.gg/example" : {
+                        "roles" : [
+                            012345678987654321,
+                            987654321234567890
+                        ],
+                        "uses" : 42
+                    }
+                }
         """
 
         return await self.data.guild(guild).invites()
