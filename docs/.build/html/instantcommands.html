@@ -92,6 +92,14 @@
 <li class="toctree-l3"><a class="reference internal" href="#instantcommand-info">instantcommand info</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#frequently-asked-questions">Frequently Asked Questions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#it-s-written-in-the-help-message-that-i-can-add-a-listener-how-can-i-do-so">It’s written in the help message that I can add a listener. How can I do so?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#my-command-was-added-but-doesn-t-respond-when-invoked">My command was added but doesn’t respond when invoked.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#can-i-use-config-in-my-command">Can I use Config in my command?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-can-limit-a-command-for-some-users">How can limit a command for some users?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-can-i-import-a-module-without-problem">How can I import a module without problem?</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -203,7 +211,7 @@ from Discord. You just need basic Python and discord.py knowledge.</p>
 <img alt="_images/InstantCommands-example.png" src="_images/InstantCommands-example.png" />
 <p>Here’s a list of all commands of this cog:</p>
 <div class="section" id="instantcommand">
-<h3>instantcommand<a class="headerlink" href="#instantcommand" title="Permalink to this headline">¶</a></h3>
+<span id="command-instantcommand"></span><h3>instantcommand<a class="headerlink" href="#instantcommand" title="Permalink to this headline">¶</a></h3>
 <p><strong>Syntax</strong>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">p</span><span class="p">][</span><span class="n">instacmd</span><span class="o">|</span><span class="n">instantcmd</span><span class="o">|</span><span class="n">instantcommand</span><span class="p">]</span>
 </pre></div>
@@ -213,7 +221,7 @@ from Discord. You just need basic Python and discord.py knowledge.</p>
 It will be used for all other commands.</p>
 </div>
 <div class="section" id="instantcommand-create">
-<h3>instantcommand create<a class="headerlink" href="#instantcommand-create" title="Permalink to this headline">¶</a></h3>
+<span id="command-instantcommand-create"></span><h3>instantcommand create<a class="headerlink" href="#instantcommand-create" title="Permalink to this headline">¶</a></h3>
 <p><strong>Syntax</strong>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="n">instantcommand</span> <span class="n">create</span>
 </pre></div>
@@ -265,8 +273,11 @@ A future release should give a ready <code class="docutils literal"><span class=
 </div>
 </div>
 <div class="section" id="instantcommad-delete">
-<h3>instantcommad delete<a class="headerlink" href="#instantcommad-delete" title="Permalink to this headline">¶</a></h3>
+<span id="command-instantcommand-delete"></span><h3>instantcommad delete<a class="headerlink" href="#instantcommad-delete" title="Permalink to this headline">¶</a></h3>
 <p><strong>Syntax</strong></p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[p]instantcommand [delete|del|remove] &lt;name&gt;
+</pre></div>
+</div>
 <p><strong>Description</strong></p>
 <p>Remove an instant command or a listener from what you registered before.</p>
 <div class="admonition warning">
@@ -281,7 +292,7 @@ sure the listener is well removed.</p>
 </ul>
 </div>
 <div class="section" id="instantcommand-info">
-<h3>instantcommand info<a class="headerlink" href="#instantcommand-info" title="Permalink to this headline">¶</a></h3>
+<span id="command-instantcommand-info"></span><h3>instantcommand info<a class="headerlink" href="#instantcommand-info" title="Permalink to this headline">¶</a></h3>
 <p><strong>Syntax</strong></p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>[p]instantcommand info [command]
 </pre></div>
@@ -299,6 +310,89 @@ sure the listener is well removed.</p>
 If not given, a list of existing commands and listeners created with the cog
 is shown.</li>
 </ul>
+</div>
+</div>
+<div class="section" id="frequently-asked-questions">
+<h2>Frequently Asked Questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p><strong>Your question is not in the list or you got an unexcpected issue?</strong></p>
+<p class="last">You should join the <a class="reference external" href="https://discord.gg/WsTGeQM">Discord server</a> or
+<a class="reference external" href="https://github.com/retke/Laggrons-Dumb-Cogs/issues/new/choose">post an issue</a>
+on the repo.</p>
+</div>
+<div class="section" id="it-s-written-in-the-help-message-that-i-can-add-a-listener-how-can-i-do-so">
+<h3>It’s written in the help message that I can add a listener. How can I do so?<a class="headerlink" href="#it-s-written-in-the-help-message-that-i-can-add-a-listener-how-can-i-do-so" title="Permalink to this headline">¶</a></h3>
+<p>Instead of giving a <a class="reference external" href="https://discordpy.readthedocs.io/en/rewrite/ext/commands/api.html#discord.ext.commands.Command" title="(in discord.py v1.0.0a)"><code class="xref py py-class docutils literal"><span class="pre">Command</span></code></a> object, just
+give a simple function (don’t put the command decorator) and make sure
+its name is matching the lowercased <a class="reference external" href="https://discordapp.com/developers/docs/topics/gateway#commands-and-events">Discord API listeners</a>.</p>
+<div class="admonition attention">
+<p class="first admonition-title">Attention</p>
+<p>The <code class="xref py py-func docutils literal"><span class="pre">remove_listener()</span></code> function is not really
+working at the moment and the listeners are not removed from the bot when
+using the <a class="reference internal" href="#command-instantcommand-delete"><span class="std std-ref">delete</span></a> command.</p>
+<p class="last">Please restart the bot after using <a class="reference internal" href="#command-instantcommand-delete"><span class="std std-ref">delete</span></a> on a listener to make sure it was removed.</p>
+</div>
+</div>
+<div class="section" id="my-command-was-added-but-doesn-t-respond-when-invoked">
+<h3>My command was added but doesn’t respond when invoked.<a class="headerlink" href="#my-command-was-added-but-doesn-t-respond-when-invoked" title="Permalink to this headline">¶</a></h3>
+<p>If a command is not invoked, this is most likely due to missing arguments.
+Please check that you only have the <code class="xref py py-class docutils literal"><span class="pre">ctx</span></code>
+argument and <strong>no self argument</strong>.</p>
+</div>
+<div class="section" id="can-i-use-config-in-my-command">
+<h3>Can I use Config in my command?<a class="headerlink" href="#can-i-use-config-in-my-command" title="Permalink to this headline">¶</a></h3>
+<p>Yes you can. The <code class="xref py py-class docutils literal"><span class="pre">Config</span></code> module is already imported,
+you just need to use it as in a cog.</p>
+<p>..tip:: Here’s an example</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="nd">@commands.command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
+<span class="n">async</span> <span class="k">def</span> <span class="nf">my_command</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get_conf</span><span class="p">(</span><span class="n">cog_instance</span><span class="o">=</span><span class="s2">&quot;InstantCommands&quot;</span><span class="p">,</span> <span class="n">identifier</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+    <span class="c1"># use anything but 260 for the identifier</span>
+    <span class="c1"># since it&#39;s the one used for the cog settings</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">register_guild</span><span class="p">(</span><span class="o">**</span><span class="p">{</span>
+        <span class="s2">&quot;foo&quot;</span><span class="p">:</span> <span class="bp">None</span>
+    <span class="p">})</span>
+
+    <span class="n">await</span> <span class="n">config</span><span class="o">.</span><span class="n">guild</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">guild</span><span class="p">)</span><span class="o">.</span><span class="n">foo</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;bar&quot;</span><span class="p">)</span>
+    <span class="n">await</span> <span class="n">ctx</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;Well done&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="how-can-limit-a-command-for-some-users">
+<h3>How can limit a command for some users?<a class="headerlink" href="#how-can-limit-a-command-for-some-users" title="Permalink to this headline">¶</a></h3>
+<p>You can use the <code class="xref py py-class docutils literal"><span class="pre">checks</span></code> module, like in a normal cog.</p>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p>Here’s an example</p>
+<div class="last highlight-python"><div class="highlight"><pre><span></span><span class="nd">@commands.command</span><span class="p">()</span>
+<span class="nd">@checks.admin_or_permissions</span><span class="p">(</span><span class="n">administrator</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">async</span> <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+    <span class="c1"># your code</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="how-can-i-import-a-module-without-problem">
+<h3>How can I import a module without problem?<a class="headerlink" href="#how-can-i-import-a-module-without-problem" title="Permalink to this headline">¶</a></h3>
+<p>Just import, but inside the function. You can use the <code class="xref py py-meth docutils literal"><span class="pre">__import__()</span></code>
+method or use the <code class="xref py py-const docutils literal"><span class="pre">from</span> <span class="pre">...</span> <span class="pre">import</span> <span class="pre">...</span></code> built-in method.</p>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p>Here’s an example</p>
+<div class="last highlight-python"><div class="highlight"><pre><span></span><span class="nd">@commands.command</span><span class="p">()</span>
+<span class="n">async</span> <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+
+    <span class="kn">from</span> <span class="nn">redbot.core</span> <span class="kn">import</span> <span class="n">modlog</span>
+    <span class="kn">import</span> <span class="nn">time</span>
+    <span class="nb">__import__</span><span class="p">(</span><span class="s1">&#39;random&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">randint</span>
+
+    <span class="c1"># your code</span>
+</pre></div>
+</div>
+</div>
 </div>
 </div>
 </div>

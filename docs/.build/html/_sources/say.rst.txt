@@ -66,7 +66,7 @@ it is send in a different channel.
 **Arguments**
 
 * ``[channel=ctx]``: The channel where the bot will send a message. 
-      Default to where you typed the command.
+  Default to where you typed the command.
 
 * ``<text>``: The text that the bot will say in the channel.
 

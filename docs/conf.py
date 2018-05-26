@@ -180,5 +180,6 @@ texinfo_documents = [
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.6", None),
     "discord": ("https://discordpy.readthedocs.io/en/rewrite/", None),
+    "redbot": ("https://red-discordbot.readthedocs.io/en/v3-develop/", None),
 }
 
