@@ -1,0 +1,435 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>RoleInvite &mdash; Laggron&#39;s Dumb Cogs  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="InstantCommands" href="instantcommands.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Laggron's Dumb Cogs
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Cog guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="say.html">Say</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roleinvite.html">RoleInvite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instantcommands.html">InstantCommands</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">RoleInvite</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#api-reference">API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#errors">Errors</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Laggron's Dumb Cogs</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>RoleInvite</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/roleinvite-api.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span class="target" id="module-roleinvite.roleinvite"></span><div class="section" id="roleinvite">
+<h1>RoleInvite<a class="headerlink" href="#roleinvite" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="api-reference">
+<h2>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="roleinvite.roleinvite.API">
+<em class="property">class </em><code class="descclassname">roleinvite.roleinvite.</code><code class="descname">API</code><span class="sig-paren">(</span><em>bot</em>, <em>config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/roleinvite/api.html#API"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roleinvite.roleinvite.API" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interact with RoleInvite from your cog.</p>
+<p>To import the cog and use the functions, type this in your code:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">roleinvite</span> <span class="o">=</span> <span class="n">bot</span><span class="o">.</span><span class="n">get_cog</span><span class="p">(</span><span class="s1">&#39;RoleInvite&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">api</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">If <code class="docutils literal"><span class="pre">roleinvite</span></code> is <a class="reference external" href="https://docs.python.org/3.6/library/constants.html#None" title="(in Python v3.6)"><code class="xref py py-obj docutils literal"><span class="pre">None</span></code></a>, the cog is
+not loaded/installed. You won’t be able to interact with
+the API at this point.</p>
+</div>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p>You can get the cog version by doing this</p>
+<div class="last highlight-python"><div class="highlight"><pre><span></span><span class="n">version</span> <span class="o">=</span> <span class="n">bot</span><span class="o">.</span><span class="n">get_cog</span><span class="p">(</span><span class="s1">&#39;RoleInvite&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">__version__</span>
+</pre></div>
+</div>
+</div>
+<dl class="method">
+<dt id="roleinvite.roleinvite.API.add_invite">
+<em class="property">coroutine </em><code class="descname">add_invite</code><span class="sig-paren">(</span><em>guild: discord.guild.Guild</em>, <em>invite: str</em>, <em>roles: list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/roleinvite/api.html#API.add_invite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roleinvite.roleinvite.API.add_invite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an invite link to the autorole system.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>guild</strong> (<a class="reference external" href="https://discordpy.readthedocs.io/en/rewrite/api.html#discord.Guild" title="(in discord.py v1.0.0a)"><code class="xref py py-class docutils literal"><span class="pre">discord.Guild</span></code></a>) – The guild to get the invites from.</li>
+<li><strong>invite</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">str</span></code></a>) – The invite link to create/extend. Give <code class="docutils literal"><span class="pre">main</span></code> or <code class="docutils literal"><span class="pre">default</span></code> if
+you want to edit the main/default autorole system.</li>
+<li><strong>roles</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#list" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">list</span></code></a>) – A list of roles ID to add to the roles list.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/3.6/library/constants.html#True" title="(in Python v3.6)"><code class="xref py py-obj docutils literal"><span class="pre">True</span></code></a> if successful</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)">bool</a></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference internal" href="#roleinvite.roleinvite.Errors.NotInvite" title="roleinvite.roleinvite.Errors.NotInvite"><code class="xref py py-class docutils literal"><span class="pre">NotInvite</span></code></a> – The invite given is not a discord invite, not is is main/default.</li>
+<li><a class="reference internal" href="#roleinvite.roleinvite.Errors.CannotGetInvites" title="roleinvite.roleinvite.Errors.CannotGetInvites"><code class="xref py py-class docutils literal"><span class="pre">CannotGetInvites</span></code></a> – The bot doesn’t have the permission to get the guild’s invites</li>
+<li><a class="reference internal" href="#roleinvite.roleinvite.Errors.EmptyRolesList" title="roleinvite.roleinvite.Errors.EmptyRolesList"><code class="xref py py-class docutils literal"><span class="pre">EmptyRolesList</span></code></a> – The list of roles given is empty</li>
+<li><a class="reference internal" href="#roleinvite.roleinvite.Errors.InviteNotFound" title="roleinvite.roleinvite.Errors.InviteNotFound"><code class="xref py py-class docutils literal"><span class="pre">InviteNotFound</span></code></a> – The invite given doesn’t exist in the guild.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="roleinvite.roleinvite.API.get_invites">
+<em class="property">coroutine </em><code class="descname">get_invites</code><span class="sig-paren">(</span><em>guild</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/roleinvite/api.html#API.get_invites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roleinvite.roleinvite.API.get_invites" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#list" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">list</span></code></a> of the invites linked to the autorole system of the guild.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>guild</strong> (<a class="reference external" href="https://discordpy.readthedocs.io/en/rewrite/api.html#discord.Guild" title="(in discord.py v1.0.0a)"><code class="xref py py-class docutils literal"><span class="pre">discord.Guild</span></code></a>) – The guild to get the invites from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">dict</span></code></a> of invites linked to any role on the guild.<p>Example</p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;main&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;roles&quot;</span> <span class="p">:</span> <span class="p">[</span>
+            <span class="mi">987654321234567890</span>
+        <span class="p">]</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;https://discord.gg/example&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;roles&quot;</span> <span class="p">:</span> <span class="p">[</span>
+            <span class="mi">012345678987654321</span><span class="p">,</span>
+            <span class="mi">987654321234567890</span>
+        <span class="p">],</span>
+        <span class="nt">&quot;uses&quot;</span> <span class="p">:</span> <span class="mi">42</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)">dict</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="roleinvite.roleinvite.API.has_invites">
+<em class="property">coroutine </em><code class="descname">has_invites</code><span class="sig-paren">(</span><em>guild</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/roleinvite/api.html#API.has_invites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roleinvite.roleinvite.API.has_invites" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a bool telling if there are invites links in the autorole system, or main ones.
+This can tell if the <a class="reference external" href="https://discordpy.readthedocs.io/en/rewrite/api.html#discord.Permissions.manage_guild" title="(in discord.py v1.0.0a)"><code class="xref py py-attr docutils literal"><span class="pre">manage_guild</span></code></a>
+permission is needed or not.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>guild</strong> (<a class="reference external" href="https://discordpy.readthedocs.io/en/rewrite/api.html#discord.Guild" title="(in discord.py v1.0.0a)"><code class="xref py py-class docutils literal"><span class="pre">discord.Guild</span></code></a>) – The guild to get the invites from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/constants.html#True" title="(in Python v3.6)"><code class="xref py py-obj docutils literal"><span class="pre">True</span></code></a> if there are invite links, else <a class="reference external" href="https://docs.python.org/3.6/library/constants.html#False" title="(in Python v3.6)"><code class="xref py py-obj docutils literal"><span class="pre">False</span></code></a>.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="roleinvite.roleinvite.API.remove_invite">
+<em class="property">coroutine </em><code class="descname">remove_invite</code><span class="sig-paren">(</span><em>guild: discord.guild.Guild</em>, <em>invite: str</em>, <em>roles: list = []</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/roleinvite/api.html#API.remove_invite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roleinvite.roleinvite.API.remove_invite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#list" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">list</span></code></a> of roles from the invite links.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>guild</strong> (<a class="reference external" href="https://discordpy.readthedocs.io/en/rewrite/api.html#discord.Guild" title="(in discord.py v1.0.0a)"><code class="xref py py-class docutils literal"><span class="pre">discord.Guild</span></code></a>) – The guild to get the invites from.</li>
+<li><strong>roles</strong> (<em>:py:class:list</em>) – A : py:class:<cite>list</cite> of roles ID to remove from the roles list. If it’s empty, it will remove the invite from the autorole system.</li>
+<li><strong>invite</strong> (<em>:py:class`str`</em>) – The invite to remove roles from. Give <cite>main</cite> or <cite>default</cite> to edit the main/default autorole system.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/3.6/library/constants.html#True" title="(in Python v3.6)"><code class="xref py py-obj docutils literal"><span class="pre">True</span></code></a> if successful</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)">bool</a></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#KeyError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">KeyError</span></code></a> – The invite given doesn’t exist.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="errors">
+<h2>Errors<a class="headerlink" href="#errors" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="roleinvite.roleinvite.Errors">
+<em class="property">class </em><code class="descclassname">roleinvite.roleinvite.</code><code class="descname">Errors</code><span class="sig-paren">(</span><em>exception</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/roleinvite/errors.html#Errors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roleinvite.roleinvite.Errors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom error handling used for the cog and the API</p>
+<p>If you need to prevent and exception, do it like this</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">errors</span> <span class="o">=</span> <span class="n">bot</span><span class="o">.</span><span class="n">get_cog</span><span class="p">(</span><span class="s1">&#39;RoleInvite&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">errors</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">await</span> <span class="n">api</span><span class="o">.</span><span class="n">add_invite</span><span class="p">(</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">guild</span><span class="p">,</span> <span class="s1">&#39;main&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">42</span><span class="p">]</span>
+    <span class="p">)</span>
+<span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">CannotAddRole</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Missing permissions&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">InviteNotFound</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Invalid invite&quot;</span><span class="p">)</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="c1"># occurs for any exception</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Fatal error&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="c1"># executed if the try succeeded</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;All good&quot;</span><span class="p">)</span>
+<span class="k">finally</span><span class="p">:</span>
+    <span class="c1"># always executed</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;End of function&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="roleinvite.roleinvite.Errors.CannotAddRole">
+<em class="property">class </em><code class="descname">CannotAddRole</code><a class="reference internal" href="_modules/roleinvite/errors.html#Errors.CannotAddRole"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roleinvite.roleinvite.Errors.CannotAddRole" title="Permalink to this definition">¶</a></dt>
+<dd><p>The bot isn’t allowed to give a role.
+The role hierarchy was modified or a 3rd party module added the role without check.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="roleinvite.roleinvite.Errors.CannotGetInvites">
+<em class="property">class </em><code class="descname">CannotGetInvites</code><a class="reference internal" href="_modules/roleinvite/errors.html#Errors.CannotGetInvites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roleinvite.roleinvite.Errors.CannotGetInvites" title="Permalink to this definition">¶</a></dt>
+<dd><p>The bot isn’t allowed to get the guild invites.
+Manage server permission is needed.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="roleinvite.roleinvite.Errors.EmptyRolesList">
+<em class="property">class </em><code class="descname">EmptyRolesList</code><a class="reference internal" href="_modules/roleinvite/errors.html#Errors.EmptyRolesList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roleinvite.roleinvite.Errors.EmptyRolesList" title="Permalink to this definition">¶</a></dt>
+<dd><p>The list of roles that needs to be linked to an invite is empty.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="roleinvite.roleinvite.Errors.InviteNotFound">
+<em class="property">class </em><code class="descname">InviteNotFound</code><a class="reference internal" href="_modules/roleinvite/errors.html#Errors.InviteNotFound"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roleinvite.roleinvite.Errors.InviteNotFound" title="Permalink to this definition">¶</a></dt>
+<dd><p>The invite sent isn’t in the guild’s invite list.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="roleinvite.roleinvite.Errors.NotInvite">
+<em class="property">class </em><code class="descname">NotInvite</code><a class="reference internal" href="_modules/roleinvite/errors.html#Errors.NotInvite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roleinvite.roleinvite.Errors.NotInvite" title="Permalink to this definition">¶</a></dt>
+<dd><p>The invite sent is not found as a discord.Invite object.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="instantcommands.html" class="btn btn-neutral" title="InstantCommands" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, El Laggron.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

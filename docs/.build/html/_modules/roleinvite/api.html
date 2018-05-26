@@ -1,0 +1,403 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>roleinvite.api &mdash; Laggron&#39;s Dumb Cogs  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Laggron's Dumb Cogs
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Cog guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../say.html">Say</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roleinvite.html">RoleInvite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../instantcommands.html">InstantCommands</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../roleinvite-api.html">RoleInvite</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Laggron's Dumb Cogs</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>roleinvite.api</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for roleinvite.api</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">discord</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">Errors</span>
+
+
+<div class="viewcode-block" id="API"><a class="viewcode-back" href="../../roleinvite-api.html#roleinvite.roleinvite.API">[docs]</a><span class="k">class</span> <span class="nc">API</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Interact with RoleInvite from your cog.</span>
+
+<span class="sd">    To import the cog and use the functions, type this in your code:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        roleinvite = bot.get_cog(&#39;RoleInvite&#39;).api</span>
+
+<span class="sd">    .. warning:: If ``roleinvite`` is :py:obj:`None`, the cog is </span>
+<span class="sd">      not loaded/installed. You won&#39;t be able to interact with</span>
+<span class="sd">      the API at this point.</span>
+
+<span class="sd">    .. tip:: You can get the cog version by doing this</span>
+<span class="sd">        </span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            version = bot.get_cog(&#39;RoleInvite&#39;).__version__</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bot</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bot</span> <span class="o">=</span> <span class="n">bot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">config</span>
+
+<div class="viewcode-block" id="API.has_invites"><a class="viewcode-back" href="../../roleinvite-api.html#roleinvite.roleinvite.API.has_invites">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">has_invites</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">guild</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a bool telling if there are invites links in the autorole system, or main ones.</span>
+<span class="sd">        This can tell if the :attr:`~discord.Permissions.manage_guild`</span>
+<span class="sd">        permission is needed or not.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        guild: :class:`discord.Guild`</span>
+<span class="sd">            The guild to get the invites from.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            :py:obj:`True` if there are invite links, else :py:obj:`False`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">invites</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">guild</span><span class="p">(</span><span class="n">guild</span><span class="p">)</span><span class="o">.</span><span class="n">invites</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">invite</span> <span class="ow">in</span> <span class="n">invites</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">invite</span> <span class="o">!=</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="API.add_invite"><a class="viewcode-back" href="../../roleinvite-api.html#roleinvite.roleinvite.API.add_invite">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">add_invite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">guild</span><span class="p">:</span> <span class="n">discord</span><span class="o">.</span><span class="n">Guild</span><span class="p">,</span> <span class="n">invite</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">roles</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add an invite link to the autorole system.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        guild: :class:`discord.Guild`</span>
+<span class="sd">            The guild to get the invites from.</span>
+<span class="sd">        invite: :py:class:`str`</span>
+<span class="sd">            The invite link to create/extend. Give ``main`` or ``default`` if</span>
+<span class="sd">            you want to edit the main/default autorole system.</span>
+<span class="sd">        roles: :py:class:`list` </span>
+<span class="sd">            A list of roles ID to add to the roles list.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            :py:obj:`True` if successful</span>
+<span class="sd">        </span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        :class:`~Errors.NotInvite`</span>
+<span class="sd">            The invite given is not a discord invite, not is is main/default.</span>
+<span class="sd">        :class:`~Errors.CannotGetInvites`</span>
+<span class="sd">            The bot doesn&#39;t have the permission to get the guild&#39;s invites</span>
+<span class="sd">        :class:`~Errors.EmptyRolesList`</span>
+<span class="sd">            The list of roles given is empty</span>
+<span class="sd">        :class:`~Errors.InviteNotFound`</span>
+<span class="sd">            The invite given doesn&#39;t exist in the guild.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">invites</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">guild</span><span class="p">(</span><span class="n">guild</span><span class="p">)</span><span class="o">.</span><span class="n">invites</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">invite</span> <span class="o">!=</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;main&quot;</span><span class="p">]):</span>  <span class="c1"># the invite given is not default</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">invite_object</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">get_invite</span><span class="p">(</span><span class="n">invite</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">discord</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">NotFound</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">NotInvite</span><span class="p">(</span><span class="s2">&quot;Cannot get discord.Invite object from &quot;</span> <span class="o">+</span> <span class="n">invite</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">guild_invite</span> <span class="o">=</span> <span class="k">await</span> <span class="n">guild</span><span class="o">.</span><span class="n">invites</span><span class="p">()</span>
+            <span class="k">except</span> <span class="n">discord</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">Forbidden</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">CannotGetInvites</span><span class="p">(</span>
+                    <span class="s2">&quot;The Manage server permission is needed for this function&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">invite_object</span> <span class="o">=</span> <span class="n">discord</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">guild_invite</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="n">invite_object</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">invite_object</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">InviteNotFound</span><span class="p">(</span><span class="s2">&quot;The invite given doesn&#39;t exist in that guild&quot;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="n">invite</span> <span class="o">!=</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;main&quot;</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">NotInvite</span><span class="p">(</span><span class="s2">&quot;The invite sent isn&#39;t a discord.Invite, not it is main/default&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">roles</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="k">raise</span> <span class="n">Errors</span><span class="o">.</span><span class="n">EmptyRolesList</span><span class="p">(</span><span class="s2">&quot;No roles to add to the invite&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">invite</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">invites</span><span class="p">:</span>
+            <span class="n">invites</span><span class="p">[</span><span class="n">invite</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;roles&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;uses&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+
+        <span class="n">invites</span><span class="p">[</span><span class="n">invite</span><span class="p">][</span><span class="s2">&quot;roles&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">roles</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">invite</span> <span class="o">!=</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;main&quot;</span><span class="p">]):</span>
+            <span class="n">invites</span><span class="p">[</span><span class="n">invite</span><span class="p">][</span><span class="s2">&quot;uses&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">invite_object</span><span class="o">.</span><span class="n">uses</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">guild</span><span class="p">(</span><span class="n">guild</span><span class="p">)</span><span class="o">.</span><span class="n">invites</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">invites</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="API.remove_invite"><a class="viewcode-back" href="../../roleinvite-api.html#roleinvite.roleinvite.API.remove_invite">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">remove_invite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">guild</span><span class="p">:</span> <span class="n">discord</span><span class="o">.</span><span class="n">Guild</span><span class="p">,</span> <span class="n">invite</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">roles</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove a :py:class:`list` of roles from the invite links.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        guild: :class:`discord.Guild`</span>
+<span class="sd">            The guild to get the invites from.</span>
+<span class="sd">        roles: :py:class:list</span>
+<span class="sd">            A : py:class:`list` of roles ID to remove from the roles list. If it&#39;s empty, it will remove the invite from the autorole system.</span>
+<span class="sd">        invite: :py:class`str`</span>
+<span class="sd">            The invite to remove roles from. Give `main` or `default` to edit the main/default autorole system.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            :py:obj:`True` if successful</span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        :py:class:`KeyError`</span>
+<span class="sd">            The invite given doesn&#39;t exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">invites</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">guild</span><span class="p">(</span><span class="n">guild</span><span class="p">)</span><span class="o">.</span><span class="n">invites</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">invite</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">invites</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;That invite was never added.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">roles</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="c1"># all roles will be removed</span>
+            <span class="k">del</span> <span class="n">invites</span><span class="p">[</span><span class="n">invite</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">invites</span><span class="p">[</span><span class="n">invite</span><span class="p">][</span><span class="s2">&quot;roles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">invites</span><span class="p">[</span><span class="n">invite</span><span class="p">][</span><span class="s2">&quot;roles&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">roles</span><span class="p">]</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">guild</span><span class="p">(</span><span class="n">guild</span><span class="p">)</span><span class="o">.</span><span class="n">invites</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">invites</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="API.get_invites"><a class="viewcode-back" href="../../roleinvite-api.html#roleinvite.roleinvite.API.get_invites">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_invites</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">guild</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a :py:class:`list` of the invites linked to the autorole system of the guild.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        guild: :class:`discord.Guild`</span>
+<span class="sd">            The guild to get the invites from.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            A :py:class:`dict` of invites linked to any role on the guild.</span>
+<span class="sd">            </span>
+<span class="sd">            Example</span>
+
+<span class="sd">            .. code-block:: json</span>
+<span class="sd">    </span>
+<span class="sd">                {</span>
+<span class="sd">                    &quot;main&quot; : {</span>
+<span class="sd">                        &quot;roles&quot; : [</span>
+<span class="sd">                            987654321234567890</span>
+<span class="sd">                        ]</span>
+<span class="sd">                    },</span>
+<span class="sd">                    &quot;https://discord.gg/example&quot; : {</span>
+<span class="sd">                        &quot;roles&quot; : [</span>
+<span class="sd">                            012345678987654321,</span>
+<span class="sd">                            987654321234567890</span>
+<span class="sd">                        ],</span>
+<span class="sd">                        &quot;uses&quot; : 42</span>
+<span class="sd">                    }</span>
+<span class="sd">                }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">guild</span><span class="p">(</span><span class="n">guild</span><span class="p">)</span><span class="o">.</span><span class="n">invites</span><span class="p">()</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, El Laggron.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

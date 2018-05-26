@@ -79,7 +79,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">Cog guides:</span></p>
+              <p class="caption"><span class="caption-text">Cog guides</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="say.html">Say</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">RoleInvite</a><ul>
@@ -94,6 +94,10 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="instantcommands.html">InstantCommands</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="roleinvite-api.html">RoleInvite</a></li>
 </ul>
 
             
@@ -194,15 +198,19 @@ To load it, type this:</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p>Before giving the commands list, I’d like to show you how the cog is working.</p>
-<p>The cog works with what I call invite links. Each invite link is linked to one or more
-roles. This mean that, every time a new user join the server, if he used the invite A to
+<p>The cog works with what I call invite links. Each invite
+link is linked to one or more roles. This mean that,
+every time a new user join the server, if he used the invite A to
 join the server, he will get the list of roles linked to the invite A.</p>
-<p>You can link many roles  to multiple invites, so you can imagine something like “click <strong>here</strong>
-if you are an engineer, else click <strong>here</strong> if you’re an architect”, and make
-roleinvite give the engineer or architect roles.</p>
-<p>You can also link roles to default or main autorole. If you link roles to the main autorole,
-the new member will get these roles if he joined with an unlinked invite. If you link roles
-to the default autorole, new users will always get these roles, whatever invite he used.</p>
+<p>You can link many roles  to multiple invites, so you can imagine something
+like “click <strong>here</strong> if you are an engineer, else click <strong>here</strong> if you’re
+an architect”, and make roleinvite give the engineer or architect roles.</p>
+<p>You can also link roles to default or main autorole.
+If you link roles to the main autorole,
+the new member will get these roles if he
+joined with an unlinked invite. If you link roles
+to the default autorole, new users will always get
+these roles, whatever invite he used.</p>
 <p>Here’s a schema for a better understanding:</p>
 <img alt="_images/RoleInvite.png" src="_images/RoleInvite.png" />
 <p>Here’s the list of all commands of this cog.</p>
@@ -244,7 +252,8 @@ a new invite link will be created with the role you gave.</li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">&lt;role&gt;</span></code> The role to be linked. Please give the <strong>exact role name</strong> or the ID.</p>
+<li><p class="first"><code class="docutils literal"><span class="pre">&lt;role&gt;</span></code> The role to be linked. Please give the <strong>exact role name</strong>
+or the ID.</p>
 </li>
 </ul>
 </div>
@@ -264,12 +273,14 @@ will be removed.</p>
 <div><ul class="simple">
 <li>If it is a Discord invite URL, the role will be unlinked from it.</li>
 <li>If it is <code class="docutils literal"><span class="pre">main</span></code>, the role will be unlinked from the main autorole.</li>
-<li>If it is <code class="docutils literal"><span class="pre">default</span></code>, the role will be unlinked from the default autorole.</li>
+<li>If it is <code class="docutils literal"><span class="pre">default</span></code>, the role will be unlinked from
+the default autorole.</li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">[role&gt;]</span></code> Optional. The role to be unlinked. Please give the <strong>exact role name</strong>
-or the ID. If not given, the entire autorole will be removed.</p>
+<li><p class="first"><code class="docutils literal"><span class="pre">[role&gt;]</span></code> Optional. The role to be unlinked. Please give the
+<strong>exact role name</strong> or the ID. If not given, the entire
+autorole will be removed.</p>
 </li>
 </ul>
 </div>

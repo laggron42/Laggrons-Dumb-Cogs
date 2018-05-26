@@ -1,6 +1,31 @@
 class Errors:
     """
     Custom error handling used for the cog and the API
+
+    If you need to prevent and exception, do it like this
+
+    .. code-block:: python
+
+        errors = bot.get_cog('RoleInvite').errors
+
+        try:
+            await api.add_invite(
+                ctx.guild, 'main', [42]
+            )
+        except errors.CannotAddRole:
+            print("Missing permissions")
+        except InviteNotFound:
+            print("Invalid invite")
+        except:
+            # occurs for any exception
+            print("Fatal error")
+        else:
+            # executed if the try succeeded
+            print("All good")
+        finally:
+            # always executed
+            print("End of function")
+
     """
 
     def __init__(self, exception):
