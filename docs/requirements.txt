@@ -1,1 +1,1 @@
-pip install sphinxcontrib-asyncio
+pip install -U sphinxcontrib-asyncio
