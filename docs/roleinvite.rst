@@ -174,7 +174,7 @@ roleset enable
 
 Enable or disable the autorole system.
 
-.. info::
+.. note::
 
     If it was removed without your action, that means that the bot somehow
     lost its permissions. Make sure it has the good permissions and enable it again.
