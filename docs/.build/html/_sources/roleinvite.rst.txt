@@ -59,6 +59,8 @@ Here's a schema for a better understanding:
 
 Here's the list of all commands of this cog.
 
+.. _command-roleset:
+
 ~~~~~~~
 roleset
 ~~~~~~~
@@ -71,6 +73,8 @@ roleset
 
 This is the main command used for setting up the code.
 It will be used for all other commands.
+
+.. _command-roleset-add:
 
 ~~~~~~~~~~~
 roleset add
@@ -108,6 +112,8 @@ You can link more roles by typing the command with the same argument.
 * ``<role>`` The role to be linked. Please give the **exact role name**
   or the ID.
 
+.. _command-roleset-remove:
+
 ~~~~~~~~~~~~~~
 roleset remove
 ~~~~~~~~~~~~~~
@@ -132,9 +138,11 @@ will be removed.
     * If it is ``default``, the role will be unlinked from
       the default autorole.
 
-* ``[role>]`` Optional. The role to be unlinked. Please give the
+* ``[role]`` Optional. The role to be unlinked. Please give the
   **exact role name** or the ID. If not given, the entire
   autorole will be removed.
+
+.. _command-roleset-list:
 
 ~~~~~~~~~~~~
 roleset list
@@ -149,3 +157,97 @@ roleset list
 **Description**
 
 List all of the existing autoroles on the guild, with their linked roles.
+
+.. _command-roleset-enable:
+
+~~~~~~~~~~~~~~
+roleset enable
+~~~~~~~~~~~~~~
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]roleset enable
+
+**Description**
+
+Enable or disable the autorole system.
+
+.. info::
+
+    If it was removed without your action, that means that the bot somehow
+    lost its permissions. Make sure it has the good permissions and enable it again.
+
+-------------------------
+Frequently Asked Question
+-------------------------
+
+.. note::
+
+    **Your question is not in the list or you got an unexcpected issue?**
+
+    You should join the `Discord server <https://discord.gg/WsTGeQM>`_ or
+    `post an issue <https://github.com/retke/Laggrons-Dumb-Cogs/issues/new/choose>`_
+    on the repo.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Can I make it so the bot adds x roles if the invite used is unknown?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Yes, by using the ``main`` value instead of using a discord invite
+when creating a new invite link. See :ref:`roleset add <command-roleset-add>` command's
+arguments for more informations.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Can I make it so the bot always adds x roles, regardless of the invite used?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Yes, by using the ``default`` value instead of using a discord invite
+when creating a new invite link. See :ref:`roleset add <command-roleset-add>` command's
+arguments for more informations.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Can I make a custom welcome message for each invite link?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Not for now. I'm thinking about interacting with another package for that, 
+but that'll require an API, which is rare with cog creators, and creating 
+my own welcomer system is a lot of work. 
+
+This may be available in a future release.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The bot suddenly stopped adding roles to the new members
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The bot will automatically turn off the autorole system if he lose the ``Manage
+sever`` or the ``Add roles`` permission, which are absolutely necessary for the cog.
+
+If you added the permissions back, enable the autorole again with the command 
+:ref:`enable <command-roleset-enable>`.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Some roles are not added to the new members
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This can happens if the role hierarchy is modified after the roles got linked.
+Remember that a bot/member can only add roles that are below him in the role
+hierarchy. 
+
+Modify the role hirearchy and make sure all necessary roles are **below**
+the bot's highest role. If it still doesn't work, try to link the role again.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+An invite link was removed without any action
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Invite links will be deleted if the invite doesn't exist anymore
+(manual delete or invite expired).
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+I lost all of my data on the guild
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The bot will delete your server's data after a restart if he's
+not anymore on your server. Don't kick the bot and use the disable function instead.
