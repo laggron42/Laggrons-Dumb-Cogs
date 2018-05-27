@@ -1,2 +1,5 @@
 -i https://pypi.org/simple
 sphinxcontrib-asyncio
+yarl==0.18.0
+Red-DiscordBot[voice]
+git+https://github.com/Rapptz/discord.py@rewrite
