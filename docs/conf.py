@@ -35,11 +35,10 @@ sys.path.insert(0, os.path.abspath(".."))
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
-    "sphinx.ext.todo",
-    "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
     "sphinxcontrib.asyncio",
+    "sphinx_autodoc_napoleon_typehints",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -85,6 +84,9 @@ pygments_style = "sphinx"
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+# Role which is assigned when you make a simple reference within backticks
+default_role = "any"
 
 
 # -- Options for HTML output ----------------------------------------------
