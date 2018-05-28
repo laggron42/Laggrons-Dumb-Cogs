@@ -25,7 +25,6 @@ class Errors:
         finally:
             # always executed
             print("End of function")
-
     """
 
     def __init__(self, exception):

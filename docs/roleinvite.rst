@@ -124,7 +124,7 @@ roleset remove
 
 **Description**
 
-Unlink a role from an autorole. If the role is not given, the full autorole
+Unlink a role from an autorole. If the role is not given, the entire autorole
 will be removed.
 
 **Arguments**
