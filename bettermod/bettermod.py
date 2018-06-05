@@ -1018,7 +1018,7 @@ thumbnail's URL pictures:
         modlog.add_field(name="User", value=user.mention, inline=True)
         modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
-        modlog.set_author(name=user.name, icon_url=user.avatar_url)
+        modlog.set_author(name=user.display_name, icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         modlog.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_simple'])
         try:
@@ -1088,7 +1088,7 @@ thumbnail's URL pictures:
         modlog.add_field(name="User", value=user.mention, inline=True)
         modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
-        modlog.set_author(name=user.name, icon_url=user.avatar_url)
+        modlog.set_author(name=user.display_name, icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         modlog.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_kick'])
         try:
@@ -1166,7 +1166,7 @@ thumbnail's URL pictures:
         modlog.add_field(name="User", value=user.mention, inline=True)
         modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
-        modlog.set_author(name=user.name, icon_url=user.avatar_url)
+        modlog.set_author(name=user.display_name, icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         try:
             modlog.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_softban'])
@@ -1251,7 +1251,7 @@ thumbnail's URL pictures:
         modlog.add_field(name="User", value=user.mention, inline=True)
         modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
-        modlog.set_author(name=user.name, icon_url=user.avatar_url)
+        modlog.set_author(name=user.display_name, icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         modlog.set_thumbnail(url=self.settings[server.id]['thumbnail']['warning_embed_ban'])
         try:
