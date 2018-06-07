@@ -129,6 +129,10 @@ class Say:
             else:
                 channel = ctx.channel
 
+        if u in self.interaction:
+            await ctx.send("A session is already running.")
+            return
+
         message = await u.send(
             "I will start sending you messages from {}.\n"
             "Just send me any message and I will send it in that channel.\n"
