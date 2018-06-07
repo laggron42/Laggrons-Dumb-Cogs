@@ -48,7 +48,7 @@ class Say:
         if user in self.interaction:
             channel = reaction.message.channel
             if isinstance(channel, discord.DMChannel):
-                await self.stop_interaction(user.id)
+                await self.stop_interaction(user)
 
     async def say(self, ctx, text):
 
