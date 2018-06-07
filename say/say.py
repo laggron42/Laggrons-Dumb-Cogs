@@ -20,7 +20,7 @@ class Say:
         self.interaction = []
 
     __author__ = "retke (El Laggron)"
-    __version__ = "Laggrons-Dumb-Cogs/say release 1.1b"
+    __version__ = "Laggrons-Dumb-Cogs/say release 1.2"
     __info__ = {
         "bot_version": "3.0.0b9",
         "description": (
