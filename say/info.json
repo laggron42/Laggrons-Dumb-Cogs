@@ -1,12 +1,12 @@
 {
     "author": "retke (El Laggron)",
     "bot_version": "3.0.0b9",
-    "description": "Speak as if you were the bot.\nAllow file upload, rift with DM and specific destinations.",
+    "description": "Speak as if you were the bot.\nAllow file upload, rift in DM and specific destinations.",
     "hidden": false,
-    "install_msg": "Thanks for installing roleinvite. Please check the wiki for all informations about the cog.\nhttps://github.com/retke/Laggrons-Dumb-Cogs/wiki\nEverything you need to know about setting up the cog is here.",
+    "install_msg": "Thank you for installing the say cog. Please check the wiki for all informations about the cog.\nhttps://github.com/retke/Laggrons-Dumb-Cogs/wiki\n\nType `[p]help Say` for a quick overview of the commands.",
     "required_cogs": [],
     "requirements": [],
-    "short": "Speak as if you were the bot",
+    "short": "Speak as the bot through multiple options.",
     "tags": [
         "rift",
         "upload",
