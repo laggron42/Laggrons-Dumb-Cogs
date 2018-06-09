@@ -1,5 +1,21 @@
 # Laggron's Dumb Cogs - Red V3
 
+<a href="https://discord.gg/WsTGeQM">
+	<img src="https://discordapp.com/api/guilds/363008468602454017/embed.png" alt="Discord server">
+</a>
+
+<a href="https://github.com/Rapptz/discord.py">
+    <img src="https://img.shields.io/badge/discord-py-blue.svg">
+</a>
+
+<a href="https://travis-ci.org/retke/Laggrons-Dumb-Cogs">
+    <img src="https://api.travis-ci.org/retke/Laggrons-Dumb-Cogs.svg?branch=v3">
+</a>
+
+<a href="http://makeapullrequest.com">
+    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square">
+</a>
+
 ![](https://github.com/retke/Laggrons-Dumb-Cogs/blob/master/.github/RESSOURCES/BANNERS/v3_branch.png)
 
 Hello and welcome there, this is the repository for the **Laggron's Dumb Cogs**, a buch of modules for [Red, the modular Discord bot](https://github.com/Cog-Creators/Red-DiscordBot/tree/V3/master) version 3. This is using the rewrite of [Discord.py library](https://github.com/Rapptz/discord.py/tree/rewrite).

@@ -6,6 +6,26 @@
 Welcome to Laggron's Dumb Cogs's documentation!
 ===============================================
 
+.. raw:: html
+
+    <embed>
+        <a href="https://discord.gg/WsTGeQM">
+		    <img src="https://discordapp.com/api/guilds/363008468602454017/embed.png" alt="Discord server">
+		</a>
+
+        <a href="https://github.com/Rapptz/discord.py">
+            <img src="https://img.shields.io/badge/discord-py-blue.svg">
+        </a>
+
+        <a href="https://travis-ci.org/retke/Laggrons-Dumb-Cogs">
+            <img src="https://api.travis-ci.org/retke/Laggrons-Dumb-Cogs.svg?branch=v3">
+        </a>
+
+        <a href="http://makeapullrequest.com">
+            <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square">
+        </a>
+    </embed>
+
 .. image:: .ressources/BANNERS/wiki.png
 
 .. important:: Please make sure that you first installed
