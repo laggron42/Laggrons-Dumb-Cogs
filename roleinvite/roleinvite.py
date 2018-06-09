@@ -5,6 +5,7 @@ import json
 from discord.ext import commands
 from .utils.dataIO import dataIO
 
+
 class RoleInvite:
     """Autorole on users following the invite they used
     
@@ -12,18 +13,15 @@ class RoleInvite:
 
     def __init__(self, bot):
         self.bot = bot
-        self.settings = dataIO.load_json('data/roleinvite/settings.json')
-    
+        self.settings = dataIO.load_json("data/roleinvite/settings.json")
+
     def init(self, server_id):
-        self.settings[server_id] = {
-            'invites': {},
-                'len': 0
-        }
-    
+        self.settings[server_id] = {"invites": {}, "len": 0}
+
     @commands.group(pass_context=True)
     async def roleset(self, ctx):
         """Settings for role invite cog"""
-    
+
         if ctx.invoked_subcommand is None:
             await self.bot.send_cmd_help(ctx)
 
@@ -33,18 +31,20 @@ class RoleInvite:
             
             Usage: [p]roleset add https://discord.gg/red Linux users
             Will add the Linux users role to anyone who joins using the red invite link"""
-        
+
         if ctx.message.server.id not in self.settings:
             self.init(ctx.message.server.id)
-    
+
         role = discord.utils.get(ctx.message.server.roles, name=rolename)
 
         if role is None:
             await self.bot.say("The given role cannot be found.")
             return
-        
+
         if role.position >= ctx.message.server.me.top_role.position:
-            await self.bot.say("That role is higher or equal than me. As the Discord's laws says, I can't give users this role. Aborting...")
+            await self.bot.say(
+                "That role is higher or equal than me. As the Discord's laws says, I can't give users this role. Aborting..."
+            )
             return
 
         try:
@@ -54,22 +54,26 @@ class RoleInvite:
             return
 
         if invite.startswith("https://discord.gg/") or invite.startswith("http://discord.gg/"):
-            tmp = invite.split('/')
+            tmp = invite.split("/")
             invite = tmp[3]
 
         for i in invites:
-            tmp = i.url.split('/')
+            tmp = i.url.split("/")
             name_i = tmp[3]
             if name_i == invite:
-                self.settings[ctx.message.server.id]['len'] += 1
-                self.settings[ctx.message.server.id]['invites'][i.url] = {"role": str(role), "use": int(i.uses)}
-                
-                await self.bot.say("The invite `{}` is now assigned to the role `{}`".format(i, role.name))
-                dataIO.save_json('data/roleinvite/settings.json', self.settings)
+                self.settings[ctx.message.server.id]["len"] += 1
+                self.settings[ctx.message.server.id]["invites"][i.url] = {
+                    "role": str(role),
+                    "use": int(i.uses),
+                }
+
+                await self.bot.say(
+                    "The invite `{}` is now assigned to the role `{}`".format(i, role.name)
+                )
+                dataIO.save_json("data/roleinvite/settings.json", self.settings)
                 return
 
         await self.bot.say("The invite cannot be found")
-
 
     @roleset.command(pass_context=True)
     async def list(self, ctx):
@@ -77,19 +81,20 @@ class RoleInvite:
 
         if ctx.message.server.id not in self.settings:
             self.init(ctx.message.server.id)
-        
-        if self.settings[ctx.message.server.id]['invites'] == {}:
+
+        if self.settings[ctx.message.server.id]["invites"] == {}:
             await self.bot.say("There is nothing set on this server yet")
             return
-                
+
         message = "List of current enabled invites on this server:\n`Invite`: role concerned\n\n"
 
-        for invite in self.settings[ctx.message.server.id]['invites']:
-            message += "`{}`: {}\n".format(invite, self.settings[ctx.message.server.id]['invites'][invite]['role'])
-        
+        for invite in self.settings[ctx.message.server.id]["invites"]:
+            message += "`{}`: {}\n".format(
+                invite, self.settings[ctx.message.server.id]["invites"][invite]["role"]
+            )
+
         await self.bot.say(message)
-            
-    
+
     @roleset.command(pass_context=True)
     async def remove(self, ctx, invite: str):
         """Remove a link between an invite and a role
@@ -100,48 +105,59 @@ class RoleInvite:
             self.init(ctx.message.server.id)
 
         if invite.startswith("https://discord.gg/") or invite.startswith("http://discord.gg/"):
-            tmp = invite.split('/')
+            tmp = invite.split("/")
             invite_sh = tmp[3]
         else:
             invite_sh = invite
             invite = "http://discord.gg/" + invite_sh
 
-        if invite not in self.settings[ctx.message.server.id]['invites']:
-            await self.bot.say("That invite does not exist or is not registered. Type `{}roleset list` to see all invites registered".format(ctx.prefix))
+        if invite not in self.settings[ctx.message.server.id]["invites"]:
+            await self.bot.say(
+                "That invite does not exist or is not registered. Type `{}roleset list` to see all invites registered".format(
+                    ctx.prefix
+                )
+            )
             return
-                
+
         e = discord.Embed(description="Deletion of role-invite link")
         e.add_field(name="Invite", value=invite, inline=True)
-        e.add_field(name="Role", value=self.settings[ctx.message.server.id]['invites'][invite]['role'], inline=True)
+        e.add_field(
+            name="Role",
+            value=self.settings[ctx.message.server.id]["invites"][invite]["role"],
+            inline=True,
+        )
         e.set_author(name=ctx.message.server.name, icon_url=ctx.message.server.icon_url)
         e.set_footer(text="Click on the reaction to confirm changes")
-            
+
         msg = await self.bot.say(embed=e)
-            
+
         await self.bot.add_reaction(msg, "✅")
-        reaction = await self.bot.wait_for_reaction(message=msg, user=ctx.message.author, emoji="✅", timeout=30)
-        
+        reaction = await self.bot.wait_for_reaction(
+            message=msg, user=ctx.message.author, emoji="✅", timeout=30
+        )
+
         if reaction is None:
             await self.bot.remove_reaction(msg, "✅")
             return
-                
-        del self.settings[ctx.message.server.id]['invites'][invite]
-        self.settings[ctx.message.server.id]['len'] -= 1
-        
-        dataIO.save_json('data/roleinvite/settings.json', self.settings)
+
+        del self.settings[ctx.message.server.id]["invites"][invite]
+        self.settings[ctx.message.server.id]["len"] -= 1
+
+        dataIO.save_json("data/roleinvite/settings.json", self.settings)
 
         try:
             await self.bot.delete_message(msg)
         except:
             pass
-        await self.bot.say("The link has been removed, users won't get this role anymore when joining with this link")
-            
-            
+        await self.bot.say(
+            "The link has been removed, users won't get this role anymore when joining with this link"
+        )
+
     async def on_member_join(self, member):
-        
+
         if member.bot:
             return
-        
+
         if member.server.id not in self.settings:
             self.init(member.server.id)
 
@@ -152,19 +168,22 @@ class RoleInvite:
             return
 
         for i in invites:
-            if i.url in sett['invites']:
-                if int(i.uses) > int(sett['invites'][str(i)]['use']):
-                    role = discord.utils.get(member.server.roles, name=sett['invites'][str(i)]['role'])
-                    #print("\n\nUser {} joined with {} invite, adding the {} role > Stored invite uses: {}".format(member, i, role, sett['invites'][str(i)]['use']))
+            if i.url in sett["invites"]:
+                if int(i.uses) > int(sett["invites"][str(i)]["use"]):
+                    role = discord.utils.get(
+                        member.server.roles, name=sett["invites"][str(i)]["role"]
+                    )
+                    # print("\n\nUser {} joined with {} invite, adding the {} role > Stored invite uses: {}".format(member, i, role, sett['invites'][str(i)]['use']))
                     if role is not None:
                         await self.bot.add_roles(member, role)
                     else:
-                        print("Role not found") # debug line
-                sett['invites'][str(i)]['use'] = i.uses
-        dataIO.save_json('data/roleinvite/settings.json', self.settings)
+                        print("Role not found")  # debug line
+                sett["invites"][str(i)]["use"] = i.uses
+        dataIO.save_json("data/roleinvite/settings.json", self.settings)
+
 
 def check_folders():
-    folders = ('data', 'data/roleinvite/')
+    folders = ("data", "data/roleinvite/")
     for folder in folders:
         if not os.path.exists(folder):
             print("Creating " + folder + " folder...")
@@ -172,16 +191,14 @@ def check_folders():
 
 
 def check_files():
-    ignore_list = {'SERVERS': [], 'CHANNELS': []}
-    
-    files = {
-        'settings.json'         : {}
-    }
-    
+    ignore_list = {"SERVERS": [], "CHANNELS": []}
+
+    files = {"settings.json": {}}
+
     for filename, value in files.items():
-        if not os.path.isfile('data/roleinvite/{}'.format(filename)):
+        if not os.path.isfile("data/roleinvite/{}".format(filename)):
             print("Creating empty {}".format(filename))
-            dataIO.save_json('data/roleinvite/{}'.format(filename), value)
+            dataIO.save_json("data/roleinvite/{}".format(filename), value)
 
 
 def setup(bot):
