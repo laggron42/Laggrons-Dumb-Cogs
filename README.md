@@ -12,12 +12,12 @@
     <img src="https://img.shields.io/badge/code%20style-black-000000.svg" alt="Black coding style">
 </a>
 
-<a href="http://laggrons-dumb-cogs.readthedocs.io/en/v3/?badge=v3">
-    <img src="https://readthedocs.org/projects/laggrons-dumb-cogs/badge/?version=v3" alt="Docs build">
-</a>
-
 <a href="https://travis-ci.org/retke/Laggrons-Dumb-Cogs">
     <img src="https://api.travis-ci.org/retke/Laggrons-Dumb-Cogs.svg?branch=v3" alt="Travis CI build">
+</a>
+
+<a href="http://laggrons-dumb-cogs.readthedocs.io/en/v3/?badge=v3">
+    <img src="https://readthedocs.org/projects/laggrons-dumb-cogs/badge/?version=v3" alt="Docs build">
 </a>
 
 <a href="http://makeapullrequest.com">
