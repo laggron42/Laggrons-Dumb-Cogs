@@ -451,7 +451,6 @@ class RoleInvite:
             )
 
     async def on_member_join(self, member):
-
         async def add_roles(invite):
             roles = []
             for role in invites[invite]["roles"]:
