@@ -25,18 +25,18 @@ class Say:
         "bot_version": "3.0.0b9",
         "description": (
             "Speak as if you were the bot.\n"
-            "Allow file upload, rift with DM and specific destinations."
+            "Allow file upload, rift in DM and specific destinations."
         ),
         "hidden": False,
         "install_msg": (
-            "Thanks for installing roleinvite. Please check the wiki "
+            "Thank you for installing the say cog. Please check the wiki "
             "for all informations about the cog.\n"
-            "https://github.com/retke/Laggrons-Dumb-Cogs/wiki\n"
-            "Everything you need to know about setting up the cog is here."
+            "https://github.com/retke/Laggrons-Dumb-Cogs/wiki\n\n"
+            "Type `[p]help Say` for a quick overview of the commands."
         ),
         "required_cogs": [],
         "requirements": [],
-        "short": "Speak as if you were the bot",
+        "short": "Speak as the bot through multiple options.",
         "tags": ["rift", "upload", "interact"],
     }
 
