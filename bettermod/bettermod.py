@@ -1040,7 +1040,7 @@ thumbnail's URL pictures:
         try:
             await self.bot.send_message(user, embed=target)
         except:
-            modlog.set_footer(text="I couldn't send a message to this user. He may has blocked messages from this server.")
+            modlog.set_footer(text="I couldn't send a message to this user. He may have blocked messages from this server.")
 
         await self.bot.send_message(channel, embed=modlog)
 
@@ -1110,7 +1110,7 @@ thumbnail's URL pictures:
         try:
             await self.bot.send_message(user, embed=target)
         except:
-            modlog.set_footer(text="I couldn't send a message to this user. He may has blocked messages from this server.")
+            modlog.set_footer(text="I couldn't send a message to this user. He may have blocked messages from this server.")
 
         try:
             await self.bot.kick(user)
@@ -1195,7 +1195,7 @@ thumbnail's URL pictures:
         try:
             await self.bot.send_message(user, embed=target)
         except:
-            modlog.set_footer(text="I couldn't send a message to this user. He may has blocked messages from this server.")
+            modlog.set_footer(text="I couldn't send a message to this user. He may have blocked messages from this server.")
 
         try:
             await self.bot.ban(user, 7)
@@ -1273,7 +1273,7 @@ thumbnail's URL pictures:
         try:
             await self.bot.send_message(user, embed=target)
         except:
-            modlog.set_footer(text="I couldn't send a message to this user. He may has blocked messages from this server.")
+            modlog.set_footer(text="I couldn't send a message to this user. He may have blocked messages from this server.")
 
         try:
             await self.bot.ban(user)
