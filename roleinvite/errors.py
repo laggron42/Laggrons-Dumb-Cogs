@@ -35,6 +35,7 @@ class Errors:
         """
         The list of roles that needs to be linked to an invite is empty.
         """
+
         pass
 
     class NotInvite:
@@ -46,6 +47,7 @@ class Errors:
         """
         The invite sent isn't in the guild's invite list.
         """
+
         pass
 
     # errors used in the listener
@@ -54,6 +56,7 @@ class Errors:
         The bot isn't allowed to get the guild invites.
         Manage server permission is needed.
         """
+
         pass
 
     class CannotAddRole:
@@ -61,4 +64,5 @@ class Errors:
         The bot isn't allowed to give a role. 
         The role hierarchy was modified or a 3rd party module added the role without check.
         """
+
         pass
