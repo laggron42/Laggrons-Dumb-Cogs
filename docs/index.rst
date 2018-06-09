@@ -6,25 +6,25 @@
 Welcome to Laggron's Dumb Cogs's documentation!
 ===============================================
 
-.. raw:: html
+.. image:: https://discordapp.com/api/guilds/363008468602454017/embed.png
+    :target: https://discord.gg/WsTGeQM
+    :alt: Discord server
 
-    <embed>
-        <a href="https://discord.gg/WsTGeQM">
-		    <img src="https://discordapp.com/api/guilds/363008468602454017/embed.png" alt="Discord server">
-		</a>
+.. image:: https://img.shields.io/badge/discord-py-blue.svg
+    :target: https://github.com/Rapptz/discord.py
+    :alt: discord.py
 
-        <a href="https://github.com/Rapptz/discord.py">
-            <img src="https://img.shields.io/badge/discord-py-blue.svg">
-        </a>
+.. image:: https://api.travis-ci.org/retke/Laggrons-Dumb-Cogs.svg?branch=v3
+    :target: https://travis-ci.org/retke/Laggrons-Dumb-Cogs
+    :alt: Travis CI build
 
-        <a href="https://travis-ci.org/retke/Laggrons-Dumb-Cogs">
-            <img src="https://api.travis-ci.org/retke/Laggrons-Dumb-Cogs.svg?branch=v3">
-        </a>
+.. image:: https://readthedocs.org/projects/laggrons-dumb-cogs/badge/
+    :target: http://laggrons-dumb-cogs.readthedocs.io
+    :alt: Docs build
 
-        <a href="http://makeapullrequest.com">
-            <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square">
-        </a>
-    </embed>
+.. image:: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square
+    :target: http://makeapullrequest.com
+    :alt: PRs open
 
 .. image:: .ressources/BANNERS/wiki.png
 
