@@ -26,7 +26,7 @@ class Say:
     __info__ = {
         "bot_version": "3.0.0b9",
         "description": (
-            "Speak as if you were the bot.\n"
+            "Speak as the bot through multiple options.\n"
             "Allow file upload, rift in DM and specific destinations."
         ),
         "hidden": False,
