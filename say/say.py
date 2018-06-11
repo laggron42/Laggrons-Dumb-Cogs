@@ -22,7 +22,7 @@ class Say:
         self.cache = cog_data_path(self) / 'cache'
 
     __author__ = "retke (El Laggron)"
-    __version__ = "Laggrons-Dumb-Cogs/say release 1.2"
+    __version__ = "Laggrons-Dumb-Cogs/say release 1.3"
     __info__ = {
         "bot_version": "3.0.0b9",
         "description": (
