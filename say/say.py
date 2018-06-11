@@ -13,7 +13,7 @@ class Say:
     Speak as if you were the bot
     
     Report a bug or ask a question: https://discord.gg/WsTGeQ
-    Full documentation and FAQ: https://github.com/retke/Laggrons-Dumb-Cogs/wiki
+    Full documentation and FAQ: http://laggrons-dumb-cogs.readthedocs.io/say.html
     """
 
     def __init__(self, bot):
