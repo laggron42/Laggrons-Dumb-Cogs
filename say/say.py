@@ -19,7 +19,7 @@ class Say:
     def __init__(self, bot):
         self.bot = bot
         self.interaction = []
-        self.cache = cog_data_path(self) / 'cache'
+        self.cache = cog_data_path(self) / "cache"
 
     __author__ = "retke (El Laggron)"
     __version__ = "Laggrons-Dumb-Cogs/say release 1.3"
@@ -58,15 +58,15 @@ class Say:
 
     async def say(self, ctx, text):
 
-        self.clear_cache() # let's make sure cache is clear
+        self.clear_cache()  # let's make sure cache is clear
         text = [x for x in text]
         if ctx.message.attachments != []:
             # there is an attachment
             exit_code = os.system(
-                "wget --quiet --directory-prefix " +
-                str(self.cache) +
-                " " +
-                " ".join([x.url for x in ctx.message.attachments])
+                "wget --quiet --directory-prefix "
+                + str(self.cache)
+                + " "
+                + " ".join([x.url for x in ctx.message.attachments])
             )
             files = [discord.File(str(self.cache / x.filename)) for x in ctx.message.attachments]
 
@@ -74,10 +74,7 @@ class Say:
                 print(exit_code)
                 # the file wasn't download correctly
                 # let's tell the user what's wrong
-                error_message = (
-                    "An error occured while downloading the file.\n"
-                    "Error code "
-                )
+                error_message = "An error occured while downloading the file.\n" "Error code "
                 if exit_code == 3:
                     error_message += "3: File I/O error (write permission)"
                     # probably a permission error
@@ -100,7 +97,7 @@ class Say:
                     # no attachments, no text, nothing to send
                     return
                 # still the text to send, let's continue
-                files = None 
+                files = None
         else:
             files = None
 
