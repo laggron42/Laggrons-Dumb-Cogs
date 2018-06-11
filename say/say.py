@@ -4,6 +4,7 @@ import os
 import asyncio
 
 from redbot.core import checks
+from redbot.core.data_manager import cog_data_path
 from discord.ext import commands
 
 
@@ -18,6 +19,7 @@ class Say:
     def __init__(self, bot):
         self.bot = bot
         self.interaction = []
+        self.cache = cog_data_path(self) / 'cache'
 
     __author__ = "retke (El Laggron)"
     __version__ = "Laggrons-Dumb-Cogs/say release 1.2"
@@ -50,16 +52,59 @@ class Say:
             if isinstance(channel, discord.DMChannel):
                 await self.stop_interaction(user)
 
+    def clear_cache(self):
+        for file in self.cache.iterdir():
+            os.remove(str(file.absolute()))
+
     async def say(self, ctx, text):
 
+        self.clear_cache() # let's make sure cache is clear
         text = [x for x in text]
         if ctx.message.attachments != []:
-            os.system("wget " + ctx.message.attachments[0].url)
-            file = discord.File(ctx.message.attachments[0].filename)
-        else:
-            file = None
+            # there is an attachment
+            exit_code = os.system(
+                "wget --quiet --directory-prefix " +
+                str(self.cache) +
+                " " +
+                " ".join([x.url for x in ctx.message.attachments])
+            )
+            files = [discord.File(str(self.cache / x.filename)) for x in ctx.message.attachments]
 
-        if file is None and text == []:  # no text, no attachment
+            if exit_code != 0:
+                print(exit_code)
+                # the file wasn't download correctly
+                # let's tell the user what's wrong
+                error_message = (
+                    "An error occured while downloading the file.\n"
+                    "Error code "
+                )
+                if exit_code == 3:
+                    error_message += "3: File I/O error (write permission)"
+                    # probably a permission error
+                    # shouldn't occur with the cache dir
+                elif exit_code == 4:
+                    error_message += "4: Network failure"
+                elif exit_code == 5:
+                    error_message += "5: SSL verification failure"
+                elif exit_code == 7:
+                    error_message += "7: Protocol error"
+                elif exit_code == 8:
+                    error_message += "8: Server issued an error response"
+                else:
+                    error_message += "unknown."
+                # source: https://gist.github.com/cosimo/5747881
+
+                await ctx.author.send(error_message)
+
+                if text == []:
+                    # no attachments, no text, nothing to send
+                    return
+                # still the text to send, let's continue
+                files = None 
+        else:
+            files = None
+
+        if files is None and text == []:  # no text, no attachment
             await ctx.send_help()
             return
 
@@ -76,7 +121,7 @@ class Say:
         text = " ".join(text)
 
         try:
-            await channel.send(text, file=file)
+            await channel.send(text, files=files)
 
         except discord.errors.Forbidden:
             if not ctx.guild.me.permissions_in(channel).send_messages:
@@ -84,8 +129,7 @@ class Say:
             elif not ctx.guild.me.permissions_in(channel).attach_files:
                 await ctx.send("I am not allowed to upload files in " + channel.mention)
 
-        if file is not None:
-            os.remove(file.filename)
+        self.clear_cache()
 
     @commands.command(name="say")
     @checks.guildowner()
