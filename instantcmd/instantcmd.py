@@ -18,7 +18,7 @@ class InstantCommands:
     Generate a new command from a code snippet, without making a new cog.
 
     Report a bug or ask a question: https://discord.gg/WsTGeQ
-    Full documentation and FAQ: https://github.com/retke/Laggrons-Dumb-Cogs/wiki
+    Full documentation and FAQ: https://laggrons-dumb-cogs.readthedocs.io/instantcommands.html
     """
 
     def __init__(self, bot):

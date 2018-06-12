@@ -1,3 +1,5 @@
+# RoleInvite by retke, aka El Laggron
+
 import asyncio
 import discord
 
@@ -16,7 +18,7 @@ class RoleInvite:
     Server autorole following the invite the user used to join the server
 
     Report a bug or ask a question: https://discord.gg/WsTGeQ
-    Full documentation and FAQ: https://github.com/retke/Laggrons-Dumb-Cogs/wiki
+    Full documentation and FAQ: https://laggrons-dumb-cogs.readthedocs.io/roleinvite.html
     """
 
     def __init__(self, bot):
