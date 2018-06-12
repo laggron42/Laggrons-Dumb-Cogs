@@ -16,8 +16,8 @@
     <img src="https://api.travis-ci.org/retke/Laggrons-Dumb-Cogs.svg?branch=v3" alt="Travis CI build">
 </a>
 
-<a href="http://laggrons-dumb-cogs.readthedocs.io/en/v3/?badge=v3">
-    <img src="https://readthedocs.org/projects/laggrons-dumb-cogs/" alt="Docs build">
+<a href="http://laggrons-dumb-cogs.readthedocs.io/">
+    <img src="https://readthedocs.org/projects/laggrons-dumb-cogs/en/v3/?badge=v3" alt="Docs build">
 </a>
 
 <a href="http://makeapullrequest.com">
