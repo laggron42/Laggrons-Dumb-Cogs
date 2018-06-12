@@ -1,3 +1,5 @@
+# Say by retke, aka El Laggron
+
 import discord
 import datetime
 import os
