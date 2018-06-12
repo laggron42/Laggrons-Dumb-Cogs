@@ -17,7 +17,7 @@
 </a>
 
 <a href="http://laggrons-dumb-cogs.readthedocs.io/en/v3/?badge=v3">
-    <img src="https://readthedocs.org/projects/laggrons-dumb-cogs/badge/?version=v3" alt="Docs build">
+    <img src="https://readthedocs.org/projects/laggrons-dumb-cogs/" alt="Docs build">
 </a>
 
 <a href="http://makeapullrequest.com">
