@@ -34,7 +34,7 @@ Please join the [Discord server](https://discord.gg/WsTGeQM) to stay tuned about
 
 ## Tutorials, FAQ and API
 
-If you want to know in details how to use my cogs, please go check the [Laggron's Dumb Cogs wiki](https://github.com/retke/Laggrons-Dumb-Cogs/wiki). Everything you need is wrote there. You will be able to find
+If you want to know in details how to use my cogs, please go check the [Laggron's Dumb Cogs wiki](https://laggrons-dumb-cogs.readthedocs.io/). Everything you need is wrote there. You will be able to find
 
 - a detailled guide for every cog, with all command agruments and some shemas
 - some FAQs for every cog
