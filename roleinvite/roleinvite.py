@@ -43,8 +43,10 @@ class RoleInvite:
         "install_msg": (
             "Thanks for installing roleinvite. Please check the wiki "
             "for all informations about the cog.\n"
-            "https://github.com/retke/Laggrons-Dumb-Cogs/wiki\n"
-            "Everything you need to know about setting up the cog is here."
+            "https://laggrons-dumb-cogs.readthedocs.io/roleinvite.html\n"
+            "Everything you need to know about setting up the cog is here.\n"
+            "For a quick guide, type `[p]help RoleInvite`, just keep in mind "
+            "that the bot needs the `Manage server` and the `Add roles` permissions."
         ),
         "required_cogs": [],
         "requirements": [],

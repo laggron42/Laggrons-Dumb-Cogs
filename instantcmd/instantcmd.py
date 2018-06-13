@@ -42,8 +42,11 @@ class InstantCommands:
         "install_msg": (
             "Thanks for installing roleinvite. Please check the wiki "
             "for all informations about the cog.\n"
-            "https://github.com/retke/Laggrons-Dumb-Cogs/wiki\n"
-            "Everything you need to know about setting up the cog is here."
+            "https://laggrons-dumb-cogs.readthedocs.io/\n"
+            "Everything you need to know about setting up the cog is here.\n\n"
+            "Please keep in mind that you must know Python and discord.py for "
+            "that cog. Try to create normal cogs if you don't already know how "
+            "it works."
         ),
         "required_cogs": [],
         "requirements": [],
@@ -135,7 +138,7 @@ class InstantCommands:
             "Your next message will be the code of the command. \n\n"
             "If this is the first time you're adding instant commands, "
             "please read the wiki:\n"
-            "<https://github.com/retke/Laggrons-Dumb-Cogs/wiki>"
+            "<https://laggrons-dumb-cogs.readthedocs.io/instantcommands.html>"
         )
 
         try:

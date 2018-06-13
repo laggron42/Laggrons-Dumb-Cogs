@@ -27,7 +27,7 @@ class Default:
         "install_msg": (
             "Thanks for installing the repository! Please check the wiki "
             "for all informations about the cogs.\n"
-            "https://github.com/retke/Laggrons-Dumb-Cogs/wiki\n"
+            "https://laggrons-dumb-cogs.readthedocs.io/\n"
             "Join the official discord server for questions or suggestions.\n"
             "https://discord.gg/WsTGeQ"
         ),
