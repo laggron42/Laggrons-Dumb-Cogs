@@ -35,7 +35,7 @@ class Say:
         "install_msg": (
             "Thank you for installing the say cog. Please check the wiki "
             "for all informations about the cog.\n"
-            "https://github.com/retke/Laggrons-Dumb-Cogs/wiki\n\n"
+            "https://laggrons-dumb-cogs.readthedocs.io/say.html\n\n"
             "Type `[p]help Say` for a quick overview of the commands."
         ),
         "required_cogs": [],
