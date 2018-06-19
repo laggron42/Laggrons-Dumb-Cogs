@@ -1,4 +1,4 @@
-**If you are looking for the V3 Cogs, please switch to the v3 branch.**
+**If you are looking for the V3 Cogs, please switch to [the v3 branch](https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3).**
 
 # Laggron's dumb cogs
 
