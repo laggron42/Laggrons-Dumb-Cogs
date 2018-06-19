@@ -1,11 +1,15 @@
 # Laggron's Dumb Cogs - Red V3
 
 <a href="https://discord.gg/WsTGeQM">
-	<img src="https://discordapp.com/api/guilds/363008468602454017/embed.png" alt="Discord server">
+	<img src="https://discordapp.com/api/guilds/363008468602454017/embed.png" alt="Discord server"/>
+</a>
+
+<a href="https://github.com/Cog-Creators/Red-DiscordBot/tree/V3/develop">
+	<img src="https://img.shields.io/badge/Red--DiscordBot-cogs-red.svg" alt="Red DiscordBot cogs"/>
 </a>
 
 <a href="https://github.com/Rapptz/discord.py">
-    <img src="https://img.shields.io/badge/discord-py-blue.svg" alt="discord.py">
+    <img src="https://img.shields.io/badge/discord-py-blue.svg" alt="discord.py"/>
 </a>
 
 <a href="https://github.com/ambv/black">
