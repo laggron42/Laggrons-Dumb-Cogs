@@ -25,7 +25,7 @@
 </a>
 
 <a href="http://makeapullrequest.com">
-    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square" alt="PRs open">
+    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs open">
 </a>
 
 ![](https://github.com/retke/Laggrons-Dumb-Cogs/blob/master/.github/RESSOURCES/BANNERS/v3_branch.png)
