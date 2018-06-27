@@ -40,7 +40,7 @@ class InstantCommands:
         "description": "Command and listener maker from a code snippet through Discord",
         "hidden": False,
         "install_msg": (
-            "Thanks for installing roleinvite. Please check the wiki "
+            "Thanks for installing instantcmd. Please check the wiki "
             "for all informations about the cog.\n"
             "https://laggrons-dumb-cogs.readthedocs.io/\n"
             "Everything you need to know about setting up the cog is here.\n\n"
