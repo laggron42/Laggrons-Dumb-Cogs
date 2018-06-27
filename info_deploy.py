@@ -85,6 +85,9 @@ def commit(token, build, to_add):
 
 
 if __name__ == "__main__":
+    if "GH_TOKEN" not in os.environ:
+        print("GitHub token not found. This environement may be a pull request. Closing...")
+        sys.exit(0)
     create_info_json(InstantCommands, "instantcmd")
     create_info_json(RoleInvite, "roleinvite")
     create_info_json(Say, "say")
