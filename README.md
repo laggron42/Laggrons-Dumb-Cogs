@@ -62,4 +62,6 @@ You can also contact be by email: `laggron42@gmail.com`.
 
 ## Comissions
 
-I may accept paid commissions. Please post them on [Red's Cog board](https://github.com/Cog-Creators/Cog-Board/blob/master/README.md). You can ping me (@retke) if you really want it to be made by me. However, motivation is important in a project, and I know that things that I don't like will never end, so I can refuse anything. That's why you should post comissions in the cog board, so everyone can see them and the one which has experience with what you're asking will answer.
+I am open to comissions. If you need a cog, you can suggest it on [Red's cog board](https://cogboard.red), our new forum, where you will just need to log in with your Discord account to create a post.
+
+If you want me to make your cog, you can check [my profile](https://cogboard.red/u/El_Laggron) and send me a DM or mention me in your post.
