@@ -1,5 +1,5 @@
 import discord
-import json
+import random
 import os
 import datetime
 import asyncio
@@ -8,6 +8,7 @@ from discord.ext import commands
 from .utils.dataIO import dataIO
 from .utils import checks
 from __main__ import settings as set_roles
+from pathlib import Path
 
 
 class BetterMod:
@@ -19,6 +20,10 @@ class BetterMod:
         self.bot = bot
         self.settings = dataIO.load_json("data/bettermod/settings.json")
         self.red = dataIO.load_json("data/red/settings.json")
+
+    def clear_cache(self):
+        for file in Path('data/bettermod/cache').iterdir():
+            os.remove(str(file.absolute()))
 
     async def error(self, ctx):
         # called when whatever error happend
@@ -104,6 +109,11 @@ class BetterMod:
                     "warning_embed_ban": None,
                     "report_embed": None,
                 },
+                "report_message": (
+                    "Thanks for your report {author.mention} !\nYour report has "
+                    "been send to the moderators of {server.name}.\n\nYour report "
+                    "ID is #{id}"
+                )
             }
 
             try:
@@ -980,21 +990,19 @@ thumbnail's URL pictures:
             await self.error(ctx)
             return
 
-    @commands.command(pass_context=True)
-    @commands.cooldown(5, 60, commands.BucketType.user)
-    async def report(self, ctx, user: discord.Member, *, reason):
-        """Report a user to the moderation team"""
+    @bmodset.command(pass_context=True)
+    async def message(self, ctx, *, message: str):
+        """
+        Customize the message sent to the user when a report is done.
 
-        author = ctx.message.author
+        The possible values in your message are:
+        - `{server}`: The server object.
+        - `{author}`: The report's author. You can use `{author.mention}` or `{author.name}`.
+        - `{target}`: The reported used. You can use `{target.mention}` or `{target.name}`.
+        - `{reason}`: The reason of the report
+        - `{id}`: The ID of the report, so the user can reference it. It is shown in the modlog.
+        """
         server = ctx.message.server
-        x = ""  # empty string for searching any link leading to a URL in the message
-        ok = False  # indian coding methods
-        words = ctx.message.content.split(" ")
-
-        try:
-            await self.bot.delete_message(ctx.message)
-        except:
-            pass
 
         try:
             if server.id not in self.settings:
@@ -1002,17 +1010,84 @@ thumbnail's URL pictures:
         except:
             await self.error(ctx)
 
+        if len(message) > 1000:
+            await self.bot.say(
+                "That message is too long! Think about the lengh of the report, the message "
+                "could have more than 2000 characters."
+            )
+            return
+
+        self.settings[server.id]["report_message"] = message
+        try:
+            dataIO.save_json("data/bettermod/settings.json", self.settings)
+        except:
+            await self.error(ctx)
+            return
+        await self.bot.say(
+            "The new message has been set. Here is an example of what it will do:\n\n"
+            + message.format(author=ctx.message.author, reason="Laggron did dumb coding mistakes again!",
+                             server=ctx.message.server, id="262536")
+        )
+
+    @commands.command(pass_context=True)
+    @commands.cooldown(5, 60, commands.BucketType.channel)
+    async def report(self, ctx, user: discord.Member = None, *, reason: str = None):
+        """Report a user to the moderation team.
+        
+        If you abuse that command, actions will be taken."""
+
+        author = ctx.message.author
+        server = ctx.message.server
+        files = None
+
+        if ctx.message.attachments != []:
+            # attachment found, let's download them before we delete the message
+            code = os.system(
+                "wget --quiet --directory-prefix {dir} {file}".format(
+                    dir="data/bettermod/cache/",
+                    file=" ".join([x["url"] for x in ctx.message.attachments])
+                )
+            )
+            if code != 0:
+                print(
+                    "Something went wrong when downloading the report attachment. "
+                    "Please make sure the wget program is installed. (not pip)"
+                )
+                return
+            files = ["data/bettermod/cache/" + x["filename"] for x in ctx.message.attachments]
+            # files downloaded, the message can be deleted
+
+        try:
+            await self.bot.delete_message(ctx.message)
+        except discord.errors.Forbidden:
+            pass
+
+        if user is None or reason is None:
+            await self.bot.send_message(ctx.message.author,
+                "The given arguments are wrong. Please do so: `{}report @user your reason`.\n"
+                "If you omit an argument, the report won't be sent. You can also attach a file "
+                "to your report to bring a proof.".format(ctx.prefix)
+            )
+            return
+
+        try:
+            if server.id not in self.settings:
+                await self.init(server, ctx)
+        except:
+            # file I/O errors
+            await self.error(ctx)
+
         if (
             not self.settings[server.id]["channels"]["general"]
             and not self.settings[server.id]["channels"]["report"]
-        ):
+        ):  # no modlog channel found
             await self.bot.say(
-                "The log channel is not set yet. Please use `"
-                + ctx.prefix
-                + "bmodset channel` to set it. Aborting..."
+                "The log channel is not set yet. Please use "
+                "`{}bmodset channel` to set it. Aborting...".format(ctx.prefix)
             )
             return
         else:
+            # getting the channel object
             if not self.settings[server.id]["channels"]["report"]:
                 channel = discord.utils.get(
                     server.channels, id=self.settings[server.id]["channels"]["general"]
@@ -1022,59 +1097,40 @@ thumbnail's URL pictures:
                     server.channels, id=self.settings[server.id]["channels"]["report"]
                 )
 
-        if self.settings[server.id]["proof"] is True:
-            if ctx.message.attachments == [] and "http" not in ctx.message.content:
-                await self.bot.send_message(
-                    author,
-                    "Proof-need mode is enabled on this server. Please attach a file or a link to your report in order to send it (screenshot the proof)",
-                )
-                return
+        if self.settings[server.id]["proof"] is True and ctx.message.attachments == [] and "http" not in ctx.message.content:
+            # no attachment, no link, but a proof is required
+            await self.bot.send_message(
+                author,
+                "Proof-need mode is enabled on this server. Please attach a file or a link to your report in order to send it (screenshot the proof)",
+            )
+            return
 
-            if ctx.message.attachments != []:
-                ok = True
-
-            for word in words:
-                if word.startswith("http"):
-                    ok = True
-                    break
-
-            if ok is False:
-                await self.bot.send_message(
-                    author,
-                    "Proof-need mode is enabled on this server. Please attach a file or a link to your report in order to send it (screenshot the proof)",
-                )
-                return
+        report_int = random.randint(1, 999999)
+        report_id = "{arg0:{fill_char}{alignment}{width}}".format(
+            arg0=report_int, fill_char=0, alignment='>', width=6)
+        # that force the int to be shown with 6 numbers, credit to Sinbad
 
         report = discord.Embed(
             title="Report", description="A user reported someone for a abusive behaviour"
         )
-        report.add_field(name="From", value=author.mention, inline=True)
+        report.add_field(name="From", value="**Name:** {0.name}\n**ID:** {0.id}".format(author), inline=True)
         report.add_field(name="To", value=user.mention, inline=True)
         report.add_field(name="Channel", value=ctx.message.channel.mention, inline=True)
+        report.add_field(name="Reason", value=reason, inline=False)
         if user.voice.voice_channel is not None:
             report.add_field(
                 name="Reported user voice channel", value=user.voice.voice_channel.name, inline=True
             )
 
         report.set_author(name="{}".format(user.name), icon_url=user.avatar_url)
-        report.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
+        report.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M") + " | ID: #" + report_id)
         report.set_thumbnail(url=self.settings[server.id]["thumbnail"]["report_embed"])
         try:
             report.color = discord.Colour(self.settings[server.id]["colour"]["report_embed"])
         except:
             pass
 
-        if ctx.message.attachments != []:
-            report.set_image(url=ctx.message.attachments[0]["url"])
-            report.add_field(
-                name="Reason",
-                value=reason
-                + "\n\n[Click here to see proof URL]({})".format(ctx.message.attachments[0]["url"]),
-                inline=False,
-            )
-
-        elif "http" in ctx.message.content:
-
+        if "http" in ctx.message.content:
             for word in words:
                 if word.startswith("http"):
                     report.set_image(url=word)
@@ -1085,11 +1141,7 @@ thumbnail's URL pictures:
                     )
                     break
 
-        elif self.settings[server.id]["proof"] is False:
-            report.add_field(name="Reason", value=reason, inline=False)
-
         if self.settings[server.id]["role"] is None:
-
             try:
                 await self.bot.send_message(channel, embed=report)
             except:
@@ -1102,7 +1154,16 @@ thumbnail's URL pictures:
             except:
                 await self.error(ctx)
 
-        await self.bot.say("Your report has been sent to the moderation team")
+        if files:
+            for file in files:
+                await self.bot.upload(file)
+
+        await self.bot.send_message(
+            ctx.message.author, self.settings[server.id]["report_message"].format(
+                author=ctx.message.author, reason=reason, server=server, id=report_id
+            )
+        )
+        self.clear_cache()
 
     @commands.group(pass_context=True, no_pm=True)
     @checks.mod()
@@ -1163,8 +1224,8 @@ thumbnail's URL pictures:
 
         # This is the embed sent in the moderator log channel
         modlog = discord.Embed(title="Warning", description="A user got a level 1 warning")
-        modlog.add_field(name="User", value=user.mention, inline=True)
-        modlog.add_field(name="Moderator", value=author.mention, inline=True)
+        modlog.add_field(name="User", value="**Name:** {0}\n**ID:** {0.id}".format(user), inline=True)
+        modlog.add_field(name="Moderator", value="**Name:** {0}\n**ID:** {0.id}".format(author), inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
         modlog.set_author(name=user.display_name, icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
@@ -1261,8 +1322,8 @@ thumbnail's URL pictures:
 
         # This is the embed sent in the moderator log channel
         modlog = discord.Embed(title="Warning", description="A user got a level 2 (kick) warning")
-        modlog.add_field(name="User", value=user.mention, inline=True)
-        modlog.add_field(name="Moderator", value=author.mention, inline=True)
+        modlog.add_field(name="User", value="**Name:** {0}\n**ID:** {0.id}".format(user), inline=True)
+        modlog.add_field(name="Moderator", value="**Name:** {0}\n**ID:** {0.id}".format(author), inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
         modlog.set_author(name=user.display_name, icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
@@ -1297,7 +1358,7 @@ thumbnail's URL pictures:
                 "I cannot kick this user, he is higher than me in the role hierarchy. Aborting..."
             )
             await self.bot.send_message(
-                channel, content="The user was not kick. Check my permissions", embed=modlog
+                channel, content="The user was not kicked. Check my permissions", embed=modlog
             )
             await self.add_case(
                 level="Kick",
@@ -1378,8 +1439,8 @@ thumbnail's URL pictures:
         modlog = discord.Embed(
             title="Warning", description="A user got a level 3 (softban) warning"
         )
-        modlog.add_field(name="User", value=user.mention, inline=True)
-        modlog.add_field(name="Moderator", value=author.mention, inline=True)
+        modlog.add_field(name="User", value="**Name:** {0}\n**ID:** {0.id}".format(user), inline=True)
+        modlog.add_field(name="Moderator", value="**Name:** {0}\n**ID:** {0.id}".format(author), inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
         modlog.set_author(name=user.display_name, icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
@@ -1427,7 +1488,7 @@ thumbnail's URL pictures:
                 "I cannot ban this user, he is higher than me in the role hierarchy. Aborting..."
             )
             await self.bot.send_message(
-                channel, content="The user was not ban. Check my permissions", embed=modlog
+                channel, content="The user was not banned. Check my permissions", embed=modlog
             )
             await self.add_case(
                 level="Softban",
@@ -1506,8 +1567,8 @@ thumbnail's URL pictures:
 
         # This is the embed sent in the moderator log channel
         modlog = discord.Embed(title="Warning", description="A user got a level 4 (ban) warning")
-        modlog.add_field(name="User", value=user.mention, inline=True)
-        modlog.add_field(name="Moderator", value=author.mention, inline=True)
+        modlog.add_field(name="User", value="**Name:** {0}\n**ID:** {0.id}".format(user), inline=True)
+        modlog.add_field(name="Moderator", value="**Name:** {0}\n**ID:** {0.id}".format(author), inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
         modlog.set_author(name=user.display_name, icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
@@ -1542,7 +1603,7 @@ thumbnail's URL pictures:
                 "I cannot ban this user, he is higher than me in the role hierarchy. Aborting..."
             )
             await self.bot.send_message(
-                channel, content="The user was not ban. Check my permissions", embed=modlog
+                channel, content="The user was not banned. Check my permissions", embed=modlog
             )
             await self.add_case(
                 level="Ban",
@@ -1862,9 +1923,12 @@ thumbnail's URL pictures:
 
         await self.bot.say("The new reason has been saved")
 
+    async def __unload():
+        self.clear_cache()
+
 
 def check_folders():
-    folders = ("data", "data/bettermod/", "data/bettermod/history/")
+    folders = ("data", "data/bettermod/", "data/bettermod/history/", "data/bettermod/cache")
     for folder in folders:
         if not os.path.exists(folder):
             print("Creating " + folder + " folder...")
@@ -1956,6 +2020,20 @@ def check_version_settings():
         for server in settings:
             if server != "version":
                 settings[server]["proof"] = False
+
+        dataIO.save_json("data/bettermod/settings.json", settings)
+        print("Json body of data/bettermod/settings.json was successfully updated")
+
+    if settings["version"] == "1.4":
+        settings["version"] = "1.5"
+
+        for server in settings:
+            if server != "version":
+                settings[server]["report_message"] = (
+                    "Thanks for your report {author.mention} !\nYour report has "
+                    "been send to the moderators of {server.name}.\n\nYour report "
+                    "ID is #{id}"
+                )
 
         dataIO.save_json("data/bettermod/settings.json", settings)
         print("Json body of data/bettermod/settings.json was successfully updated")
