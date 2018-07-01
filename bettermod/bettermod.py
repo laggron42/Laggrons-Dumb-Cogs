@@ -275,7 +275,7 @@ class BetterMod:
                 if history[user.id]["case{}".format(str(i))]["deleted"] == 1:
                     i = i + 1
 
-                e = discord.Embed(description="Case {} informations".format(str(i)))
+                e = discord.Embed(description="Case {} information".format(str(i)))
                 e.set_author(name=user.name, icon_url=user.avatar_url)
 
                 e.add_field(
@@ -1645,7 +1645,7 @@ thumbnail's URL pictures:
 
         if case == 0:
 
-            e = discord.Embed(description="General user infos")
+            e = discord.Embed(description="General user info")
             e.set_author(name=user, icon_url=user.avatar_url)
 
             e.add_field(
