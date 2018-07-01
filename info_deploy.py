@@ -64,19 +64,29 @@ def create_info_json(instance, file_name):
 
 def commit(token, build, to_add):
     if os.popen("git diff").read() != "":
+        exits = []  # collect the exit int of the process
 
-        os.system('git config user.name "Travis CI Auto-JSON"')
-        os.system('git config user.email "travis@travis-ci.org"')
+        exits.append(os.system('git config user.name "Travis CI Auto-JSON"'))
+        exits.append(os.system('git config user.email "travis@travis-ci.org"'))
 
-        os.system("git checkout v3")
+        exits.append(os.system("git checkout v3"))
         for file in to_add:
-            os.system("git add " + file)
+            exits.append(os.system("git add " + file))
 
-        os.system('git commit -m "Updated info.json files. Build #{}"'.format(build))
-        os.system(
-            "git remote add github https://{}@github.com/retke/Laggrons-Dumb-Cogs.git".format(token)
+        exits.append(os.system('git commit -m "Updated info.json files. Build #{}"'.format(build)))
+        exits.append(
+            os.system(
+                "git remote add github https://{}@github.com/retke/Laggrons-Dumb-Cogs.git".format(
+                    token
+                )
+            )
         )
-        os.system("git push github v3")
+        exits.append(os.system("git push github v3"))
+
+        if 1 in exits:
+            # something existed with error code 1
+            print("Something went wrong during the process.")
+            sys.exit(1)
         print("Created info.json files, successfully pushed to Github")
         sys.exit(0)
     else:
