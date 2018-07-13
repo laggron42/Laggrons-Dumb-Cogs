@@ -1113,7 +1113,7 @@ thumbnail's URL pictures:
         report = discord.Embed(
             title="Report", description="A user reported someone for a abusive behaviour"
         )
-        report.add_field(name="From", value="**Name:** {0.name}\n**ID:** {0.id}".format(author), inline=True)
+        report.add_field(name="From", value=author.mention, inline=True)
         report.add_field(name="To", value=user.mention, inline=True)
         report.add_field(name="Channel", value=ctx.message.channel.mention, inline=True)
         report.add_field(name="Reason", value=reason, inline=False)
@@ -1122,7 +1122,7 @@ thumbnail's URL pictures:
                 name="Reported user voice channel", value=user.voice.voice_channel.name, inline=True
             )
 
-        report.set_author(name="{}".format(user.name), icon_url=user.avatar_url)
+        report.set_author(name="{0} ¦ {0.id}".format(user), icon_url=user.avatar_url)
         report.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M") + " | ID: #" + report_id)
         report.set_thumbnail(url=self.settings[server.id]["thumbnail"]["report_embed"])
         try:
@@ -1156,7 +1156,14 @@ thumbnail's URL pictures:
 
         if files:
             for file in files:
-                await self.bot.upload(file)
+                try:
+                    await self.bot.upload(file)
+                except discord.errors.Forbidden:
+                    await self.bot.say(
+                        "The user attached some files but I couldn't upload them here. "
+                        "Please check my permissions."
+                    )
+                    break
 
         await self.bot.send_message(
             ctx.message.author, self.settings[server.id]["report_message"].format(
@@ -1224,10 +1231,10 @@ thumbnail's URL pictures:
 
         # This is the embed sent in the moderator log channel
         modlog = discord.Embed(title="Warning", description="A user got a level 1 warning")
-        modlog.add_field(name="User", value="**Name:** {0}\n**ID:** {0.id}".format(user), inline=True)
-        modlog.add_field(name="Moderator", value="**Name:** {0}\n**ID:** {0.id}".format(author), inline=True)
+        modlog.add_field(name="User", value=user.mention, inline=True)
+        modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
-        modlog.set_author(name=user.display_name, icon_url=user.avatar_url)
+        modlog.set_author(name="{0} ¦ {0.id}".format(user), icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         modlog.set_thumbnail(url=self.settings[server.id]["thumbnail"]["warning_embed_simple"])
         try:
@@ -1322,10 +1329,10 @@ thumbnail's URL pictures:
 
         # This is the embed sent in the moderator log channel
         modlog = discord.Embed(title="Warning", description="A user got a level 2 (kick) warning")
-        modlog.add_field(name="User", value="**Name:** {0}\n**ID:** {0.id}".format(user), inline=True)
-        modlog.add_field(name="Moderator", value="**Name:** {0}\n**ID:** {0.id}".format(author), inline=True)
+        modlog.add_field(name="User", value=user.mention, inline=True)
+        modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
-        modlog.set_author(name=user.display_name, icon_url=user.avatar_url)
+        modlog.set_author(name="{0} ¦ {0.id}".format(user), icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         modlog.set_thumbnail(url=self.settings[server.id]["thumbnail"]["warning_embed_kick"])
         try:
@@ -1439,10 +1446,10 @@ thumbnail's URL pictures:
         modlog = discord.Embed(
             title="Warning", description="A user got a level 3 (softban) warning"
         )
-        modlog.add_field(name="User", value="**Name:** {0}\n**ID:** {0.id}".format(user), inline=True)
-        modlog.add_field(name="Moderator", value="**Name:** {0}\n**ID:** {0.id}".format(author), inline=True)
+        modlog.add_field(name="User", value=user.mention, inline=True)
+        modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
-        modlog.set_author(name=user.display_name, icon_url=user.avatar_url)
+        modlog.set_author(name="{0} ¦ {0.id}".format(user), icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         try:
             modlog.set_thumbnail(url=self.settings[server.id]["thumbnail"]["warning_embed_softban"])
@@ -1567,10 +1574,10 @@ thumbnail's URL pictures:
 
         # This is the embed sent in the moderator log channel
         modlog = discord.Embed(title="Warning", description="A user got a level 4 (ban) warning")
-        modlog.add_field(name="User", value="**Name:** {0}\n**ID:** {0.id}".format(user), inline=True)
-        modlog.add_field(name="Moderator", value="**Name:** {0}\n**ID:** {0.id}".format(author), inline=True)
+        modlog.add_field(name="User", value=user.mention, inline=True)
+        modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
-        modlog.set_author(name=user.display_name, icon_url=user.avatar_url)
+        modlog.set_author(name="{0} ¦ {0.id}".format(user), icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         modlog.set_thumbnail(url=self.settings[server.id]["thumbnail"]["warning_embed_ban"])
         try:
