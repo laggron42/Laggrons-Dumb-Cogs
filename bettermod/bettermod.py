@@ -1024,8 +1024,8 @@ thumbnail's URL pictures:
             await self.error(ctx)
             return
         await self.bot.say(
-            "The new message has been set. Here is an example of what it will do:\n\n"
-            + message.format(author=ctx.message.author, reason="Laggron did dumb coding mistakes again!",
+            "The new message has been set. Here is an example of what it will do:\n\n" +
+            message.format(author=ctx.message.author, reason="Laggron did dumb coding mistakes again!",
                              server=ctx.message.server, id="262536")
         )
 
@@ -1033,7 +1033,7 @@ thumbnail's URL pictures:
     @commands.cooldown(5, 60, commands.BucketType.channel)
     async def report(self, ctx, user: discord.Member = None, *, reason: str = None):
         """Report a user to the moderation team.
-        
+
         If you abuse that command, actions will be taken."""
 
         author = ctx.message.author
@@ -1064,10 +1064,10 @@ thumbnail's URL pictures:
 
         if user is None or reason is None:
             await self.bot.send_message(ctx.message.author,
-                "The given arguments are wrong. Please do so: `{}report @user your reason`.\n"
-                "If you omit an argument, the report won't be sent. You can also attach a file "
-                "to your report to bring a proof.".format(ctx.prefix)
-            )
+                                        "The given arguments are wrong. Please do so: `{}report @user your reason`.\n"
+                                        "If you omit an argument, the report won't be sent. You can also attach a file "
+                                        "to your report to bring a proof.".format(ctx.prefix)
+                                        )
             return
 
         try:
@@ -1078,8 +1078,8 @@ thumbnail's URL pictures:
             await self.error(ctx)
 
         if (
-            not self.settings[server.id]["channels"]["general"]
-            and not self.settings[server.id]["channels"]["report"]
+            not self.settings[server.id]["channels"]["general"] and not
+            self.settings[server.id]["channels"]["report"]
         ):  # no modlog channel found
             await self.bot.say(
                 "The log channel is not set yet. Please use "
@@ -1198,13 +1198,13 @@ thumbnail's URL pictures:
             await self.error(ctx)
 
         if (
-            not self.settings[server.id]["channels"]["general"]
-            and not self.settings[server.id]["channels"]["simple-warn"]
+            not self.settings[server.id]["channels"]["general"] and not
+            self.settings[server.id]["channels"]["simple-warn"]
         ):
             await self.bot.say(
-                "The log channel is not set yet. Please use `"
-                + ctx.prefix
-                + "bmodset channel` to set it. Aborting..."
+                "The log channel is not set yet. Please use `" +
+                ctx.prefix +
+                "bmodset channel` to set it. Aborting..."
             )
             return
 
@@ -1296,13 +1296,13 @@ thumbnail's URL pictures:
             await self.error(ctx)
 
         if (
-            not self.settings[server.id]["channels"]["general"]
-            and not self.settings[server.id]["channels"]["kick-warn"]
+            not self.settings[server.id]["channels"]["general"] and not
+            self.settings[server.id]["channels"]["kick-warn"]
         ):
             await self.bot.say(
-                "The log channel is not set yet. Please use `"
-                + ctx.prefix
-                + "bmodset channel` to set it. Aborting..."
+                "The log channel is not set yet. Please use `" +
+                ctx.prefix +
+                "bmodset channel` to set it. Aborting..."
             )
             return
         else:
@@ -1409,13 +1409,13 @@ thumbnail's URL pictures:
             await self.error(ctx)
 
         if (
-            not self.settings[server.id]["channels"]["general"]
-            and not self.settings[server.id]["channels"]["ban-warn"]
+            not self.settings[server.id]["channels"]["general"] and not
+            self.settings[server.id]["channels"]["ban-warn"]
         ):
             await self.bot.say(
-                "The log channel is not set yet. Please use `"
-                + ctx.prefix
-                + "bmodset channel` to set it. Aborting..."
+                "The log channel is not set yet. Please use `" +
+                ctx.prefix +
+                "bmodset channel` to set it. Aborting..."
             )
             return
         else:
@@ -1541,13 +1541,13 @@ thumbnail's URL pictures:
             await self.error(ctx)
 
         if (
-            not self.settings[server.id]["channels"]["general"]
-            and not self.settings[server.id]["channels"]["ban-warn"]
+            not self.settings[server.id]["channels"]["general"] and not
+            self.settings[server.id]["channels"]["ban-warn"]
         ):
             await self.bot.say(
-                "The log channel is not set yet. Please use `"
-                + ctx.prefix
-                + "bmodset channel` to set it. Aborting..."
+                "The log channel is not set yet. Please use `" +
+                ctx.prefix +
+                "bmodset channel` to set it. Aborting..."
             )
             return
         else:
@@ -1673,9 +1673,9 @@ thumbnail's URL pictures:
             allowed = True
 
         if (
-            author == server.owner
-            or author.id == self.bot.settings.owner
-            or author.server_permissions.administrator
+            author == server.owner or
+            author.id == self.bot.settings.owner or
+            author.server_permissions.administrator
         ):
             allowed = True
 
@@ -1771,8 +1771,8 @@ thumbnail's URL pictures:
             return
 
         if (
-            "case" + str(case) not in history[user.id]
-            or history[user.id]["case{}".format(str(case))]["deleted"] == 1
+            "case" + str(case) not in history[user.id] or
+            history[user.id]["case{}".format(str(case))]["deleted"] == 1
         ):
             await self.bot.say("That case does not exist or is already deleted")
             return
@@ -1971,29 +1971,29 @@ def check_version_settings():
             if server != "version":
                 # Add here new body
                 if (
-                    settings[server]["thumbnail"]["report_embed"]
-                    == "https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png"
+                    settings[server]["thumbnail"]["report_embed"] ==
+                    "https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png"
                 ):
                     settings[server]["thumbnail"][
                         "report_embed"
                     ] = "https://i.imgur.com/Bl62rGd.png"
                 if (
-                    settings[server]["thumbnail"]["warning_embed_simple"]
-                    == "https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png"
+                    settings[server]["thumbnail"]["warning_embed_simple"] ==
+                    "https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png"
                 ):
                     settings[server]["thumbnail"][
                         "warning_embed_simple"
                     ] = "https://i.imgur.com/Bl62rGd.png"
                 if (
-                    settings[server]["thumbnail"]["warning_embed_kick"]
-                    == "https://cdn.discordapp.com/attachments/303988901570150401/360466190956494858/kick.png"
+                    settings[server]["thumbnail"]["warning_embed_kick"] ==
+                    "https://cdn.discordapp.com/attachments/303988901570150401/360466190956494858/kick.png"
                 ):
                     settings[server]["thumbnail"][
                         "warning_embed_kick"
                     ] = "https://i.imgur.com/uhrYzyt.png"
                 if (
-                    settings[server]["thumbnail"]["warning_embed_ban"]
-                    == "https://media.discordapp.net/attachments/303988901570150401/360466189979222017/ban.png"
+                    settings[server]["thumbnail"]["warning_embed_ban"] ==
+                    "https://media.discordapp.net/attachments/303988901570150401/360466189979222017/ban.png"
                 ):
                     settings[server]["thumbnail"][
                         "warning_embed_ban"
