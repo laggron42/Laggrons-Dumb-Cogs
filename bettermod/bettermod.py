@@ -1168,11 +1168,7 @@ thumbnail's URL pictures:
                 try:
                     await self.bot.send_file(channel, file)
                 except discord.errors.Forbidden:
-                    await self.bot.say(
-                        "The user attached some files but I couldn't upload them here. "
-                        "Please check my permissions."
-                    )
-                    break
+                    pass
 
         try:
             await self.bot.send_message(author, self.settings[server.id]["report_message"].format(
