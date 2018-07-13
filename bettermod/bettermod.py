@@ -1024,16 +1024,16 @@ thumbnail's URL pictures:
             await self.error(ctx)
             return
         await self.bot.say(
-            "The new message has been set. Here is an example of what it will do:\n\n"
-            + message.format(author=ctx.message.author, reason="Laggron did dumb coding mistakes again!",
-                             server=ctx.message.server, id="262536")
+            "The new message has been set. Here is an example of what it will do:\n\n" +
+            message.format(author=ctx.message.author, reason="Laggron did dumb coding mistakes again!",
+                           server=ctx.message.server, id="262536")
         )
 
-    @commands.command(pass_context=True)
+    @commands.command(pass_context=True, no_pm=True)
     @commands.cooldown(5, 60, commands.BucketType.channel)
     async def report(self, ctx, user: discord.Member = None, *, reason: str = None):
         """Report a user to the moderation team.
-        
+
         If you abuse that command, actions will be taken."""
 
         author = ctx.message.author
@@ -1064,10 +1064,10 @@ thumbnail's URL pictures:
 
         if user is None or reason is None:
             await self.bot.send_message(ctx.message.author,
-                "The given arguments are wrong. Please do so: `{}report @user your reason`.\n"
-                "If you omit an argument, the report won't be sent. You can also attach a file "
-                "to your report to bring a proof.".format(ctx.prefix)
-            )
+                                        "The given arguments are wrong. Please do so: `{}report @user your reason`.\n"
+                                        "If you omit an argument, the report won't be sent. You can also attach a file "
+                                        "to your report to bring a proof.".format(ctx.prefix)
+                                        )
             return
 
         try:
@@ -1078,8 +1078,8 @@ thumbnail's URL pictures:
             await self.error(ctx)
 
         if (
-            not self.settings[server.id]["channels"]["general"]
-            and not self.settings[server.id]["channels"]["report"]
+            not self.settings[server.id]["channels"]["general"] and not
+            self.settings[server.id]["channels"]["report"]
         ):  # no modlog channel found
             await self.bot.say(
                 "The log channel is not set yet. Please use "
@@ -1113,7 +1113,7 @@ thumbnail's URL pictures:
         report = discord.Embed(
             title="Report", description="A user reported someone for a abusive behaviour"
         )
-        report.add_field(name="From", value="**Name:** {0.name}\n**ID:** {0.id}".format(author), inline=True)
+        report.add_field(name="From", value=author.mention, inline=True)
         report.add_field(name="To", value=user.mention, inline=True)
         report.add_field(name="Channel", value=ctx.message.channel.mention, inline=True)
         report.add_field(name="Reason", value=reason, inline=False)
@@ -1122,7 +1122,12 @@ thumbnail's URL pictures:
                 name="Reported user voice channel", value=user.voice.voice_channel.name, inline=True
             )
 
-        report.set_author(name="{}".format(user.name), icon_url=user.avatar_url)
+        if user.nick is not None:
+            report.set_author(name="{} ~ {} ({})".format(str(user), user.nick, user.id),
+                              icon_url=user.avatar_url)
+        else:
+            report.set_author(name="{} | {}".format(str(user), user.id),
+                              icon_url=user.avatar_url)
         report.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M") + " | ID: #" + report_id)
         report.set_thumbnail(url=self.settings[server.id]["thumbnail"]["report_embed"])
         try:
@@ -1131,7 +1136,7 @@ thumbnail's URL pictures:
             pass
 
         if "http" in ctx.message.content:
-            for word in words:
+            for word in ctx.message.content.split(" "):
                 if word.startswith("http"):
                     report.set_image(url=word)
                     report.add_field(
@@ -1156,13 +1161,20 @@ thumbnail's URL pictures:
 
         if files:
             for file in files:
-                await self.bot.upload(file)
+                try:
+                    await self.bot.upload(file)
+                except discord.errors.Forbidden:
+                    await self.bot.say(
+                        "The user attached some files but I couldn't upload them here. "
+                        "Please check my permissions."
+                    )
+                    break
 
-        await self.bot.send_message(
-            ctx.message.author, self.settings[server.id]["report_message"].format(
-                author=ctx.message.author, reason=reason, server=server, id=report_id
-            )
-        )
+        try:
+            await self.bot.send_message(author, self.settings[server.id]["report_message"].format(
+                                        author=ctx.message.author, reason=reason, server=server, id=report_id))
+        except:
+            pass
         self.clear_cache()
 
     @commands.group(pass_context=True, no_pm=True)
@@ -1191,13 +1203,13 @@ thumbnail's URL pictures:
             await self.error(ctx)
 
         if (
-            not self.settings[server.id]["channels"]["general"]
-            and not self.settings[server.id]["channels"]["simple-warn"]
+            not self.settings[server.id]["channels"]["general"] and not
+            self.settings[server.id]["channels"]["simple-warn"]
         ):
             await self.bot.say(
-                "The log channel is not set yet. Please use `"
-                + ctx.prefix
-                + "bmodset channel` to set it. Aborting..."
+                "The log channel is not set yet. Please use `" +
+                ctx.prefix +
+                "bmodset channel` to set it. Aborting..."
             )
             return
 
@@ -1224,10 +1236,15 @@ thumbnail's URL pictures:
 
         # This is the embed sent in the moderator log channel
         modlog = discord.Embed(title="Warning", description="A user got a level 1 warning")
-        modlog.add_field(name="User", value="**Name:** {0}\n**ID:** {0.id}".format(user), inline=True)
-        modlog.add_field(name="Moderator", value="**Name:** {0}\n**ID:** {0.id}".format(author), inline=True)
+        modlog.add_field(name="User", value=user.mention, inline=True)
+        modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
-        modlog.set_author(name=user.display_name, icon_url=user.avatar_url)
+        if user.nick is not None:
+            modlog.set_author(name="{} ~ {} ({})".format(str(user), user.nick, user.id),
+                              icon_url=user.avatar_url)
+        else:
+            modlog.set_author(name="{} | {}".format(str(user), user.id),
+                              icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         modlog.set_thumbnail(url=self.settings[server.id]["thumbnail"]["warning_embed_simple"])
         try:
@@ -1289,13 +1306,13 @@ thumbnail's URL pictures:
             await self.error(ctx)
 
         if (
-            not self.settings[server.id]["channels"]["general"]
-            and not self.settings[server.id]["channels"]["kick-warn"]
+            not self.settings[server.id]["channels"]["general"] and not
+            self.settings[server.id]["channels"]["kick-warn"]
         ):
             await self.bot.say(
-                "The log channel is not set yet. Please use `"
-                + ctx.prefix
-                + "bmodset channel` to set it. Aborting..."
+                "The log channel is not set yet. Please use `" +
+                ctx.prefix +
+                "bmodset channel` to set it. Aborting..."
             )
             return
         else:
@@ -1322,10 +1339,15 @@ thumbnail's URL pictures:
 
         # This is the embed sent in the moderator log channel
         modlog = discord.Embed(title="Warning", description="A user got a level 2 (kick) warning")
-        modlog.add_field(name="User", value="**Name:** {0}\n**ID:** {0.id}".format(user), inline=True)
-        modlog.add_field(name="Moderator", value="**Name:** {0}\n**ID:** {0.id}".format(author), inline=True)
+        modlog.add_field(name="User", value=user.mention, inline=True)
+        modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
-        modlog.set_author(name=user.display_name, icon_url=user.avatar_url)
+        if user.nick is not None:
+            modlog.set_author(name="{} ~ {} ({})".format(str(user), user.nick, user.id),
+                              icon_url=user.avatar_url)
+        else:
+            modlog.set_author(name="{} | {}".format(str(user), user.id),
+                              icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         modlog.set_thumbnail(url=self.settings[server.id]["thumbnail"]["warning_embed_kick"])
         try:
@@ -1402,13 +1424,13 @@ thumbnail's URL pictures:
             await self.error(ctx)
 
         if (
-            not self.settings[server.id]["channels"]["general"]
-            and not self.settings[server.id]["channels"]["ban-warn"]
+            not self.settings[server.id]["channels"]["general"] and not
+            self.settings[server.id]["channels"]["ban-warn"]
         ):
             await self.bot.say(
-                "The log channel is not set yet. Please use `"
-                + ctx.prefix
-                + "bmodset channel` to set it. Aborting..."
+                "The log channel is not set yet. Please use `" +
+                ctx.prefix +
+                "bmodset channel` to set it. Aborting..."
             )
             return
         else:
@@ -1439,10 +1461,15 @@ thumbnail's URL pictures:
         modlog = discord.Embed(
             title="Warning", description="A user got a level 3 (softban) warning"
         )
-        modlog.add_field(name="User", value="**Name:** {0}\n**ID:** {0.id}".format(user), inline=True)
-        modlog.add_field(name="Moderator", value="**Name:** {0}\n**ID:** {0.id}".format(author), inline=True)
+        modlog.add_field(name="User", value=user.mention, inline=True)
+        modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
-        modlog.set_author(name=user.display_name, icon_url=user.avatar_url)
+        if user.nick is not None:
+            modlog.set_author(name="{} ~ {} ({})".format(str(user), user.nick, user.id),
+                              icon_url=user.avatar_url)
+        else:
+            modlog.set_author(name="{} | {}".format(str(user), user.id),
+                              icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         try:
             modlog.set_thumbnail(url=self.settings[server.id]["thumbnail"]["warning_embed_softban"])
@@ -1534,13 +1561,13 @@ thumbnail's URL pictures:
             await self.error(ctx)
 
         if (
-            not self.settings[server.id]["channels"]["general"]
-            and not self.settings[server.id]["channels"]["ban-warn"]
+            not self.settings[server.id]["channels"]["general"] and not
+            self.settings[server.id]["channels"]["ban-warn"]
         ):
             await self.bot.say(
-                "The log channel is not set yet. Please use `"
-                + ctx.prefix
-                + "bmodset channel` to set it. Aborting..."
+                "The log channel is not set yet. Please use `" +
+                ctx.prefix +
+                "bmodset channel` to set it. Aborting..."
             )
             return
         else:
@@ -1567,10 +1594,15 @@ thumbnail's URL pictures:
 
         # This is the embed sent in the moderator log channel
         modlog = discord.Embed(title="Warning", description="A user got a level 4 (ban) warning")
-        modlog.add_field(name="User", value="**Name:** {0}\n**ID:** {0.id}".format(user), inline=True)
-        modlog.add_field(name="Moderator", value="**Name:** {0}\n**ID:** {0.id}".format(author), inline=True)
+        modlog.add_field(name="User", value=user.mention, inline=True)
+        modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
-        modlog.set_author(name=user.display_name, icon_url=user.avatar_url)
+        if user.nick is not None:
+            modlog.set_author(name="{} ~ {} ({})".format(str(user), user.nick, user.id),
+                              icon_url=user.avatar_url)
+        else:
+            modlog.set_author(name="{} | {}".format(str(user), user.id),
+                              icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         modlog.set_thumbnail(url=self.settings[server.id]["thumbnail"]["warning_embed_ban"])
         try:
@@ -1666,9 +1698,9 @@ thumbnail's URL pictures:
             allowed = True
 
         if (
-            author == server.owner
-            or author.id == self.bot.settings.owner
-            or author.server_permissions.administrator
+            author == server.owner or
+            author.id == self.bot.settings.owner or
+            author.server_permissions.administrator
         ):
             allowed = True
 
@@ -1764,8 +1796,8 @@ thumbnail's URL pictures:
             return
 
         if (
-            "case" + str(case) not in history[user.id]
-            or history[user.id]["case{}".format(str(case))]["deleted"] == 1
+            "case" + str(case) not in history[user.id] or
+            history[user.id]["case{}".format(str(case))]["deleted"] == 1
         ):
             await self.bot.say("That case does not exist or is already deleted")
             return
@@ -1923,7 +1955,7 @@ thumbnail's URL pictures:
 
         await self.bot.say("The new reason has been saved")
 
-    async def __unload():
+    async def __unload(self):
         self.clear_cache()
 
 
@@ -1964,29 +1996,29 @@ def check_version_settings():
             if server != "version":
                 # Add here new body
                 if (
-                    settings[server]["thumbnail"]["report_embed"]
-                    == "https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png"
+                    settings[server]["thumbnail"]["report_embed"] ==
+                    "https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png"
                 ):
                     settings[server]["thumbnail"][
                         "report_embed"
                     ] = "https://i.imgur.com/Bl62rGd.png"
                 if (
-                    settings[server]["thumbnail"]["warning_embed_simple"]
-                    == "https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png"
+                    settings[server]["thumbnail"]["warning_embed_simple"] ==
+                    "https://cdn.discordapp.com/attachments/303988901570150401/360466192781017088/report.png"
                 ):
                     settings[server]["thumbnail"][
                         "warning_embed_simple"
                     ] = "https://i.imgur.com/Bl62rGd.png"
                 if (
-                    settings[server]["thumbnail"]["warning_embed_kick"]
-                    == "https://cdn.discordapp.com/attachments/303988901570150401/360466190956494858/kick.png"
+                    settings[server]["thumbnail"]["warning_embed_kick"] ==
+                    "https://cdn.discordapp.com/attachments/303988901570150401/360466190956494858/kick.png"
                 ):
                     settings[server]["thumbnail"][
                         "warning_embed_kick"
                     ] = "https://i.imgur.com/uhrYzyt.png"
                 if (
-                    settings[server]["thumbnail"]["warning_embed_ban"]
-                    == "https://media.discordapp.net/attachments/303988901570150401/360466189979222017/ban.png"
+                    settings[server]["thumbnail"]["warning_embed_ban"] ==
+                    "https://media.discordapp.net/attachments/303988901570150401/360466189979222017/ban.png"
                 ):
                     settings[server]["thumbnail"][
                         "warning_embed_ban"
