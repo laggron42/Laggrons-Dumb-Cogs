@@ -1026,10 +1026,10 @@ thumbnail's URL pictures:
         await self.bot.say(
             "The new message has been set. Here is an example of what it will do:\n\n" +
             message.format(author=ctx.message.author, reason="Laggron did dumb coding mistakes again!",
-                             server=ctx.message.server, id="262536")
+                           server=ctx.message.server, id="262536")
         )
 
-    @commands.command(pass_context=True)
+    @commands.command(pass_context=True, no_pm=True)
     @commands.cooldown(5, 60, commands.BucketType.channel)
     async def report(self, ctx, user: discord.Member = None, *, reason: str = None):
         """Report a user to the moderation team.
@@ -1122,7 +1122,12 @@ thumbnail's URL pictures:
                 name="Reported user voice channel", value=user.voice.voice_channel.name, inline=True
             )
 
-        report.set_author(name="{0} ¦ {0.id}".format(user), icon_url=user.avatar_url)
+        if user.nick is not None:
+            report.set_author(name="{} ~ {} ({})".format(str(user), user.nick, user.id),
+                              icon_url=user.avatar_url)
+        else:
+            report.set_author(name="{} | {}".format(str(user), user.id),
+                              icon_url=user.avatar_url)
         report.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M") + " | ID: #" + report_id)
         report.set_thumbnail(url=self.settings[server.id]["thumbnail"]["report_embed"])
         try:
@@ -1131,7 +1136,7 @@ thumbnail's URL pictures:
             pass
 
         if "http" in ctx.message.content:
-            for word in words:
+            for word in ctx.message.content.split(" "):
                 if word.startswith("http"):
                     report.set_image(url=word)
                     report.add_field(
@@ -1165,11 +1170,11 @@ thumbnail's URL pictures:
                     )
                     break
 
-        await self.bot.send_message(
-            ctx.message.author, self.settings[server.id]["report_message"].format(
-                author=ctx.message.author, reason=reason, server=server, id=report_id
-            )
-        )
+        try:
+            await self.bot.send_message(author, self.settings[server.id]["report_message"].format(
+                                        author=ctx.message.author, reason=reason, server=server, id=report_id))
+        except:
+            pass
         self.clear_cache()
 
     @commands.group(pass_context=True, no_pm=True)
@@ -1234,7 +1239,12 @@ thumbnail's URL pictures:
         modlog.add_field(name="User", value=user.mention, inline=True)
         modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
-        modlog.set_author(name="{0} ¦ {0.id}".format(user), icon_url=user.avatar_url)
+        if user.nick is not None:
+            modlog.set_author(name="{} ~ {} ({})".format(str(user), user.nick, user.id),
+                              icon_url=user.avatar_url)
+        else:
+            modlog.set_author(name="{} | {}".format(str(user), user.id),
+                              icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         modlog.set_thumbnail(url=self.settings[server.id]["thumbnail"]["warning_embed_simple"])
         try:
@@ -1332,7 +1342,12 @@ thumbnail's URL pictures:
         modlog.add_field(name="User", value=user.mention, inline=True)
         modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
-        modlog.set_author(name="{0} ¦ {0.id}".format(user), icon_url=user.avatar_url)
+        if user.nick is not None:
+            modlog.set_author(name="{} ~ {} ({})".format(str(user), user.nick, user.id),
+                              icon_url=user.avatar_url)
+        else:
+            modlog.set_author(name="{} | {}".format(str(user), user.id),
+                              icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         modlog.set_thumbnail(url=self.settings[server.id]["thumbnail"]["warning_embed_kick"])
         try:
@@ -1449,7 +1464,12 @@ thumbnail's URL pictures:
         modlog.add_field(name="User", value=user.mention, inline=True)
         modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
-        modlog.set_author(name="{0} ¦ {0.id}".format(user), icon_url=user.avatar_url)
+        if user.nick is not None:
+            modlog.set_author(name="{} ~ {} ({})".format(str(user), user.nick, user.id),
+                              icon_url=user.avatar_url)
+        else:
+            modlog.set_author(name="{} | {}".format(str(user), user.id),
+                              icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         try:
             modlog.set_thumbnail(url=self.settings[server.id]["thumbnail"]["warning_embed_softban"])
@@ -1577,7 +1597,12 @@ thumbnail's URL pictures:
         modlog.add_field(name="User", value=user.mention, inline=True)
         modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
-        modlog.set_author(name="{0} ¦ {0.id}".format(user), icon_url=user.avatar_url)
+        if user.nick is not None:
+            modlog.set_author(name="{} ~ {} ({})".format(str(user), user.nick, user.id),
+                              icon_url=user.avatar_url)
+        else:
+            modlog.set_author(name="{} | {}".format(str(user), user.id),
+                              icon_url=user.avatar_url)
         modlog.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
         modlog.set_thumbnail(url=self.settings[server.id]["thumbnail"]["warning_embed_ban"])
         try:
@@ -1930,7 +1955,7 @@ thumbnail's URL pictures:
 
         await self.bot.say("The new reason has been saved")
 
-    async def __unload():
+    async def __unload(self):
         self.clear_cache()
 
 
