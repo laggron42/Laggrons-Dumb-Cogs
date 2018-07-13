@@ -1063,11 +1063,15 @@ thumbnail's URL pictures:
             pass
 
         if user is None or reason is None:
-            await self.bot.send_message(ctx.message.author,
-                                        "The given arguments are wrong. Please do so: `{}report @user your reason`.\n"
-                                        "If you omit an argument, the report won't be sent. You can also attach a file "
-                                        "to your report to bring a proof.".format(ctx.prefix)
-                                        )
+            try:
+                await self.bot.send_message(ctx.message.author,
+                                            "The given arguments are wrong. Please do so: `{}report @user your reason`.\n"
+                                            "If you omit an argument, the report won't be sent. You can also attach a file "
+                                            "to your report to bring a proof.".format(ctx.prefix)
+                                            )
+            except discord.errors.Forbidden:
+                pass
+
             return
 
         try:
@@ -1162,7 +1166,7 @@ thumbnail's URL pictures:
         if files:
             for file in files:
                 try:
-                    await self.bot.upload(file)
+                    await self.bot.send_file(channel, file)
                 except discord.errors.Forbidden:
                     await self.bot.say(
                         "The user attached some files but I couldn't upload them here. "
