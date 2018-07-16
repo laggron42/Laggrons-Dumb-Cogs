@@ -1,34 +1,14 @@
 # Laggron's Dumb Cogs - Red V3
 
-<a href="https://discord.gg/WsTGeQM">
-	<img src="https://discordapp.com/api/guilds/363008468602454017/embed.png" alt="Discord server"/>
-</a>
+[![Discord server](https://discordapp.com/api/guilds/363008468602454017/embed.png)](https://discord.gg/WsTGeQM)
+[![Red cogs](https://img.shields.io/badge/Red--DiscordBot-cogs-red.svg)](https://github.com/Cog-Creators/Red-DiscordBot/tree/V3/develop)
+[![discord.py](https://img.shields.io/badge/discord-py-blue.svg)](https://github.com/Rapptz/discord.py)
+[![Black coding style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+[![Build status](https://api.travis-ci.org/retke/Laggrons-Dumb-Cogs.svg?branch=v3)](https://travis-ci.org/retke/Laggrons-Dumb-Cogs)
+[![Docs status](https://readthedocs.org/projects/laggrons-dumb-cogs/badge)](http://laggrons-dumb-cogs.readthedocs.io)
+[![Patreon](https://img.shields.io/badge/Patreon-donate-orange.svg)](https://patreon.com/retke)
 
-<a href="https://github.com/Cog-Creators/Red-DiscordBot/tree/V3/develop">
-	<img src="https://img.shields.io/badge/Red--DiscordBot-cogs-red.svg" alt="Red DiscordBot cogs"/>
-</a>
-
-<a href="https://github.com/Rapptz/discord.py">
-    <img src="https://img.shields.io/badge/discord-py-blue.svg" alt="discord.py"/>
-</a>
-
-<a href="https://github.com/ambv/black">
-    <img src="https://img.shields.io/badge/code%20style-black-000000.svg" alt="Black coding style">
-</a>
-
-<a href="https://travis-ci.org/retke/Laggrons-Dumb-Cogs">
-    <img src="https://api.travis-ci.org/retke/Laggrons-Dumb-Cogs.svg?branch=v3" alt="Travis CI build">
-</a>
-
-<a href="http://laggrons-dumb-cogs.readthedocs.io">
-    <img src="https://readthedocs.org/projects/laggrons-dumb-cogs/badge" alt="Docs build">
-</a>
-
-<a href="http://makeapullrequest.com">
-    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs open">
-</a>
-
-![](https://github.com/retke/Laggrons-Dumb-Cogs/blob/master/.github/RESSOURCES/BANNERS/v3_branch.png)
+![Artwork](https://github.com/retke/Laggrons-Dumb-Cogs/blob/master/.github/RESSOURCES/BANNERS/v3_branch.png)
 
 Hello and welcome there, this is the repository for the **Laggron's Dumb Cogs**, a bunch of modules for [Red, the modular Discord bot](https://github.com/Cog-Creators/Red-DiscordBot/tree/V3/master) version 3. This is using the rewrite of [Discord.py library](https://github.com/Rapptz/discord.py/tree/rewrite).
 
