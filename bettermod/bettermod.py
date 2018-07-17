@@ -356,7 +356,7 @@ class BetterMod:
 
                 msg = await self.bot.edit_message(msg, embed=e)
 
-    @commands.group(pass_context=True)
+    @commands.group(pass_context=True, no_pm=True) 
     @checks.admin()
     async def bmodset(self, ctx):
         """Bettermod's settings"""
@@ -1664,7 +1664,7 @@ thumbnail's URL pictures:
             ctx=ctx,
         )
 
-    @commands.group(pass_context=True)
+    @commands.group(pass_context=True, no_pm=True) 
     @checks.mod_or_permissions(administrator=True)
     async def case(self, ctx):
         """Edit warnings' reasons or remove them"""
@@ -1672,7 +1672,7 @@ thumbnail's URL pictures:
         if ctx.invoked_subcommand is None:
             await self.bot.send_cmd_help(ctx)
 
-    @commands.command(pass_context=True)
+    @commands.command(pass_context=True, no_pm=True) 
     async def bcheck(self, ctx, user: discord.Member = None, case: int = 0):
         """Give the sanction and the reason of a specific case
         If 0 is given, all of the cases of the user will be given
