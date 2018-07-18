@@ -1059,7 +1059,7 @@ thumbnail's URL pictures:
 
         try:
             await self.bot.delete_message(ctx.message)
-        except discord.errors.Forbidden:
+        except:
             pass
 
         if user is None or reason is None:
