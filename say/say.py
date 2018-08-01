@@ -48,39 +48,43 @@ class Say:
         self.interaction.remove(user)
         await user.send("Session closed")
 
-    async def on_reaction_add(self, reaction, user):
-        if user in self.interaction:
-            channel = reaction.message.channel
-            if isinstance(channel, discord.DMChannel):
-                await self.stop_interaction(user)
-
-    def clear_cache(self):
-        for file in self.cache.iterdir():
-            os.remove(str(file.absolute()))
-
     async def say(self, ctx, text):
+        """
+        Send text in a channel with the attachments.
+        If a channel is found as the first word, it will be send
+        in that channel. This needs a context.
+
+        Arguments
+        ---------
+        text: str
+            The text to send.
+        ctx: ~commands.Context
+            The context got from a command. Can be generated with
+            `~commands.Bot.get_context`.
+        """
 
         self.clear_cache()  # let's make sure cache is clear
-        text = [x for x in text]
+        if text == '':  # no text, maybe attachment
+            potential_channel = ''
+        else:
+            potential_channel = text.split()[0]  # first word of the text
+
         if ctx.message.attachments != []:
             # there is an attachment
+
             exit_code = os.system(
-                "wget --quiet --directory-prefix "
-                + str(self.cache)
+                "wget --quiet --directory-prefix " + str(self.cache)
+                + " --output-file " + str(self.cache / "wget_log.txt")
                 + " "
                 + " ".join([x.url for x in ctx.message.attachments])
             )
             files = [discord.File(str(self.cache / x.filename)) for x in ctx.message.attachments]
-
             if exit_code != 0:
-                print(exit_code)
-                # the file wasn't download correctly
+                # the file wasn't downloaded correctly
                 # let's tell the user what's wrong
                 error_message = "An error occured while downloading the file.\n" "Error code "
                 if exit_code == 3:
                     error_message += "3: File I/O error (write permission)"
-                    # probably a permission error
-                    # shouldn't occur with the cache dir
                 elif exit_code == 4:
                     error_message += "4: Network failure"
                 elif exit_code == 5:
@@ -94,34 +98,25 @@ class Say:
                 # source: https://gist.github.com/cosimo/5747881
 
                 await ctx.author.send(error_message)
-
-                if text == []:
-                    # no attachments, no text, nothing to send
-                    return
-                # still the text to send, let's continue
                 files = None
         else:
             files = None
 
-        if files is None and text == []:  # no text, no attachment
+        if files is None and text == '':
+            # no text, no attachment, nothing to send
             await ctx.send_help()
             return
 
         try:  # we try to get a channel object
-            channel = await commands.TextChannelConverter().convert(ctx, text[0])
-        except (
-            commands.BadArgument,
-            IndexError,
-        ):  # no channel was given or text is empty (attachment)
+            channel = await commands.TextChannelConverter().convert(ctx, potential_channel)
+        except (commands.BadArgument, IndexError):
+            # no channel was given or text is empty (attachment)
             channel = ctx.channel
         else:
-            text.remove(text[0])  # we remove the channel from the text
-
-        text = " ".join(text)
+            text = text.replace(potential_channel, '')  # we remove the channel from the text
 
         try:
             await channel.send(text, files=files)
-
         except discord.errors.Forbidden:
             if not ctx.guild.me.permissions_in(channel).send_messages:
                 await ctx.send("I am not allowed to send messages in " + channel.mention)
@@ -132,17 +127,28 @@ class Say:
 
     @commands.command(name="say")
     @checks.guildowner()
-    async def _say(self, ctx, *text: str):
-        """Make the bot say what you want.
-        If no channel is specified, the message will be send in the current channel."""
+    async def _say(self, ctx, *, text: str = ''):
+        """
+        Make the bot say what you want in the desired channel.
+
+        If no channel is specified, the message will be send in the current channel.
+        You can attach some files to upload them to Discord.
+
+        Example usage :
+        - `!say #general hello there`
+        - `!say owo I have a file` (a file is attached to the command message)
+        """
 
         await self.say(ctx, text)
 
     @commands.command(name="sayd", aliases=["sd"])
     @checks.guildowner()
-    async def _saydelete(self, ctx, *text: str):
-        """Same as say command, except it deletes your message
-        If the message wasn't removed, then I don't have enough permissions"""
+    async def _saydelete(self, ctx, *, text: str = ''):
+        """
+        Same as say command, except it deletes your message.
+        
+        If the message wasn't removed, then I don't have enough permissions.
+        """
 
         message = None
 
