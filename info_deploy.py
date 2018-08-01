@@ -29,7 +29,10 @@ class Default:
             "for all informations about the cogs.\n"
             "https://laggrons-dumb-cogs.readthedocs.io/\n"
             "Join the official discord server for questions or suggestions.\n"
-            "https://discord.gg/WsTGeQ"
+            "https://discord.gg/WsTGeQ\n\n"
+            "**Important**\n"
+            "Some cogs use Sentry error reporting, like core Red. If Sentry is "
+            "enabled on Red, it will also be enabled with these cogs."
         ),
         "short": "Utility cogs for your server.",
     }
