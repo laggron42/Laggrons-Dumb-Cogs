@@ -4,10 +4,18 @@ import discord
 import datetime
 import os
 import asyncio
+import sys
+import logging
 
 from redbot.core import checks
+from redbot.core import Config
 from redbot.core.data_manager import cog_data_path
 from discord.ext import commands
+
+from .sentry import Sentry
+
+log = logging.getLogger("laggron.say")
+log.setLevel(logging.WARNING)
 
 
 class Say:
@@ -20,6 +28,9 @@ class Say:
 
     def __init__(self, bot):
         self.bot = bot
+        self.sentry = Sentry(log)
+        if bot.loop.create_task(bot.db.enable_sentry()):
+            self.sentry.enable()
         self.interaction = []
         self.cache = cog_data_path(self) / "cache"
 
@@ -43,7 +54,7 @@ class Say:
         "short": "Speak as the bot through multiple options.",
         "tags": ["rift", "upload", "interact"],
     }
-
+    
     async def stop_interaction(self, user):
         self.interaction.remove(user)
         await user.send("Session closed")
@@ -106,7 +117,7 @@ class Say:
             # no text, no attachment, nothing to send
             await ctx.send_help()
             return
-
+        
         try:  # we try to get a channel object
             channel = await commands.TextChannelConverter().convert(ctx, potential_channel)
         except (commands.BadArgument, IndexError):
@@ -238,7 +249,33 @@ class Say:
 
                 await u.send(embed=embed)
 
+    async def on_reaction_add(self, reaction, user):
+        if user in self.interaction:
+            channel = reaction.message.channel
+            if isinstance(channel, discord.DMChannel):
+                await self.stop_interaction(user)
+
+    async def on_error(self, event, *args, **kwargs):
+        error = sys.exc_info()
+        log.error(
+            f"Exception in {event}.\nArgs: {args}\nKwargs: {kwargs}\n\n" +
+            "".join(error.format_exception(type(error), error, error.__traceback__))
+        )
+        
+    async def on_command_error(self, ctx, error):
+        if not isinstance(error, commands.CommandInvokeError):
+            return
+        log.error(
+            f"Exception in command {ctx.command.qualified_name}",
+            exc_info=error.original
+        )
+
+    def clear_cache(self):
+        for file in self.cache.iterdir():
+            os.remove(str(file.absolute()))
+
     def __unload(self):
         for user in self.interaction:
             self.bot.loop.create_task(self.stop_interaction(user))
         self.clear_cache()
+        self.sentry.disable()
