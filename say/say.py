@@ -84,7 +84,7 @@ class Say:
             # there is an attachment
 
             exit_code = os.system(
-                "wget --quiet --directory-prefix " + str(self.cache)
+                "wget --quiet --debug --directory-prefix " + str(self.cache)
                 + " --output-file " + str(self.cache / "wget_log.txt")
                 + " "
                 + " ".join([x.url for x in ctx.message.attachments])
@@ -94,6 +94,8 @@ class Say:
                 # the file wasn't downloaded correctly
                 # let's tell the user what's wrong
                 error_message = "An error occured while downloading the file.\n" "Error code "
+                if exit_code == 1:
+                    error_message += "1: `wget` program not found, install it on your machine"
                 if exit_code == 3:
                     error_message += "3: File I/O error (write permission)"
                 elif exit_code == 4:
@@ -107,6 +109,12 @@ class Say:
                 else:
                     error_message += "unknown."
                 # source: https://gist.github.com/cosimo/5747881
+
+                with open(str(self.cache / "wget_log.txt"), "r") as log_file:
+                    log.error(
+                        f"Exception in downloading files. Exit code {exit_code}.\n"
+                        f"Full output: {log_file}"
+                    )
 
                 await ctx.author.send(error_message)
                 files = None
