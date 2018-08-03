@@ -8,7 +8,7 @@
 [![Docs status](https://readthedocs.org/projects/laggrons-dumb-cogs/badge)](http://laggrons-dumb-cogs.readthedocs.io)
 [![Patreon](https://img.shields.io/badge/Patreon-donate-orange.svg)](https://patreon.com/retke)
 
-![Artwork](https://github.com/retke/Laggrons-Dumb-Cogs/blob/master/.github/RESSOURCES/BANNERS/v3_branch.png)
+![Artwork](https://github.com/retke/Laggrons-Dumb-Cogs/blob/master/.github/RESSOURCES/BANNERS/Base_banner.png)
 
 Hello and welcome there, this is the repository for the **Laggron's Dumb Cogs**, a bunch of modules for [Red, the modular Discord bot](https://github.com/Cog-Creators/Red-DiscordBot/tree/V3/master) version 3. This is using the rewrite of [Discord.py library](https://github.com/Rapptz/discord.py/tree/rewrite).
 
@@ -45,3 +45,7 @@ You can also contact be by email: `laggron42@gmail.com`.
 I am open to comissions. If you need a cog, you can suggest it on [Red's cog board](https://cogboard.red), our new forum, where you will just need to log in with your Discord account to create a post.
 
 If you want me to make your cog, you can check [my profile](https://cogboard.red/u/El_Laggron) and send me a DM or mention me in your post.
+
+## Credits
+
+Credit to Blockula105 for the hand-drawn banner. Thanks @Malarne for the help in coding.
