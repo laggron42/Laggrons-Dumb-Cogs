@@ -1,6 +1,6 @@
 {
     "author": "El Laggron",
     "description": "A buch of utility and quality cogs that brings unique features for your server. Made by Laggron.",
-    "install_msg": "Thanks for installing the repository! Please check the wiki for all informations about the cogs.\nhttps://laggrons-dumb-cogs.readthedocs.io/\nJoin the official discord server for questions or suggestions.\nhttps://discord.gg/WsTGeQ",
+    "install_msg": "Thanks for installing the repository! Please check the wiki for all informations about the cogs.\nhttps://laggrons-dumb-cogs.readthedocs.io/\nJoin the official discord server for questions or suggestions.\nhttps://discord.gg/WsTGeQ\n\n**Important**\nSome cogs use Sentry error reporting, like core Red. If Sentry is enabled on Red, it will also be enabled with these cogs.",
     "short": "Utility cogs for your server."
 }
