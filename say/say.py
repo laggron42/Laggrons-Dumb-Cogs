@@ -19,7 +19,7 @@ if logging.getLogger('red').isEnabledFor(logging.DEBUG):
     # debug mode enabled
     log.setLevel(logging.DEBUG)
 else:
-log.setLevel(logging.WARNING)
+    log.setLevel(logging.WARNING)
 
 
 class Say:
@@ -79,67 +79,52 @@ class Say:
 
         if message.attachments == []:
             return []
-            exit_code = os.system(
-                f"wget --verbose --directory-prefix {str(self.cache)} " +
-                f"--output-file {str(self.cache)}/wget_log.txt" +
-                " ".join([x.url for x in message.attachments])
-            )
+        
+        exit_code = os.system(
+            f"wget --verbose --directory-prefix {str(self.cache)} " +
+            f"--output-file {str(self.cache)}/wget_log.txt " +
+            " ".join([x.url for x in message.attachments])
+        )
         files = [discord.File(str(self.cache / x.filename)) for x in message.attachments]
-            if exit_code != 0:
-                # the file wasn't downloaded correctly
-                # let's tell the user what's wrong
-                error_message = "An error occured while downloading the file.\n" "Error code "
-                if exit_code == 1:
-                    error_message += "1: `wget` program not found, install it on your machine"
-                if exit_code == 3:
-                    error_message += "3: File I/O error (write permission)"
-                elif exit_code == 4:
-                    error_message += "4: Network failure"
-                elif exit_code == 5:
-                    error_message += "5: SSL verification failure"
-                elif exit_code == 7:
-                    error_message += "7: Protocol error"
-                elif exit_code == 8:
-                    error_message += "8: Server issued an error response"
+        if exit_code != 0:
+            # the file wasn't downloaded correctly
+            # let's tell the user what's wrong
+            error_message = "An error occured while downloading the file.\n" "Error code "
+            if exit_code == 1:
+                error_message += "1: `wget` program not found, install it on your machine"
+            if exit_code == 3:
+                error_message += "3: File I/O error (write permission)"
+            elif exit_code == 4:
+                error_message += "4: Network failure"
+            elif exit_code == 5:
+                error_message += "5: SSL verification failure"
+            elif exit_code == 7:
+                error_message += "7: Protocol error"
+            elif exit_code == 8:
+                error_message += "8: Server issued an error response"
             elif exit_code == 2048:
                 error_message += "2048: Image not found"
-                else:
-                    error_message += "unknown."
-                # source: https://gist.github.com/cosimo/5747881
-
-                with open(str(self.cache / "wget_log.txt"), "r") as log_file:
-                log.warning(
-                        f"Exception in downloading files. Exit code {exit_code}.\n"
-                    f"Full output: {log_file.read()}"
-                    )
+            else:
+                error_message += "unknown."
+            # source: https://gist.github.com/cosimo/5747881
 
             await author.send(error_message)
+            with open(str(self.cache / "wget_log.txt"), "r") as log_file:
+                log.warning(
+                    f"Exception in downloading files. Exit code {exit_code}.\n"
+                    f"Full output: {log_file.read()}"
+                )
             return []
         return files
 
-    async def say(self, ctx, text):
-        """
-        Send text in a channel with the attachments.
-        If a channel is found as the first word, it will be send
-        in that channel. This needs a context.
+    async def say(self, ctx, text, files):
 
-        Arguments
-        ---------
-        text: str
-            The text to send.
-        ctx: ~commands.Context
-            The context got from a command. Can be generated with
-            `~commands.Bot.get_context`.
-        """
-
-        self.clear_cache()  # let's make sure cache is clear
         if text == '':  # no text, maybe attachment
             potential_channel = ''
         else:
             potential_channel = text.split()[0]  # first word of the text
-        files = await self.download_files(ctx.message, ctx.author)
 
-        if files is None and text == '':
+        if files == [] and text == '':
             # no text, no attachment, nothing to send
             await ctx.send_help()
             return
@@ -197,7 +182,8 @@ class Say:
         - `!say owo I have a file` (a file is attached to the command message)
         """
 
-        await self.say(ctx, text)
+        files = await self.download_files(ctx.message, ctx.author)
+        await self.say(ctx, text, files)
 
     @commands.command(name="sayd", aliases=["sd"])
     @checks.guildowner()
@@ -209,13 +195,15 @@ class Say:
         """
 
         message = None
+        # download the files BEFORE deleting the message
+        files = await self.download_files(ctx.message, ctx.author)
 
         try:
             await ctx.message.delete()
         except discord.errors.Forbidden:
             message = await ctx.send("Not enough permissions to delete message")
 
-        await self.say(ctx, text)
+        await self.say(ctx, text, files)
 
         if message is not None:
             await asyncio.sleep(1)
