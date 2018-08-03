@@ -39,7 +39,7 @@ class Say:
         self.cache = cog_data_path(self) / "cache"
 
     __author__ = "retke (El Laggron)"
-    __version__ = "1.4.0"
+    __version__ = "1.4.1"
     __info__ = {
         "bot_version": "3.0.0b9",
         "description": (
@@ -291,13 +291,17 @@ class Say:
         Get informations about the cog.
         """
 
-        sentry = "enabled" if await bot.db.enable_sentry() else "disabled"
+        sentry = "enabled" if await self.bot.db.enable_sentry() else "disabled"
         message = (
             "Laggron's Dumb Cogs V3 - say\n\n"
             f"Version: {self.__version__}\n"
             f"Author: {self.__author__}\n"
-            f"Sentry error reporting: {sentry}"
+            f"Sentry error reporting: {sentry}\n\n"
+            "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
+            "Discord server: https://discord.gg/WsTGeQ\n"
+            "Documentation: http://laggrons-dumb-cogs.readthedocs.io/"
         )
+        await ctx.send(message)
 
     async def on_reaction_add(self, reaction, user):
         if user in self.interaction:
