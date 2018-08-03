@@ -17,7 +17,7 @@ class RoleInvite:
     """
     Server autorole following the invite the user used to join the server
 
-    Report a bug or ask a question: https://discord.gg/WsTGeQ
+    Report a bug or ask a question: https://discord.gg/AVzjfpR
     Full documentation and FAQ: https://laggrons-dumb-cogs.readthedocs.io/roleinvite.html
     """
 

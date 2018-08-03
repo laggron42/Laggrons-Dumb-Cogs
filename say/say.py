@@ -26,7 +26,7 @@ class Say:
     """
     Speak as if you were the bot
     
-    Report a bug or ask a question: https://discord.gg/WsTGeQ
+    Report a bug or ask a question: https://discord.gg/AVzjfpR
     Full documentation and FAQ: http://laggrons-dumb-cogs.readthedocs.io/say.html
     """
 
@@ -298,7 +298,7 @@ class Say:
             f"Author: {self.__author__}\n"
             f"Sentry error reporting: {sentry}\n\n"
             "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
-            "Discord server: https://discord.gg/WsTGeQ\n"
+            "Discord server: https://discord.gg/AVzjfpR\n"
             "Documentation: http://laggrons-dumb-cogs.readthedocs.io/"
         )
         await ctx.send(message)

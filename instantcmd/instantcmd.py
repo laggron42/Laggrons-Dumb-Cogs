@@ -17,7 +17,7 @@ class InstantCommands:
     """
     Generate a new command from a code snippet, without making a new cog.
 
-    Report a bug or ask a question: https://discord.gg/WsTGeQ
+    Report a bug or ask a question: https://discord.gg/AVzjfpR
     Full documentation and FAQ: https://laggrons-dumb-cogs.readthedocs.io/instantcommands.html
     """
 
