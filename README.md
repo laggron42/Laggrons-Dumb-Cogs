@@ -8,7 +8,7 @@
 [![Docs status](https://readthedocs.org/projects/laggrons-dumb-cogs/badge)](http://laggrons-dumb-cogs.readthedocs.io)
 [![Patreon](https://img.shields.io/badge/Patreon-donate-orange.svg)](https://patreon.com/retke)
 
-![Artwork](https://github.com/retke/Laggrons-Dumb-Cogs/blob/master/.github/RESSOURCES/BANNERS/Base_branch.png)
+![Artwork](https://github.com/retke/Laggrons-Dumb-Cogs/blob/master/.github/RESSOURCES/BANNERS/Base_banner.png)
 
 Hello and welcome there, this is the repository for the **Laggron's Dumb Cogs**, a bunch of modules for [Red, the modular Discord bot](https://github.com/Cog-Creators/Red-DiscordBot/tree/V3/master) version 3. This is using the rewrite of [Discord.py library](https://github.com/Rapptz/discord.py/tree/rewrite).
 
