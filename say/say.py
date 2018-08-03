@@ -15,6 +15,10 @@ from discord.ext import commands
 from .sentry import Sentry
 
 log = logging.getLogger("laggron.say")
+if logging.getLogger('red').isEnabledFor(logging.DEBUG):
+    # debug mode enabled
+    log.setLevel(logging.DEBUG)
+else:
 log.setLevel(logging.WARNING)
 
 
@@ -28,7 +32,7 @@ class Say:
 
     def __init__(self, bot):
         self.bot = bot
-        self.sentry = Sentry(log)
+        self.sentry = Sentry(log, self.__version__)
         if bot.loop.create_task(bot.db.enable_sentry()):
             self.sentry.enable()
         self.interaction = []
@@ -55,9 +59,63 @@ class Say:
         "tags": ["rift", "upload", "interact"],
     }
     
-    async def stop_interaction(self, user):
-        self.interaction.remove(user)
-        await user.send("Session closed")
+    async def download_files(self, message: discord.Message, author: discord.User = None):
+        """
+        Download all of the attachments linked to a message.
+
+        Arguments
+        ---------
+        message: discord.Message
+            The message to get the attachments.
+        author: discord.User
+            The user to send a message to in case of a downloading error.
+        
+        Returns
+        -------
+        files: list
+            Return a :py:class:`list` of :class:`discord.File`
+            downloaded in the cog's cache.
+        """
+
+        if message.attachments == []:
+            return []
+            exit_code = os.system(
+                f"wget --verbose --directory-prefix {str(self.cache)} " +
+                f"--output-file {str(self.cache)}/wget_log.txt" +
+                " ".join([x.url for x in message.attachments])
+            )
+        files = [discord.File(str(self.cache / x.filename)) for x in message.attachments]
+            if exit_code != 0:
+                # the file wasn't downloaded correctly
+                # let's tell the user what's wrong
+                error_message = "An error occured while downloading the file.\n" "Error code "
+                if exit_code == 1:
+                    error_message += "1: `wget` program not found, install it on your machine"
+                if exit_code == 3:
+                    error_message += "3: File I/O error (write permission)"
+                elif exit_code == 4:
+                    error_message += "4: Network failure"
+                elif exit_code == 5:
+                    error_message += "5: SSL verification failure"
+                elif exit_code == 7:
+                    error_message += "7: Protocol error"
+                elif exit_code == 8:
+                    error_message += "8: Server issued an error response"
+            elif exit_code == 2048:
+                error_message += "2048: Image not found"
+                else:
+                    error_message += "unknown."
+                # source: https://gist.github.com/cosimo/5747881
+
+                with open(str(self.cache / "wget_log.txt"), "r") as log_file:
+                log.warning(
+                        f"Exception in downloading files. Exit code {exit_code}.\n"
+                    f"Full output: {log_file.read()}"
+                    )
+
+            await author.send(error_message)
+            return []
+        return files
 
     async def say(self, ctx, text):
         """
@@ -79,54 +137,15 @@ class Say:
             potential_channel = ''
         else:
             potential_channel = text.split()[0]  # first word of the text
-
-        if ctx.message.attachments != []:
-            # there is an attachment
-
-            exit_code = os.system(
-                "wget --quiet --debug --directory-prefix " + str(self.cache)
-                + " --output-file " + str(self.cache / "wget_log.txt")
-                + " "
-                + " ".join([x.url for x in ctx.message.attachments])
-            )
-            files = [discord.File(str(self.cache / x.filename)) for x in ctx.message.attachments]
-            if exit_code != 0:
-                # the file wasn't downloaded correctly
-                # let's tell the user what's wrong
-                error_message = "An error occured while downloading the file.\n" "Error code "
-                if exit_code == 1:
-                    error_message += "1: `wget` program not found, install it on your machine"
-                if exit_code == 3:
-                    error_message += "3: File I/O error (write permission)"
-                elif exit_code == 4:
-                    error_message += "4: Network failure"
-                elif exit_code == 5:
-                    error_message += "5: SSL verification failure"
-                elif exit_code == 7:
-                    error_message += "7: Protocol error"
-                elif exit_code == 8:
-                    error_message += "8: Server issued an error response"
-                else:
-                    error_message += "unknown."
-                # source: https://gist.github.com/cosimo/5747881
-
-                with open(str(self.cache / "wget_log.txt"), "r") as log_file:
-                    log.error(
-                        f"Exception in downloading files. Exit code {exit_code}.\n"
-                        f"Full output: {log_file}"
-                    )
-
-                await ctx.author.send(error_message)
-                files = None
-        else:
-            files = None
+        files = await self.download_files(ctx.message, ctx.author)
 
         if files is None and text == '':
             # no text, no attachment, nothing to send
             await ctx.send_help()
             return
         
-        try:  # we try to get a channel object
+        # we try to get a channel object
+        try:  
             channel = await commands.TextChannelConverter().convert(ctx, potential_channel)
         except (commands.BadArgument, IndexError):
             # no channel was given or text is empty (attachment)
@@ -134,14 +153,34 @@ class Say:
         else:
             text = text.replace(potential_channel, '')  # we remove the channel from the text
 
+        # preparing context info in case of an error
+        if files != []:
+            error_message = (
+                "Has files: yes\n"
+                f"Number of files: {len(files)}\n"
+                f"Files URL: "
+                + ", ".join([x.url for x in ctx.message.attachments])
+            )
+        else:
+            error_message = "Has files: no"
+
+        # sending the message
         try:
             await channel.send(text, files=files)
-        except discord.errors.Forbidden:
+        except discord.errors.Forbidden as e:
             if not ctx.guild.me.permissions_in(channel).send_messages:
-                await ctx.send("I am not allowed to send messages in " + channel.mention)
+                msg = await ctx.send("I am not allowed to send messages in " + channel.mention)
+                await asyncio.sleep(1)
+                await msg.delete()
             elif not ctx.guild.me.permissions_in(channel).attach_files:
-                await ctx.send("I am not allowed to upload files in " + channel.mention)
-
+                msg = await ctx.send("I am not allowed to upload files in " + channel.mention)
+                await asyncio.sleep(1)
+                await msg.delete()
+            else:
+                log.error(
+                    f"Unknown permissions error when sending a message.\n{error_message}",
+                    exc_info=e
+                )
         self.clear_cache()
 
     @commands.command(name="say")
@@ -250,12 +289,27 @@ class Say:
                 )
                 embed.set_footer(text=message.created_at.strftime("%d %b %Y %H:%M"))
                 embed.description = message.content
-                embed.color = message.author.color
+                embed.colour = message.author.color
 
                 if message.attachments != []:
                     embed.set_image(url=message.attachments[0].url)
 
                 await u.send(embed=embed)
+
+    @commands.command(hidden=True)
+    @checks.is_owner()
+    async def sayinfo(self, ctx):
+        """
+        Get informations about the cog.
+        """
+
+        sentry = "enabled" if await bot.db.enable_sentry() else "disabled"
+        message = (
+            "Laggron's Dumb Cogs V3 - say\n\n"
+            f"Version: {self.__version__}\n"
+            f"Author: {self.__author__}\n"
+            f"Sentry error reporting: {sentry}"
+        )
 
     async def on_reaction_add(self, reaction, user):
         if user in self.interaction:
@@ -266,17 +320,21 @@ class Say:
     async def on_error(self, event, *args, **kwargs):
         error = sys.exc_info()
         log.error(
-            f"Exception in {event}.\nArgs: {args}\nKwargs: {kwargs}\n\n" +
-            "".join(error.format_exception(type(error), error, error.__traceback__))
+            f"Exception in {event}.\nArgs: {args}\nKwargs: {kwargs}\n\n",
+            exc_info=error
         )
         
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
         log.error(
-            f"Exception in command {ctx.command.qualified_name}",
+            f"Exception in command '{ctx.command.qualified_name}'",
             exc_info=error.original
         )
+
+    async def stop_interaction(self, user):
+        self.interaction.remove(user)
+        await user.send("Session closed")
 
     def clear_cache(self):
         for file in self.cache.iterdir():
