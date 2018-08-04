@@ -9,6 +9,7 @@ import logging
 
 from redbot.core import checks
 from redbot.core import Config
+from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.data_manager import cog_data_path
 from discord.ext import commands
 
@@ -20,8 +21,10 @@ if logging.getLogger('red').isEnabledFor(logging.DEBUG):
     log.setLevel(logging.DEBUG)
 else:
     log.setLevel(logging.WARNING)
+_ = Translator("Say", __file__)
 
 
+@cog_i18n(_)
 class Say:
     """
     Speak as if you were the bot
@@ -89,23 +92,23 @@ class Say:
         if exit_code != 0:
             # the file wasn't downloaded correctly
             # let's tell the user what's wrong
-            error_message = "An error occured while downloading the file.\n" "Error code "
+            error_message = _("An error occured while downloading the file.\n" "Error code ")
             if exit_code == 1:
-                error_message += "1: `wget` program not found, install it on your machine"
+                error_message += _("1: `wget` program not found, install it on your machine")
             if exit_code == 3:
-                error_message += "3: File I/O error (write permission)"
+                error_message += _("3: File I/O error (write permission)")
             elif exit_code == 4:
-                error_message += "4: Network failure"
+                error_message += _("4: Network failure")
             elif exit_code == 5:
-                error_message += "5: SSL verification failure"
+                error_message += _("5: SSL verification failure")
             elif exit_code == 7:
-                error_message += "7: Protocol error"
+                error_message += _("7: Protocol error")
             elif exit_code == 8:
-                error_message += "8: Server issued an error response"
+                error_message += _("8: Server issued an error response")
             elif exit_code == 2048:
-                error_message += "2048: Image not found"
+                error_message += _("2048: Image not found")
             else:
-                error_message += "unknown."
+                error_message += _("unknown.")
             # source: https://gist.github.com/cosimo/5747881
 
             await author.send(error_message)
@@ -154,11 +157,11 @@ class Say:
             await channel.send(text, files=files)
         except discord.errors.Forbidden as e:
             if not ctx.guild.me.permissions_in(channel).send_messages:
-                msg = await ctx.send("I am not allowed to send messages in " + channel.mention)
+                msg = await ctx.send(_(f"I am not allowed to send messages in {channel.mention}"))
                 await asyncio.sleep(1)
                 await msg.delete()
             elif not ctx.guild.me.permissions_in(channel).attach_files:
-                msg = await ctx.send("I am not allowed to upload files in " + channel.mention)
+                msg = await ctx.send(_(f"I am not allowed to upload files in {channel.mention}"))
                 await asyncio.sleep(1)
                 await msg.delete()
             else:
@@ -201,7 +204,7 @@ class Say:
         try:
             await ctx.message.delete()
         except discord.errors.Forbidden:
-            message = await ctx.send("Not enough permissions to delete message")
+            message = await ctx.send(_("Not enough permissions to delete message"))
 
         await self.say(ctx, text, files)
 
@@ -217,25 +220,23 @@ class Say:
         u = ctx.author
         if channel is None:
             if isinstance(ctx.channel, discord.DMChannel):
-                await ctx.send(
+                await ctx.send(_(
                     "You need to give a channel to enable this in DM. You can give the channel ID too."
-                )
+                ))
                 return
             else:
                 channel = ctx.channel
 
         if u in self.interaction:
-            await ctx.send("A session is already running.")
+            await ctx.send(_("A session is already running."))
             return
 
-        message = await u.send(
-            "I will start sending you messages from {}.\n"
+        message = await u.send(_(
+            f"I will start sending you messages from {channel.mention}.\n"
             "Just send me any message and I will send it in that channel.\n"
             "React with ❌ on this message to end the session.\n"
-            "If no message was send or received in the last 5 minutes, the request will time out and stop.".format(
-                channel.mention
-            )
-        )
+            "If no message was send or received in the last 5 minutes, the request will time out and stop."
+        ))
         await message.add_reaction("❌")
         self.interaction.append(u)
 
@@ -247,7 +248,7 @@ class Say:
             try:
                 message = await self.bot.wait_for("message", timeout=300)
             except asyncio.TimeoutError:
-                await u.send("Request timed out. Session closed")
+                await u.send(_("Request timed out. Session closed"))
                 self.interaction.remove(u)
                 return
 
@@ -291,8 +292,8 @@ class Say:
         Get informations about the cog.
         """
 
-        sentry = "enabled" if await self.bot.db.enable_sentry() else "disabled"
-        message = (
+        sentry = _("enabled") if await self.bot.db.enable_sentry() else _("disabled")
+        message = (_(
             "Laggron's Dumb Cogs V3 - say\n\n"
             f"Version: {self.__version__}\n"
             f"Author: {self.__author__}\n"
@@ -300,7 +301,7 @@ class Say:
             "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
             "Discord server: https://discord.gg/AVzjfpR\n"
             "Documentation: http://laggrons-dumb-cogs.readthedocs.io/"
-        )
+        ))
         await ctx.send(message)
 
     async def on_reaction_add(self, reaction, user):
@@ -326,7 +327,7 @@ class Say:
 
     async def stop_interaction(self, user):
         self.interaction.remove(user)
-        await user.send("Session closed")
+        await user.send(_("Session closed"))
 
     def clear_cache(self):
         for file in self.cache.iterdir():
