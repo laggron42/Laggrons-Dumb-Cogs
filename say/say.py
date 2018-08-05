@@ -16,7 +16,7 @@ from discord.ext import commands
 from .sentry import Sentry
 
 log = logging.getLogger("laggron.say")
-if logging.getLogger('red').isEnabledFor(logging.DEBUG):
+if logging.getLogger("red").isEnabledFor(logging.DEBUG):
     # debug mode enabled
     log.setLevel(logging.DEBUG)
 else:
@@ -61,8 +61,10 @@ class Say:
         "short": "Speak as the bot through multiple options.",
         "tags": ["rift", "upload", "interact"],
     }
-    
-    async def download_files(self, message: discord.Message, author: discord.User = None):
+
+    async def download_files(
+        self, message: discord.Message, author: discord.User = None
+    ):
         """
         Download all of the attachments linked to a message.
 
@@ -82,19 +84,25 @@ class Say:
 
         if message.attachments == []:
             return []
-        
+
         exit_code = os.system(
-            f"wget --verbose --directory-prefix {str(self.cache)} " +
-            f"--output-file {str(self.cache)}/wget_log.txt " +
-            " ".join([x.url for x in message.attachments])
+            f"wget --verbose --directory-prefix {str(self.cache)} "
+            + f"--output-file {str(self.cache)}/wget_log.txt "
+            + " ".join([x.url for x in message.attachments])
         )
-        files = [discord.File(str(self.cache / x.filename)) for x in message.attachments]
+        files = [
+            discord.File(str(self.cache / x.filename)) for x in message.attachments
+        ]
         if exit_code != 0:
             # the file wasn't downloaded correctly
             # let's tell the user what's wrong
-            error_message = _("An error occured while downloading the file.\n" "Error code ")
+            error_message = _(
+                "An error occured while downloading the file.\n" "Error code "
+            )
             if exit_code == 1:
-                error_message += _("1: `wget` program not found, install it on your machine")
+                error_message += _(
+                    "1: `wget` program not found, install it on your machine"
+                )
             if exit_code == 3:
                 error_message += _("3: File I/O error (write permission)")
             elif exit_code == 4:
@@ -122,32 +130,35 @@ class Say:
 
     async def say(self, ctx, text, files):
 
-        if text == '':  # no text, maybe attachment
-            potential_channel = ''
+        if text == "":  # no text, maybe attachment
+            potential_channel = ""
         else:
             potential_channel = text.split()[0]  # first word of the text
 
-        if files == [] and text == '':
+        if files == [] and text == "":
             # no text, no attachment, nothing to send
             await ctx.send_help()
             return
-        
+
         # we try to get a channel object
-        try:  
-            channel = await commands.TextChannelConverter().convert(ctx, potential_channel)
+        try:
+            channel = await commands.TextChannelConverter().convert(
+                ctx, potential_channel
+            )
         except (commands.BadArgument, IndexError):
             # no channel was given or text is empty (attachment)
             channel = ctx.channel
         else:
-            text = text.replace(potential_channel, '')  # we remove the channel from the text
+            text = text.replace(
+                potential_channel, ""
+            )  # we remove the channel from the text
 
         # preparing context info in case of an error
         if files != []:
             error_message = (
                 "Has files: yes\n"
                 f"Number of files: {len(files)}\n"
-                f"Files URL: "
-                + ", ".join([x.url for x in ctx.message.attachments])
+                f"Files URL: " + ", ".join([x.url for x in ctx.message.attachments])
             )
         else:
             error_message = "Has files: no"
@@ -157,23 +168,27 @@ class Say:
             await channel.send(text, files=files)
         except discord.errors.Forbidden as e:
             if not ctx.guild.me.permissions_in(channel).send_messages:
-                msg = await ctx.send(_("I am not allowed to send messages in ") + channel.mention)
+                msg = await ctx.send(
+                    _("I am not allowed to send messages in ") + channel.mention
+                )
                 await asyncio.sleep(1)
                 await msg.delete()
             elif not ctx.guild.me.permissions_in(channel).attach_files:
-                msg = await ctx.send(_("I am not allowed to upload files in ") + channel.mention)
+                msg = await ctx.send(
+                    _("I am not allowed to upload files in ") + channel.mention
+                )
                 await asyncio.sleep(1)
                 await msg.delete()
             else:
                 log.error(
                     f"Unknown permissions error when sending a message.\n{error_message}",
-                    exc_info=e
+                    exc_info=e,
                 )
         self.clear_cache()
 
     @commands.command(name="say")
     @checks.guildowner()
-    async def _say(self, ctx, *, text: str = ''):
+    async def _say(self, ctx, *, text: str = ""):
         """
         Make the bot say what you want in the desired channel.
 
@@ -190,7 +205,7 @@ class Say:
 
     @commands.command(name="sayd", aliases=["sd"])
     @checks.guildowner()
-    async def _saydelete(self, ctx, *, text: str = ''):
+    async def _saydelete(self, ctx, *, text: str = ""):
         """
         Same as say command, except it deletes your message.
         
@@ -220,9 +235,11 @@ class Say:
         u = ctx.author
         if channel is None:
             if isinstance(ctx.channel, discord.DMChannel):
-                await ctx.send(_(
-                    "You need to give a channel to enable this in DM. You can give the channel ID too."
-                ))
+                await ctx.send(
+                    _(
+                        "You need to give a channel to enable this in DM. You can give the channel ID too."
+                    )
+                )
                 return
             else:
                 channel = ctx.channel
@@ -231,15 +248,14 @@ class Say:
             await ctx.send(_("A session is already running."))
             return
 
-        message = await u.send(_(
-            "I will start sending you messages from {0}.\n"
-            "Just send me any message and I will send it in that channel.\n"
-            "React with ❌ on this message to end the session.\n"
-            "If no message was send or received in the last 5 minutes, "
-            "the request will time out and stop."
-        ).format(
-                channel.mention
-            )
+        message = await u.send(
+            _(
+                "I will start sending you messages from {0}.\n"
+                "Just send me any message and I will send it in that channel.\n"
+                "React with ❌ on this message to end the session.\n"
+                "If no message was send or received in the last 5 minutes, "
+                "the request will time out and stop."
+            ).format(channel.mention)
         )
         await message.add_reaction("❌")
         self.interaction.append(u)
@@ -260,7 +276,8 @@ class Say:
                 if message.attachments != []:
                     os.system("wget " + message.attachments[0].url)
                     await channel.send(
-                        message.content, file=discord.File(message.attachments[0].filename)
+                        message.content,
+                        file=discord.File(message.attachments[0].filename),
                     )
                     os.remove(message.attachments[0].filename)
 
@@ -297,17 +314,15 @@ class Say:
         """
 
         sentry = _("enabled") if await self.bot.db.enable_sentry() else _("disabled")
-        message = (_(
+        message = _(
             "Laggron's Dumb Cogs V3 - say\n\n"
             "Version: {0.__version__}\n"
             "Author: {0.__author__}\n"
             "Sentry error reporting: {1}\n\n"
             "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
             "Discord server: https://discord.gg/AVzjfpR\n"
-            "Documentation: http://laggrons-dumb-cogs.readthedocs.io/").format(
-                self, sentry
-            )
-        )
+            "Documentation: http://laggrons-dumb-cogs.readthedocs.io/"
+        ).format(self, sentry)
         await ctx.send(message)
 
     async def on_reaction_add(self, reaction, user):
@@ -319,16 +334,15 @@ class Say:
     async def on_error(self, event, *args, **kwargs):
         error = sys.exc_info()
         log.error(
-            f"Exception in {event}.\nArgs: {args}\nKwargs: {kwargs}\n\n",
-            exc_info=error
+            f"Exception in {event}.\nArgs: {args}\nKwargs: {kwargs}\n\n", exc_info=error
         )
-        
+
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
         log.error(
             f"Exception in command '{ctx.command.qualified_name}'",
-            exc_info=error.original
+            exc_info=error.original,
         )
 
     async def stop_interaction(self, user):

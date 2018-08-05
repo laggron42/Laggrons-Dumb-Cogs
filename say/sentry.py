@@ -26,7 +26,7 @@ class Sentry:
                 "@sentry.io/1253554"
             ),
             release=version,
-            environement=f"{platform.system()} ({platform.release()}"
+            environement=f"{platform.system()} ({platform.release()}",
         )
         self.handler = SentryHandler(self.client)
         self.logger = logger
