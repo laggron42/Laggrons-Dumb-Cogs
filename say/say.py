@@ -42,9 +42,9 @@ class Say:
         self.cache = cog_data_path(self) / "cache"
 
     __author__ = "retke (El Laggron)"
-    __version__ = "1.4.1"
+    __version__ = "1.4.2"
     __info__ = {
-        "bot_version": "3.0.0b9",
+        "bot_version": "3.0.0b14",
         "description": (
             "Speak as the bot through multiple options.\n"
             "Allow file upload, rift in DM and specific destinations."
