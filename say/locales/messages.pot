@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2018-05-26 16:06+0000\n"
+"POT-Creation-Date: 2018-08-05 12:51+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -14,4 +14,99 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: pygettext.py 1.5\n"
 
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:99
+msgid ""
+"An error occured while downloading the file.\n"
+"Error code "
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:103
+msgid "1: `wget` program not found, install it on your machine"
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:107
+msgid "3: File I/O error (write permission)"
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:109
+msgid "4: Network failure"
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:111
+msgid "5: SSL verification failure"
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:113
+msgid "7: Protocol error"
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:115
+msgid "8: Server issued an error response"
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:117
+msgid "2048: Image not found"
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:119
+msgid "unknown."
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:172
+msgid "I am not allowed to send messages in "
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:178
+msgid "I am not allowed to upload files in "
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:222
+msgid "Not enough permissions to delete message"
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:239
+msgid "You need to give a channel to enable this in DM. You can give the channel ID too."
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:248
+msgid "A session is already running."
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:252
+msgid ""
+"I will start sending you messages from {0}.\n"
+"Just send me any message and I will send it in that channel.\n"
+"React with ❌ on this message to end the session.\n"
+"If no message was send or received in the last 5 minutes, the request will time out and stop."
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:271
+msgid "Request timed out. Session closed"
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:316
+msgid "disabled"
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:316
+msgid "enabled"
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:317
+msgid ""
+"Laggron's Dumb Cogs V3 - say\n"
+"\n"
+"Version: {0.__version__}\n"
+"Author: {0.__author__}\n"
+"Sentry error reporting: {1}\n"
+"\n"
+"Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
+"Discord server: https://discord.gg/AVzjfpR\n"
+"Documentation: http://laggrons-dumb-cogs.readthedocs.io/"
+msgstr ""
+
+#: Documents/Laggrons-Dumb-Cogs/say/say.py:350
+msgid "Session closed"
+msgstr ""
 
