@@ -62,9 +62,7 @@ class Say:
         "tags": ["rift", "upload", "interact"],
     }
 
-    async def download_files(
-        self, message: discord.Message, author: discord.User = None
-    ):
+    async def download_files(self, message: discord.Message, author: discord.User = None):
         """
         Download all of the attachments linked to a message.
 
@@ -90,19 +88,13 @@ class Say:
             + f"--output-file {str(self.cache)}/wget_log.txt "
             + " ".join([x.url for x in message.attachments])
         )
-        files = [
-            discord.File(str(self.cache / x.filename)) for x in message.attachments
-        ]
+        files = [discord.File(str(self.cache / x.filename)) for x in message.attachments]
         if exit_code != 0:
             # the file wasn't downloaded correctly
             # let's tell the user what's wrong
-            error_message = _(
-                "An error occured while downloading the file.\n" "Error code "
-            )
+            error_message = _("An error occured while downloading the file.\n" "Error code ")
             if exit_code == 1:
-                error_message += _(
-                    "1: `wget` program not found, install it on your machine"
-                )
+                error_message += _("1: `wget` program not found, install it on your machine")
             if exit_code == 3:
                 error_message += _("3: File I/O error (write permission)")
             elif exit_code == 4:
@@ -142,16 +134,12 @@ class Say:
 
         # we try to get a channel object
         try:
-            channel = await commands.TextChannelConverter().convert(
-                ctx, potential_channel
-            )
+            channel = await commands.TextChannelConverter().convert(ctx, potential_channel)
         except (commands.BadArgument, IndexError):
             # no channel was given or text is empty (attachment)
             channel = ctx.channel
         else:
-            text = text.replace(
-                potential_channel, ""
-            )  # we remove the channel from the text
+            text = text.replace(potential_channel, "")  # we remove the channel from the text
 
         # preparing context info in case of an error
         if files != []:
@@ -168,15 +156,11 @@ class Say:
             await channel.send(text, files=files)
         except discord.errors.Forbidden as e:
             if not ctx.guild.me.permissions_in(channel).send_messages:
-                msg = await ctx.send(
-                    _("I am not allowed to send messages in ") + channel.mention
-                )
+                msg = await ctx.send(_("I am not allowed to send messages in ") + channel.mention)
                 await asyncio.sleep(1)
                 await msg.delete()
             elif not ctx.guild.me.permissions_in(channel).attach_files:
-                msg = await ctx.send(
-                    _("I am not allowed to upload files in ") + channel.mention
-                )
+                msg = await ctx.send(_("I am not allowed to upload files in ") + channel.mention)
                 await asyncio.sleep(1)
                 await msg.delete()
             else:
@@ -276,8 +260,7 @@ class Say:
                 if message.attachments != []:
                     os.system("wget " + message.attachments[0].url)
                     await channel.send(
-                        message.content,
-                        file=discord.File(message.attachments[0].filename),
+                        message.content, file=discord.File(message.attachments[0].filename)
                     )
                     os.remove(message.attachments[0].filename)
 
@@ -333,15 +316,24 @@ class Say:
 
     async def on_error(self, event, *args, **kwargs):
         error = sys.exc_info()
-        log.error(
-            f"Exception in {event}.\nArgs: {args}\nKwargs: {kwargs}\n\n", exc_info=error
-        )
+        log.error(f"Exception in {event}.\nArgs: {args}\nKwargs: {kwargs}\n\n", exc_info=error)
 
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
+        if not ctx.command.cog_name == self.__class__.__name__:
+            # That error doesn't belong to the cog
+            return
+        messages = "\n".join(
+            [
+                f"{x.author} %bot%: {x.content}".replace("%bot%", "(Bot)" if x.author.bot else "")
+                for x in await ctx.history(limit=5).flatten()
+            ]
+        )
         log.error(
-            f"Exception in command '{ctx.command.qualified_name}'",
+            f"Exception in command '{ctx.command.qualified_name}'.\n\n"
+            f"Myself: {ctx.me}\n"
+            f"Last 5 messages:\n\n{messages}",
             exc_info=error.original,
         )
 
