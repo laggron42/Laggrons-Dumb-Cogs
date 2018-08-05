@@ -83,6 +83,15 @@ class Say:
         if message.attachments == []:
             return []
 
+        total_bytes = 0
+        for attachment in message.attachments:
+            total_bytes += attachment.size
+        if total_bytes > 8000000:
+            await author.send(
+                _("The files got removed because they were too big. " "The limit for bots is 8mb.")
+            )
+            return []
+
         exit_code = os.system(
             f"wget --verbose --directory-prefix {str(self.cache)} "
             + f"--output-file {str(self.cache)}/wget_log.txt "

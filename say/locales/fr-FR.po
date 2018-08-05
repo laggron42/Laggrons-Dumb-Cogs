@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2018-08-05 12:51+0200\n"
-"PO-Revision-Date: 2018-08-05 12:58+0200\n"
+"PO-Revision-Date: 2018-08-05 18:50+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -17,7 +17,14 @@ msgstr ""
 "X-Generator: Poedit 2.1.1\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:99
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:91
+msgid ""
+"The files got removed because they were too big. The limit for bots is 8mb."
+msgstr ""
+"Les fichiers ont été retirés car ils sont trop gros. La limite pour les bots "
+"est 8mb."
+
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:104
 msgid ""
 "An error occured while downloading the file.\n"
 "Error code "
@@ -25,51 +32,51 @@ msgstr ""
 "Une erreur s’est produite lors du téléchargement du fichier.\n"
 "Code erreur "
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:103
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:106
 msgid "1: `wget` program not found, install it on your machine"
 msgstr "1 : programme `wget` inexistant, veuillez l’installer"
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:107
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:108
 msgid "3: File I/O error (write permission)"
 msgstr "3 : Erreur I/O (permissions d’écriture)"
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:109
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:110
 msgid "4: Network failure"
 msgstr "4 : Problème réseau"
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:111
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:112
 msgid "5: SSL verification failure"
 msgstr "5 : La vérification du protocole SSL a échoué"
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:113
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:114
 msgid "7: Protocol error"
 msgstr "7 : Erreur de protocole"
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:115
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:116
 msgid "8: Server issued an error response"
 msgstr "8 : Le serveur a renvoyé un message d’erreur"
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:117
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:118
 msgid "2048: Image not found"
 msgstr "2048 : Image non trouvée"
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:119
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:120
 msgid "unknown."
 msgstr "inconnue."
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:172
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:169
 msgid "I am not allowed to send messages in "
 msgstr "Je ne suis pas autorisé à envoyer des messages dans le channel "
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:178
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:173
 msgid "I am not allowed to upload files in "
 msgstr "Je ne suis pas autorisé à envoyer des fichiers dans le channel "
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:222
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:214
 msgid "Not enough permissions to delete message"
 msgstr "Pas assez de permissions pour supprimer le message"
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:239
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:227
 msgid ""
 "You need to give a channel to enable this in DM. You can give the channel ID "
 "too."
@@ -77,11 +84,11 @@ msgstr ""
 "Vous devez donner un channel pour activer ceci en MP. Vous pouvez également "
 "donner l’ID du channel."
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:248
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:236
 msgid "A session is already running."
 msgstr "Une session est déjà en cours."
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:252
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:240
 msgid ""
 "I will start sending you messages from {0}.\n"
 "Just send me any message and I will send it in that channel.\n"
@@ -95,19 +102,19 @@ msgstr ""
 "Si aucun message n’a été envoyé ou reçu dans les 5 dernières minutes, la "
 "requête va s’expirer."
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:271
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:259
 msgid "Request timed out. Session closed"
-msgstr "Requête expirée. Session fermée."
+msgstr "Requête expirée. Session fermée"
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:316
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:303
 msgid "disabled"
 msgstr "désactivé"
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:316
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:303
 msgid "enabled"
 msgstr "activé"
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:317
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:304
 msgid ""
 "Laggron's Dumb Cogs V3 - say\n"
 "\n"
@@ -129,6 +136,6 @@ msgstr ""
 "Serveur Discord : https://discord.gg/AVzjfpR\n"
 "Documentation : http://laggrons-dumb-cogs.readthedocs.io/"
 
-#: Documents/Laggrons-Dumb-Cogs/say/say.py:350
+#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:346
 msgid "Session closed"
-msgstr "Requête expirée. Session fermée."
+msgstr "Requête expirée. Session fermée"
