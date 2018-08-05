@@ -1,6 +1,6 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR ORGANIZATION
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Laggron's Dumb Cogs V3 - Internationalization
+# Copyright (C) 2018
+# retke <laggron42@gmail.com>, 2018.
 #
 msgid ""
 msgstr ""
