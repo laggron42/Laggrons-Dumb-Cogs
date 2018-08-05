@@ -156,13 +156,13 @@ class Say:
             await channel.send(text, files=files)
         except discord.errors.Forbidden as e:
             if not ctx.guild.me.permissions_in(channel).send_messages:
-                msg = await ctx.send(_("I am not allowed to send messages in ") + channel.mention)
-                await asyncio.sleep(1)
-                await msg.delete()
+                await ctx.send(
+                    _("I am not allowed to send messages in ") + channel.mention, delete_after=1
+                )
             elif not ctx.guild.me.permissions_in(channel).attach_files:
-                msg = await ctx.send(_("I am not allowed to upload files in ") + channel.mention)
-                await asyncio.sleep(1)
-                await msg.delete()
+                await ctx.send(
+                    _("I am not allowed to upload files in ") + channel.mention, delete_after=1
+                )
             else:
                 log.error(
                     f"Unknown permissions error when sending a message.\n{error_message}",
@@ -196,20 +196,15 @@ class Say:
         If the message wasn't removed, then I don't have enough permissions.
         """
 
-        message = None
         # download the files BEFORE deleting the message
         files = await self.download_files(ctx.message, ctx.author)
 
         try:
             await ctx.message.delete()
         except discord.errors.Forbidden:
-            message = await ctx.send(_("Not enough permissions to delete message"))
+            await ctx.send(_("Not enough permissions to delete message"), delete_after=1)
 
         await self.say(ctx, text, files)
-
-        if message is not None:
-            await asyncio.sleep(1)
-            await message.delete()
 
     @commands.command(name="interact")
     @checks.guildowner()
