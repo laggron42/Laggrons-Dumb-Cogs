@@ -157,11 +157,11 @@ class Say:
             await channel.send(text, files=files)
         except discord.errors.Forbidden as e:
             if not ctx.guild.me.permissions_in(channel).send_messages:
-                msg = await ctx.send(_(f"I am not allowed to send messages in {channel.mention}"))
+                msg = await ctx.send(_("I am not allowed to send messages in " + channel.mention))
                 await asyncio.sleep(1)
                 await msg.delete()
             elif not ctx.guild.me.permissions_in(channel).attach_files:
-                msg = await ctx.send(_(f"I am not allowed to upload files in {channel.mention}"))
+                msg = await ctx.send(_("I am not allowed to upload files in " + channel.mention))
                 await asyncio.sleep(1)
                 await msg.delete()
             else:
@@ -232,10 +232,12 @@ class Say:
             return
 
         message = await u.send(_(
-            f"I will start sending you messages from {channel.mention}.\n"
+            "I will start sending you messages from {0}.\n"
             "Just send me any message and I will send it in that channel.\n"
             "React with ❌ on this message to end the session.\n"
-            "If no message was send or received in the last 5 minutes, the request will time out and stop."
+            "If no message was send or received in the last 5 minutes, the request will time out and stop.".format(
+                channel.mention
+            )
         ))
         await message.add_reaction("❌")
         self.interaction.append(u)
@@ -295,12 +297,14 @@ class Say:
         sentry = _("enabled") if await self.bot.db.enable_sentry() else _("disabled")
         message = (_(
             "Laggron's Dumb Cogs V3 - say\n\n"
-            f"Version: {self.__version__}\n"
-            f"Author: {self.__author__}\n"
-            f"Sentry error reporting: {sentry}\n\n"
+            "Version: {0.__version__}\n"
+            "Author: {0.__author__}\n"
+            "Sentry error reporting: {1}\n\n"
             "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
             "Discord server: https://discord.gg/AVzjfpR\n"
-            "Documentation: http://laggrons-dumb-cogs.readthedocs.io/"
+            "Documentation: http://laggrons-dumb-cogs.readthedocs.io/".format(
+                self, sentry
+            )
         ))
         await ctx.send(message)
 
