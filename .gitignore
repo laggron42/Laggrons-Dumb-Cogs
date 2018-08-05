@@ -1,7 +1,19 @@
+# Python executables
 *.pyc
 __pycache__
+
+# Mac folders
 .DS_Store
+
+# VScode properties
 .vscode
+
+# pipenv
 Pipfile
+
+# Sphinx docs
 .build
-source
+_build
+
+# pygettext
+*.mo
