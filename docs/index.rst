@@ -3,8 +3,27 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Laggron's Dumb Cogs's documentation!
-===============================================
+Welcome to Laggron's Dumb Cogs's official documentation!
+========================================================
+
+.. HTML head data
+
+.. title:: Laggron's Dumb Cogs documentation
+
+.. meta::
+   :name: description
+   :content: Official documentation for Laggron's Dumb Cogs
+
+.. meta::
+   :property: og:title
+   :content: Laggron's Dumb Cogs's documentation
+
+.. meta::
+   :property: og:description
+   :content: Official documentation for Laggron's Dumb Cogs
+
+
+.. Badges and artwork
 
 .. image:: https://discordapp.com/api/guilds/363008468602454017/embed.png
     :target: https://discord.gg/AVzjfpRM
