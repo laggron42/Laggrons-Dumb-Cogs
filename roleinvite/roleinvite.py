@@ -3,7 +3,7 @@
 import asyncio
 import discord
 
-from discord.ext import commands
+from redbot.core import commands
 from discord.utils import get
 from redbot.core import Config
 from redbot.core import checks
