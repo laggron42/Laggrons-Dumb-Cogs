@@ -11,7 +11,7 @@ from redbot.core import checks
 from redbot.core import Config
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.data_manager import cog_data_path
-from discord.ext import commands
+from redbot.core import commands
 
 from .sentry import Sentry
 

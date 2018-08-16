@@ -7,7 +7,7 @@ import inspect  # for checking is value is a class
 import traceback
 import random
 
-from discord.ext import commands
+from redbot.core import commands
 from redbot.core import checks
 from redbot.core import Config
 from redbot.core.utils.chat_formatting import pagify
