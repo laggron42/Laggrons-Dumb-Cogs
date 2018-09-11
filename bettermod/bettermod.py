@@ -87,6 +87,10 @@ class BetterMod:
             self.settings[server.id] = {
                 "role": None,
                 "proof": False,
+                "bandays": {
+                    "softban": 7,  # the goal of a softban is to delete messages
+                    "ban": 0,  # depends on the user
+                },
                 "channels": {
                     "general": None,
                     "report": None,
@@ -989,6 +993,75 @@ thumbnail's URL pictures:
         except:
             await self.error(ctx)
             return
+        
+    @bmodset.group(pass_context=True, no_pm=True)
+    async def bandays(self, ctx):
+        """Modify the number of days to delete for a ban."""
+        
+        if ctx.invoked_subcommand is None:
+            await self.bot.send_cmd_help(ctx)
+        
+    @bandays.command(pass_context=True, no_pm=True, name="softban")
+    async def bandays_softban(self, ctx, days: int):
+        """Set the number of days to delete for a softbanned user."""
+        server = ctx.message.server
+
+        try:
+            if server.id not in self.settings:
+                await self.init(server, ctx)
+        except:
+            await self.error(ctx)
+            
+        if days > 7:
+            await self.bot.say("You cannot set more than 7 days.")
+            return
+        if days < 1:
+            await self.bot.say(
+                "Pretty sure you don't want to do this, "
+                "the goal of a softban is to delete messages of someone."
+            )
+            return
+        
+        self.settings[server.id]["bandays"]["softban"] = days
+        try:
+            dataIO.save_json("data/bettermod/settings.json", self.settings)
+        except:
+            await self.error(ctx)
+            return
+        await self.bot.say(
+            "Done. The bot will now delete the last {days} ".format(days=days)
+            "of messages when using softban on someone."
+        )
+        
+    @bandays.command(pass_context=True, no_pm=True, name="ban")
+    async def bandays_ban(self, ctx, days: int):
+        """Set the number of days to delete for a banned user.
+        Set 0 to disable message deletion."""
+        server = ctx.message.server
+
+        try:
+            if server.id not in self.settings:
+                await self.init(server, ctx)
+        except:
+            await self.error(ctx)
+            
+        if days > 7:
+            await self.bot.say("You cannot set more than 7 days.")
+            return
+        if days < 0:
+            await self.bot.say("That number is negative and cannot be set.")
+            return
+        
+        self.settings[server.id]["bandays"]["ban"] = days
+        try:
+            dataIO.save_json("data/bettermod/settings.json", self.settings)
+        except:
+            await self.error(ctx)
+            return
+        await self.bot.say(
+            "Done. The bot will now delete the last {days} ".format(days=days)
+            "of messages when using ban on someone."
+        )
 
     @bmodset.command(pass_context=True)
     async def message(self, ctx, *, message: str):
@@ -1513,7 +1586,7 @@ thumbnail's URL pictures:
             )
 
         try:
-            await self.bot.ban(user, 7)
+            await self.bot.ban(user, self.settings[server.id]["bandays"]["softban"])
         except:
             await self.bot.say(
                 "I cannot ban this user, he is higher than me in the role hierarchy. Aborting..."
@@ -1633,7 +1706,7 @@ thumbnail's URL pictures:
             )
 
         try:
-            await self.bot.ban(user)
+            await self.bot.ban(user, self.settings[server.id]["bandays"]["ban"])
         except:
             await self.bot.say(
                 "I cannot ban this user, he is higher than me in the role hierarchy. Aborting..."
@@ -2071,6 +2144,19 @@ def check_version_settings():
                     "ID is #{id}"
                 )
 
+        dataIO.save_json("data/bettermod/settings.json", settings)
+        print("Json body of data/bettermod/settings.json was successfully updated")
+        
+    if settings["version"] == "1.5":
+        settings["version"] = "1.6"
+        
+        for server in settings:
+            if server != "version":
+                settings[server]["banday"] = {
+                    "softban": 7,
+                    "ban": 0,
+                }
+        
         dataIO.save_json("data/bettermod/settings.json", settings)
         print("Json body of data/bettermod/settings.json was successfully updated")
 
