@@ -37,7 +37,7 @@ class Say:
         self.data = Config.get_conf(self, 260)
         self.data.register_global(enable_sentry=None)
         self.translator = _
-        self.sentry = Sentry(log, self.__version__)
+        self.sentry = Sentry(log, self.__version__, bot)
         self.interaction = []
         self.cache = cog_data_path(self) / "cache"
 
@@ -61,6 +61,18 @@ class Say:
         "short": "Speak as the bot through multiple options.",
         "tags": ["rift", "upload", "interact"],
     }
+
+    def _set_context(self, data: dict):
+        """
+        Set any extra context information before logging something.
+        This is an alias of ``self.sentry.client.extra_context()``
+
+        Arguments
+        ---------
+        data: dict
+            The dictionnary that must appear on Sentry panel
+        """
+        self.sentry.client.extra_context(data)
 
     async def download_files(self, message: discord.Message, author: discord.User = None):
         """
@@ -366,15 +378,27 @@ class Say:
         messages = "\n".join(
             [
                 f"{x.author} %bot%: {x.content}".replace("%bot%", "(Bot)" if x.author.bot else "")
-                for x in await ctx.history(limit=5).flatten()
+                for x in await ctx.history(limit=5, reverse=True).flatten()
             ]
         )
+        log.propagate = False  # let's remove console output for this since Red already handle this
+        context = {
+            "command": {
+                "invoked": f"{ctx.author} (ID: {ctx.author.id})",
+                "command": f"{ctx.command.name} (cog: {ctx.cog})",
+            }
+        }
+        if ctx.guild:
+            context["guild"] = f"{ctx.guild.name} (ID: {ctx.guild.id})"
+        self._set_context(context)
         log.error(
             f"Exception in command '{ctx.command.qualified_name}'.\n\n"
             f"Myself: {ctx.me}\n"
-            f"Last 5 messages:\n\n{messages}",
+            f"Last 5 messages:\n\n{messages}\n\n",
             exc_info=error.original,
         )
+        log.propagate = True  # re-enable console output for warnings
+        self._set_context({})  # remove context for future logs
 
     async def stop_interaction(self, user):
         self.interaction.remove(user)
