@@ -18,7 +18,7 @@ Please join the [Discord server](https://discord.gg/AVzjfpRM) to stay tuned abou
 
 ## Tutorials, FAQ and API
 
-If you want to know in details how to use my cogs, please go check the [Laggron's Dumb Cogs wiki](https://laggrons-dumb-cogs.readthedocs.io/). Everything you need is wrote there. You will be able to find
+If you want to know in details how to use my cogs, please go check the [Laggron's Dumb Cogs wiki](https://laggron.red/). Everything you need is wrote there. You will be able to find
 
 - a detailled guide for every cog, with all command agruments and some shemas
 - some FAQs for every cog
@@ -48,4 +48,8 @@ If you want me to make your cog, you can check [my profile](https://cogboard.red
 
 ## Credits
 
-Credit to Blockula105 for the hand-drawn banner. Thanks @Malarne for the help in coding.
+Credit to Blockula105 for the hand-drawn banner. Thanks to the [Red DiscordBot community](https://discord.gg/red) for the help in coding!
+
+## Licence
+
+This repository is under the [General Public Licence 3.0](https://www.gnu.org/licenses/gpl-3.0.en.html). For a quick review of what's allowed or not, check [this](https://github.com/retke/Laggrons-Dumb-Cogs/blob/master/LICENSE), full licence can be found below.
