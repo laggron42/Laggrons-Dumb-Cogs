@@ -787,7 +787,7 @@ thumbnail's URL pictures:
         if not url.endswith((".jpg", ".png", ".gif")) and not url.startswith(
             ("http://", "https://")
         ):
-            await self.bot.say("The URL given is not valid".)
+            await self.bot.say("The URL given is not valid.")
             return
 
         else:
@@ -1319,7 +1319,8 @@ thumbnail's URL pictures:
 
         if user == self.bot.user:
             await self.bot.say(
-                "Why do you want to report me :C I did nothing wrong (I cannot kick or ban myself)."
+                "Why do you want to report me :C I did nothing wrong (I cannot kick or ban myself
+                "
             )
             return
 
