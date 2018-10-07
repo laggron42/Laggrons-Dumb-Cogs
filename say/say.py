@@ -177,13 +177,21 @@ class Say:
             await channel.send(text, files=files)
         except discord.errors.Forbidden as e:
             if not ctx.guild.me.permissions_in(channel).send_messages:
-                await ctx.send(
-                    _("I am not allowed to send messages in ") + channel.mention, delete_after=1
-                )
+                author = ctx.author
+                try:
+                    await ctx.send(
+                        _("I am not allowed to send messages in ") + channel.mention, delete_after=1
+                    )
+                except discord.errors.Forbidden as e:
+                    await author.send(_("I am not allowed to send messages in ") + channel.mention, delete_after=10)
+                    # If this fails then fuck the command author
             elif not ctx.guild.me.permissions_in(channel).attach_files:
-                await ctx.send(
-                    _("I am not allowed to upload files in ") + channel.mention, delete_after=1
-                )
+                try:
+                    await ctx.send(
+                        _("I am not allowed to upload files in ") + channel.mention, delete_after=1
+                    )
+                except discord.errors.Forbidden as e:
+                    await author.send(_("I am not allowed to upload files in ") + channel.mention, delete_after=10)
             else:
                 log.error(
                     f"Unknown permissions error when sending a message.\n{error_message}",
