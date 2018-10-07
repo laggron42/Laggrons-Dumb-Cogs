@@ -238,15 +238,9 @@ class Say:
             await ctx.message.delete()
         except discord.errors.Forbidden:
             try:
-                await ctx.send(_("Not enough permissions to delete message"), delete_after=2)
+                await ctx.send(_("Not enough permissions to delete messages."), delete_after=2)
             except discord.errors.Forbidden as e:
-                await author.send(
-                    _(
-                        "Not enough permissions to delete the command message and "
-                        "to send you the permission error in the channel."
-                    ),
-                    delete_after=15,
-                )
+                await author.send(_("Not enough permissions to delete messages."), delete_after=15)
 
         await self.say(ctx, text, files)
 
