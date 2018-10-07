@@ -14,6 +14,7 @@ from .errors import Errors
 
 BaseCog = getattr(commands, "Cog", object)
 
+
 class RoleInvite(BaseCog):
     """
     Server autorole following the invite the user used to join the server

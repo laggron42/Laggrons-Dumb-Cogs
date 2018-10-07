@@ -24,6 +24,7 @@ _ = Translator("Say", __file__)
 
 BaseCog = getattr(commands, "Cog", object)
 
+
 @cog_i18n(_)
 class Say(BaseCog):
     """
