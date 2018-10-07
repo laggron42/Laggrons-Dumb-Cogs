@@ -180,22 +180,22 @@ class Say:
                 author = ctx.author
                 try:
                     await ctx.send(
-                        _("I am not allowed to send messages in ") + channel.mention, delete_after=1
+                        _("I am not allowed to send messages in ") + channel.mention, delete_after=2
                     )
                 except discord.errors.Forbidden as e:
                     await author.send(
                         _("I am not allowed to send messages in ") + channel.mention,
-                        delete_after=10,
+                        delete_after=15,
                     )
                     # If this fails then fuck the command author
             elif not ctx.guild.me.permissions_in(channel).attach_files:
                 try:
                     await ctx.send(
-                        _("I am not allowed to upload files in ") + channel.mention, delete_after=1
+                        _("I am not allowed to upload files in ") + channel.mention, delete_after=2
                     )
                 except discord.errors.Forbidden as e:
                     await author.send(
-                        _("I am not allowed to upload files in ") + channel.mention, delete_after=10
+                        _("I am not allowed to upload files in ") + channel.mention, delete_after=15
                     )
             else:
                 log.error(
@@ -236,7 +236,7 @@ class Say:
         try:
             await ctx.message.delete()
         except discord.errors.Forbidden:
-            await ctx.send(_("Not enough permissions to delete message"), delete_after=1)
+            await ctx.send(_("Not enough permissions to delete message"), delete_after=2)
 
         await self.say(ctx, text, files)
 
