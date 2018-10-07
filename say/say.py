@@ -22,9 +22,10 @@ else:
     log.setLevel(logging.WARNING)
 _ = Translator("Say", __file__)
 
+BaseCog = getattr(commands, "Cog", object)
 
 @cog_i18n(_)
-class Say:
+class Say(BaseCog):
     """
     Speak as if you were the bot
 
