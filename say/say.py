@@ -183,7 +183,10 @@ class Say:
                         _("I am not allowed to send messages in ") + channel.mention, delete_after=1
                     )
                 except discord.errors.Forbidden as e:
-                    await author.send(_("I am not allowed to send messages in ") + channel.mention, delete_after=10)
+                    await author.send(
+                        _("I am not allowed to send messages in ") + channel.mention,
+                        delete_after=10,
+                    )
                     # If this fails then fuck the command author
             elif not ctx.guild.me.permissions_in(channel).attach_files:
                 try:
@@ -191,7 +194,9 @@ class Say:
                         _("I am not allowed to upload files in ") + channel.mention, delete_after=1
                     )
                 except discord.errors.Forbidden as e:
-                    await author.send(_("I am not allowed to upload files in ") + channel.mention, delete_after=10)
+                    await author.send(
+                        _("I am not allowed to upload files in ") + channel.mention, delete_after=10
+                    )
             else:
                 log.error(
                     f"Unknown permissions error when sending a message.\n{error_message}",
