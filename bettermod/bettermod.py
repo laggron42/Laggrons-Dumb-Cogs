@@ -285,7 +285,7 @@ class BetterMod:
                 if history[user.id]["case{}".format(str(i))]["deleted"] == 1:
                     i = i + 1
 
-                e = discord.Embed(description="Case {} information:".format(str(i)))
+                e = discord.Embed(description="Case {} information".format(str(i)))
                 e.set_author(name=user.name, icon_url=user.avatar_url)
 
                 e.add_field(
@@ -460,7 +460,7 @@ thumbnail's URL pictures:
 
     @bmodset.command(pass_context=True, no_pm=True)
     async def mention(self, ctx, role: str = None):
-        """Mention a specific role when a report is done.
+        """Mention a specific role when a report is sent.
 
         Give no argument to disable mention."""
 
@@ -482,12 +482,12 @@ thumbnail's URL pictures:
             object = discord.utils.get(ctx.message.server.roles, name=role)
 
             if object is None:
-                await self.bot.say("The role cannot be found. Please give the __exact__ role name.")
+                await self.bot.say("The role cannot be found. Please give the __exact__ role name")
                 return
 
             if not object.mentionable:
                 await self.bot.say(
-                    "The role cannot be mentioned. Please modify its settings to enable `Allow anyone to @mention this role`."
+                    "The role cannot be mentioned. Please enable `Allow anyone to @mention this role` on Discord's Server Settings -> Roles."
                 )
                 return
 
@@ -541,7 +541,7 @@ thumbnail's URL pictures:
 
     @bmodset.group(pass_context=True, no_pm=True)
     async def color(self, ctx):
-        """Modify the embed color bar
+        """Modify the embed color bar.
 
         Please provide an hexadecimal color (same color character chain as discord roles). Example: #ffff = cyan
         Useful website: http://www.color-hex.com
@@ -552,7 +552,7 @@ thumbnail's URL pictures:
 
     @color.command(pass_context=True, no_pm=True, name="report")
     async def report_color(self, ctx, color: str = "000000"):
-        """Set the report embed color bar in the log channel
+        """Set the report embed color bar in the log channel.
 
             Please provide an hexadecimal color (same color character chain as discord roles). Example: #ffff = cyan
             Useful website: http://www.color-hex.com
@@ -584,7 +584,7 @@ thumbnail's URL pictures:
 
     @color.command(pass_context=True, no_pm=True, name="simple", aliases="1")
     async def simple_warn_color(self, ctx, color: str = "000000"):
-        """Set the warning embed color bar in the log channel for the simple type.
+        """Set the warning embed color bar in the log channel for simple warns.
 
             Please provide an hexadecimal color (same color character chain as discord roles). Example: #ffff = cyan
             Useful website: http://www.color-hex.com
@@ -615,7 +615,7 @@ thumbnail's URL pictures:
 
     @color.command(pass_context=True, no_pm=True, name="kick", aliases="2")
     async def kick_warn_color(self, ctx, color: str = "000000"):
-        """Set the warning embed color bar in the log channel for the kick type.
+        """Set the warning embed color bar in the log channel for kick warns.
 
         Please provide an hexadecimal color (same color character chain as discord roles). Example: #ffff = cyan
         Useful website: http://www.color-hex.com
@@ -646,7 +646,7 @@ thumbnail's URL pictures:
 
     @color.command(pass_context=True, no_pm=True, name="softban", aliases="3")
     async def softban_warn_color(self, ctx, color: str = "000000"):
-        """Set the warning embed color bar in the log channel for the softban type.
+        """Set the warning embed color bar in the log channel for softban warns.
 
             Please provide an hexadecimal color (same color character chain as discord roles). Example: #ffff = cyan
             Useful website: http://www.color-hex.com
@@ -738,7 +738,7 @@ thumbnail's URL pictures:
                 self.settings[server.id]["thumbnail"]["report_embed"] = url
                 dataIO.save_json("data/bettermod/settings.json", self.settings)
                 await self.bot.say(
-                    "The new thumbnail for the report embed has been set. If the URL is not valid, no thumbnail will be shown in the embed."
+                    "The new thumbnail for the report embed has been set.\nIf the URL is not valid, no thumbnail will be shown in the embed."
                 )
             except:
                 await self.error(ctx)
@@ -746,7 +746,7 @@ thumbnail's URL pictures:
 
     @thumbnail.command(name="simple", pass_context=True, no_pm=True, aliases="1")
     async def simple_thumbnail(self, ctx, *, url):
-        """Set the picture of the simple warning embed in modlog."""
+        """Set the picture of the simple warning embed in modlog"""
         server = ctx.message.server
 
         try:
@@ -787,7 +787,7 @@ thumbnail's URL pictures:
         if not url.endswith((".jpg", ".png", ".gif")) and not url.startswith(
             ("http://", "https://")
         ):
-            await self.bot.say("The URL given is not valid".)
+            await self.bot.say("The URL given is not valid.")
             return
 
         else:
@@ -803,7 +803,7 @@ thumbnail's URL pictures:
 
     @thumbnail.command(pass_context=True, no_pm=True, name="softban", aliases="3")
     async def softban_thumbnail(self, ctx, url: str):
-        """Set the picture of the softban warning embed in modlog.""
+        """Set the picture of the softban warning embed in modlog."""
 
         server = ctx.message.server
 
@@ -832,7 +832,7 @@ thumbnail's URL pictures:
 
     @thumbnail.command(pass_context=True, no_pm=True, name="ban", aliases="4")
     async def ban_thumbnail(self, ctx, url: str):
-        """Set the picture of the ban warning embed in modlog".""
+        """Set the picture of the ban warning embed in modlog."""
         server = ctx.message.server
 
         try:
@@ -1014,7 +1014,7 @@ thumbnail's URL pictures:
         if days < 1:
             await self.bot.say(
                 "Pretty sure you don't want to do this, "
-                "the goal of a softban is to delete messages of someone."
+                "the goal of a softban is to __delete__ messages of someone."
             )
             return
 
@@ -1033,7 +1033,7 @@ thumbnail's URL pictures:
     @bandays.command(pass_context=True, no_pm=True, name="ban")
     async def bandays_ban(self, ctx, days: int):
         """Set the number of days to delete for a banned user.
-        
+
         Set 0 to disable message deletion."""
         server = ctx.message.server
 
@@ -1189,7 +1189,7 @@ thumbnail's URL pictures:
             # no attachment, no link, but a proof is required
             await self.bot.send_message(
                 author,
-                "Proof-need mode is enabled on this server. Please attach a file or a link to your report in order to send it ( *screenshot the proof* ).",
+                "Proof-need mode is enabled on this server. Please attach a file or a link to your report in order to send it (screenshot the proof).",
             )
             return
 
@@ -1325,7 +1325,7 @@ thumbnail's URL pictures:
 
         elif user.bot:
             await self.bot.say(
-                "Why trying to report a bot ? I cannot send message to bots, they cannot see them. Instead, go for the manual way."
+                "Why trying to report a bot? I cannot send message to bots, they cannot see them. Instead, go for the manual way."
             )
             return
 
@@ -1350,7 +1350,7 @@ thumbnail's URL pictures:
             pass
 
         # This is the embed sent to the user
-        target = discord.Embed(description="The moderation team set you a level 1 warning")
+        target = discord.Embed(description="The moderation team set you a level 1 warning.")
         target.add_field(name="Moderator", value=author.mention, inline=False)
         target.add_field(name="Reason", value=reason, inline=False)
         target.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
@@ -1422,7 +1422,7 @@ thumbnail's URL pictures:
 
         if user == self.bot.user:
             await self.bot.say(
-                "Why do you want to report me :C I did nothing wrong (I cannot kick or ban myself)"
+                "Why do you want to report me :C I did nothing wrong (I cannot kick or ban myself)."
             )
             return
 
@@ -1548,13 +1548,13 @@ thumbnail's URL pictures:
 
         elif user.bot:
             await self.bot.say(
-                "Why trying to report a bot? I cannot send message to bots, they cannot see them. Instead, go for the manual way."
+                "Why trying to report a bot ? I cannot send message to bots, they cannot see them. Instead, go for the manual way."
             )
             return
 
         # This is the embed sent in the moderator log channel
         modlog = discord.Embed(
-            title="Warning", description="A user got a level 3 (softban) warning."
+            title="Warning", description="A user got a level 3 (softban) warning"
         )
         modlog.add_field(name="User", value=user.mention, inline=True)
         modlog.add_field(name="Moderator", value=author.mention, inline=True)
@@ -1610,7 +1610,7 @@ thumbnail's URL pictures:
                 "I cannot ban this user, he is higher than me in the role hierarchy. Aborting..."
             )
             await self.bot.send_message(
-                channel, content="The user was not banned. Check my permissions.", embed=modlog
+                channel, content="The user was not banned. Check my permissions", embed=modlog
             )
             await self.add_case(
                 level="Softban",
@@ -1640,7 +1640,7 @@ thumbnail's URL pictures:
     @checks.mod_or_permissions(administrator=True)
     @warn.command(pass_context=True, no_pm=True, aliases="4")
     async def ban(self, ctx, user: discord.Member, *, reason: str):
-        """Bans the user."""
+        """Bans the user"""
         server = ctx.message.server
         author = ctx.message.author
 
@@ -1677,18 +1677,18 @@ thumbnail's URL pictures:
 
         if user == self.bot.user:
             await self.bot.say(
-                "Why do you want to report me :C I did nothing wrong (I cannot kick or ban myself)."
+                "Why do you want to report me :C I did nothing wrong (I cannot kick or ban myself)"
             )
             return
 
         elif user.bot:
             await self.bot.say(
-                "Why trying to report a bot ? I cannot send message to other bots, they cannot see them. Instead, go for the manual way."
+                "Why trying to report a bot ? I cannot send message to bots, they cannot see them. Instead, go for the manual way."
             )
             return
 
         # This is the embed sent in the moderator log channel
-        modlog = discord.Embed(title="Warning", description="A user got a level 4 (ban) warning.")
+        modlog = discord.Embed(title="Warning", description="A user got a level 4 (ban) warning")
         modlog.add_field(name="User", value=user.mention, inline=True)
         modlog.add_field(name="Moderator", value=author.mention, inline=True)
         modlog.add_field(name="Reason", value=reason, inline=False)
@@ -1706,7 +1706,7 @@ thumbnail's URL pictures:
             pass
 
         # This is the embed sent to the user
-        target = discord.Embed(description="The moderation team gave you a level 4 (ban) warning.")
+        target = discord.Embed(description="The moderation team set you a level 4 (ban) warning")
         target.add_field(name="Moderator", value=author.mention, inline=False)
         target.add_field(name="Reason", value=reason, inline=False)
         target.set_footer(text=ctx.message.timestamp.strftime("%d %b %Y %H:%M"))
@@ -1730,7 +1730,7 @@ thumbnail's URL pictures:
                 "I cannot ban this user, he is higher than me in the role hierarchy. Aborting..."
             )
             await self.bot.send_message(
-                channel, content="The user was not banned. Check my permissions.", embed=modlog
+                channel, content="The user was not banned. Check my permissions", embed=modlog
             )
             await self.add_case(
                 level="Ban",
@@ -1758,7 +1758,7 @@ thumbnail's URL pictures:
     @commands.group(pass_context=True, no_pm=True)
     @checks.mod_or_permissions(administrator=True)
     async def case(self, ctx):
-        """Edit or remove warning's reasons."""
+        """Edit reasons for warnings or remove warnings altogether."""
 
         if ctx.invoked_subcommand is None:
             await self.bot.send_cmd_help(ctx)
@@ -1767,8 +1767,8 @@ thumbnail's URL pictures:
     async def bcheck(self, ctx, user: discord.Member = None, case: int = 0):
         """Give the sanction and the reason of a specific case.
         If 0 is given, all of the cases of the user will be given.
-        
-        You need to be at least moderator to see other's warnings.
+
+        You need to be at least moderator to see other's warnings
         """
         # Order of Params changed by Kowlin because ~~'reasons'~~ Logic!
         server = ctx.message.server
@@ -1831,7 +1831,7 @@ thumbnail's URL pictures:
         if case < 0 or case > history[user.id]["total-warns"]:
             await self.bot.say("That case does not exist.")
             return
-        
+
         if history[user.id]["total-warns"] is 0:
             await self.bot.say("You don't have any warnings.")
             return
@@ -1852,7 +1852,7 @@ thumbnail's URL pictures:
                 ),
             )
 
-            e.set_footer(text="Click on the reaction to see all of the cases.")
+            e.set_footer(text="Click on the reaction to see all of the cases")
 
             try:
                 msg = await self.bot.say(embed=e)
@@ -1981,7 +1981,7 @@ thumbnail's URL pictures:
             except:
                 await self.error(ctx)
                 return
-            await self.bot.say("The case {} of {} has been deleted.".format(str(case), user.name))
+            await self.bot.say("The case {} of {} has been deleted".format(str(case), user.name))
 
         try:
             dataIO.save_json("data/bettermod/settings.json", self.settings)
@@ -2018,7 +2018,7 @@ thumbnail's URL pictures:
         if case < 0 or case > history[user.id]["total-warns"]:
             await self.bot.say("That case does not exist.")
             return
-        
+
         if history[user.id]["total-warns"] is 0: # for precaution errors.
             await self.bot.say("That person does not have any warnings.")
             return
@@ -2030,7 +2030,7 @@ thumbnail's URL pictures:
 
         e.add_field(name="Old reason", value=old_reason, inline=True)
         e.add_field(name="New reason", value=reason, inline=True)
-        e.set_footer(text="Click on the reaction to confirm changes")
+        e.set_footer(text="Click on the reaction to confirm changes.")
 
         try:
             msg = await self.bot.say(embed=e)
