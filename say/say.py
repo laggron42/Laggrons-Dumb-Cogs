@@ -231,12 +231,20 @@ class Say:
         """
 
         # download the files BEFORE deleting the message
-        files = await self.download_files(ctx.message, ctx.author)
+        author = ctx.author
+        files = await self.download_files(ctx.message, author)
 
         try:
             await ctx.message.delete()
         except discord.errors.Forbidden:
-            await ctx.send(_("Not enough permissions to delete message"), delete_after=2)
+            try:
+                await ctx.send(_("Not enough permissions to delete message"), delete_after=2)
+            except discord.errors.Forbidden as e:
+                await author.send(
+                    _("Not enough permissions to delete the command message and "
+                      "to send you the permission error in the channel."), delete_after=15
+                )
+                   
 
         await self.say(ctx, text, files)
 
