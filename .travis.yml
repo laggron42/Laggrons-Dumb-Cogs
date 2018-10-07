@@ -2,6 +2,7 @@ language: python
 
 python:
  - "3.6"
+ - "3.7"
 
 install:
  - pip install -U --process-dependency-links Red-DiscordBot[voice]
@@ -10,6 +11,6 @@ install:
  - pip install black
 
 script:
- - black --check -l 100 --skip-numeric-underscore-normalization .
- - python3 -m compileall .
- - python3 info_deploy.py $GH_TOKEN $TRAVIS_BUILD_NUMBER
+ - make compile
+ - make stylecheck
+ - make deploy GITHUB_TOKEN=$GH_TOKEN BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
