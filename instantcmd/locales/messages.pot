@@ -5,13 +5,46 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2018-05-26 15:50+0000\n"
+"POT-Creation-Date: 2018-10-07 20:28+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: pygettext.py 1.5\n"
+"Generated-By: redgettext 2.1\n"
 
+
+#: instantcmd/instantcmd.py:121
+#, docstring
+msgid "Instant Commands cog management"
+msgstr ""
+
+#: instantcmd/instantcmd.py:128
+#, docstring
+msgid ""
+"\n"
+"        Instantly generate a new command from a code snippet.\n"
+"\n"
+"        If you want to make a listener, give its name instead of the command name.\n"
+"        "
+msgstr ""
+
+#: instantcmd/instantcmd.py:220
+#, docstring
+msgid ""
+"\n"
+"        Remove a command from the registered instant commands.\n"
+"        "
+msgstr ""
+
+#: instantcmd/instantcmd.py:244
+#, docstring
+msgid ""
+"\n"
+"        List all existing commands made using Instant Commands.\n"
+"\n"
+"        If a command name is given and found in the Instant commands list, the code will be shown.\n"
+"        "
+msgstr ""
 
