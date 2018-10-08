@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2018-08-05 12:51+0200\n"
-"PO-Revision-Date: 2018-08-05 18:50+0200\n"
+"POT-Creation-Date: 2018-10-07 20:28+0200\n"
+"PO-Revision-Date: 2018-10-07 23:08+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -17,14 +17,65 @@ msgstr ""
 "X-Generator: Poedit 2.1.1\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:91
+#: say/__init__.py:25
+msgid ""
+"Hello, thanks for installing `say`. Would you like to enable error logging "
+"to help the developer to fix new errors? If you wish to opt in the process, "
+"please type \"yes\""
+msgstr ""
+"Bonjour, merci d’avoir installé le module `say`. Voulez-vous activer le "
+"partage d’erreurs au développeur pour corriger les bugs ? Si vous souhaitez "
+"partager vos erreurs, tapez “oui”."
+
+#: say/__init__.py:35
+msgid ""
+"Request timed out. Error logging disabled by default. You can change that by "
+"using the `[p]sayinfo` command."
+msgstr ""
+"Requête expirée. Le partage d’erreur est désactivé par défaut. Vous pouvez "
+"changer cela en utilisant la commande `[p]sayinfo`."
+
+#: say/__init__.py:43
+msgid ""
+"Thank you for helping me with the development process!\n"
+"You can disable this at anytime by using `[p]sayinfo` command."
+msgstr ""
+"Merci de m’aider dans le processus de développement !\n"
+"Vous pouvez désactiver ceci à tout moment en utilisant la commande "
+"`[p]sayinfo`."
+
+#: say/__init__.py:51
+msgid ""
+"The error logging was not enabled. You can change that by using the "
+"`[p]sayinfo` command."
+msgstr ""
+"Le partage d’erreur n’a pas été activé. Vous pouvez changer ceci en "
+"utilisant la commande `[p]sayinfo`."
+
+#: say/say.py:29
+msgid ""
+"\n"
+"    Speak as if you were the bot\n"
+"\n"
+"    Report a bug or ask a question: https://discord.gg/AVzjfpR\n"
+"    Full documentation and FAQ: http://laggrons-dumb-cogs.readthedocs.io/say."
+"html\n"
+"    "
+msgstr ""
+"Parlez en tant que votre bot\n"
+"\n"
+"Reporter un bug ou poser une question : https://discord.gg/AVzjfpR\n"
+"Documentation complète et FAQ : http://laggrons-dumb-cogs.readthedocs.io/say."
+"html"
+
+#: say/say.py:104
 msgid ""
 "The files got removed because they were too big. The limit for bots is 8mb."
 msgstr ""
 "Les fichiers ont été retirés car ils sont trop gros. La limite pour les bots "
 "est 8mb."
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:104
+#: say/say.py:117
 msgid ""
 "An error occured while downloading the file.\n"
 "Error code "
@@ -32,51 +83,95 @@ msgstr ""
 "Une erreur s’est produite lors du téléchargement du fichier.\n"
 "Code erreur "
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:106
+#: say/say.py:119
 msgid "1: `wget` program not found, install it on your machine"
 msgstr "1 : programme `wget` inexistant, veuillez l’installer"
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:108
+#: say/say.py:121
 msgid "3: File I/O error (write permission)"
 msgstr "3 : Erreur I/O (permissions d’écriture)"
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:110
+#: say/say.py:123
 msgid "4: Network failure"
 msgstr "4 : Problème réseau"
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:112
+#: say/say.py:125
 msgid "5: SSL verification failure"
 msgstr "5 : La vérification du protocole SSL a échoué"
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:114
+#: say/say.py:127
 msgid "7: Protocol error"
 msgstr "7 : Erreur de protocole"
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:116
+#: say/say.py:129
 msgid "8: Server issued an error response"
 msgstr "8 : Le serveur a renvoyé un message d’erreur"
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:118
+#: say/say.py:131
 msgid "2048: Image not found"
 msgstr "2048 : Image non trouvée"
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:120
+#: say/say.py:133
 msgid "unknown."
 msgstr "inconnue."
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:169
+#: say/say.py:184 say/say.py:188
 msgid "I am not allowed to send messages in "
 msgstr "Je ne suis pas autorisé à envoyer des messages dans le channel "
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:173
+#: say/say.py:195 say/say.py:199
 msgid "I am not allowed to upload files in "
 msgstr "Je ne suis pas autorisé à envoyer des fichiers dans le channel "
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:214
-msgid "Not enough permissions to delete message"
-msgstr "Pas assez de permissions pour supprimer le message"
+#: say/say.py:211
+msgid ""
+"\n"
+"        Make the bot say what you want in the desired channel.\n"
+"\n"
+"        If no channel is specified, the message will be send in the current "
+"channel.\n"
+"        You can attach some files to upload them to Discord.\n"
+"\n"
+"        Example usage :\n"
+"        - `!say #general hello there`\n"
+"        - `!say owo I have a file` (a file is attached to the command "
+"message)\n"
+"        "
+msgstr ""
+"Faites parler le bot dans le channel désiré.\n"
+"\n"
+"Si aucun channel n’est spécifié, le message sera envoyé dans le channel "
+"actuel.\n"
+"Vous pouvez attacher des fichiers à votre message pour les envoyer à "
+"Discord.\n"
+"\n"
+"Exemple :\n"
+"- `!say #general bonjour\n"
+"- `!say owo j’ai un fichier` (un fichier est lié au message de la commande)"
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:227
+#: say/say.py:228
+msgid ""
+"\n"
+"        Same as say command, except it deletes your message.\n"
+"        \n"
+"        If the message wasn't removed, then I don't have enough "
+"permissions.\n"
+"        "
+msgstr ""
+"Idem à la commande say, mais celle-ci supprime votre message.\n"
+"\n"
+"Si le message n’a pas été supprimé, je n’ai pas assez de permissions pour le "
+"faire."
+
+#: say/say.py:242 say/say.py:244
+msgid "Not enough permissions to delete messages."
+msgstr "Pas assez de permissions pour supprimer le message."
+
+#: say/say.py:251
+msgid "Start receiving and sending messages as the bot through DM"
+msgstr "Envoyez et recevez des messages en tant que votre bot à travers les MP"
+
+#: say/say.py:257
 msgid ""
 "You need to give a channel to enable this in DM. You can give the channel ID "
 "too."
@@ -84,11 +179,11 @@ msgstr ""
 "Vous devez donner un channel pour activer ceci en MP. Vous pouvez également "
 "donner l’ID du channel."
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:236
+#: say/say.py:266
 msgid "A session is already running."
 msgstr "Une session est déjà en cours."
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:240
+#: say/say.py:270
 msgid ""
 "I will start sending you messages from {0}.\n"
 "Just send me any message and I will send it in that channel.\n"
@@ -102,25 +197,61 @@ msgstr ""
 "Si aucun message n’a été envoyé ou reçu dans les 5 dernières minutes, la "
 "requête va s’expirer."
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:259
+#: say/say.py:289
 msgid "Request timed out. Session closed"
 msgstr "Requête expirée. Session fermée"
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:303
-msgid "disabled"
-msgstr "désactivé"
+#: say/say.py:329
+msgid ""
+"\n"
+"        Get informations about the cog.\n"
+"\n"
+"        Type `sentry` after your command to modify its status.\n"
+"        "
+msgstr ""
+"Obtenez des informations sur le module.\n"
+"\n"
+"Tapez `sentry` après votre commande pour modifier son statut."
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:303
-msgid "enabled"
-msgstr "activé"
+#: say/say.py:335
+msgid "enable"
+msgstr "activer"
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:304
+#: say/say.py:335
+msgid "disable"
+msgstr "désactiver"
+
+#: say/say.py:343
+msgid ""
+"You're about to {} error logging. Are you sure you want to do this? Type "
+"`yes` to confirm."
+msgstr ""
+"Vous allez {} le partage d’erreurs. Êtes-vous sûr de vouloir faire cela ? "
+"Tapez `oui` pour confirmer."
+
+#: say/say.py:350
+msgid "Request timed out."
+msgstr "Requête expirée. Session fermée."
+
+#: say/say.py:357
+msgid ""
+"Upcoming errors will be reported automatically for a faster fix. Thank you "
+"for helping me with the development process!"
+msgstr ""
+"Les prochaines erreurs seront reportées automatiquement pour un patch plus "
+"rapide. Merci de m’aider dans le processus de développement !"
+
+#: say/say.py:365
+msgid "Error logging has been disabled."
+msgstr "Le partage d’erreur a bien été désactivé."
+
+#: say/say.py:369
 msgid ""
 "Laggron's Dumb Cogs V3 - say\n"
 "\n"
 "Version: {0.__version__}\n"
 "Author: {0.__author__}\n"
-"Sentry error reporting: {1}\n"
+"Sentry error reporting: {1}d (type `{2}sayinfo sentry` to change this)\n"
 "\n"
 "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
 "Discord server: https://discord.gg/AVzjfpR\n"
@@ -130,12 +261,13 @@ msgstr ""
 "\n"
 "Version : {0.__version__}\n"
 "Auteur : {0.__author__}\n"
-"Envoi des erreurs via Sentry: {1}\n"
+"Envoi des erreurs via Sentry: {1} (tapez `{2}sayinfo sentry` pour changer "
+"cela)\n"
 "\n"
 "Repository Github : https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
 "Serveur Discord : https://discord.gg/AVzjfpR\n"
 "Documentation : http://laggrons-dumb-cogs.readthedocs.io/"
 
-#: /Users/laggron/Documents/Laggrons-Dumb-Cogs/say/say.py:346
+#: say/say.py:423
 msgid "Session closed"
 msgstr "Requête expirée. Session fermée"
