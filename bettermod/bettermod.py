@@ -1,3 +1,4 @@
+# BetterMod by retke, aka El Laggron
 import discord
 
 from typing import Union
