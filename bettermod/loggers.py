@@ -3,9 +3,8 @@ import asyncio
 import platform
 
 from raven import Client
-from raven.handlers import SentryHandler
+from raven.handlers.logging import SentryHandler
 from raven_aiohttp import AioHttpTransport
-from pathlib import Path
 from typing import TYPE_CHECKING
 from redbot.core.data_manager import cog_data_path
 
@@ -19,6 +18,7 @@ if logging.getLogger("red").isEnabledFor(logging.DEBUG):
     log.setLevel(logging.DEBUG)
 else:
     log.setLevel(logging.INFO)
+log.propagate = True
 
 
 class Log:
@@ -32,15 +32,13 @@ class Log:
         self.bot = bot
         self.client = Client(
             dsn=(
-                "https://240c1316c99148d085acde231596bdb7:40f84ce62374493891d57e30bec5ee1c"
-                "@sentry.io/1256932"
+                "https://ccfa4192027c4400852b3dd7fe9ddbe9:6c98e56cf92d47f381da50e911f0976f@sentry.io/1298445"
             ),
             release=version,
             transport=AioHttpTransport,
         )
         self.format = logging.Formatter(
-            "%(asctime)s %(levelname)s %(module)s %(funcName)s %(lineno)d : %(message)s",
-            datefmt="[%d/%m/%Y %H:%M]",
+            "%(asctime)s BetterMod %(levelname)s: %(message)s", datefmt="[%d/%m/%Y %H:%M]"
         )
         self.sentry_handler = self.init_logger()
 
@@ -56,24 +54,32 @@ class Log:
             }
         )
         sentry_handler = SentryHandler(self.client)
-        sentry_handler.setFormatter(self.format)
+        sentry_handler.setLevel(logging.ERROR)  # only send errors
 
         # logging to a log file
-        log_path = cog_data_path(self.bot) / "bettermod.log"
-        if log_path.is_file():
+        # file is automatically created by the module, if the parent foler exists
+        cog_path = cog_data_path(raw_name="BetterMod")
+        if cog_path.exists():
+            log_path = cog_path / "bettermod.log"
             file_logger = logging.FileHandler(log_path)
-            file_logger.setLevel(logging.INFO)
+            file_logger.setLevel(logging.DEBUG)
+            file_logger.setFormatter(self.format)
             log.addHandler(file_logger)
+
+        # stdout stuff
+        stdout_handler = logging.StreamHandler()
+        stdout_handler.setFormatter(self.format)
+        log.addHandler(stdout_handler)
 
         return sentry_handler
 
     def enable(self):
         """Enable error reporting for Sentry."""
-        slog.addHandler(self.handler)
+        log.addHandler(self.sentry_handler)
 
     def disable(self):
         """Disable error reporting for Sentry."""
-        log.removeHandler(self.handler)
+        log.removeHandler(self.sentry_handler)
         loop = asyncio.get_event_loop()
         loop.create_task(self.close())
 

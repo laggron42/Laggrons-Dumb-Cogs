@@ -1,16 +1,25 @@
 # BetterMod by retke, aka El Laggron
 import discord
+import logging
 
-from typing import Union
+from typing import Union, TYPE_CHECKING
 
 from redbot.core import commands, Config, checks
 from redbot.core.i18n import Translator, cog_i18n
 
+from .api import API  # works
+from . import errors  # doesn't work
+
+if TYPE_CHECKING:
+    from .loggers import Log
+
+log = None
 _ = Translator("BetterMod", __file__)
+BaseCog = getattr(commands, "Cog", object)
 
 
 @cog_i18n(_)
-class BetterMod:
+class BetterMod(BaseCog):
     """
     An alternative to the Red core moderation system, providing a different system of moderation\
     similar to Dyno.
@@ -19,9 +28,46 @@ class BetterMod:
     Full documentation and FAQ: http://laggron.red/bettermod.html
     """
 
+    default_global = {"enable_sentry": None}
+    default_guild = {
+        "channels": {
+            "default": None,
+            "report": None,
+            "1": None,
+            "2": None,
+            "3": None,
+            "4": None,
+            "5": None,
+        }
+    }
+
     def __init__(self, bot):
         self.bot = bot
+
         self.data = Config.get_conf(self, 260, force_registration=True)
+        self.data.register_global(**self.default_global)
+        self.data.register_guild(**self.default_guild)
+
+        self.api = API(bot, self.data)
+        self.errors = errors
+        self.sentry = None
+        self.translator = _
+
+    __version__ = "indev"
+    __author__ = "retke (El Laggron)"
+
+    # helpers
+    def _set_log(self, sentry: "Log"):
+        self.sentry = sentry
+        global log
+        log = logging.getLogger("laggron.bettermod")
+
+    # debug commands
+    @commands.command(hidden=True)
+    @checks.is_owner()
+    async def log(self, ctx):
+        log.debug("wi")
+        await ctx.send("Done.")
 
     # all settings
     @commands.group()
@@ -261,3 +307,10 @@ class BetterMod:
         Moderators can also edit or delete warnings by using the reactions.
         """
         pass
+
+    # correctly unload the cog
+    def __unload(self):
+
+        # remove all handlers from the logger, this prevents adding
+        # multiple times the same handler if the cog gets reloaded
+        log.handlers = []
