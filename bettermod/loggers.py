@@ -7,6 +7,7 @@ from raven.handlers.logging import SentryHandler
 from raven_aiohttp import AioHttpTransport
 from typing import TYPE_CHECKING
 from redbot.core.data_manager import cog_data_path
+from redbot.core import __version__ as red_version
 
 if TYPE_CHECKING:
     from redbot.core.bot import RedBase
@@ -32,7 +33,8 @@ class Log:
         self.bot = bot
         self.client = Client(
             dsn=(
-                "https://ccfa4192027c4400852b3dd7fe9ddbe9:6c98e56cf92d47f381da50e911f0976f@sentry.io/1298445"
+                "https://ccfa4192027c4400852b3dd7fe9ddbe9:6c98e56cf92d47f381da50e911f0976f"
+                "@sentry.io/1298445"
             ),
             release=version,
             transport=AioHttpTransport,
@@ -50,9 +52,10 @@ class Log:
             {
                 "id": self.bot.user.id,
                 "name": str(self.bot.user),
-                "owner": {"id": owner.id, "name": owner.name},
+                "Owner": f"{str(owner)} (ID: {owner.id})",
             }
         )
+        self.client.tags_context({"red_version": red_version})
         sentry_handler = SentryHandler(self.client)
         sentry_handler.setLevel(logging.ERROR)  # only send errors
 
