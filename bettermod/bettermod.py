@@ -367,6 +367,7 @@ class BetterMod(BaseCog):
 
     # correctly unload the cog
     def __unload(self):
+        log.debug("Cog unloaded from the instance.")
 
         # remove all handlers from the logger, this prevents adding
         # multiple times the same handler if the cog gets reloaded

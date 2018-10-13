@@ -85,3 +85,4 @@ async def setup(bot):
     if await n.data.enable_sentry():
         n.sentry.enable()
     bot.add_cog(n)
+    log.debug("Cog successfully loaded on the instance.")
