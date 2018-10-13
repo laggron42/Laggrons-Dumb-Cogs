@@ -3,9 +3,11 @@ import discord
 import logging
 
 from typing import Union, TYPE_CHECKING
+from asyncio import TimeoutError as AsyncTimeoutError
 
 from redbot.core import commands, Config, checks
 from redbot.core.i18n import Translator, cog_i18n
+from redbot.core.utils import predicates
 
 from .api import API
 from . import errors
@@ -301,6 +303,67 @@ class BetterMod(BaseCog):
         Moderators can also edit or delete warnings by using the reactions.
         """
         pass
+
+    @commands.command(hidden=True)
+    @checks.is_owner()
+    async def bettermodinfo(self, ctx, sentry: str = None):
+        """
+        Get informations about the cog.
+
+        Type `sentry` after your command to modify its status.
+        """
+        current_status = await self.data.enable_sentry()
+        status = lambda x: _("enable") if x else _("disable")
+
+        if sentry is not None and "sentry" in sentry:
+            await ctx.send(
+                _(
+                    "You're about to {} error logging. Are you sure you want to do this? Type "
+                    "`yes` to confirm."
+                ).format(status(not current_status))
+            )
+            predicate = predicates.MessagePredicate.yes_or_no(ctx)
+            try:
+                await self.bot.wait_for("message", timeout=60, check=predicate)
+            except AsyncTimeoutError:
+                await ctx.send(_("Request timed out."))
+            else:
+                if predicate.result:
+                    await self.data.enable_sentry.set(not current_status)
+                    if not current_status:
+                        # now enabled
+                        self.sentry.enable()
+                        await ctx.send(
+                            _(
+                                "Upcoming errors will be reported automatically for a faster fix. "
+                                "Thank you for helping me with the development process!"
+                            )
+                        )
+                    else:
+                        # disabled
+                        self.sentry.disable()
+                        await ctx.send(_("Error logging has been disabled."))
+                    log.info(
+                        f"Sentry error reporting was {status(not current_status)}d "
+                        "on this instance."
+                    )
+                else:
+                    await ctx.send(
+                        _("Okay, error logging will stay {}d.").format(status(current_status))
+                    )
+                return
+
+        message = _(
+            "Laggron's Dumb Cogs V3 - bettermod\n\n"
+            "Version: {0.__version__}\n"
+            "Author: {0.__author__}\n"
+            "Sentry error reporting: {1}d (type `{2}bettermodinfo sentry` to change this)\n\n"
+            "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
+            "Discord server: https://discord.gg/AVzjfpR\n"
+            "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"
+            "Support my work on Patreon: https://www.patreon.com/retke"
+        ).format(self, status(current_status), ctx.prefix)
+        await ctx.send(message)
 
     # correctly unload the cog
     def __unload(self):

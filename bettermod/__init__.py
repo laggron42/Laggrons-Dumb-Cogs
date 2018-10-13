@@ -43,7 +43,7 @@ async def ask_enable_sentry(bot, _):
             await owner.send(
                 _(
                     "Request timed out. Error logging disabled by default. You can "
-                    "change that by using the `[p]sayinfo` command."
+                    "change that by using the `[p]bettermodinfo` command."
                 )
             )
             return None
@@ -51,15 +51,16 @@ async def ask_enable_sentry(bot, _):
             await owner.send(
                 _(
                     "Thank you for helping me with the development process!\n"
-                    "You can disable this at anytime by using `[p]sayinfo` command."
+                    "You can disable this at anytime by using `[p]bettermodinfo` command."
                 )
             )
+            log.info("Sentry error reporting was enabled for this instance.")
             return True
         else:
             await owner.send(
                 _(
                     "The error logging was not enabled. You can change that by "
-                    "using the `[p]sayinfo` command."
+                    "using the `[p]bettermodinfo` command."
                 )
             )
             return False
