@@ -22,9 +22,11 @@ else:
     log.setLevel(logging.WARNING)
 _ = Translator("Say", __file__)
 
+BaseCog = getattr(commands, "Cog", object)
+
 
 @cog_i18n(_)
-class Say:
+class Say(BaseCog):
     """
     Speak as if you were the bot
 
@@ -42,7 +44,7 @@ class Say:
         self.cache = cog_data_path(self) / "cache"
 
     __author__ = "retke (El Laggron)"
-    __version__ = "1.4.5"
+    __version__ = "1.4.6"
     __info__ = {
         "bot_version": "3.0.0b14",
         "description": (
@@ -177,13 +179,26 @@ class Say:
             await channel.send(text, files=files)
         except discord.errors.Forbidden as e:
             if not ctx.guild.me.permissions_in(channel).send_messages:
-                await ctx.send(
-                    _("I am not allowed to send messages in ") + channel.mention, delete_after=1
-                )
+                author = ctx.author
+                try:
+                    await ctx.send(
+                        _("I am not allowed to send messages in ") + channel.mention, delete_after=2
+                    )
+                except discord.errors.Forbidden as e:
+                    await author.send(
+                        _("I am not allowed to send messages in ") + channel.mention,
+                        delete_after=15,
+                    )
+                    # If this fails then fuck the command author
             elif not ctx.guild.me.permissions_in(channel).attach_files:
-                await ctx.send(
-                    _("I am not allowed to upload files in ") + channel.mention, delete_after=1
-                )
+                try:
+                    await ctx.send(
+                        _("I am not allowed to upload files in ") + channel.mention, delete_after=2
+                    )
+                except discord.errors.Forbidden as e:
+                    await author.send(
+                        _("I am not allowed to upload files in ") + channel.mention, delete_after=15
+                    )
             else:
                 log.error(
                     f"Unknown permissions error when sending a message.\n{error_message}",
@@ -218,12 +233,16 @@ class Say:
         """
 
         # download the files BEFORE deleting the message
-        files = await self.download_files(ctx.message, ctx.author)
+        author = ctx.author
+        files = await self.download_files(ctx.message, author)
 
         try:
             await ctx.message.delete()
         except discord.errors.Forbidden:
-            await ctx.send(_("Not enough permissions to delete message"), delete_after=1)
+            try:
+                await ctx.send(_("Not enough permissions to delete messages."), delete_after=2)
+            except discord.errors.Forbidden as e:
+                await author.send(_("Not enough permissions to delete messages."), delete_after=15)
 
         await self.say(ctx, text, files)
 

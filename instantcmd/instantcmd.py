@@ -12,8 +12,10 @@ from redbot.core import checks
 from redbot.core import Config
 from redbot.core.utils.chat_formatting import pagify
 
+BaseCog = getattr(commands, "Cog", object)
 
-class InstantCommands:
+
+class InstantCommands(BaseCog):
     """
     Generate a new command from a code snippet, without making a new cog.
 

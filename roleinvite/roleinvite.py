@@ -12,8 +12,10 @@ from redbot.core.utils.chat_formatting import pagify
 from .api import API
 from .errors import Errors
 
+BaseCog = getattr(commands, "Cog", object)
 
-class RoleInvite:
+
+class RoleInvite(BaseCog):
     """
     Server autorole following the invite the user used to join the server
 

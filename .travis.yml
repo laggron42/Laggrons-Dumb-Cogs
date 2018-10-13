@@ -1,7 +1,11 @@
 language: python
 
-python:
- - "3.6"
+matrix:
+  include:
+    - python: 3.6.6
+    - python: 3.7
+      dist: xenial
+      sudo: true
 
 install:
  - pip install -U --process-dependency-links Red-DiscordBot[voice]
@@ -10,6 +14,6 @@ install:
  - pip install black
 
 script:
- - black --check -l 100 .
- - python3 -m compileall .
- - python3 info_deploy.py $GH_TOKEN $TRAVIS_BUILD_NUMBER
+ - make compile
+ - make stylecheck
+ - make deploy GITHUB_TOKEN=$GH_TOKEN BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
