@@ -7,8 +7,8 @@ from typing import Union, TYPE_CHECKING
 from redbot.core import commands, Config, checks
 from redbot.core.i18n import Translator, cog_i18n
 
-from .api import API  # works
-from . import errors  # doesn't work
+from .api import API
+from . import errors
 
 if TYPE_CHECKING:
     from .loggers import Log
@@ -61,13 +61,7 @@ class BetterMod(BaseCog):
         self.sentry = sentry
         global log
         log = logging.getLogger("laggron.bettermod")
-
-    # debug commands
-    @commands.command(hidden=True)
-    @checks.is_owner()
-    async def log(self, ctx):
-        log.debug("wi")
-        await ctx.send("Done.")
+        # this is called now so the logger is already initialized
 
     # all settings
     @commands.group()
