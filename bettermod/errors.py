@@ -45,7 +45,7 @@ class InvalidLevel(Exception):
     """
 
     def __init__(self, exception):
-        log.debug(f"API error: InvalidLevel\n{exception}")
+        log.debug(f"API error: InvalidLevel\n{exception}\n")
 
 
 class NotFound(Exception):
@@ -55,4 +55,4 @@ class NotFound(Exception):
     """
 
     def __init__(self, exception):
-        log.debug(f"API error: NotFound\n{exception}")
+        log.debug(f"API error: NotFound\n{exception}\n")

@@ -33,7 +33,7 @@ class BetterMod(BaseCog):
     default_global = {"enable_sentry": None}
     default_guild = {
         "channels": {
-            "default": None,
+            "main": None,
             "report": None,
             "1": None,
             "2": None,
