@@ -40,7 +40,7 @@ class Log:
             transport=AioHttpTransport,
         )
         self.format = logging.Formatter(
-            "%(asctime)s BetterMod %(levelname)s: %(message)s", datefmt="[%d/%m/%Y %H:%M]"
+            "%(asctime)s %(levelname)s BetterMod: %(message)s", datefmt="[%d/%m/%Y %H:%M]"
         )
         self.sentry_handler = self.init_logger()
 
