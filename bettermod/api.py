@@ -115,6 +115,8 @@ class API:
         -------
         channel: discord.TextChannel
             The channel requested.
+            
+            .. note:: It can be :py:obj:`None` if the channel doesn't exist anymore.
 
         Raises
         ------
