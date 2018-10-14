@@ -40,7 +40,7 @@ __all__ = ["InvalidLevel", "NotFound"]
 
 class InvalidLevel(Exception):
     """
-    The level argument for :py:`~bettermod.api.warn` is wrong.
+    The level argument for :func:`~bettermod.api.warn` is wrong.
     It must be between 1 and 5.
     """
 

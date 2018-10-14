@@ -2,14 +2,7 @@ import discord
 import logging
 import inspect
 
-# import yaml
-
-# from datetime import timedelta
 from typing import Union, Optional
-
-from redbot.core.modlog import get_modlog_channel as get_red_modlog_channel
-
-# from redbot.core.data_manager import cog_data_path
 
 from . import errors
 
@@ -45,6 +38,10 @@ class API:
     def __init__(self, bot, config):
         self.bot = bot
         self.data = config
+
+        # importing this here prevents a RuntimeError when building the documentation
+        global get_red_modlog_channel
+        from redbot.core.modlog import get_modlog_channel as get_red_modlog_channel
 
     def _log_call(self, stack):
         """Create a debug log for each BMod API call."""
@@ -94,19 +91,19 @@ class API:
             *   If ``"all"`` is returned, a :py:class:`dict` will be returned. It should be built
                 like this:
 
-                .. code-block:: JSON
+                .. code-block:: python3
 
                     {
                         "main"      : 012345678987654321,
                         "report"    : 579084368900053345,
-                        "1"         : null,
-                        "2"         : null,
-                        "3"         : null,
+                        "1"         : None,
+                        "2"         : None,
+                        "3"         : None,
                         "4"         : 478065433996537900,
                         "5"         : 567943553912O46428,
                     }
 
-                A dict with the possible channels is returned, associated with a :py:class:`int`
+                A dict with the possible channels is returned, associated with an :py:class:`int`
                 corresponding to the channel ID set, or :py:obj:`None` if it was not set.
 
                 For technical reasons, the default channel is actually named ``"main"`` in the dict.
@@ -115,7 +112,7 @@ class API:
         -------
         channel: discord.TextChannel
             The channel requested.
-            
+
             .. note:: It can be :py:obj:`None` if the channel doesn't exist anymore.
 
         Raises
