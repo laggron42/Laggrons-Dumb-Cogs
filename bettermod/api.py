@@ -111,6 +111,11 @@ class API:
 
                 For technical reasons, the default channel is actually named ``"main"`` in the dict.
 
+        Returns
+        -------
+        channel: discord.TextChannel
+            The channel requested.
+
         Raises
         ------
         NotFound
@@ -138,8 +143,8 @@ class API:
         if not default_channel and not channel:
             # bettermod default channel doesn't exist, let's try to get Red's one
             try:
-                default_channel = await get_red_modlog_channel(guild)
+                return await get_red_modlog_channel(guild)
             except RuntimeError:
                 raise errors.NotFound("No modlog found from BetterMod or Red")
 
-        return channel if channel else default_channel
+        return self.bot.get_channel(channel if channel else default_channel)
