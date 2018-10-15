@@ -56,3 +56,12 @@ class NotFound(Exception):
 
     def __init__(self, exception):
         log.debug(f"API error: NotFound\n{exception}\n")
+
+
+class BadArgument(Exception):
+    """
+    The arguments provided for your request are wrong, check the types.
+    """
+
+    def __init__(self, exception):
+        log.debug(f"API error: NotFound\n{exception}\n")

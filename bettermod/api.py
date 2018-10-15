@@ -2,8 +2,11 @@ import discord
 import logging
 import inspect
 
+from copy import deepcopy
 from typing import Union, Optional
+from datetime import datetime, timedelta
 
+from .bettermod import _  # translator
 from . import errors
 
 log = logging.getLogger("laggron.bettermod")
@@ -59,7 +62,7 @@ class API:
 
     async def get_modlog_channel(
         self, guild: discord.Guild, level: Optional[Union[int, str]] = None
-    ):
+    ) -> discord.TextChannel:
         """
         Get the BetterMod's modlog channel on the current guild.
 
@@ -147,3 +150,177 @@ class API:
                 raise errors.NotFound("No modlog found from BetterMod or Red")
 
         return self.bot.get_channel(channel if channel else default_channel)
+
+    async def get_embeds(
+        self,
+        guild: discord.Guild,
+        member: Union[discord.Member, discord.User],
+        author: Union[discord.Member, str],
+        level: int,
+        reason: Optional[str] = None,
+        time: Optional[timedelta] = None,
+        action_fail: Optional[str] = None,
+    ) -> tuple:
+        """
+        Return two embeds, one for the modlog and one for the member.
+
+        Arguments
+        ---------
+        guild: discord.Guild
+            The Discord guild where the warning takes place.
+        member: Union[discord.Member, discord.User]
+            The warned member. Should only be :class:`discord.User` in case of a hack ban.
+        author: Union[discord.Member, str]
+            The moderator that warned the user. If it's not a Discord user, you can specify a
+            :py:class:`str` instead (e.g. "Automod").
+        level: int
+            The level of the warning which should be between 1 and 5.
+        reason: Optional[str]
+            The reason of the warning.
+        time: timedelta
+            The time before the action ends. Only for mute and ban.
+        action_fail: Optional[str]
+            The message shown to the moderators if the action failed.
+
+        Returns
+        -------
+        tuple
+            A :py:class:`tuple` with the modlog embed at index 0, and the user embed at index 1.
+
+        .. warning:: Unlike for the warning, the arguments are not checked and won't raise errors
+            if they are wrong. It is recommanded to call :func:`~bettermod.api.API.warn` and let
+            it generate the embeds instead.
+        """
+        action = (
+            _("mute")
+            if level == 2
+            else _("kick")
+            if level == 3
+            else _("softban")
+            if level == 4
+            else _("ban")
+            if level == 5
+            else _("warn")
+        )
+        success = None
+        if action_fail:
+            success = (
+                _("The bot couldn't {action} the user for the following reason: ").format(
+                    action=action
+                )
+                + action_fail
+            )
+        if not reason:
+            reason = _("No reason was provided.\nEdit this with `[p]warnings @{name}`").format(
+                name=str(member)
+            )
+        logs = await self.data.member(member).logs()
+        total_warns = len(logs) + 1
+        total_type_warns = (
+            len([x for x in logs if x["level"] == level]) + 1
+        )  # number of warns of the received type
+        current_status = lambda x: _(
+            "{who} now {verb} {total} warning{plural} ({total_type} {action}{plural_type})"
+        ).format(
+            who=_("The member") if x else _("You"),
+            verb=_("has") if x else _("have"),
+            total=total_warns,
+            total_type=total_type_warns,
+            action=action,
+            plural="s" if total_warns > 1 else "",
+            plural_type="s" if total_type_warns > 1 else "",
+        )
+
+        # embed for the modlog
+        log_embed = discord.Embed()
+        log_embed.set_author(name=f"{member.name} | {member.id}", icon_url=member.avatar_url)
+        log_embed.title = _("Level {level} warning ({action})").format(level=level, action=action)
+        log_embed.description = _("A member got a level {level} warning.\n\n{successful}").format(
+            level=level, successful=success if success else ""
+        )
+        log_embed.add_field(name=_("Member"), value=member.mention, inline=True)
+        log_embed.add_field(name=_("Moderator"), value=author.mention, inline=True)
+        log_embed.add_field(name=_("Reason"), value=reason, inline=False)
+        log_embed.add_field(name=_("Status"), value=current_status(True), inline=False)
+        log_embed.set_footer(text=datetime.today().strftime("%a %d %B %Y %H:%M"))
+        log_embed.set_thumbnail(url=await self.data.guild(guild).thumbnails.get_raw(level))
+        log_embed.color = await self.data.guild(guild).colors.get_raw(level)
+
+        # embed for the member in DM
+        user_embed = deepcopy(log_embed)
+        user_embed.set_author(name="")
+        user_embed.description = _("The moderation team set you a level {level} warning.").format(
+            level=level
+        )
+        user_embed.set_field_at(3, name=_("Status"), value=current_status(False), inline=False)
+        user_embed.remove_field(0)  # removes member field
+        if not await self.data.guild(guild).show_mod():
+            user_embed.remove_field(0)  # called twice, removing moderator field
+
+        return (log_embed, user_embed)
+
+    async def warn(
+        self,
+        guild: discord.Guild,
+        member: Union[discord.Member, discord.User],
+        author: Union[discord.Member, str],
+        level: int,
+        reason: Optional[str] = None,
+        time: Optional[timedelta] = None,
+        log_modlog: bool = True,
+        log_dm: bool = True,
+        take_action: bool = True,
+    ) -> bool:
+        """
+        Set a warning on a member of a Discord guild and log it with the BetterMod system.
+
+        Arguments
+        ---------
+        guild: discord.Guild
+            The guild of the member to warn
+        member: Union[discord.Member, discord.User]
+            The member that will be warned. It can be a :class:`discord.User` only if you need to
+            ban someone not in the guild.
+        author: Union[discord.Member, str]
+            The member that called the action, which will be associated to the log.
+        level: int
+            An :py:class:`int` between 1 and 5, specifying the warning level:
+
+            #.  Simple DM warning
+            #.  Mute (can be temporary)
+            #.  Kick
+            #.  Softban
+            #.  Ban (can be temporary ban, or hack ban, if the member is not in the server)
+        reason: Optional[str]
+            The optional reason of the warning. It is strongly recommanded to set one.
+        time: Optional[timedelta]
+            The time before cancelling the action. This only works for a mute or a ban.
+        log_modlog: bool
+            Specify if an embed should be posted to the modlog channel. Default to :py:obj:`True`.
+        log_dm: bool
+            Specify if an embed should be sent to the warned user. Default to :py:obj:`True`.
+        take_action: bool
+            Specify if the bot should take action on the member (mute, kick, softban, ban). If set
+            to :py:obj:`False`, the bot will only send a log embed to the member and in the modlog.
+            Default to :py:obj:`True`.
+
+        Returns
+        -------
+        bool
+            :py:obj:`True` if the action was successful.
+        """
+        self._log_call(inspect.stack())
+
+        if not 1 <= level <= 5:
+            raise errors.InvalidLevel("The level must be between 1 and 5.")
+        if isinstance(level, discord.User) and level != 5:
+            raise errors.BadArgument(
+                "You need to provide a valid discord.Member object for this action."
+            )
+        if not log_modlog and not log_dm and not take_action:
+            raise errors.BadArgument(
+                "I have nothing to do! Please set one of these arguments to True to continue: "
+                "log_modlog, log_dm, take_action"
+            )
+
+        modlog_msg, user_msg = await self.get_embeds(guild, member, author, level, reason, time)

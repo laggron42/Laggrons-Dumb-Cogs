@@ -9,6 +9,10 @@ from redbot.core import commands, Config, checks
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils import predicates
 
+
+# creating this before importing other modules allows to import the translator
+_ = Translator("BetterMod", __file__)
+
 from .api import API
 from . import errors
 
@@ -16,7 +20,6 @@ if TYPE_CHECKING:
     from .loggers import Log
 
 log = None
-_ = Translator("BetterMod", __file__)
 BaseCog = getattr(commands, "Cog", object)
 
 
@@ -32,6 +35,7 @@ class BetterMod(BaseCog):
 
     default_global = {"enable_sentry": None}
     default_guild = {
+        "show_mod": False,
         "channels": {
             "main": None,
             "report": None,
@@ -40,8 +44,25 @@ class BetterMod(BaseCog):
             "3": None,
             "4": None,
             "5": None,
-        }
+        },
+        "thumbnails": {
+            "report": "https://i.imgur.com/Bl62rGd.png",
+            "1": "https://i.imgur.com/Bl62rGd.png",
+            "2": "https://i.imgur.com/cVtzp1M.png",
+            "3": "https://i.imgur.com/uhrYzyt.png",
+            "4": "https://i.imgur.com/uhrYzyt.png",
+            "5": "https://i.imgur.com/DfBvmic.png",
+        },
+        "colors": {
+            "report": 0xF4AA42,
+            "1": 0xD1ED35,
+            "2": 0xEDCB35,
+            "3": 0xED9735,
+            "4": 0xED6F35,
+            "5": 0xFF4C4C,
+        },
     }
+    default_member = {"logs": {}}
 
     def __init__(self, bot):
         self.bot = bot
@@ -49,6 +70,7 @@ class BetterMod(BaseCog):
         self.data = Config.get_conf(self, 260, force_registration=True)
         self.data.register_global(**self.default_global)
         self.data.register_guild(**self.default_guild)
+        self.data.register_member(**self.default_member)
 
         self.api = API(bot, self.data)
         self.errors = errors
