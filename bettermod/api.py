@@ -60,6 +60,72 @@ class API:
             # this should not block the action
             pass
 
+    def _get_datetime(self, time: str) -> datetime:
+        return datetime.strptime(time, "%a %d %B %Y %H:%M")
+
+    async def _create_case(
+        self,
+        guild: discord.Guild,
+        user: discord.User,
+        author: Union[discord.Member, str],
+        level: int,
+        reason: str,
+        time: datetime,
+        duration: Optional[datetime] = None,
+        success: bool = True,
+    ):
+        """Create a new case for a member."""
+        data = {
+            "level": level,
+            "reason": reason,
+            "author": author if not isinstance(author, discord.User) else author.id,
+            "time": None if not time else time.strftime("%a %d %B %Y %H:%M"),
+            "success": success,
+        }
+        async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
+            logs.append(data)
+
+    async def get_case(self, guild: discord.Guild, user: discord.User, index: int) -> dict:
+        try:
+            case = (await self.data.custom("MODLOGS", guild.id, user.id).x())[index - 1]
+        except IndexError:
+            raise errors.NotFound("The case requested doesn't exist.")
+        else:
+            time = case["time"]
+            if time:
+                case["time"] = self._get_datetime(time)
+            return case
+
+    async def get_all_cases(
+        self, guild: discord.Guild, user: Optional[discord.User] = None
+    ) -> list:
+        if user:
+            return await self.data.custom("MODLOGS", guild.id, user.id).x()
+        logs = await self.data.custom("MODLOGS", guild.id).all()
+        all_cases = []
+        for member, content in logs.items():
+            if member == "x":
+                continue
+            for log in content["x"]:
+                author = guild.get_member(log["author"])
+                time = log["time"]
+                if time:
+                    log["time"] = self._get_datetime(time)
+                log["member"] = self.bot.get_user(member)
+                log["author"] = author if author else log["author"]  # can be None or a string
+                all_cases.append(log)
+        return sorted(all_cases, key=lambda x: x["time"])  # sorted from oldest to newest
+
+    async def edit_case(
+        self, guild: discord.Guild, user: discord.User, index: int, new_reason: str
+    ):
+        if len(new_reason) > 1024:
+            raise errors.BadArgument("The reason must not be above 1024 characters.")
+        case = await self.get_case(guild, user, index)
+        case["reason"] = new_reason
+        async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
+            logs[index - 1] = case
+
     async def get_modlog_channel(
         self, guild: discord.Guild, level: Optional[Union[int, str]] = None
     ) -> discord.TextChannel:
@@ -322,5 +388,7 @@ class API:
                 "I have nothing to do! Please set one of these arguments to True to continue: "
                 "log_modlog, log_dm, take_action"
             )
+
+        await self._create_case(member)
 
         modlog_msg, user_msg = await self.get_embeds(guild, member, author, level, reason, time)

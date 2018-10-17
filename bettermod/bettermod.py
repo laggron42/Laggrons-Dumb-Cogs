@@ -62,7 +62,7 @@ class BetterMod(BaseCog):
             "5": 0xFF4C4C,
         },
     }
-    default_member = {"logs": {}}
+    default_custom_member = {"x": []}  # cannot set a list as base group
 
     def __init__(self, bot):
         self.bot = bot
@@ -70,7 +70,7 @@ class BetterMod(BaseCog):
         self.data = Config.get_conf(self, 260, force_registration=True)
         self.data.register_global(**self.default_global)
         self.data.register_guild(**self.default_guild)
-        self.data.register_member(**self.default_member)
+        self.data.register_custom("MODLOGS", **self.default_custom_member)
 
         self.api = API(bot, self.data)
         self.errors = errors
