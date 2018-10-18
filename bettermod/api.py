@@ -69,23 +69,59 @@ class API:
         user: discord.User,
         author: Union[discord.Member, str],
         level: int,
-        reason: str,
         time: datetime,
+        reason: Optional[str] = None,
         duration: Optional[datetime] = None,
         success: bool = True,
     ):
-        """Create a new case for a member."""
+        """Create a new case for a member. Don't call this, call warn instead."""
         data = {
             "level": level,
-            "reason": reason,
             "author": author if not isinstance(author, discord.User) else author.id,
-            "time": None if not time else time.strftime("%a %d %B %Y %H:%M"),
+            "reason": reason,
+            "time": time.strftime("%a %d %B %Y %H:%M"),
             "success": success,
+            "duration": None if not duration else duration.strftime("%a %d %B %Y %H:%M"),
         }
         async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
             logs.append(data)
 
-    async def get_case(self, guild: discord.Guild, user: discord.User, index: int) -> dict:
+    async def get_case(
+        self, guild: discord.Guild, user: Union[discord.User, discord.Member], index: int
+    ) -> dict:
+        """
+        Get a specific case for a user.
+
+        Parameters
+        ----------
+        guild: discord.Guild
+            The guild of the member.
+        user: Union[discord.User, discord.Member]
+            The user you want to get the case from. Can be a :class:`discord.User` if the member is
+            not in the server.
+        index: int
+            The case index you want to get. Must be positive.
+
+        Returns
+        -------
+        dict
+            A :py:class:`dict` which has the following body:
+
+            .. code-block: python3
+
+                {
+                    "level"     : int,  # between 1 and 5, the warning level
+                    "author"    : Union[discord.Member, str],  # the member that warned the user
+                    "reason"    : Optional[str],  # the reason of the warn, can be None
+                    "time"      : datetime.datetime,  # the date when the warn was set
+                    "success"   : bool,  # if the action was successful
+                }
+
+        Raises
+        ------
+        ~bettermod.errors.NotFound
+            The case requested doesn't exist.
+        """
         try:
             case = (await self.data.custom("MODLOGS", guild.id, user.id).x())[index - 1]
         except IndexError:
@@ -97,8 +133,59 @@ class API:
             return case
 
     async def get_all_cases(
-        self, guild: discord.Guild, user: Optional[discord.User] = None
+        self, guild: discord.Guild, user: Optional[Union[discord.User, discord.Member]] = None
     ) -> list:
+        """
+        Get all cases for a member of a guild.
+
+        Parameters
+        ----------
+        guild: discord.Guild
+            The guild where you want to get the cases from.
+        user: Optional[Union[discord.User, discord.Member]]
+            The user you want to get the cases from. If this arguments is omitted, all cases of
+            the guild are returned.
+
+        Returns
+        -------
+        list
+            A list of all cases of a user/guild. The cases are sorted from the oldest to the
+            newest.
+
+            If you specified a user, you should get something like this:
+
+            .. code-block:: python3
+
+                [
+                    {  # case #1
+                        "level"     : int,  # between 1 and 5, the warning level
+                        "author"    : Union[discord.Member, str],  # the member that warned the user
+                        "reason"    : Optional[str],  # the reason of the warn, can be None
+                        "time"      : datetime.datetime,  # the date when the warn was set
+                        "success"   : bool,  # if the action was successful
+                    },
+                    {
+                        # case #2
+                    },
+                    # ...
+                ]
+
+            However, if you didn't specify a user, you got all cases of the guild. As for the user,
+            you will get a :py:class:`list` of the cases, with another key for specifying the
+            warned user:
+
+            .. code-block:: python3
+
+                {  # case #1
+                    "level"     : int,  # between 1 and 5, the warning level
+                    "author"    : Union[discord.Member, str],  # the member that warned the user
+                    "reason"    : Optional[str],  # the reason of the warn, can be None
+                    "time"      : datetime.datetime,  # the date when the warn was set
+                    "success"   : bool,  # if the action was successful
+
+                    "member"    : discord.User,  # the member warned, this key is specific to guild
+                }
+        """
         if user:
             return await self.data.custom("MODLOGS", guild.id, user.id).x()
         logs = await self.data.custom("MODLOGS", guild.id).all()
@@ -117,14 +204,47 @@ class API:
         return sorted(all_cases, key=lambda x: x["time"])  # sorted from oldest to newest
 
     async def edit_case(
-        self, guild: discord.Guild, user: discord.User, index: int, new_reason: str
-    ):
+        self,
+        guild: discord.Guild,
+        user: Union[discord.User, discord.Member],
+        index: int,
+        new_reason: str,
+    ) -> bool:
+        """
+        Edit the reason of a case.
+
+        Parameters
+        ----------
+        guild: discord.Guild
+            The guild where you want to get the case from.
+        user: Union[discord.User, discord.Member]
+            The user you want to get the case from.
+        index: int
+            The number of the case you want to edit.
+        new_reason: str
+            The new reason to set.
+
+        Returns
+        -------
+        bool
+            :py:obj:`True` if the action succeeded.
+
+        Raises
+        ------
+        ~bettermod.errors.BadArgument
+            The reason is above 1024 characters. Due to Discord embed rules, you have to make it
+            shorter.
+        ~bettermod.errors.NotFound
+            The case requested doesn't exist.
+        """
         if len(new_reason) > 1024:
             raise errors.BadArgument("The reason must not be above 1024 characters.")
         case = await self.get_case(guild, user, index)
         case["reason"] = new_reason
+        case["time"] = case["time"].strftime("%a %d %B %Y %H:%M")
         async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
             logs[index - 1] = case
+        return True
 
     async def get_modlog_channel(
         self, guild: discord.Guild, level: Optional[Union[int, str]] = None
@@ -138,8 +258,8 @@ class API:
         #.  Get the defult modlog channel set with BetterMod
         #.  Get the Red's modlog channel associated to the server
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         guild: discord.Guild
             The guild you want to get the modlog from.
         level: Optional[Union[int, str]]
@@ -230,8 +350,8 @@ class API:
         """
         Return two embeds, one for the modlog and one for the member.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         guild: discord.Guild
             The Discord guild where the warning takes place.
         member: Union[discord.Member, discord.User]
@@ -340,8 +460,8 @@ class API:
         """
         Set a warning on a member of a Discord guild and log it with the BetterMod system.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         guild: discord.Guild
             The guild of the member to warn
         member: Union[discord.Member, discord.User]
