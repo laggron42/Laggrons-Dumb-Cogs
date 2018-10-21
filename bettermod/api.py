@@ -109,13 +109,15 @@ class API:
         level: int,
         time: datetime,
         reason: Optional[str] = None,
-        duration: Optional[datetime] = None,
+        duration: Optional[timedelta] = None,
         success: bool = True,
     ):
         """Create a new case for a member. Don't call this, call warn instead."""
         data = {
             "level": level,
-            "author": author if not isinstance(author, discord.User) else author.id,
+            "author": author
+            if not isinstance(author, (discord.User, discord.Member))
+            else author.id,
             "reason": reason,
             "time": time.strftime("%a %d %B %Y %H:%M"),
             "success": success,
