@@ -72,17 +72,17 @@ class API:
             _("year"): 0,
             _("month"): 0,
             _("week"): 0,
-            _("day"): time.days,
+            _("day"): 0,
             _("hour"): 0,
             _("minute"): 0,
-            _("second"): time.seconds,
+            _("second"): time.total_seconds(),
         }
-        if units[_("day")] > 365:
-            units[_("year")], units[_("day")] = divmod(units[_("day")], 365)
-        if units[_("day")] > 31:
-            units[_("month")], units[_("day")] = divmod(units[_("day")], 31)
-        if units[_("day")] > 7:
-            units[_("week")], units[_("day")] = divmod(units[_("day")], 7)
+        if units[_("second")] > 31_536_000:
+            units[_("year")], units[_("second")] = divmod(units[_("second")], 365)
+        if units[_("second")] > 2_635_200:
+            units[_("month")], units[_("second")] = divmod(units[_("second")], 2_635_200)
+        if units[_("second")] > 86400:
+            units[_("week")], units[_("second")] = divmod(units[_("second")], 86400)
         if units[_("second")] > 3600:
             units[_("hour")], units[_("second")] = divmod(units[_("second")], 3600)
         if units[_("second")] > 60:
@@ -91,7 +91,7 @@ class API:
         for unit, value in units.items():
             if value < 1:
                 continue
-            strings.append(f"{value} {unit}{plural(value)}")
+            strings.append(f"{round(value)} {unit}{plural(value)}")
         string = ", ".join(strings[:-1])
         if len(strings) > 1:
             string += _(" and ") + strings[-1]
@@ -428,23 +428,20 @@ class API:
             if level == 5
             else _("warn")
         )
-        success = None
-        if action_fail:
-            success = (
-                _("The bot couldn't {action} the user for the following reason: ").format(
-                    action=action
-                )
-                + action_fail
-            )
         if not reason:
             reason = _("No reason was provided.\nEdit this with `[p]warnings @{name}`").format(
                 name=str(member)
             )
-        logs = await self.data.member(member).logs()
+        logs = await self.data.custom("MODLOGS", guild.id, member.id).x()
+
+        # prepare the status field
         total_warns = len(logs) + 1
         total_type_warns = (
             len([x for x in logs if x["level"] == level]) + 1
         )  # number of warns of the received type
+
+        # a lambda that returns a string; if True is given, a third person sentence is returned
+        # (modlog), if False is given, a first person sentence is returned (DM user)
         current_status = lambda x: _(
             "{who} now {verb} {total} warning{plural} ({total_type} {action}{plural_type})"
         ).format(
@@ -461,16 +458,24 @@ class API:
         log_embed = discord.Embed()
         log_embed.set_author(name=f"{member.name} | {member.id}", icon_url=member.avatar_url)
         log_embed.title = _("Level {level} warning ({action})").format(level=level, action=action)
-        log_embed.description = _("A member got a level {level} warning.\n\n{successful}").format(
-            level=level, successful=success if success else ""
-        )
+        log_embed.description = _("A member got a level {level} warning.").format(level=level)
         log_embed.add_field(name=_("Member"), value=member.mention, inline=True)
         log_embed.add_field(name=_("Moderator"), value=author.mention, inline=True)
+        if time:
+            log_embed.add_field(
+                name=_("Duration"), value=self._format_timedelta(time), inline=True
+            )
         log_embed.add_field(name=_("Reason"), value=reason, inline=False)
         log_embed.add_field(name=_("Status"), value=current_status(True), inline=False)
         log_embed.set_footer(text=datetime.today().strftime("%a %d %B %Y %H:%M"))
         log_embed.set_thumbnail(url=await self.data.guild(guild).thumbnails.get_raw(level))
         log_embed.color = await self.data.guild(guild).colors.get_raw(level)
+        log_embed.url = await self.data.guild(guild).url()
+        if not message_sent:
+            log_embed += _(
+                "\n\n***The message couldn't be delivered to the member. We may don't "
+                "have a server in common or he blocked me/messages from this guild.***"
+            )
 
         # embed for the member in DM
         user_embed = deepcopy(log_embed)
@@ -478,12 +483,66 @@ class API:
         user_embed.description = _("The moderation team set you a level {level} warning.").format(
             level=level
         )
-        user_embed.set_field_at(3, name=_("Status"), value=current_status(False), inline=False)
+        user_embed.remove_field(4)  # removes status field (gonna be added back)
         user_embed.remove_field(0)  # removes member field
+        user_embed.set_field_at(2, name=_("Status"), value=current_status(False), inline=False)
+        if time:
+            user_embed.set_field_at(
+                1, name=_("Duration"), value=self._format_timedelta(time), inline=True
+            )
         if not await self.data.guild(guild).show_mod():
             user_embed.remove_field(0)  # called twice, removing moderator field
 
         return (log_embed, user_embed)
+
+    async def maybe_create_mute_role(self, guild: discord.Guild) -> bool:
+        """
+        Create the mod role for BetterMod if it doesn't exist.
+
+        Parameters
+        ----------
+        guild: discord.Guild
+            The guild you want to set up the mute in.
+
+        Returns
+        -------
+        bool
+            *   :py:obj:`True` if the role was successfully created.
+            *   :py:obj:`False` if the role already exists.
+
+        Raises
+        ------
+        ~bettermod.errors.MissingPermissions
+            The bot lacks the :attr:`discord.PermissionOverwrite.create_roles` permission.
+        discord.errors.HTTPException
+            Creating the role failed.
+        """
+        mod_role = await self.data.guild(guild).mod_role()
+        mod_role = guild.get_role(mod_role)
+        if mod_role:
+            return
+
+        if not guild.me.guild_permissions.create_roles:
+            raise errors.MissingPermissions("I need the create_roles permission to do this.")
+
+        # no mod role on this guild, let's create one
+        mod_role = await guild.create_role(
+            name="Muted",
+            reason=_(
+                "BetterMod mute role. This role will be assigned to the muted members, "
+                "feel free to move it or modify its channel permissions."
+            ),
+        )
+        for channel in [x for x in guild.channels if isinstance(x, discord.TextChannel)]:
+            await channel.set_permissions(
+                mod_role,
+                send_messages=False,
+                add_reactions=False,
+                reason=_(
+                    "Setting up BetterMod mute. All muted members will have this role, "
+                    "feel free to edit its permissions."
+                ),
+            )
 
     async def warn(
         self,
@@ -545,18 +604,74 @@ class API:
         """
         self._log_call(inspect.stack())
 
-        if not 1 <= level <= 5:
+        if not isinstance(level, int) or not 1 <= level <= 5:
             raise errors.InvalidLevel("The level must be between 1 and 5.")
-        if isinstance(level, discord.User) and level != 5:
+        if isinstance(member, discord.User) and level != 5:
             raise errors.BadArgument(
                 "You need to provide a valid discord.Member object for this action."
             )
-        if not log_modlog and not log_dm and not take_action:
-            raise errors.BadArgument(
-                "I have nothing to do! Please set one of these arguments to True to continue: "
-                "log_modlog, log_dm, take_action"
+
+        # we get the modlog channel now to make sure it exists before doing anything
+        mod_channel = await self.get_modlog_channel(guild, level)
+
+        # we check for all permission problem that can occur before calling the API
+        if not any(
+            [  # checks if the bot has send_messages and embed_links permissions in modlog channel
+                getattr(mod_channel.permissions_for(guild.me), x)
+                for x in ["send_messages", "embed_links"]
+            ]
+        ):
+            raise errors.MissingPermissions(
+                _(
+                    "I need the `Send messages` and `Embed links` "
+                    "permissions in {channel} to do this."
+                ).format(channel=mod_channel.mention)
+            )
+        if guild.me.top_role.position <= member.top_role.position:
+            pass
+            # raise errors.MemberTooHigh(
+            #     _(
+            #         "Cannot take actions on this member, he is above me in the roles hierarchy. "
+            #         "Modify the hierarchy so my top role ({bot_role}) is above {member_role}."
+            #     ).format(bot_role=guild.me.top_role.name, member_role=member.top_role.name)
+            # )
+        if level == 2:
+            # mute with role
+            if not guild.me.guild_permissions.manage_roles:
+                raise errors.MissingPermissions(
+                    _("I can't manage roles, please give me this permission to continue.")
+                )
+        if level == 3:
+            # kick
+            if not guild.me.guild_permissions.kick_members:
+                raise errors.MissingPermissions(
+                    _("I can't kick members, please give me this permission to continue.")
+                )
+        if level == 4 or level == 5:
+            # softban or ban
+            if not guild.me.guild_permissions.ban_members:
+                raise errors.MissingPermissions(
+                    _("I can't ban members, please give me this permission to continue.")
+                )
+
+        modlog_e, user_e = await self.get_embeds(guild, member, author, level, reason, time)
+        try:
+            await member.send(embed=user_e)
+        except discord.errors.Forbidden:
+            modlog_e, user_e = await self.get_embeds(
+                guild, member, author, level, reason, time, message_sent=False
+            )
+        except discord.errors.HTTPException as e:
+            modlog_e, user_e = await self.get_embeds(
+                guild, member, author, level, reason, time, message_sent=False
+            )
+            log.warn(
+                f"Couldn't send a message to {member} (ID: {member.id}) "
+                "because of an HTTPException.",
+                exc_info=e,
             )
 
-        await self._create_case(member)
-
-        modlog_msg, user_msg = await self.get_embeds(guild, member, author, level, reason, time)
+        # actions were taken, time to log
+        await mod_channel.send(embed=modlog_e)
+        await self._create_case(guild, member, author, level, datetime.now(), reason)
+        return True
