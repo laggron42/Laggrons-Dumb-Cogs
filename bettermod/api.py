@@ -63,6 +63,44 @@ class API:
     def _get_datetime(self, time: str) -> datetime:
         return datetime.strptime(time, "%a %d %B %Y %H:%M")
 
+    def _format_timedelta(self, time: timedelta):
+        """Format a timedelta object into a string"""
+        # blame python for not creating a strftime attribute
+        plural = lambda x: _("s") if x > 1 else ""
+        strings = []
+        units = {
+            "year": 0,
+            "month": 0,
+            "week": 0,
+            "day": time.days,
+            "hour": 0,
+            "minute": 0,
+            "second": time.seconds,
+        }
+        if units["day"] > 365:
+            units["year"], units["day"] = divmod(units["day"], 365)
+        if units["day"] > 31:
+            units["month"], units["day"] = divmod(units["day"], 31)
+        if units["day"] > 7:
+            units["week"], units["day"] = divmod(units["day"], 7)
+        if units["second"] > 3600:
+            units["hour"], units["second"] = divmod(units["second"], 3600)
+        if units["second"] > 60:
+            units["minut"], units["second"] = divmod(units["second"], 60)
+
+        for unit, value in units.items():
+            if value < 1:
+                continue
+            strings.append(f"{value} {unit}{plural(value)}")
+        string = ", ".join(strings[:-1])
+        if len(strings) > 1:
+            string += _(" and ") + strings[-1]
+        return string
+
+    async def _mute(self, member: discord.Member, time: timedelta):
+        """Mute a user on the server."""
+        pass
+
     async def _create_case(
         self,
         guild: discord.Guild,
