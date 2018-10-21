@@ -65,3 +65,31 @@ class BadArgument(Exception):
 
     def __init__(self, exception):
         log.debug(f"API error: NotFound\n{exception}\n")
+
+
+class MissingPermissions(Exception):
+    """
+    The bot lacks a permission to do an action.
+
+    This is raised instead of :class:`discord.errors.Forbidden` to prevent a useless
+    API call, we check the bot's permissions before calling.
+    """
+
+    def __init__(self, exception):
+        log.debug(f"API error: MissingPermissions\n{exception}\n")
+
+
+class MemberTooHigh(Exception):
+    """
+    The member to take action on is above the bot in the guild's role hierarchy.
+
+    To fix this, set the bot's top role **above** the member's top role.
+    For more informations about Discord Permissions, read this:\
+    `https://support.discordapp.com/hc/en-us/articles/206029707`_
+
+    This is raised instead of :class:`discord.errors.Forbidden` to prevent a useless
+    API call, we check the bot's permissions before calling.
+    """
+
+    def __init__(self, exception):
+        log.debug(f"API error: MemberTooHigh\n{exception}\n")
