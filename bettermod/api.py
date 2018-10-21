@@ -69,24 +69,24 @@ class API:
         plural = lambda x: _("s") if x > 1 else ""
         strings = []
         units = {
-            "year": 0,
-            "month": 0,
-            "week": 0,
-            "day": time.days,
-            "hour": 0,
-            "minute": 0,
-            "second": time.seconds,
+            _("year"): 0,
+            _("month"): 0,
+            _("week"): 0,
+            _("day"): time.days,
+            _("hour"): 0,
+            _("minute"): 0,
+            _("second"): time.seconds,
         }
-        if units["day"] > 365:
-            units["year"], units["day"] = divmod(units["day"], 365)
-        if units["day"] > 31:
-            units["month"], units["day"] = divmod(units["day"], 31)
-        if units["day"] > 7:
-            units["week"], units["day"] = divmod(units["day"], 7)
-        if units["second"] > 3600:
-            units["hour"], units["second"] = divmod(units["second"], 3600)
-        if units["second"] > 60:
-            units["minut"], units["second"] = divmod(units["second"], 60)
+        if units[_("day")] > 365:
+            units[_("year")], units[_("day")] = divmod(units[_("day")], 365)
+        if units[_("day")] > 31:
+            units[_("month")], units[_("day")] = divmod(units[_("day")], 31)
+        if units[_("day")] > 7:
+            units[_("week")], units[_("day")] = divmod(units[_("day")], 7)
+        if units[_("second")] > 3600:
+            units[_("hour")], units[_("second")] = divmod(units[_("second")], 3600)
+        if units[_("second")] > 60:
+            units[_("minute")], units[_("second")] = divmod(units[_("second")], 60)
 
         for unit, value in units.items():
             if value < 1:
