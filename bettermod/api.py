@@ -346,7 +346,7 @@ class API:
 
         Raises
         ------
-        NotFound
+        ~bettermod.errors.NotFound
             There is no modlog channel set with BetterMod or Red, ask the user to set one.
         """
         self._log_call(inspect.stack())
@@ -385,7 +385,7 @@ class API:
         level: int,
         reason: Optional[str] = None,
         time: Optional[timedelta] = None,
-        action_fail: Optional[str] = None,
+        message_sent: bool = True,
     ) -> tuple:
         """
         Return two embeds, one for the modlog and one for the member.
@@ -403,10 +403,10 @@ class API:
             The level of the warning which should be between 1 and 5.
         reason: Optional[str]
             The reason of the warning.
-        time: timedelta
+        time: Optional[timedelta]
             The time before the action ends. Only for mute and ban.
-        action_fail: Optional[str]
-            The message shown to the moderators if the action failed.
+        message_sent: bool
+            Set to :py:obj:`False` if the embed couldn't be sent to the warned user.
 
         Returns
         -------
@@ -534,6 +534,14 @@ class API:
         -------
         bool
             :py:obj:`True` if the action was successful.
+
+        Raises
+        ------
+        ~bettermod.errors.InvalidLevel
+            The level must be an :py:class:`int` between 1 and 5.
+        ~bettermod.errors.BadArgument
+            You need to provide a valid :class:`discord.Member` object, except for a
+            hackban where a :class:`discord.User` works.
         """
         self._log_call(inspect.stack())
 
