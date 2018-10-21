@@ -35,9 +35,9 @@ class BetterMod(BaseCog):
 
     default_global = {"enable_sentry": None}
     default_guild = {
-        "show_mod": False,
-        "channels": {
-            "main": None,
+        "show_mod": False,  # if the responsible mod should be revealed to the warned user
+        "channels": {  # modlog channels
+            "main": None,  # default
             "report": None,
             "1": None,
             "2": None,
@@ -45,7 +45,7 @@ class BetterMod(BaseCog):
             "4": None,
             "5": None,
         },
-        "thumbnails": {
+        "thumbnails": {  # image at the top right corner of an embed
             "report": "https://i.imgur.com/Bl62rGd.png",
             "1": "https://i.imgur.com/Bl62rGd.png",
             "2": "https://i.imgur.com/cVtzp1M.png",
@@ -53,7 +53,7 @@ class BetterMod(BaseCog):
             "4": "https://i.imgur.com/uhrYzyt.png",
             "5": "https://i.imgur.com/DfBvmic.png",
         },
-        "colors": {
+        "colors": {  # color bar of an embed
             "report": 0xF4AA42,
             "1": 0xD1ED35,
             "2": 0xEDCB35,
@@ -61,6 +61,7 @@ class BetterMod(BaseCog):
             "4": 0xED6F35,
             "5": 0xFF4C4C,
         },
+        "url": None,  # URL set for the title of all embeds
     }
     default_custom_member = {"x": []}  # cannot set a list as base group
 
