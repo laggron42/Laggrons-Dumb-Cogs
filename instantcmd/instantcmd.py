@@ -178,7 +178,9 @@ class InstantCommands(BaseCog):
                 message = (
                     "An expetion has occured while adding the command to discord.py:\n"
                     "```py\n"
-                    "{}```".format("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+                    "{}```".format(
+                        "".join(traceback.format_exception(type(e), e, e.__traceback__))
+                    )
                 )
                 for page in pagify(message):
                     await ctx.send(page)
@@ -203,7 +205,9 @@ class InstantCommands(BaseCog):
                 message = (
                     "An expetion has occured while adding the listener to discord.py:\n"
                     "```py\n"
-                    "{}```".format("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+                    "{}```".format(
+                        "".join(traceback.format_exception(type(e), e, e.__traceback__))
+                    )
                 )
                 for page in pagify(message):
                     await ctx.send(page)

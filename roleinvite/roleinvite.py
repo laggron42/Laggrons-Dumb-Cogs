@@ -28,12 +28,14 @@ class RoleInvite(BaseCog):
         self.bot = bot
         self.data = Config.get_conf(self, 260)
 
+        def_global = {"rename": False}
         def_guild = {"invites": {}, "enabled": False}
+        self.data.register_global(**def_global)
         self.data.register_guild(**def_guild)
         self.api = API(self.bot, self.data)  # loading the API
 
     __author__ = "retke (El Laggron)"
-    __version__ = "Laggrons-Dumb-Cogs/roleinvite beta 2c"
+    __version__ = "Laggrons-Dumb-Cogs/roleinvite beta 3"
     __info__ = {
         "bot_version": "3.0.0b9",
         "description": (
@@ -542,3 +544,16 @@ class RoleInvite(BaseCog):
 
         if not await add_roles("main"):
             return
+
+    @commands.command(hidden=True)
+    async def renameroleset(self, ctx):
+        """
+        Change the `[p]roleset` command to `[p]inviteset` to prevent name conflicts.
+        """
+        # you're welcome, Mystik
+        current = await self.data.rename()
+        await self.data.rename.set(not current)
+        if not current:
+            await ctx.send("The `[p]roleset` will now be called `[p]inviteset` on next reload.")
+        else:
+            await ctx.send("The `[p]inviteset` will now be called `[p]roleset` on next reload.")
