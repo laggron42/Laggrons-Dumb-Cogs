@@ -95,6 +95,8 @@ class API:
         string = ", ".join(strings[:-1])
         if len(strings) > 1:
             string += _(" and ") + strings[-1]
+        else:
+            string = strings[0]
         return string
 
     async def _mute(self, member: discord.Member, time: timedelta):
