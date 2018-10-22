@@ -182,12 +182,8 @@ class Say(BaseCog):
                 author = ctx.author
                 try:
                     await ctx.send(
-<<<<<<< HEAD
-                        _("I am not allowed to send messages in ") + channel.mention, delete_after=2
-=======
                         _("I am not allowed to send messages in ") + channel.mention,
                         delete_after=2,
->>>>>>> v3
                     )
                 except discord.errors.Forbidden as e:
                     await author.send(
