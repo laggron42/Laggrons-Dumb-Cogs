@@ -102,7 +102,9 @@ class API:
                 raise Errors.InviteNotFound("The invite given doesn't exist in that guild")
 
         elif all(invite != x for x in ["default", "main"]):
-            raise Errors.NotInvite("The invite sent isn't a discord.Invite, not it is main/default")
+            raise Errors.NotInvite(
+                "The invite sent isn't a discord.Invite, not it is main/default"
+            )
 
         if roles == []:
             raise Errors.EmptyRolesList("No roles to add to the invite")
