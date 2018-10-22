@@ -1,3 +1,4 @@
+import asyncio
 import discord
 import logging
 import inspect
@@ -99,9 +100,31 @@ class API:
             string = strings[0]
         return string
 
-    async def _mute(self, member: discord.Member, time: timedelta):
-        """Mute a user on the server."""
-        pass
+    async def _start_timer(self, guild: discord.Guild, case: dict) -> bool:
+        """Start the timer for a temporary mute/ban."""
+        if not case["until"]:
+            raise errors.BadArgument("No duration for this warning!")
+        async with self.data.guild(guild).temporary_warns() as warns:
+            warns.append(case)
+        return True
+
+    async def _mute(self, member: discord.Member, reason: Optional[str] = None):
+        """Mute an user on the guild."""
+        guild = member.guild
+        role = guild.get_role(await self.data.guild(guild).mute_role())
+        if not role:
+            raise errors.MissingMuteRole("You need to create the mute role before doing this.")
+        await member.add_roles(role, reason=reason)
+
+    async def _unmute(self, member: discord.Member, reason: str):
+        """Unmute an user on the guild."""
+        guild = member.guild
+        role = guild.get_role(await self.data.guild(guild).mute_role())
+        if not role:
+            raise errors.MissingMuteRole(
+                f"Lost the mute role on guild {guild.name} (ID: {guild.id}"
+            )
+        await member.remove_roles(role, reason=reason)
 
     async def _create_case(
         self,
@@ -113,7 +136,7 @@ class API:
         reason: Optional[str] = None,
         duration: Optional[timedelta] = None,
         success: bool = True,
-    ):
+    ) -> dict:
         """Create a new case for a member. Don't call this, call warn instead."""
         data = {
             "level": level,
@@ -123,10 +146,14 @@ class API:
             "reason": reason,
             "time": time.strftime("%a %d %B %Y %H:%M"),
             "success": success,
-            "duration": None if not duration else duration.strftime("%a %d %B %Y %H:%M"),
+            "duration": None if not duration else self._format_timedelta(duration),
+            "until": None
+            if not duration
+            else (datetime.today() + duration).strftime("%a %d %B %Y %H:%M"),
         }
         async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
             logs.append(data)
+        return data
 
     async def get_case(
         self, guild: discord.Guild, user: Union[discord.User, discord.Member], index: int
@@ -474,7 +501,7 @@ class API:
         log_embed.color = await self.data.guild(guild).colors.get_raw(level)
         log_embed.url = await self.data.guild(guild).url()
         if not message_sent:
-            log_embed += _(
+            log_embed.description += _(
                 "\n\n***The message couldn't be delivered to the member. We may don't "
                 "have a server in common or he blocked me/messages from this guild.***"
             )
@@ -519,25 +546,29 @@ class API:
         discord.errors.HTTPException
             Creating the role failed.
         """
-        mod_role = await self.data.guild(guild).mod_role()
-        mod_role = guild.get_role(mod_role)
-        if mod_role:
-            return
-
-        if not guild.me.guild_permissions.create_roles:
-            raise errors.MissingPermissions("I need the create_roles permission to do this.")
+        role = await self.data.guild(guild).mute_role()
+        role = guild.get_role(role)
+        if role:
+            return False
 
         # no mod role on this guild, let's create one
-        mod_role = await guild.create_role(
+        role = await guild.create_role(
             name="Muted",
             reason=_(
                 "BetterMod mute role. This role will be assigned to the muted members, "
                 "feel free to move it or modify its channel permissions."
             ),
         )
+        await role.edit(
+            position=guild.me.top_role.position - 1,
+            reason=_(
+                "Modifying role's position, keep it under my top role so "
+                "I can add it to muted members."
+            ),
+        )
         for channel in [x for x in guild.channels if isinstance(x, discord.TextChannel)]:
             await channel.set_permissions(
-                mod_role,
+                role,
                 send_messages=False,
                 add_reactions=False,
                 reason=_(
@@ -545,6 +576,8 @@ class API:
                     "feel free to edit its permissions."
                 ),
             )
+        await self.data.guild(guild).mute_role.set(role.id)
+        return True
 
     async def warn(
         self,
@@ -616,7 +649,7 @@ class API:
                 )
             try:
                 # we re-create a discord.User object to do not break the functions
-                member = bot.get_user_info(member)
+                member = self.bot.get_user_info(member)
             except discord.errors.NotFound:
                 raise errors.NotFound(_("The requested member does not exist."))
 
@@ -684,7 +717,6 @@ class API:
                 )
 
         # take actions
-
         if take_action:
             action = (
                 _("mute")
@@ -716,7 +748,7 @@ class API:
                 )
             )
             if level == 2:
-                await self._mute(guild, member, reason)
+                await self._mute(member, audit_reason)
             if level == 3:
                 await guild.kick(member, reason=audit_reason)
             if level == 4:
@@ -739,5 +771,70 @@ class API:
         # actions were taken, time to log
         if log_modlog:
             await mod_channel.send(embed=modlog_e)
-        await self._create_case(guild, member, author, level, datetime.now(), reason)
+        data = await self._create_case(guild, member, author, level, datetime.now(), reason, time)
+
+        # start timer if there is a temporary warning
+        if time and level == 2 or level == 5:
+            data["member"] = member.id
+            await self._start_timer(guild, data)
+
+        # all good!
         return True
+
+    async def _check_endwarn(self):
+        """
+        This is an infinite loop task started with the cog that will check\
+        if a temporary warn (mute or ban) is over, and cancel the action if it's true.
+
+        The loop runs every 10 seconds.
+        """
+        await self.bot.wait_until_ready()
+        log.debug(
+            "Starting infinite loop for unmutes and unbans. Canel the "
+            'task with bot.get_cog("BetterMod").task.cancel()'
+        )
+        while True:
+            guilds = await self.data.all_guilds()
+            now = datetime.today()
+
+            for guild, data in guilds.items():
+                guild = self.bot.get_guild(guild)
+                if not guild:
+                    continue
+                for action in data["temporary_warns"]:
+                    until = self._get_datetime(action["until"])
+                    member = guild.get_member(action["member"])
+                    author = guild.get_member(action["author"])
+                    level = action["level"]
+                    if not member:
+                        continue
+                    reason = _(
+                        "End of timed {action} of {member} requested by {author} that lasted "
+                        "for {time}. Reason of the {action}: {reason}"
+                    ).format(
+                        action=_("mute") if level == 3 else _("ban"),
+                        member=member,
+                        author=author if author else action["author"],
+                        time=action["duration"],
+                        reason=action["reason"],
+                    )
+                    if until < now:
+                        # end of warn
+                        try:
+                            if level == 2:
+                                await self._unmute(member, reason=reason)
+                            if level == 5:
+                                await guild.unban(member, reason=reason)
+                        except discord.errors.Forbidden:
+                            log.warn(
+                                f"I lost required permissions for ending the timed {action}. "
+                                f"Member {member} (ID: {member.id}) from guild {guild} (ID: "
+                                f"{guild.id}) will stay as it is now."
+                            )
+                        except discord.errors.HTTPException as e:
+                            log.warn(
+                                f"Couldn't end the timed {action} of {member} (ID: {member.id}) "
+                                f"from guild {guild} (ID: {guild.id}). He will stay as it is now.",
+                                exc_info=e,
+                            )
+            await asyncio.sleep(10)

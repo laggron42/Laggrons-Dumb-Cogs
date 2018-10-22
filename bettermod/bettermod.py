@@ -66,6 +66,7 @@ class BetterMod(BaseCog):
             "5": 0xFF4C4C,
         },
         "url": None,  # URL set for the title of all embeds
+        "temporary_warns": [],  # list of temporary warns (need to unmute/unban after some time)
     }
     default_custom_member = {"x": []}  # cannot set a list as base group
 
@@ -81,6 +82,8 @@ class BetterMod(BaseCog):
         self.errors = errors
         self.sentry = None
         self.translator = _
+
+        self.task = bot.loop.create_task(self.api._check_endwarn())
 
     __version__ = "indev"
     __author__ = "retke (El Laggron)"
@@ -401,3 +404,6 @@ class BetterMod(BaseCog):
         # remove all handlers from the logger, this prevents adding
         # multiple times the same handler if the cog gets reloaded
         log.handlers = []
+
+        # stop checking for unmute and unban
+        self.task.cancel()

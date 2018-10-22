@@ -58,6 +58,16 @@ class NotFound(Exception):
         log.debug(f"API error: NotFound\n{exception}\n")
 
 
+class MissingMuteRole(Exception):
+    """
+    You requested a mute warn but the mute role doesn't exist. Call
+    :func:`~bettermod.api.API.maybe_create_role` to fix this.
+    """
+
+    def __init__(self, exception):
+        log.debug(f"API error: MissingMuteRole\n{exception}\n")
+
+
 class BadArgument(Exception):
     """
     The arguments provided for your request are wrong, check the types.
