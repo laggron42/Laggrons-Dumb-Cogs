@@ -45,6 +45,10 @@ class BetterMod(BaseCog):
             "4": None,
             "5": None,
         },
+        "bandays": {  # the number of days of messages to delte in case of a ban/softban
+            "softban": 7,
+            "ban": 0,
+        },
         "thumbnails": {  # image at the top right corner of an embed
             "report": "https://i.imgur.com/Bl62rGd.png",
             "1": "https://i.imgur.com/Bl62rGd.png",
@@ -273,7 +277,9 @@ class BetterMod(BaseCog):
     @checks.mod_or_permissions(manage_messages=True)
     @commands.guild_only()
     @commands.cooldown(1, 10, commands.BucketType.channel)
-    async def slowmode(self, ctx: commands.Context, time: int, channel: discord.TextChannel = None):
+    async def slowmode(
+        self, ctx: commands.Context, time: int, channel: discord.TextChannel = None
+    ):
         """
         Set the Discord slowmode in a text channel.
 

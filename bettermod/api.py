@@ -485,7 +485,7 @@ class API:
         )
         user_embed.remove_field(4)  # removes status field (gonna be added back)
         user_embed.remove_field(0)  # removes member field
-        user_embed.set_field_at(2, name=_("Status"), value=current_status(False), inline=False)
+        user_embed.add_field(name=_("Status"), value=current_status(False), inline=False)
         if time:
             user_embed.set_field_at(
                 1, name=_("Duration"), value=self._format_timedelta(time), inline=True
@@ -547,7 +547,7 @@ class API:
     async def warn(
         self,
         guild: discord.Guild,
-        member: Union[discord.Member, discord.User],
+        member: Union[discord.Member, int],
         author: Union[discord.Member, str],
         level: int,
         reason: Optional[str] = None,
@@ -563,8 +563,8 @@ class API:
         ----------
         guild: discord.Guild
             The guild of the member to warn
-        member: Union[discord.Member, discord.User]
-            The member that will be warned. It can be a :class:`discord.User` only if you need to
+        member: Union[discord.Member, int]
+            The member that will be warned. It can be an :py:class:`int` only if you need to
             ban someone not in the guild.
         author: Union[discord.Member, str]
             The member that called the action, which will be associated to the log.
@@ -604,12 +604,19 @@ class API:
         """
         self._log_call(inspect.stack())
 
+        to_ban = member  # we keep the ID in case of a hackban
         if not isinstance(level, int) or not 1 <= level <= 5:
             raise errors.InvalidLevel("The level must be between 1 and 5.")
-        if isinstance(member, discord.User) and level != 5:
-            raise errors.BadArgument(
-                "You need to provide a valid discord.Member object for this action."
-            )
+        if isinstance(member, int):
+            if level != 5:
+                raise errors.BadArgument(
+                    "You need to provide a valid discord.Member object for this action."
+                )
+            try:
+                # we re-create a discord.User object to do not break the functions
+                member = bot.get_user_info(member)
+            except discord.errors.NotFound:
+                raise errors.NotFound(_("The requested member does not exist."))
 
         # we get the modlog channel now to make sure it exists before doing anything
         mod_channel = await self.get_modlog_channel(guild, level)
@@ -628,13 +635,13 @@ class API:
                 ).format(channel=mod_channel.mention)
             )
         if guild.me.top_role.position <= member.top_role.position:
-            pass
-            # raise errors.MemberTooHigh(
-            #     _(
-            #         "Cannot take actions on this member, he is above me in the roles hierarchy. "
-            #         "Modify the hierarchy so my top role ({bot_role}) is above {member_role}."
-            #     ).format(bot_role=guild.me.top_role.name, member_role=member.top_role.name)
-            # )
+            # check if the member is below the bot in the roles's hierarchy
+            raise errors.MemberTooHigh(
+                _(
+                    "Cannot take actions on this member, he is above me in the roles hierarchy. "
+                    "Modify the hierarchy so my top role ({bot_role}) is above {member_role}."
+                ).format(bot_role=guild.me.top_role.name, member_role=member.top_role.name)
+            )
         if level == 2:
             # mute with role
             if not guild.me.guild_permissions.manage_roles:
@@ -654,24 +661,81 @@ class API:
                     _("I can't ban members, please give me this permission to continue.")
                 )
 
-        modlog_e, user_e = await self.get_embeds(guild, member, author, level, reason, time)
-        try:
-            await member.send(embed=user_e)
-        except discord.errors.Forbidden:
-            modlog_e, user_e = await self.get_embeds(
-                guild, member, author, level, reason, time, message_sent=False
+        # send the message to the user
+        if log_modlog or log_dm:
+            modlog_e, user_e = await self.get_embeds(guild, member, author, level, reason, time)
+        if log_dm:
+            try:
+                await member.send(embed=user_e)
+            except discord.errors.Forbidden:
+                modlog_e, user_e = await self.get_embeds(
+                    guild, member, author, level, reason, time, message_sent=False
+                )
+            except discord.errors.HTTPException as e:
+                modlog_e, user_e = await self.get_embeds(
+                    guild, member, author, level, reason, time, message_sent=False
+                )
+                log.warn(
+                    f"Couldn't send a message to {member} (ID: {member.id}) "
+                    "because of an HTTPException.",
+                    exc_info=e,
+                )
+
+        # take actions
+
+        if take_action:
+            action = (
+                _("mute")
+                if level == 2
+                else _("kick")
+                if level == 3
+                else _("softban")
+                if level == 4
+                else _("ban")
+                if level == 5
+                else _("warn")
             )
-        except discord.errors.HTTPException as e:
-            modlog_e, user_e = await self.get_embeds(
-                guild, member, author, level, reason, time, message_sent=False
+            if not reason.endswith("."):
+                reason += "."
+            audit_reason = (
+                _(
+                    "BetterMod {action} requested by {author} (ID: "
+                    "{author.id}) against {member} for "
+                ).format(author=author, member=member, action=action)
+                + (
+                    _("the following reason:\n{reason}").format(reason=reason)
+                    if reason
+                    else _("no reason.")
+                )
+                + (
+                    _("\n\nDuration: {time}").format(time=self._format_timedelta(time))
+                    if time
+                    else ""
+                )
             )
-            log.warn(
-                f"Couldn't send a message to {member} (ID: {member.id}) "
-                "because of an HTTPException.",
-                exc_info=e,
-            )
+            if level == 2:
+                await self._mute(guild, member, reason)
+            if level == 3:
+                await guild.kick(member, reason=audit_reason)
+            if level == 4:
+                await guild.ban(
+                    to_ban,
+                    reason=audit_reason,
+                    delete_message_days=await self.data.guild(guild).bandays.softban(),
+                )
+                await guild.unban(
+                    member,
+                    reason=_("Unbanning the softbanned member after cleaning up the messages."),
+                )
+            if level == 5:
+                await guild.ban(
+                    to_ban,
+                    reason=audit_reason,
+                    delete_message_days=await self.data.guild(guild).bandays.ban(),
+                )
 
         # actions were taken, time to log
-        await mod_channel.send(embed=modlog_e)
+        if log_modlog:
+            await mod_channel.send(embed=modlog_e)
         await self._create_case(guild, member, author, level, datetime.now(), reason)
         return True
