@@ -7,7 +7,7 @@ from asyncio import TimeoutError as AsyncTimeoutError
 
 from redbot.core import commands, Config, checks
 from redbot.core.i18n import Translator, cog_i18n
-from redbot.core.utils import predicates
+from redbot.core.utils import predicates, menus, mod
 
 
 # creating this before importing other modules allows to import the translator
@@ -343,6 +343,9 @@ class BetterMod(BaseCog):
             except discord.errors.NotFound:
                 await ctx.send(_("User not found."))
                 return
+        if not await mod.is_mod_or_superior(self.bot, ctx.author) and user != ctx.author:
+            await ctx.send(_("You are not allowed to see other's warnings!"))
+            return
         cases = await self.api.get_all_cases(ctx.guild, user)
         if not cases:
             await ctx.send(_("That member was never warned."))
@@ -404,6 +407,7 @@ class BetterMod(BaseCog):
                 )
             embed.add_field(name=_("Reason"), value=case["reason"], inline=False),
             embed.set_footer(text=_("The action was taken on {date}").format(date=case["time"]))
+            embed.color = await self.data.guild(ctx.guild).colors.get_raw(level)
 
             embeds.append(embed)
 
