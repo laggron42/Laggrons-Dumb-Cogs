@@ -714,7 +714,7 @@ class API:
             isinstance(member, discord.Member)
             and guild.me.top_role.position <= member.top_role.position
         ):
-            check if the member is below the bot in the roles's hierarchy
+            # check if the member is below the bot in the roles's hierarchy
             raise errors.MemberTooHigh(
                _(
                    "Cannot take actions on this member, he is above me in the roles hierarchy. "
