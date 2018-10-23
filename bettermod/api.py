@@ -78,10 +78,10 @@ class API:
             _("minute"): 0,
             _("second"): time.total_seconds(),
         }
-        if units[_("second")] >= 31_536_000:
+        if units[_("second")] >= 31536000:
             units[_("year")], units[_("second")] = divmod(units[_("second")], 365)
-        if units[_("second")] >= 2_635_200:
-            units[_("month")], units[_("second")] = divmod(units[_("second")], 2_635_200)
+        if units[_("second")] >= 2635200:
+            units[_("month")], units[_("second")] = divmod(units[_("second")], 2635200)
         if units[_("second")] >= 86400:
             units[_("week")], units[_("second")] = divmod(units[_("second")], 86400)
         if units[_("second")] >= 3600:
@@ -716,10 +716,10 @@ class API:
         ):
             # check if the member is below the bot in the roles's hierarchy
             raise errors.MemberTooHigh(
-               _(
-                   "Cannot take actions on this member, he is above me in the roles hierarchy. "
-                   "Modify the hierarchy so my top role ({bot_role}) is above {member_role}."
-               ).format(bot_role=guild.me.top_role.name, member_role=member.top_role.name)
+                _(
+                    "Cannot take actions on this member, he is above me in the roles hierarchy. "
+                    "Modify the hierarchy so my top role ({bot_role}) is above {member_role}."
+                ).format(bot_role=guild.me.top_role.name, member_role=member.top_role.name)
             )
         if level == 2:
             # mute with role
