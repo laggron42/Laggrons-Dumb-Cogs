@@ -324,9 +324,9 @@ class BetterMod(BaseCog):
 
     @commands.command()
     @commands.guild_only()
-    @commands.cooldown(1, 30, commands.BucketType.member)
+    @commands.cooldown(1, 3, commands.BucketType.member)
     async def warnings(
-        self, ctx: commands.Context, user: Union[discord.User, int] = None, case: int = 0
+        self, ctx: commands.Context, user: Union[discord.User, int] = None, index: int = 0
     ):
         """
         Shows all warnings of a member.
@@ -334,7 +334,87 @@ class BetterMod(BaseCog):
         This command can be used by everyone, but only moderators can see other's warnings.
         Moderators can also edit or delete warnings by using the reactions.
         """
-        pass
+        if not user:
+            await ctx.send_help()
+            return
+        if isinstance(user, int):
+            try:
+                user = self.bot.get_user_info(user)
+            except discord.errors.NotFound:
+                await ctx.send(_("User not found."))
+                return
+        cases = await self.api.get_all_cases(ctx.guild, user)
+        if not cases:
+            await ctx.send(_("That member was never warned."))
+            return
+        if 0 < index < len(cases):
+            await ctx.send(_("That case doesn't exist."))
+
+        total = lambda level: len([x for x in cases if x["level"] == level])
+        warning_str = (
+            lambda x: _("Mute")
+            if x == 2
+            else _("Kick")
+            if x == 3
+            else _("Softban")
+            if x == 4
+            else _("Ban")
+            if x == 5
+            else _("Warning")
+        )
+
+        embeds = []
+        msg = []
+        for i in range(6):
+            total_warns = total(i)
+            if total_warns > 0:
+                msg.append(
+                    _(
+                        "{action}{plural}: {number}".format(
+                            action=warning_str(i),
+                            plural=_("s") if total_warns > 1 else "",
+                            number=total_warns,
+                        )
+                    )
+                )
+        warn_field = "\n".join(msg) if len(msg) > 1 else msg[0]
+        embed = discord.Embed(description=_("User modlog summary."))
+        embed.set_author(name=f"{user} | {user.id}", icon_url=user.avatar_url)
+        embed.add_field(name=_("Total number of warnings: ") + str(len(cases)), value=warn_field)
+        embed.set_footer(text=_("Click on the reactions to scroll through the warnings"))
+        embeds.append(embed)
+
+        for i, case in enumerate(cases):
+            level = case["level"]
+            moderator = ctx.guild.get_member(case["author"])
+            moderator = "ID: " + case["author"] if not moderator else moderator.mention
+
+            embed = discord.Embed(
+                description=_("Case #{number} informations").format(number=i + 1)
+            )
+            embed.set_author(name=f"{user} | {user.id}", icon_url=user.avatar_url)
+            embed.add_field(name=_("Level"), value=f"{warning_str(level)} ({level})", inline=True)
+            embed.add_field(name=_("Moderator"), value=moderator, inline=True)
+            if case["duration"]:
+                embed.add_field(
+                    name=_("Duration"),
+                    value=_("{duration}\n(Until {date})").format(
+                        duration=case["duration"], date=case["until"]
+                    ),
+                )
+            embed.add_field(name=_("Reason"), value=case["reason"], inline=False),
+            embed.set_footer(text=_("The action was taken on {date}").format(date=case["time"]))
+
+            embeds.append(embed)
+
+        await menus.menu(
+            ctx=ctx,
+            pages=embeds,
+            controls=menus.DEFAULT_CONTROLS,
+            message=None,
+            page=index,
+            timeout=60,
+        )
 
     @commands.command(hidden=True)
     @checks.is_owner()
