@@ -78,15 +78,15 @@ class API:
             _("minute"): 0,
             _("second"): time.total_seconds(),
         }
-        if units[_("second")] > 31_536_000:
+        if units[_("second")] >= 31_536_000:
             units[_("year")], units[_("second")] = divmod(units[_("second")], 365)
-        if units[_("second")] > 2_635_200:
+        if units[_("second")] >= 2_635_200:
             units[_("month")], units[_("second")] = divmod(units[_("second")], 2_635_200)
-        if units[_("second")] > 86400:
+        if units[_("second")] >= 86400:
             units[_("week")], units[_("second")] = divmod(units[_("second")], 86400)
-        if units[_("second")] > 3600:
+        if units[_("second")] >= 3600:
             units[_("hour")], units[_("second")] = divmod(units[_("second")], 3600)
-        if units[_("second")] > 60:
+        if units[_("second")] >= 60:
             units[_("minute")], units[_("second")] = divmod(units[_("second")], 60)
 
         for unit, value in units.items():
@@ -512,7 +512,7 @@ class API:
         user_embed.description = _("The moderation team set you a level {level} warning.").format(
             level=level
         )
-        user_embed.remove_field(4)  # removes status field (gonna be added back)
+        user_embed.remove_field(4 if time else 3)  # removes status field (gonna be added back)
         user_embed.remove_field(0)  # removes member field
         user_embed.add_field(name=_("Status"), value=current_status(False), inline=False)
         if time:
@@ -538,6 +538,8 @@ class API:
         bool
             *   :py:obj:`True` if the role was successfully created.
             *   :py:obj:`False` if the role already exists.
+            *   :py:class:`list` of :py:class:`str` if some channel updates failed, containing
+                the message explaining the error for each message
 
         Raises
         ------
@@ -550,6 +552,11 @@ class API:
         role = guild.get_role(role)
         if role:
             return False
+
+        if not guild.me.guild_permissions.manage_roles:
+            raise errors.MissingPermissions(
+                _("I can't manage roles, please give me this permission to continue.")
+            )
 
         # no mod role on this guild, let's create one
         role = await guild.create_role(
@@ -566,18 +573,53 @@ class API:
                 "I can add it to muted members."
             ),
         )
+        errors = []
         for channel in [x for x in guild.channels if isinstance(x, discord.TextChannel)]:
-            await channel.set_permissions(
-                role,
-                send_messages=False,
-                add_reactions=False,
-                reason=_(
-                    "Setting up BetterMod mute. All muted members will have this role, "
-                    "feel free to edit its permissions."
-                ),
-            )
+            try:
+                await channel.set_permissions(
+                    role,
+                    send_messages=False,
+                    add_reactions=False,
+                    reason=_(
+                        "Setting up BetterMod mute. All muted members will have this role, "
+                        "feel free to edit its permissions."
+                    ),
+                )
+            except discord.errors.Forbidden:
+                errors.append(
+                    _(
+                        "Cannot edit permissions of the channel {channel} because of a "
+                        "permission error (probably enforced permission for `Manage channel`)."
+                    ).format(channel=channel.mention)
+                )
+            except discord.errors.HTTPException as e:
+                errors.append(
+                    _(
+                        "Cannot edit permissions of the channel {channel} because of "
+                        "an unknown error."
+                    ).format(channel=channel.mention)
+                )
+                log.warn(
+                    f"Couldn't edit permissions of {channel} (ID: {channel.id}) in guild "
+                    f"{guild.name} (ID: {guild.id}) for setting up the mute role because "
+                    "of an HTTPException.",
+                    exc_info=e,
+                )
+            except Exception as e:
+                errors.append(
+                    _(
+                        "Cannot edit permissions of the channel {channel} because of "
+                        "an unknown error."
+                    ).format(channel=channel.mention)
+                )
+                log.error(
+                    f"Couldn't edit permissions of {channel} (ID: {channel.id}) in guild "
+                    f"{guild.name} (ID: {guild.id}) for setting up the mute role because "
+                    "of an unknwon error.",
+                    exc_info=e,
+                )
         await self.data.guild(guild).mute_role.set(role.id)
-        return True
+        return errors if errors else True
 
     async def warn(
         self,
@@ -639,7 +681,6 @@ class API:
         """
         self._log_call(inspect.stack())
 
-        to_ban = member  # we keep the ID in case of a hackban
         if not isinstance(level, int) or not 1 <= level <= 5:
             raise errors.InvalidLevel("The level must be between 1 and 5.")
         if isinstance(member, int):
@@ -649,7 +690,7 @@ class API:
                 )
             try:
                 # we re-create a discord.User object to do not break the functions
-                member = self.bot.get_user_info(member)
+                member = await self.bot.get_user_info(member)
             except discord.errors.NotFound:
                 raise errors.NotFound(_("The requested member does not exist."))
 
@@ -669,13 +710,16 @@ class API:
                     "permissions in {channel} to do this."
                 ).format(channel=mod_channel.mention)
             )
-        if guild.me.top_role.position <= member.top_role.position:
-            # check if the member is below the bot in the roles's hierarchy
+        if (
+            isinstance(member, discord.Member)
+            and guild.me.top_role.position <= member.top_role.position
+        ):
+            check if the member is below the bot in the roles's hierarchy
             raise errors.MemberTooHigh(
-                _(
-                    "Cannot take actions on this member, he is above me in the roles hierarchy. "
-                    "Modify the hierarchy so my top role ({bot_role}) is above {member_role}."
-                ).format(bot_role=guild.me.top_role.name, member_role=member.top_role.name)
+               _(
+                   "Cannot take actions on this member, he is above me in the roles hierarchy. "
+                   "Modify the hierarchy so my top role ({bot_role}) is above {member_role}."
+               ).format(bot_role=guild.me.top_role.name, member_role=member.top_role.name)
             )
         if level == 2:
             # mute with role
@@ -753,7 +797,7 @@ class API:
                 await guild.kick(member, reason=audit_reason)
             if level == 4:
                 await guild.ban(
-                    to_ban,
+                    member,
                     reason=audit_reason,
                     delete_message_days=await self.data.guild(guild).bandays.softban(),
                 )
@@ -763,7 +807,7 @@ class API:
                 )
             if level == 5:
                 await guild.ban(
-                    to_ban,
+                    member,
                     reason=audit_reason,
                     delete_message_days=await self.data.guild(guild).bandays.ban(),
                 )
@@ -774,7 +818,7 @@ class API:
         data = await self._create_case(guild, member, author, level, datetime.now(), reason, time)
 
         # start timer if there is a temporary warning
-        if time and level == 2 or level == 5:
+        if time and (level == 2 or level == 5):
             data["member"] = member.id
             await self._start_timer(guild, data)
 
@@ -782,6 +826,73 @@ class API:
         return True
 
     async def _check_endwarn(self):
+        guilds = await self.data.all_guilds()
+        now = datetime.today()
+
+        for guild, data in guilds.items():
+            guild = self.bot.get_guild(guild)
+            if not guild:
+                continue
+            data = data["temporary_warns"]
+            to_remove = []
+            for action in data:
+                taken_on = action["time"]
+                until = self._get_datetime(action["until"])
+                member = guild.get_member(action["member"])
+                author = guild.get_member(action["author"])
+                case_reason = action["reason"]
+                level = action["level"]
+                action_str = _("mute") if level == 2 else _("ban")
+                action_past = "muted" if level == 2 else "banned"
+                if not member:
+                    if level == 2:
+                        to_remove.append(action)
+                        continue
+                    else:
+                        member = await self.bot.get_user_info(action["member"])
+                reason = _(
+                    "End of timed {action} of {member} requested by {author} that lasted "
+                    "for {time}. Reason of the {action}: {reason}"
+                ).format(
+                    action=action_str,
+                    member=member,
+                    author=author if author else action["author"],
+                    time=action["duration"],
+                    reason=case_reason,
+                )
+                if until < now:
+                    # end of warn
+                    try:
+                        if level == 2:
+                            await self._unmute(member, reason=reason)
+                        if level == 5:
+                            await guild.unban(member, reason=reason)
+                    except discord.errors.Forbidden:
+                        log.warn(
+                            f"I lost required permissions for ending the timed {action_str}. "
+                            f"Member {member} (ID: {member.id}) from guild {guild} (ID: "
+                            f"{guild.id}) will stay as it is now."
+                        )
+                    except discord.errors.HTTPException as e:
+                        log.warn(
+                            f"Couldn't end the timed {action_str} of {member} (ID: "
+                            f"{member.id}) from guild {guild} (ID: {guild.id}). He will stay "
+                            "as it is now.",
+                            exc_info=e,
+                        )
+                    else:
+                        log.debug(
+                            f"{member} was successfully un{action_past} on guild {guild} (ID: "
+                            f'{guild.id}), ending the warn set on {taken_on} for the reason "'
+                            f'{case_reason}".'
+                        )
+                    to_remove.append(action)
+            for item in to_remove:
+                data.remove(item)
+            if to_remove:
+                await self.data.guild(guild).temporary_warns.set(data)
+
+    async def _loop_task(self):
         """
         This is an infinite loop task started with the cog that will check\
         if a temporary warn (mute or ban) is over, and cancel the action if it's true.
@@ -793,48 +904,23 @@ class API:
             "Starting infinite loop for unmutes and unbans. Canel the "
             'task with bot.get_cog("BetterMod").task.cancel()'
         )
+        errors = 0
         while True:
-            guilds = await self.data.all_guilds()
-            now = datetime.today()
-
-            for guild, data in guilds.items():
-                guild = self.bot.get_guild(guild)
-                if not guild:
-                    continue
-                for action in data["temporary_warns"]:
-                    until = self._get_datetime(action["until"])
-                    member = guild.get_member(action["member"])
-                    author = guild.get_member(action["author"])
-                    level = action["level"]
-                    if not member:
-                        continue
-                    reason = _(
-                        "End of timed {action} of {member} requested by {author} that lasted "
-                        "for {time}. Reason of the {action}: {reason}"
-                    ).format(
-                        action=_("mute") if level == 3 else _("ban"),
-                        member=member,
-                        author=author if author else action["author"],
-                        time=action["duration"],
-                        reason=action["reason"],
+            try:
+                await self._check_endwarn()
+            except Exception as e:
+                errors += 1
+                if errors >= 3:
+                    # more than 3 errors in our loop, let's shut down the loop
+                    log.critical(
+                        "The loop for unmutes and unbans encountered a third error. To prevent "
+                        "more damages, the loop will be cancelled. Timed mutes and bans no longer "
+                        "works for now. Reload the cog to start the loop back. If the problem "
+                        "persists, report the error and update the cog.",
+                        exc_info=e,
                     )
-                    if until < now:
-                        # end of warn
-                        try:
-                            if level == 2:
-                                await self._unmute(member, reason=reason)
-                            if level == 5:
-                                await guild.unban(member, reason=reason)
-                        except discord.errors.Forbidden:
-                            log.warn(
-                                f"I lost required permissions for ending the timed {action}. "
-                                f"Member {member} (ID: {member.id}) from guild {guild} (ID: "
-                                f"{guild.id}) will stay as it is now."
-                            )
-                        except discord.errors.HTTPException as e:
-                            log.warn(
-                                f"Couldn't end the timed {action} of {member} (ID: {member.id}) "
-                                f"from guild {guild} (ID: {guild.id}). He will stay as it is now.",
-                                exc_info=e,
-                            )
+                    return
+                log.error(
+                    "Error in loop for unmutes and unbans. The loop will be resumed.", exc_info=e
+                )
             await asyncio.sleep(10)

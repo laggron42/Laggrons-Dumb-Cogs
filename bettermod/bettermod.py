@@ -1,14 +1,17 @@
 # BetterMod by retke, aka El Laggron
 import discord
 import logging
+import re
 
 from typing import Union, TYPE_CHECKING
 from asyncio import TimeoutError as AsyncTimeoutError
+from datetime import timedelta
 
 from redbot.core import commands, Config, checks
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils import predicates, menus, mod
 
+# from redbot.core.errors import BadArgument as RedBadArgument
 
 # creating this before importing other modules allows to import the translator
 _ = Translator("BetterMod", __file__)
@@ -23,6 +26,48 @@ log = None
 BaseCog = getattr(commands, "Cog", object)
 
 
+# from Cog-Creators/Red-DiscordBot#2140
+TIME_RE_STRING = r"\s?".join(
+    [
+        r"((?P<days>\d+?)\s?(d(ays?)?))?",
+        r"((?P<hours>\d+?)\s?(hours?|hrs|hr?))?",
+        r"((?P<minutes>\d+?)\s?(minutes?|mins?|m))?",
+        r"((?P<seconds>\d+?)\s?(seconds?|secs?|s))?",
+    ]
+)
+TIME_RE = re.compile(TIME_RE_STRING, re.I)
+
+
+class RedBadArgument(Exception):
+    """For testing, wait for release with errors.py"""
+
+    pass
+
+
+def timedelta_converter(argument: str) -> timedelta:
+    """
+    Attempts to parse a user input string as a timedelta
+    Arguments
+    ---------
+    argument: str
+        String to attempt to treat as a timedelta
+    Returns
+    -------
+    datetime.timedelta
+        The parsed timedelta
+
+    Raises
+    ------
+    ~discord.ext.commands.BadArgument
+        No time was found from the given string.
+    """
+    matches = TIME_RE.match(argument)
+    params = {k: int(v) for k, v in matches.groupdict().items() if v is not None}
+    if not params:
+        raise RedBadArgument("I couldn't turn that into a valid time period.")
+    return timedelta(**params)
+
+
 @cog_i18n(_)
 class BetterMod(BaseCog):
     """
@@ -35,7 +80,9 @@ class BetterMod(BaseCog):
 
     default_global = {"enable_sentry": None}
     default_guild = {
+        "delete_message": False,  # if the [p]warn commands should delete the context message
         "show_mod": False,  # if the responsible mod should be revealed to the warned user
+        "mute_role": None,  # the role used for mute
         "channels": {  # modlog channels
             "main": None,  # default
             "report": None,
@@ -83,7 +130,7 @@ class BetterMod(BaseCog):
         self.sentry = None
         self.translator = _
 
-        self.task = bot.loop.create_task(self.api._check_endwarn())
+        self.task = bot.loop.create_task(self.api._loop_task())
 
     __version__ = "indev"
     __author__ = "retke (El Laggron)"
@@ -94,6 +141,34 @@ class BetterMod(BaseCog):
         global log
         log = logging.getLogger("laggron.bettermod")
         # this is called now so the logger is already initialized
+
+    async def call_warn(self, ctx, level, member, reason, time=None):
+        """No need to repeat, let's do what's common to all 5 warnings."""
+        try:
+            await self.api.warn(ctx.guild, member, ctx.author, level, reason, time)
+        except errors.MissingPermissions as e:
+            await ctx.send(e)
+        except errors.MemberTooHigh as e:
+            await ctx.send(e)
+        except errors.MissingMuteRole:
+            await ctx.send(
+                _(
+                    "You need to set up the mute role before doing this.\n"
+                    "Use the `[p]bmodset mute` command for this."
+                )
+            )
+        except errors.NotFound:
+            await ctx.send(
+                _(
+                    "Please set up a modlog channel before warning a member.\n\n"
+                    "**With BetterMod**\n"
+                    "*Use the `[p]bmodset channel` command.*\n\n"
+                    "**With Red Modlog**\n"
+                    "*Load the `modlogs` cog and use the `[p]modlogset modlog` command.*"
+                )
+            )
+        if await self.data.guild(ctx.guild).delete_message():
+            await ctx.message.delete()
 
     # all settings
     @commands.group()
@@ -207,7 +282,9 @@ class BetterMod(BaseCog):
         """
         Set a simple warning on a user.
         """
-        pass
+        await self.call_warn(ctx, 1, member, reason)
+        if ctx.message:
+            await ctx.message.add_reaction("✅")
 
     @warn.command(name="2", aliases=["mute"], usage="<member> [time] <reason>")
     async def warn_2(self, ctx: commands.Context, member: discord.Member, *, reason: str):
@@ -225,7 +302,17 @@ class BetterMod(BaseCog):
         - `[p]warn 2 @user 5h Spam`: 5 hours mute for the reason "Spam"
         - `[p]warn 2 @user Advertising`: Infinite mute for the reason "Advertising"
         """
-        pass
+        time = None
+        potential_time = reason.split()[0]
+        try:
+            time = timedelta_converter(potential_time)
+        except RedBadArgument:
+            pass
+        else:
+            reason = " ".join(reason.split()[1:])  # removes time from string
+        await self.call_warn(ctx, 2, member, reason, time)
+        if ctx.message:
+            await ctx.message.add_reaction("✅")
 
     @warn.command(name="3", aliases=["kick"])
     async def warn_3(self, ctx: commands.Context, member: discord.Member, *, reason: str):
@@ -235,7 +322,9 @@ class BetterMod(BaseCog):
         You can include an invite for the server in the message received by the kicked user by\
         using the `[p]bmodset reinvite` command.
         """
-        pass
+        await self.call_warn(ctx, 3, member, reason)
+        if ctx.message:
+            await ctx.message.add_reaction("✅")
 
     @warn.command(name="4", aliases=["softban"])
     async def warn_4(self, ctx: commands.Context, member: discord.Member, *, reason: str):
@@ -248,7 +337,9 @@ class BetterMod(BaseCog):
         It will delete 7 days of messages by default, but you can edit this with the\
         `[p]bmodset bandays` command.
         """
-        pass
+        await self.call_warn(ctx, 4, member, reason)
+        if ctx.message:
+            await ctx.message.add_reaction("✅")
 
     @warn.command(name="5", aliases=["ban"], usage="<member> [time] <reason>")
     async def warn_5(
@@ -273,7 +364,17 @@ class BetterMod(BaseCog):
         while he's not in the server for the reason "Advertising and leave" (if the user shares\
         another server with the bot, a DM will be sent).
         """
-        pass
+        time = None
+        potential_time = reason.split()[0]
+        try:
+            time = timedelta_converter(potential_time)
+        except RedBadArgument:
+            pass
+        else:
+            reason = " ".join(reason.split()[1:])  # removes time from string
+        await self.call_warn(ctx, 5, member, reason, time)
+        if ctx.message:
+            await ctx.message.add_reaction("✅")
 
     # other moderation commands
     @commands.command()
