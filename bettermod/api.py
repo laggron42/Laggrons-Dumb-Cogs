@@ -483,20 +483,38 @@ class API:
             plural_type="s" if total_type_warns > 1 else "",
         )
 
+        # we set any value that can be used multiple times
+        invite = None
+        log_description = await self.data.guild(guild).embed_description_modlog.get_raw(level)
+        if "{invite}" in log_description:
+            try:
+                invite = await guild.create_invite(max_uses=1)
+            except Exception:
+                invite = _("*[couldn't create an invite]*")
+        user_description = await self.data.guild(guild).embed_description_user.get_raw(level)
+        if "{invite}" in user_description and not invite:
+            try:
+                invite = await guild.create_invite(max_uses=1)
+            except Exception:
+                invite = _("*[couldn't create an invite]*")
+        today = datetime.today().strftime("%a %d %B %Y %H:%M")
+        duration = self._format_timedelta(time)
+        format_description = lambda x: x.format(
+            invite=invite, member=member, mod=author, duration=duration, time=today
+        )
+
         # embed for the modlog
         log_embed = discord.Embed()
         log_embed.set_author(name=f"{member.name} | {member.id}", icon_url=member.avatar_url)
         log_embed.title = _("Level {level} warning ({action})").format(level=level, action=action)
-        log_embed.description = _("A member got a level {level} warning.").format(level=level)
+        log_embed.description = format_description(log_description)
         log_embed.add_field(name=_("Member"), value=member.mention, inline=True)
         log_embed.add_field(name=_("Moderator"), value=author.mention, inline=True)
         if time:
-            log_embed.add_field(
-                name=_("Duration"), value=self._format_timedelta(time), inline=True
-            )
+            log_embed.add_field(name=_("Duration"), value=duration, inline=True)
         log_embed.add_field(name=_("Reason"), value=reason, inline=False)
         log_embed.add_field(name=_("Status"), value=current_status(True), inline=False)
-        log_embed.set_footer(text=datetime.today().strftime("%a %d %B %Y %H:%M"))
+        log_embed.set_footer(text=today)
         log_embed.set_thumbnail(url=await self.data.guild(guild).thumbnails.get_raw(level))
         log_embed.color = await self.data.guild(guild).colors.get_raw(level)
         log_embed.url = await self.data.guild(guild).url()
@@ -509,9 +527,7 @@ class API:
         # embed for the member in DM
         user_embed = deepcopy(log_embed)
         user_embed.set_author(name="")
-        user_embed.description = _("The moderation team set you a level {level} warning.").format(
-            level=level
-        )
+        user_embed.description = format_description(user_description)
         user_embed.remove_field(4 if time else 3)  # removes status field (gonna be added back)
         user_embed.remove_field(0)  # removes member field
         user_embed.add_field(name=_("Status"), value=current_status(False), inline=False)

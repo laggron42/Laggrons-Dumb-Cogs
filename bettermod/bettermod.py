@@ -68,6 +68,10 @@ def timedelta_converter(argument: str) -> timedelta:
     return timedelta(**params)
 
 
+EMBED_MODLOG = lambda x: _("A member got a level {} warning.").format(x)
+EMBED_USER = lambda x: _("The moderation team set you a level {} warning.").format(x)
+
+
 @cog_i18n(_)
 class BetterMod(BaseCog):
     """
@@ -97,6 +101,20 @@ class BetterMod(BaseCog):
         "bandays": {  # the number of days of messages to delte in case of a ban/softban
             "softban": 7,
             "ban": 0,
+        },
+        "embeds_description_modlog": {  # the description of each type of warn in modlog
+            "1": EMBED_MODLOG(1),
+            "2": EMBED_MODLOG(2),
+            "3": EMBED_MODLOG(3),
+            "4": EMBED_MODLOG(4),
+            "5": EMBED_MODLOG(5),
+        },
+        "embeds_description_user": {  # the description of each type of warn for the user
+            "1": EMBED_USER(1),
+            "2": EMBED_USER(2),
+            "3": EMBED_USER(3),
+            "4": EMBED_USER(4),
+            "5": EMBED_USER(5),
         },
         "thumbnails": {  # image at the top right corner of an embed
             "report": "https://i.imgur.com/Bl62rGd.png",
@@ -345,6 +363,61 @@ class BetterMod(BaseCog):
         else:
             await self.data.guild(guild).reinvite.set(False)
             await ctx.send(_("Done. The bot will no longer show the responsible moderator."))
+
+    @bmodset.command(name="description")
+    async def bmodset_description(
+        self, ctx: commands.Context, level: int, destination: str, *, description: str
+    ):
+        """
+        Set a custom description for the modlog embeds.
+
+        You can set the description for each type of warning, one for the user in DM\
+        and the other for the server modlog.
+
+        __Keys:__
+
+        You can include these keys in your message:
+
+        - `{invite}`: Generate an invite for the server
+        - `{member}`: The warned member (tip: you can use `{member.id}` for the member's ID or\
+        `{member.mention}` for a mention)
+        - `{mod}`: The moderator that warned the member (you can also use keys like\
+        `{moderator.id}`)
+        - `{duration}`: The duration of a timed mute/ban if it exists
+        - `{time}`: The current date and time.
+
+        __Examples:__
+
+        - `[p]bmodset description 1 user You were warned by a moderator for your behaviour,\
+        please read the rules.`
+          This set the description for the first warning for the warned member.
+
+        - `[p]bmodset description 3 modlog A member was kicked from the server.`
+          This set the description for the 3rd warning (kick) for the modlog.
+
+        - `[p]bmodset description 4 user You were banned and unbanned to clear your messages\
+        from the server. You can join the server back with this link: {invite}`
+          This set the description for the 4th warning (softban) for the user, while generating\
+          an invite which will be replace `{invite}`
+        """
+        guild = ctx.guild
+        if not any([destination == x for x in ["modlog", "user"]]):
+            await ctx.send(
+                _(
+                    "You need to specify `modlog` or `user`. Read the help of "
+                    "the command for more details."
+                )
+            )
+            return
+        if len(description) > 800:
+            await ctx.send("Your text is too long!")
+            return
+        await self.data.guild(guild).set_raw(
+            "embed_description_" + destination, str(level), value=description
+        )
+        await ctx.send(
+            _("The new description for {destination} (warn {level}) was successfully set!")
+        ).format(destination=_("modlog") if destination == "modlog" else _("user"), level=level)
 
     @bmodset.group(name="data")
     async def bmodset_data(self, ctx: commands.Context):
