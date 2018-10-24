@@ -317,7 +317,7 @@ class BetterMod(BaseCog):
         if enable is None:
             await ctx.send(
                 _(
-                    "The bot {respect} reinvite kicked and unbanned members. If you want to "
+                    "The bot {respect} reinvite unbanned members. If you want to "
                     "change this, type `[p]bmodset reinvite {opposite}`."
                 ).format(respect=_("does") if current else _("doesn't"), opposite=not current)
             )
@@ -325,14 +325,14 @@ class BetterMod(BaseCog):
             await self.data.guild(guild).reinvite.set(True)
             await ctx.send(
                 _(
-                    "Done. The bot will try to send an invite to kicked and unbanned members. "
-                    "Please note that, for unbanned member, the bot needs to share one server "
-                    "in common with the member to receive the message."
+                    "Done. The bot will try to send an invite to unbanned members. Please note "
+                    "that the bot needs to share one server in common with the member to receive "
+                    "the message."
                 )
             )
         else:
             await self.data.guild(guild).reinvite.set(False)
-            await ctx.send(_("Done. The bot will no longer reinvite kicked and unbanned members."))
+            await ctx.send(_("Done. The bot will no longer reinvite unbanned members."))
 
     @bmodset.command(name="showmod")
     async def bmodset_showmod(self, ctx, enable: bool = None):

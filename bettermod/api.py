@@ -848,6 +848,31 @@ class API:
         return True
 
     async def _check_endwarn(self):
+        async def reinvite(guild, user, reason, duration):
+            try:
+                invite = await guild.create_invite(max_uses=1)
+            except Exception as e:
+                log.warn(
+                    f"Couldn't create an invite for guild {guild} (ID: {guild.id} to reinvite "
+                    f"{member} (ID: {member.id}) after its unban.",
+                    exc_info=e,
+                )
+            else:
+                try:
+                    await member.send(
+                        _(
+                            "You were unbanned from {guild}, your temporary ban (reason: "
+                            "{reason}) just ended after {duration}.\nYou can join back using this "
+                            "invite: {invite}"
+                        ).format(guild=guild.name, reason=reason, duration=duration, invite=invite)
+                    )
+                except discord.errors.Forbidden:
+                    # couldn't send message to the user, quite common
+                    log.info(
+                        f"Couldn't reinvite member {member} (ID: {member.id}) on guild "
+                        f"{guild} (ID: {guild.id}) after its temporary ban."
+                    )
+
         guilds = await self.data.all_guilds()
         now = datetime.today()
 
@@ -889,6 +914,8 @@ class API:
                             await self._unmute(member, reason=reason)
                         if level == 5:
                             await guild.unban(member, reason=reason)
+                            if await self.data.guild(guild).reinvite():
+                                await reinvite(guild, member, case_reason, action["duration"])
                     except discord.errors.Forbidden:
                         log.warn(
                             f"I lost required permissions for ending the timed {action_str}. "
