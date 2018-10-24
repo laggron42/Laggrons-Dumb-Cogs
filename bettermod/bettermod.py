@@ -316,6 +316,36 @@ class BetterMod(BaseCog):
             await self.data.guild(guild).reinvite.set(False)
             await ctx.send(_("Done. The bot will no longer reinvite kicked and unbanned members."))
 
+    @bmodset.command(name="showmod")
+    async def bmodset_showmod(self, ctx, enable: bool = None):
+        """
+        Defines if the responsible moderator should be revealed to the warned member in DM.
+
+        If enabled, any warned member will be able to see who warned him, else he won't know.
+
+        Invoke the command without arguments to get the current status.
+        """
+        guild = ctx.guild
+        current = await self.data.guild(guild).show_mod()
+        if enable is None:
+            await ctx.send(
+                _(
+                    "The bot {respect} show the responsible moderator to the warned member in DM. "
+                    "If you want to change this, type `[p]bmodset reinvite {opposite}`."
+                ).format(respect=_("does") if current else _("doesn't"), opposite=not current)
+            )
+        elif enable:
+            await self.data.guild(guild).reinvite.set(True)
+            await ctx.send(
+                _(
+                    "Done. The moderator responsible of a warn will now be shown to the warned "
+                    "member in direct messages."
+                )
+            )
+        else:
+            await self.data.guild(guild).reinvite.set(False)
+            await ctx.send(_("Done. The bot will no longer show the responsible moderator."))
+
     @bmodset.group(name="data")
     async def bmodset_data(self, ctx: commands.Context):
         """
