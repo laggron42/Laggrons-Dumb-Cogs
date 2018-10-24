@@ -169,6 +169,19 @@ class BetterMod(BaseCog):
                     "*Load the `modlogs` cog and use the `[p]modlogset modlog` command.*"
                 )
             )
+        except errors.NotAllowedByHierarchy:
+            is_admin = mod.is_admin_or_superior(member)
+            await ctx.send(
+                _(
+                    "You are not allowed to do this, {member} is higher than you in the role "
+                    "hierarchy. You can only warn members which top role is lower than yours.\n\n"
+                ).format(member=str(member))
+                + (
+                    _("You can disable this check by using the `[p]bmodset hierarchy` command.")
+                    if is_admin
+                    else ""
+                )
+            )
         if await self.data.guild(ctx.guild).delete_message():
             await ctx.message.delete()
 

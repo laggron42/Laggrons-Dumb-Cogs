@@ -721,6 +721,12 @@ class API:
                     "Modify the hierarchy so my top role ({bot_role}) is above {member_role}."
                 ).format(bot_role=guild.me.top_role.name, member_role=member.top_role.name)
             )
+        if await self.data.guild(guild).respect_hierarchy() and (
+            member.top_role >= author.top_role and not (self.bot.is_owner(author) or author.owner)
+        ):
+            raise errors.NotAllowedByHierarchy(
+                "The moderator is lower than the member in the guild's role hierarchy."
+            )
         if level == 2:
             # mute with role
             if not guild.me.guild_permissions.manage_roles:

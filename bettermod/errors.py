@@ -103,3 +103,18 @@ class MemberTooHigh(Exception):
 
     def __init__(self, exception):
         log.debug(f"API error: MemberTooHigh\n{exception}\n")
+
+
+class NotAllowedByHierarchy(Exception):
+    """
+    The bot is set to respect the role hierarchy; the moderator requested a warn against
+    someone equal or higher than him in the hierarchy, which is not allowed by Discord
+    permissions rules.
+
+    The moderator **must** have a role higher than the warned member to continue.
+
+    .. note:: This cannot be raised if the admins disabled the role hierarchy check.
+    """
+
+    def __init__(self, exception):
+        log.debug(f"API error: NotAllowedByHierarchy\n{exception}\n")
