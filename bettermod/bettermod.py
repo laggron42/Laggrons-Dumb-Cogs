@@ -83,6 +83,8 @@ class BetterMod(BaseCog):
         "delete_message": False,  # if the [p]warn commands should delete the context message
         "show_mod": False,  # if the responsible mod should be revealed to the warned user
         "mute_role": None,  # the role used for mute
+        "respect_hierarchy": False,  # if the bot should check if the mod is allowed by hierarchy
+        "reinvite": True,  # if the bot should try to send an invite to an unbanned/kicked member
         "channels": {  # modlog channels
             "main": None,  # default
             "report": None,
@@ -175,67 +177,59 @@ class BetterMod(BaseCog):
     @checks.admin_or_permissions(administrator=True)
     async def bmodset(self, ctx: commands.Context):
         """
-        Set BetterMod's all settings.
+        Set all BetterMod settings.
 
         For more informations about how to configure and use BetterMod, read the wiki:\
         https://laggron.red/bettermod.html
-
-        If you want to set more specific settings than what can be set through command,
-        take a look at `[p]bmodset advanced`.
-        """
-        pass
-
-    @bmodset.command(name="advanced")
-    async def bmodset_advanced(self, ctx: commands.Context):
-        """
-        Edit the advanced settings.
-
-        This includes the following settings:
-        - Embed customization for warnings
-        - Report customization
-        - Modlog channels (one for each type of warning/report)
-        - Deletion of message for warn
         """
         pass
 
     # goes from most basic to advanced settings
     @bmodset.command(name="channel")
-    async def bmodset_channel(self, ctx: commands.Context, channel: discord.TextChannel):
+    async def bmodset_channel(
+        self, ctx: commands.Context, channel: discord.TextChannel, level: int = None
+    ):
         """
         Set the channel for the BetterMod modlog.
 
         This will use the Red's modlog by default if it was set.
 
-        All warnings and reports will be logged here.
+        All warnings will be logged here.
         I need the `Send Messages` and `Embed Links` permissions.
-        """
-        pass
 
-    @bmodset.command(name="mention")
-    async def bmodset_mention(
-        self, ctx: commands.Context, *roles: Union[discord.Role, discord.Member]
-    ):
+        If you want to set one channel for a specific level of warning, you can specify a\
+        number after the channel
         """
-        Set a list of roles or members to mention when a report is received. @here\
-        and @everyone pings are supported.
-
-        If you have roles with spaces, use quote marks or IDs.
-
-        Example:
-        `[p]bmodset mention "The Moderators" @RandomUser Admins`
-        This will mention 2 roles and RandomUser.
-        """
-        pass
-
-    @bmodset.command(name="proof")
-    async def bmodset_proof(self, ctx: commands.Context, enable: bool = None):
-        """
-        Set if the bot should require an attachment for a report.
-
-        If enabled, any attachment will be **needed** for using the report command.
-        If disabled, it's still possible to attach a file, but not required.
-        """
-        pass
+        guild = ctx.guild
+        if not channel.permissions_for(guild.me).send_messages:
+            await ctx.send(_("I don't have the permission to send messages in that channel."))
+        elif not channel.permissions_for(guild.me).embed_links:
+            await ctx.send(_("I don't have the permissions to send embed links in that channel."))
+        else:
+            if not level:
+                await self.data.guild(guild).channels.main.set(channel.id)
+                await ctx.send(
+                    _(
+                        "Done. All events will be send to that channel by default.\n\nIf you want "
+                        "to send a specific warning level in a different channel, you can use the "
+                        "same command with the number after the channel.\nExample: "
+                        "`{prefix}bmodset channel #your-channel 3`"
+                    ).format(prefix=ctx.prefix)
+                )
+            elif not 1 <= level <= 5:
+                await ctx.send(
+                    _(
+                        "If you want to specify a level for the channel, provide a number between "
+                        "1 and 5."
+                    )
+                )
+            else:
+                await self.data.guild(guild).channels.set_raw(level, value=channel.id)
+                await ctx.send(
+                    _(
+                        "Done. All level {level} warnings events will be sent to that channel."
+                    ).format(level=str(level))
+                )
 
     @bmodset.command(name="hierarchy")
     async def bmodset_hierarchy(self, ctx: commands.Context, enable: bool = None):
@@ -245,8 +239,37 @@ class BetterMod(BaseCog):
         If enabled, a member cannot ban another member above him in the roles hierarchy, like\
         with manual bans.
         If disabled, mods can ban everyone while the bot can.
+
+        Invoke the command without arguments to get the current status.
         """
-        pass
+        guild = ctx.guild
+        current = await self.data.guild(guild).respect_hierarchy()
+        if enable is None:
+            await ctx.send(
+                _(
+                    "The bot currently {respect} role hierarchy. If you want to change this, "
+                    "type `[p]bmodset hierarchy {opposite}`."
+                ).format(
+                    respect=_("respects") if current else _("doesn't respect"),
+                    opposite=not current,
+                )
+            )
+        elif enable:
+            await self.data.guild(guild).respect_hierarchy.set(True)
+            await ctx.send(
+                _(
+                    "Done. Moderators will not be able to take actions on the members higher "
+                    "than himself in the role hierarchy of the server."
+                )
+            )
+        else:
+            await self.data.guild(guild).respect_hierarchy.set(False)
+            await ctx.send(
+                _(
+                    "Done. Moderators will be able to take actions on anyone on the server, as "
+                    "long as the bot is able to do so."
+                )
+            )
 
     @bmodset.command(name="reinvite")
     async def bmodset_reinvite(self, ctx: commands.Context, enable: bool = None):
@@ -255,15 +278,37 @@ class BetterMod(BaseCog):
 
         If enabled, any unbanned member will receive a DM with an invite to join the server back.
         The bot needs to share a server with the member to send a DM.
+
+        Invoke the command without arguments to get the current status.
         """
-        pass
+        guild = ctx.guild
+        current = await self.data.guild(guild).reinvite()
+        if enable is None:
+            await ctx.send(
+                _(
+                    "The bot {respect} reinvite kicked and unbanned members. If you want to "
+                    "change this, type `[p]bmodset reinvite {opposite}`."
+                ).format(respect=_("does") if current else _("doesn't"), opposite=not current)
+            )
+        elif enable:
+            await self.data.guild(guild).reinvite.set(True)
+            await ctx.send(
+                _(
+                    "Done. The bot will try to send an invite to kicked and unbanned members. "
+                    "Please note that, for unbanned member, the bot needs to share one server "
+                    "in common with the member to receive the message."
+                )
+            )
+        else:
+            await self.data.guild(guild).reinvite.set(False)
+            await ctx.send(_("Done. The bot will no longer reinvite kicked and unbanned members."))
 
     @bmodset.group(name="data")
     async def bmodset_data(self, ctx: commands.Context):
         """
-        Manage your log data.
+        Manage your data.
         """
-        pass
+        await ctx.send("The work is in progress for this command...")
         # this should be included later, to know if some things are at least possible
 
     # all warning commands
