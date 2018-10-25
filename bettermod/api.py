@@ -849,8 +849,29 @@ class API:
 
     async def _check_endwarn(self):
         async def reinvite(guild, user, reason, duration):
+            channel = None
+            # find an ideal channel for the invite
+            # we get the one with the most members in the order of the guild
             try:
-                invite = await guild.create_invite(max_uses=1)
+                channel = sorted(
+                    [
+                        x
+                        for x in guild.channels
+                        if isinstance(x, discord.TextChannel)
+                        and x.permissions_for(guild.me).create_instant_invite
+                    ],
+                    key=lambda x: (x.position, len(x.members)),
+                )[0]
+            except IndexError:
+                # can't find a valid channel
+                log.info(
+                    f"Can't find a channel where I can create an invite in guild {guild} "
+                    f"(ID: {guild.id}) when reinviting {member} after its unban."
+                )
+                return
+
+            try:
+                invite = await channel.create_invite(max_uses=1)
             except Exception as e:
                 log.warn(
                     f"Couldn't create an invite for guild {guild} (ID: {guild.id} to reinvite "

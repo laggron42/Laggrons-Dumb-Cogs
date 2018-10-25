@@ -102,14 +102,14 @@ class BetterMod(BaseCog):
             "softban": 7,
             "ban": 0,
         },
-        "embeds_description_modlog": {  # the description of each type of warn in modlog
+        "embed_description_modlog": {  # the description of each type of warn in modlog
             "1": EMBED_MODLOG(1),
             "2": EMBED_MODLOG(2),
             "3": EMBED_MODLOG(3),
             "4": EMBED_MODLOG(4),
             "5": EMBED_MODLOG(5),
         },
-        "embeds_description_user": {  # the description of each type of warn for the user
+        "embed_description_user": {  # the description of each type of warn for the user
             "1": EMBED_USER(1),
             "2": EMBED_USER(2),
             "3": EMBED_USER(3),
