@@ -498,7 +498,10 @@ class API:
             except Exception:
                 invite = _("*[couldn't create an invite]*")
         today = datetime.today().strftime("%a %d %B %Y %H:%M")
-        duration = self._format_timedelta(time)
+        if time:
+            duration = self._format_timedelta(time)
+        else:
+            duration = _("*[No time given]*")
         format_description = lambda x: x.format(
             invite=invite, member=member, mod=author, duration=duration, time=today
         )
@@ -636,6 +639,27 @@ class API:
                 )
         await self.data.guild(guild).mute_role.set(role.id)
         return errors if errors else True
+
+    async def format_reason(self, guild: discord.Guild, reason: str) -> str:
+        """
+        Reformat a reason with the substitutions set on the guild.
+
+        Parameters
+        ----------
+        guild: discord.Guild
+            The guild where the warn is set.
+        reason: str
+            The string you want to reformat.
+
+        Returns
+        -------
+        str
+            The reformatted string
+        """
+        substitutions = await self.data.guild(guild).substitutions()
+        for key, substitute in substitutions.items():
+            reason = reason.replace(f"[{key}]", substitute)
+        return reason
 
     async def warn(
         self,

@@ -9,7 +9,7 @@ from datetime import timedelta
 
 from redbot.core import commands, Config, checks
 from redbot.core.i18n import Translator, cog_i18n
-from redbot.core.utils import predicates, menus, mod
+from redbot.core.utils import predicates, menus, mod, chat_formatting
 
 # from redbot.core.errors import BadArgument as RedBadArgument
 
@@ -116,6 +116,7 @@ class BetterMod(BaseCog):
             "4": EMBED_USER(4),
             "5": EMBED_USER(5),
         },
+        "substitutions": {},
         "thumbnails": {  # image at the top right corner of an embed
             "report": "https://i.imgur.com/Bl62rGd.png",
             "1": "https://i.imgur.com/Bl62rGd.png",
@@ -164,6 +165,18 @@ class BetterMod(BaseCog):
 
     async def call_warn(self, ctx, level, member, reason, time=None):
         """No need to repeat, let's do what's common to all 5 warnings."""
+        reason = await self.api.format_reason(ctx.guild, reason)
+        if len(reason) > 1024:  # embed limits
+            await ctx.send(
+                _(
+                    "The reason is too long for an embed.\n\n"
+                    "*Tip: You can use Github Gist to write a long text formatted in Markdown, "
+                    "create a new file with the extension `.md` at the end and write as if you "
+                    "were on Discord.\n<https://gist.github.com/>*"
+                    # I was paid $99999999 for this, you're welcome
+                )
+            )
+            return
         try:
             await self.api.warn(ctx.guild, member, ctx.author, level, reason, time)
         except errors.MissingPermissions as e:
@@ -333,6 +346,103 @@ class BetterMod(BaseCog):
         else:
             await self.data.guild(guild).reinvite.set(False)
             await ctx.send(_("Done. The bot will no longer reinvite unbanned members."))
+
+    @bmodset.group(name="substitutions")
+    async def bmodset_substitutions(self, ctx: commands.Context):
+        """
+        Manage the reasons' substitutions
+
+        A substitution is a text replaced by a key you place in your warn reason.
+
+        For example, if you set a substitution with the keyword `last warn` associated with the\
+        text `This is your last warning!`, this is what will happen with your next warnings:
+
+        `[p]warn 4 @annoying_member Stop spamming. [last warn]`
+        Reason = Stop spamming. This is your last warning!
+        """
+        pass
+
+    @bmodset_substitutions.command(name="add")
+    async def bmodset_substitutions_add(self, ctx: commands.Context, name: str, *, text: str):
+        """
+        Create a new subsitution.
+
+        `name` should be something short, it will be the keyword that will be replaced by your text
+        `text` is what will be replaced by `[name]`
+
+        Example:
+        - `[p]bmodset substitutions add ad Advertising for a Discord server`
+        - `[p]warn 1 @noob [ad] + doesn't respect warnings`
+        The reason will be "Advertising for a Discord server + doen't respect warnings".
+        """
+        async with self.data.guild(ctx.guild).substitutions() as substitutions:
+            if name in substitutions:
+                await ctx.send(
+                    _(
+                        "The name you're using is already used by another substitution!\n"
+                        "Delete or edit it with `[p]bmodset substitutions delete`"
+                    )
+                )
+                return
+            if len(text) > 600:
+                await ctx.send(_("That substitution is too long! Maximum is 600 characters!"))
+                return
+            substitutions[name] = text
+        await ctx.send(
+            _(
+                "Your new subsitutions with the keyword `{keyword}` was successfully "
+                "created! Type `[{substitution}]` in your warning reason to use the text you "
+                "just set.\nManage your substitutions with the `{prefix}bmodset "
+                "substitutions` subcommands."
+            ).format(keyword=name, substitution=name, prefix=ctx.prefix)
+        )
+
+    @bmodset_substitutions.command(name="delete", aliases=["del"])
+    async def bmodset_substitutions_delete(self, ctx: commands.Context, name: str):
+        """
+        Delete a previously set substitution.
+
+        The substitution must exist, see existing substitutions with the `[p]bmodset substitutions\
+        list` command.
+        """
+        async with self.data.guild(ctx.guild).substitutions() as substitutions:
+            if name not in substitutions:
+                await ctx.send(
+                    _(
+                        "That substitution doesn't exist!\nSee existing substitutions with the "
+                        "`{prefix}bmodset substitutions list` command."
+                    ).format(prefix=ctx.prefix)
+                )
+            del substitutions[name]
+        await ctx.send(_("The substitutions was successfully deleted."))
+
+    @bmodset_substitutions.command(name="list")
+    async def bmodset_substitutions_list(self, ctx: commands.Context):
+        """
+        List all existing substitutions on your server
+        """
+        guild = ctx.guild
+        substitutions = await self.data.guild(guild).substitutions()
+        if len(substitutions) < 1:
+            await ctx.send(
+                _(
+                    "You don't have any existing substitution on this server!\n"
+                    "Create one with `{prefix}bmodset substitutions add`"
+                ).format(prefix=ctx.prefix)
+            )
+            return
+        embeds = []
+        while True:
+            embed = discord.Embed()
+            embed.set_author(
+                name=_("Substitutions for {guild}").format(guild=guild), icon_url=guild.icon_url
+            )
+            for i, (a, b) in enumerate(substitutions.items()):
+                embed.add_field(name=a, value=b, inline=False)
+                if i >= 25:
+                    break
+            embeds.append(embed)
+        await menus.menu(ctx, embeds, controls=menus.DEFAULT_CONTROLS)
 
     @bmodset.command(name="showmod")
     async def bmodset_showmod(self, ctx, enable: bool = None):
