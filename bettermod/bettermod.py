@@ -275,6 +275,57 @@ class BetterMod(BaseCog):
                     ).format(level=str(level))
                 )
 
+    @bmodset.command(name="mute")
+    async def bmodset_mute(self, ctx: commands.Context, *, role: discord.Role = None):
+        """
+        Create the role used for muting members.
+
+        You can specify a role when invoking the command to specify which role should be used.
+        If you don't specify a role, one will be created for you.
+        """
+        guild = ctx.guild
+        my_position = guild.me.top_role.position
+        if not role:
+            if not guild.me.guild_permissions.manage_roles:
+                await ctx.send(
+                    _("I can't manage roles, please give me this permission to continue.")
+                )
+                return
+            role = await self.api.maybe_create_mute_role(guild)
+            if not role:
+                await ctx.send(
+                    _(
+                        "A mute role was already created! You can change it by specifying "
+                        "a role when typing the command.\n`[p]bmodset mute <role name>`"
+                    )
+                )
+                return
+            else:
+                if isinstance(role, list):
+                    errors = _(
+                        "\n\nSome errors occured when editing the channel permissions:\n"
+                    ) + "\n".join(role)
+                else:
+                    errors = ""
+                await ctx.send(
+                    _(
+                        "The role `Muted` was successfully created at position {pos}. Feel free "
+                        "to drag it in the hierarchy and edit its permissions, as long as my "
+                        "top role is above and the members to mute are below."
+                    ).format(pos=my_position - 1)
+                    + errors
+                )
+        elif role.position >= my_position:
+            await ctx.send(
+                _(
+                    "That role is higher than my top role in the hierarchy. "
+                    'Please move it below "{bot_role}".'
+                ).format(bot_role=guild.me.top_role.name)
+            )
+        else:
+            await self.data.guild(guild).mute_role.set(role.id)
+            await ctx.send(_("The new mute role was successfully set!"))
+
     @bmodset.command(name="hierarchy")
     async def bmodset_hierarchy(self, ctx: commands.Context, enable: bool = None):
         """
