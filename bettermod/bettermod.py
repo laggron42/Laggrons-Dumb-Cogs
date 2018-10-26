@@ -964,6 +964,49 @@ class BetterMod(BaseCog):
         ).format(self, status(current_status), ctx.prefix)
         await ctx.send(message)
 
+    # error handling
+    def _set_context(self, data):
+        self.sentry.client.extra_context(data)
+
+    async def on_command_error(self, ctx, error):
+        if not isinstance(error, commands.CommandInvokeError):
+            return
+        if not ctx.command.cog_name == self.__class__.__name__:
+            # That error doesn't belong to the cog
+            return
+        if isinstance(error, commands.MissingPermissions):
+            await ctx.send(
+                _(
+                    "I need the `Add reactions` and `Manage messages` in the "
+                    "current channel if you want to use this command."
+                )
+            )
+        messages = "\n".join(
+            [
+                f"{x.author} %bot%: {x.content}".replace("%bot%", "(Bot)" if x.author.bot else "")
+                for x in await ctx.history(limit=5, reverse=True).flatten()
+            ]
+        )
+        log.propagate = False  # let's remove console output for this since Red already handle this
+        context = {
+            "command": {
+                "invoked": f"{ctx.author} (ID: {ctx.author.id})",
+                "command": f"{ctx.command.name} (cog: {ctx.cog})",
+                "arguments": ctx.kwargs,
+            }
+        }
+        if ctx.guild:
+            context["guild"] = f"{ctx.guild.name} (ID: {ctx.guild.id})"
+        self._set_context(context)
+        log.error(
+            f"Exception in command '{ctx.command.qualified_name}'.\n\n"
+            f"Myself: {ctx.me}\n"
+            f"Last 5 messages:\n\n{messages}\n\n",
+            exc_info=error.original,
+        )
+        log.propagate = True  # re-enable console output for warnings
+        self._set_context({})  # remove context for future logs
+
     # correctly unload the cog
     def __unload(self):
         log.debug("Cog unloaded from the instance.")
