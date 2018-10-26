@@ -1,7 +1,7 @@
 import logging
 import asyncio
 
-from redbot.core.errors import CogLoadError
+# from redbot.core.errors import CogLoadError
 from redbot.core.data_manager import cog_data_path
 from pathlib import Path
 
@@ -10,6 +10,11 @@ from .loggers import Log
 
 log = logging.getLogger("laggron.bettermod")
 # this should be called after initializing the logger
+
+
+# until release 3.1
+class CogLoadError(Exception):
+    pass
 
 
 def create_cache(path: Path):
