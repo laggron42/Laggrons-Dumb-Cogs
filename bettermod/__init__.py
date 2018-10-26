@@ -72,7 +72,7 @@ async def ask_enable_sentry(bot, _):
 
 
 async def setup(bot):
-    has_core_mod_cogs = [(x in bot.cogs) for x in ["Mod", "Reports", "Warnings"]]
+    has_core_mod_cogs = [(x in bot.cogs) for x in ["Warnings"]]
     if any(has_core_mod_cogs):
         raise CogLoadError(
             "You need to unload Mod, Reports and Warnings cogs to load this cog. Don't worry, "
