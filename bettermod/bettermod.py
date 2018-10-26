@@ -696,6 +696,7 @@ class BetterMod(BaseCog):
 
     @commands.command()
     @commands.guild_only()
+    @commands.has_permissions(add_reactions=True, manage_messages=True)
     @commands.cooldown(1, 3, commands.BucketType.member)
     async def warnings(
         self, ctx: commands.Context, user: Union[discord.User, int] = None, index: int = 0
@@ -783,14 +784,124 @@ class BetterMod(BaseCog):
 
             embeds.append(embed)
 
+        controls = {
+            "⬅": menus.prev_page,
+            "❌": menus.close_menu,
+            "➡": menus.next_page,
+            "✏": self._edit_case,
+            "🗑": self._delete_case,
+        }
+
         await menus.menu(
-            ctx=ctx,
-            pages=embeds,
-            controls=menus.DEFAULT_CONTROLS,
-            message=None,
-            page=index,
-            timeout=60,
+            ctx=ctx, pages=embeds, controls=controls, message=None, page=index, timeout=60
         )
+
+    async def _edit_case(
+        self,
+        ctx: commands.Context,
+        pages: list,
+        controls: dict,
+        message: discord.Message,
+        page: int,
+        timeout: float,
+        emoji: str,
+    ):
+        """
+        Edit a case, this is linked to the warnings menu system.
+        """
+        guild = ctx.guild
+        if page == 0:
+            # first page, no case to edit
+            await message.remove_reaction(emoji, ctx.author)
+            return await menus.menu(
+                ctx, pages, controls, message=message, page=page, timeout=timeout
+            )
+        await message.clear_reactions()
+        embed = message.embeds[0]
+        member = await self.bot.get_user_info(
+            int(embed.author.name.rpartition("|")[2].replace(" ", ""))
+        )
+        embed.clear_fields()
+        embed.description = _(
+            "Case #{number} edition.\n\n**Please type the new reason to set**"
+        ).format(number=page)
+        embed.set_footer(text=_("You have two minuts to type your text in the chat."))
+        case = (await self.data.custom("MODLOGS", guild.id, member.id).x())[page - 1]
+        await message.edit(embed=embed)
+        try:
+            response = await self.bot.wait_for("message", timeout=120)
+        except AsyncTimeoutError:
+            await message.delete()
+            return
+        new_reason = await self.api.format_reason(guild, response.content)
+        embed.description = _("Case #{number} edition.").format(number=page)
+        embed.add_field(name=_("Old reason"), value=case["reason"], inline=False)
+        embed.add_field(name=_("New reason"), value=new_reason, inline=False)
+        embed.set_footer(text=_("Click on ✅ to confirm the changes."))
+        await message.edit(embed=embed)
+        await menus.start_adding_reactions(message, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
+        pred = predicates.ReactionPredicate.yes_or_no(message, ctx.author)
+        try:
+            await ctx.bot.wait_for("reaction_add", check=pred, timeout=30)
+        except AsyncTimeoutError:
+            await message.clear_reactions()
+            await message.edit(content=_("Question timed out."), embed=None)
+            return
+        if pred.result:
+            async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
+                logs[page - 1]["reason"] = new_reason
+            await message.clear_reactions()
+            await message.edit(content=_("The reason was successfully edited!"), embed=None)
+        else:
+            await message.clear_reactions()
+            await message.edit(content=_("The reason was not edited."), embed=None)
+
+    async def _delete_case(
+        self,
+        ctx: commands.Context,
+        pages: list,
+        controls: dict,
+        message: discord.Message,
+        page: int,
+        timeout: float,
+        emoji: str,
+    ):
+        """
+        Remove a case, this is linked to the warning system.
+        """
+        guild = ctx.guild
+        if page == 0:
+            await message.remove_reaction(emoji, ctx.author)
+            return await menus.menu(
+                ctx, pages, controls, message=message, page=page, timeout=timeout
+            )
+        await message.clear_reactions()
+        embed = message.embeds[0]
+        member = await self.bot.get_user_info(
+            int(embed.author.name.rpartition("|")[2].replace(" ", ""))
+        )
+        embed.clear_fields()
+        embed.set_footer(text="")
+        embed.description = _(
+            "Case #{number} deletion.\n\n**Click on the reaction to confirm your action.**"
+        ).format(number=page)
+        await message.edit(embed=embed)
+        await menus.start_adding_reactions(message, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
+        pred = predicates.ReactionPredicate.yes_or_no(message, ctx.author)
+        try:
+            await ctx.bot.wait_for("reaction_add", check=pred, timeout=30)
+        except AsyncTimeoutError:
+            await message.clear_reactions()
+            await message.edit(content=_("Question timed out."), embed=None)
+            return
+        if pred.result:
+            async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
+                logs.remove(logs[page - 1])
+            await message.clear_reactions()
+            await message.edit(content=_("The case was successfully deleted!"), embed=None)
+        else:
+            await message.clear_reactions()
+            await message.edit(content=_("The case was not deleted."), embed=None)
 
     @commands.command(hidden=True)
     @checks.is_owner()
