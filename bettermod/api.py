@@ -737,6 +737,11 @@ class API:
         # we get the modlog channel now to make sure it exists before doing anything
         mod_channel = await self.get_modlog_channel(guild, level)
 
+        # check that the mute role exists
+        mute_role = guild.get_role(await self.data.guild(guild).mute_role())
+        if not mute_role:
+            raise errors.MissingMuteRole("You need to create the mute role before doing this.")
+
         # we check for all permission problem that can occur before calling the API
         if not any(
             [  # checks if the bot has send_messages and embed_links permissions in modlog channel
