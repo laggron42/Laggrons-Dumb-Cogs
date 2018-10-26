@@ -829,7 +829,9 @@ class BetterMod(BaseCog):
         case = (await self.data.custom("MODLOGS", guild.id, member.id).x())[page - 1]
         await message.edit(embed=embed)
         try:
-            response = await self.bot.wait_for("message", timeout=120)
+            response = await self.bot.wait_for(
+                "message", check=predicates.MessagePredicate.same_context(ctx), timeout=120
+            )
         except AsyncTimeoutError:
             await message.delete()
             return
