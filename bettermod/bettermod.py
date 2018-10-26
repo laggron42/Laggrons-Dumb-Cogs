@@ -784,13 +784,9 @@ class BetterMod(BaseCog):
 
             embeds.append(embed)
 
-        controls = {
-            "⬅": menus.prev_page,
-            "❌": menus.close_menu,
-            "➡": menus.next_page,
-            "✏": self._edit_case,
-            "🗑": self._delete_case,
-        }
+        controls = {"⬅": menus.prev_page, "❌": menus.close_menu, "➡": menus.next_page}
+        if await mod.is_mod_or_superior(self.bot, ctx.author):
+            controls.update({"✏": self._edit_case, "🗑": self._delete_case})
 
         await menus.menu(
             ctx=ctx, pages=embeds, controls=controls, message=None, page=index, timeout=60
