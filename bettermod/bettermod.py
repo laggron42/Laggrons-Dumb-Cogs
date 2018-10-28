@@ -6,10 +6,12 @@ import re
 from typing import Union, TYPE_CHECKING
 from asyncio import TimeoutError as AsyncTimeoutError
 from datetime import timedelta
+from pathlib import Path
+from json import loads
 
 from redbot.core import commands, Config, checks
 from redbot.core.i18n import Translator, cog_i18n
-from redbot.core.utils import predicates, menus, mod, chat_formatting
+from redbot.core.utils import predicates, menus, mod
 
 # from redbot.core.errors import BadArgument as RedBadArgument
 
@@ -580,13 +582,144 @@ class BetterMod(BaseCog):
             _("The new description for {destination} (warn {level}) was successfully set!")
         ).format(destination=_("modlog") if destination == "modlog" else _("user"), level=level)
 
-    @bmodset.group(name="data")
-    async def bmodset_data(self, ctx: commands.Context):
+    @bmodset.command(name="convert")
+    async def bmodset_convert(self, ctx: commands.Context, *, path: Path):
         """
-        Manage your data.
+        Convert BetterMod V2 logs to V3.
+
+        You need to point the path to your history file.
+        Get your old Red V2 instance folder, go to `/data/bettermod/history/<server ID>.json` and\
+        copy its path.
+        You can get your server ID with the `[p]serverinfo` command.
+
+        Example:
+        `[p]bmodset convert\
+        /home/laggron/Desktop/Red-DiscordBot/data/bettermod/history/363008468602454017.json`
         """
-        await ctx.send("The work is in progress for this command...")
-        # this should be included later, to know if some things are at least possible
+
+        async def maybe_clear(message):
+            try:
+                await message.clear_reactions()
+            except Exception:
+                pass
+
+        async def convert(guild_id: int, data: dict) -> int:
+            """
+            Convert V2 logs to V3 format.
+            """
+            try:
+                del data["version"]
+            except KeyError:
+                pass
+            total_cases = 0
+            for member, logs in data.items():
+                cases = []
+                for case in [y for x, y in logs.items() if x.startswith("case")]:
+                    level = (
+                        1
+                        if case["level"] == "Simple"
+                        else 3
+                        if case["level"] == "Kick"
+                        else 4
+                        if case["level"] == "Softban"
+                        else 5
+                    )
+                    cases.append(
+                        {
+                            "level": level,
+                            "author": "Unknown",
+                            "reason": case["reason"],
+                            "time": case["timestamp"],  # only day of the week missing
+                            "success": True if case["applied"] == 1 else False,
+                            "duration": None,
+                        }
+                    )
+                    total_cases += 1
+                async with self.data.custom("MODLOGS", guild, int(member)).x() as logs:
+                    logs.extend(cases)
+            return total_cases
+
+        guild = ctx.guild
+        react = guild.me.guild_permissions.add_reactions
+        if not path.is_file():
+            await ctx.send(_("That path doesn't exist."))
+            return
+        if not path.name.endswith(".json"):
+            await ctx.send(_("That's not a valid file."))
+            return
+        if not path.name.startswith(str(guild.id)):
+            yes_no = "(y/n)" if not react else ""
+            message = await ctx.send(
+                _(
+                    "It looks like that file doesn't belong to the current server. Are you sure "
+                    "you want to use this file?"
+                )
+                + yes_no
+            )
+            if react:
+                menus.start_adding_reactions(
+                    message, predicates.ReactionPredicate.YES_OR_NO_EMOJIS
+                )
+                pred = predicates.ReactionPredicate.yes_or_no(message, ctx.author)
+                try:
+                    await ctx.bot.wait_for("reaction_add", check=pred, timeout=30)
+                except AsyncTimeoutError:
+                    await ctx.send(_("Request timed out."))
+                    await maybe_clear(message)
+                    return
+                await maybe_clear(message)
+            else:
+                pred = predicates.MessagePredicate.yes_or_no(ctx)
+                try:
+                    await self.bot.wait_for("message", check=pred, timeout=30)
+                except AsyncTimeoutError:
+                    await ctx.send(_("Request timed out."))
+                    return
+            if not pred.result:
+                await ctx.send(_("Alrght, try again with the good file."))
+                return
+        content = path.open().read()
+        try:
+            content = loads(content)
+        except Exception as e:
+            log.warn(
+                f"Couldn't decode JSON given by {ctx.author} (ID: {ctx.author.id}) at {str(path)}",
+                exc_info=e,
+            )
+            await ctx.send(
+                _(
+                    "Couln't read the file because of an exception. "
+                    "Check your console or logs for details."
+                )
+            )
+        await ctx.send(
+            _(
+                "Would you like to **append** the logs or **overwrite** them?\n\n"
+                "**Append** will get the logs and add them to the current logs.\n"
+                "**Overwrite** will erase the current logs and replace it with the given logs.\n\n"
+                "*Type* `append` *or* `overwrite` *in the chat.*"
+            )
+        )
+        pred = predicates.MessagePredicate.lower_contained_in(
+            [_("append"), _("overwrite")], ctx=ctx
+        )
+        try:
+            await self.bot.wait_for("message", check=pred, timeout=40)
+        except AsyncTimeoutError:
+            await ctx.send(_("Request timed out."))
+            return
+        guild_id = path.name.partition(".")[0]
+        if pred.result == 0:
+            await ctx.send(_("Starting conversion..."))
+            total = await convert(guild_id, content)
+        elif pred.result == 1:
+            await ctx.send(_("Deleting server logs... Settings, such as channels, are kept."))
+            await self.data.custom("MODLOGS").set({})
+            await ctx.send(_("Starting conversion..."))
+            total = await convert(guild_id, content)
+        await ctx.send(
+            _("Done! {number} cases were added to the BetterMod V3 log.").format(number=total)
+        )
 
     # all warning commands
     @commands.group()
