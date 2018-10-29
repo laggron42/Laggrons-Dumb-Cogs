@@ -135,7 +135,6 @@ class API:
         time: datetime,
         reason: Optional[str] = None,
         duration: Optional[timedelta] = None,
-        success: bool = True,
     ) -> dict:
         """Create a new case for a member. Don't call this, call warn instead."""
         data = {
@@ -145,7 +144,6 @@ class API:
             else author.id,
             "reason": reason,
             "time": time.strftime("%a %d %B %Y %H:%M"),
-            "success": success,
             "duration": None if not duration else self._format_timedelta(duration),
             "until": None
             if not duration
@@ -183,7 +181,6 @@ class API:
                     "author"    : Union[discord.Member, str],  # the member that warned the user
                     "reason"    : Optional[str],  # the reason of the warn, can be None
                     "time"      : datetime.datetime,  # the date when the warn was set
-                    "success"   : bool,  # if the action was successful
                 }
 
         Raises
@@ -231,7 +228,6 @@ class API:
                         "author"    : Union[discord.Member, str],  # the member that warned the user
                         "reason"    : Optional[str],  # the reason of the warn, can be None
                         "time"      : datetime.datetime,  # the date when the warn was set
-                        "success"   : bool,  # if the action was successful
                     },
                     {
                         # case #2
@@ -250,7 +246,6 @@ class API:
                     "author"    : Union[discord.Member, str],  # the member that warned the user
                     "reason"    : Optional[str],  # the reason of the warn, can be None
                     "time"      : datetime.datetime,  # the date when the warn was set
-                    "success"   : bool,  # if the action was successful
 
                     "member"    : discord.User,  # the member warned, this key is specific to guild
                 }

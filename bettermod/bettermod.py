@@ -630,7 +630,6 @@ class BetterMod(BaseCog):
                             "author": "Unknown",
                             "reason": case["reason"],
                             "time": case["timestamp"],  # only day of the week missing
-                            "success": True if case["applied"] == 1 else False,
                             "duration": None,
                         }
                     )
