@@ -744,7 +744,7 @@ class API:
                 for x in ["send_messages", "embed_links"]
             ]
         ):
-            raise errors.MissingPermissions(
+            raise errors.LostPermissions(
                 _(
                     "I need the `Send messages` and `Embed links` "
                     "permissions in {channel} to do this."
@@ -765,13 +765,20 @@ class API:
             member.top_role >= author.top_role and not (self.bot.is_owner(author) or author.owner)
         ):
             raise errors.NotAllowedByHierarchy(
-                "The moderator is lower than the member in the guild's role hierarchy."
+                "The moderator is lower than the member in the servers's role hierarchy."
             )
         if level == 2:
             # mute with role
             if not guild.me.guild_permissions.manage_roles:
                 raise errors.MissingPermissions(
                     _("I can't manage roles, please give me this permission to continue.")
+                )
+            if mute_role.position >= guild.me.top_role.position:
+                raise errors.LostPermissions(
+                    _(
+                        "The mute role `{mute_role}` was moved above my top role `{my_role}`. "
+                        "Please move the roles so my top role is above the mute role."
+                    )
                 )
         if level == 3:
             # kick

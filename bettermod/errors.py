@@ -118,3 +118,12 @@ class NotAllowedByHierarchy(Exception):
 
     def __init__(self, exception):
         log.debug(f"API error: NotAllowedByHierarchy\n{exception}\n")
+
+
+class LostPermissions(Exception):
+    """
+    The bot lost a permission he had.
+
+    This can be the permission to send messages in the modlog channel or use\
+    the mute role.
+    """
