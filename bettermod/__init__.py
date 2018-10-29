@@ -52,7 +52,7 @@ async def ask_enable_sentry(bot, _):
                 )
             )
             return None
-        if "yes" in message.content.lower():
+        if _("yes") in message.content.lower():
             await owner.send(
                 _(
                     "Thank you for helping me with the development process!\n"
