@@ -830,53 +830,6 @@ class BetterMod(BaseCog):
         if ctx.message:
             await ctx.message.add_reaction("✅")
 
-    # other moderation commands
-    @commands.command()
-    @checks.mod_or_permissions(manage_messages=True)
-    @commands.guild_only()
-    @commands.cooldown(1, 10, commands.BucketType.channel)
-    async def slowmode(
-        self, ctx: commands.Context, time: int, channel: discord.TextChannel = None
-    ):
-        """
-        Set the Discord slowmode in a text channel.
-
-        When sending a message, users will have to wait for the time you set before sending\
-        another message. This can reduce spam.
-
-        The slowmode is between 1 and 120 seconds and is included in the user client.
-        You can specify a channel. If not, the slowmode will be applied in the current channel.
-
-        Type `[p]slowmode 0` to disable. Note: `[p]slowoff` is an alias of `[p]slowmode 0`.
-        """
-        pass
-
-    @commands.command(hidden=True)
-    @checks.mod_or_permissions(manage_messages=True)
-    @commands.guild_only()
-    @commands.cooldown(1, 10, commands.BucketType.channel)
-    async def slowoff(self, ctx: commands.Context, channel: discord.TextChannel = None):
-        """
-        An alias to `[p]slowmode 0`
-        """
-        slowmode = self.bot.get_command("slowmode")
-        channel = ctx.channel if not channel else channel
-        await ctx.invoke(slowmode, time=0, channel=channel)
-
-    @commands.command()
-    @commands.guild_only()
-    @commands.cooldown(5, 60, commands.BucketType.member)  # no more spike in the API response time
-    async def report(self, ctx: commands.Context, user: discord.Member = None, reason: str = None):
-        """
-        Report a member to the moderation team.
-
-        You can attach files to your report. For that, drag files to Discord and type the command\
-        as the file comment.
-
-        Depending on the server settings, attaching a file to your report can be required.
-        """
-        pass
-
     @commands.command()
     @commands.guild_only()
     @commands.has_permissions(add_reactions=True, manage_messages=True)
