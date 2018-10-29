@@ -47,20 +47,6 @@ class API:
         global get_red_modlog_channel
         from redbot.core.modlog import get_modlog_channel as get_red_modlog_channel
 
-    def _log_call(self, stack):
-        """Create a debug log for each BMod API call."""
-        try:
-            caller = (
-                stack[0][3],
-                stack[1][0].f_locals["self"].__class__,
-                stack[1][0].f_code.co_name,
-            )
-            if caller[1] != self:
-                log.debug(f"API.{caller[0]} called by {caller[1].__name__}.{caller[2]}")
-        except Exception:
-            # this should not block the action
-            pass
-
     def _get_datetime(self, time: str) -> datetime:
         return datetime.strptime(time, "%a %d %B %Y %H:%M")
 
@@ -373,8 +359,6 @@ class API:
         ~bettermod.errors.NotFound
             There is no modlog channel set with BetterMod or Red, ask the user to set one.
         """
-        self._log_call(inspect.stack())
-
         # raise errors if the arguments are wrong
         if level:
             msg = (
@@ -714,8 +698,6 @@ class API:
             You need to provide a valid :class:`discord.Member` object, except for a
             hackban where a :class:`discord.User` works.
         """
-        self._log_call(inspect.stack())
-
         if not isinstance(level, int) or not 1 <= level <= 5:
             raise errors.InvalidLevel("The level must be between 1 and 5.")
         if isinstance(member, int):
