@@ -71,23 +71,56 @@ async def ask_enable_sentry(bot, _):
             return False
 
 
-async def setup(bot):
-    has_core_mod_cogs = [(x in bot.cogs) for x in ["Warnings"]]
-    if any(has_core_mod_cogs):
-        raise CogLoadError(
-            "You need to unload Mod, Reports and Warnings cogs to load this cog. Don't worry, "
-            "the commands are replaced and most are the same.\nType `[p]unload mod reports "
-            "warnings` and try again."
-        )
+async def wait_for_mod(bot, cog):
+    """Wait a bit to make sure we remove the commands when mod is loaded."""
+    await asyncio.sleep(10)
+    mod = bot.get_cog("Mod")
+    if mod:
+        [bot.remove_command(x) for x in ["mute", "kick", "softban", "ban"]]
+        log.info("Removed mute, kick, softban and ban commands from the Mod cog")
 
+
+def setup_commands(cog, rename: bool):
+    """
+    Delete the class' attributes, following what the used decided with the command naming.
+    """
+    if rename:
+        del cog.warn_1
+        del cog.warn_2
+        del cog.warn_3
+        del cog.warn_4
+        del cog.warn_5
+        cog.warn.__doc__ = "Set a simple warning on a user."
+    else:
+        del cog.mute
+        del cog.kick
+        del cog.softban
+        del cog.ban
+
+
+async def setup(bot):
+    global _
     n = BetterMod(bot)
+    _ = n.translator
+    if "Warnings" in bot.cogs:
+        raise CogLoadError(
+            _(
+                "You need to unload the Warnings cog to load "
+                "this cog. Type `[p]unload warnings` and try again."
+            )
+        )
     sentry = Log(bot, n.__version__)
     n._set_log(sentry)
     create_cache(cog_data_path(n))
+    should_rename = await n.data.renamecmd()
     if await n.data.enable_sentry() is None:
-        response = await ask_enable_sentry(bot, n.translator)
+        response = await ask_enable_sentry(bot)
         await n.data.enable_sentry.set(response)
     if await n.data.enable_sentry():
         n.sentry.enable()
+    if should_rename:
+        # side task
+        bot.loop.create_task(wait_for_mod(bot, n))
+    setup_commands(n, should_rename)
     bot.add_cog(n)
     log.debug("Cog successfully loaded on the instance.")
