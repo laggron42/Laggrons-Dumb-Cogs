@@ -160,6 +160,26 @@ class BetterMod(BaseCog):
 
     __version__ = "indev"
     __author__ = "retke (El Laggron)"
+    __info__ = {
+        "bot_version": "3.0.0rc1",
+        "description": (
+            "An alternative to the core moderation cog, similar to Dyno.\n"
+            "The cog allows you to take actions against member and keep track with "
+            "a new modlog system.\n\n"
+            "This is the rewrite of the V2 BetterMod cog."
+        ),
+        "hidden": False,
+        "install_msg": (
+            "Thank you for installing the bettermod cog. Please check the wiki "
+            "for all informations about the cog.\n"
+            "https://laggrons-dumb-cogs.readthedocs.io/bettermod.html\n\n"
+            "Type `[p]help BetterMod` for a quick overview of the commands."
+        ),
+        "required_cogs": [],
+        "requirements": [],
+        "short": "Moderation tools, providing an alternative to core Red.",
+        "tags": ["warn", "warning", "bettermod", "punish", "modlog"],
+    }
 
     # helpers
     def _set_log(self, sentry: "Log"):
