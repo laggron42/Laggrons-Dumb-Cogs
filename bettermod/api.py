@@ -1,7 +1,6 @@
 import asyncio
 import discord
 import logging
-import inspect
 
 from copy import deepcopy
 from typing import Union, Optional
