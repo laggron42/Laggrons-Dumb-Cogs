@@ -80,22 +80,29 @@ async def wait_for_mod(bot, cog):
         log.info("Removed mute, kick, softban and ban commands from the Mod cog")
 
 
-def setup_commands(cog, rename: bool):
+async def check_for_commands(bot, cog):
+    """
+    If command renaming is enabled, remove any command which has that name
+    """
+    if not await cog.data.renamecmd():
+        return cog
+    commands = ["mute", "kick", "softban", "ban"]
+    for command in commands:
+        bot.remove_command(command)
+    return cog
+
+
+def setup_commands(bot, cog, rename: bool):
     """
     Delete the class' attributes, following what the used decided with the command naming.
     """
+    commands = ["mute", "kick", "softban", "ban"]
     if rename:
-        del cog.warn_1
-        del cog.warn_2
-        del cog.warn_3
-        del cog.warn_4
-        del cog.warn_5
-        cog.warn.__doc__ = "Set a simple warning on a user."
+        for i in range(1, 6):
+            cog.warn.remove_command(str(i))
     else:
-        del cog.mute
-        del cog.kick
-        del cog.softban
-        del cog.ban
+        for x in commands:
+            bot.remove_command(x)
 
 
 async def setup(bot):
@@ -121,6 +128,7 @@ async def setup(bot):
     if should_rename:
         # side task
         bot.loop.create_task(wait_for_mod(bot, n))
-    setup_commands(n, should_rename)
+    n = await check_for_commands(bot, n)
     bot.add_cog(n)
+    setup_commands(bot, n, should_rename)
     log.debug("Cog successfully loaded on the instance.")

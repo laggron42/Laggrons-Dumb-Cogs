@@ -404,8 +404,8 @@ class BetterMod(BaseCog):
             await ctx.send(_("Done. The bot will no longer reinvite unbanned members."))
 
     @checks.is_owner()
-    @bmodset.command(name="replacecmd")
-    async def bmodset_replacecmd(self, ctx: commands.Context, enable: bool = None):
+    @bmodset.command(name="renamecmd")
+    async def bmodset_renamecmd(self, ctx: commands.Context, enable: bool = None):
         """
         Rename the warn commands to warn, mute, kick, softban and ban.
 
@@ -418,7 +418,7 @@ class BetterMod(BaseCog):
                 _(
                     "The bot {enabled} renamed commands. If you want to "
                     "change this, type `[p]bmodset renamecmd {opposite}`."
-                ).format(respect=_("has") if current else _("doesn't have"), opposite=not current)
+                ).format(enabled=_("has") if current else _("doesn't have"), opposite=not current)
             )
         elif enable:
             await self.data.renamecmd.set(True)
@@ -426,12 +426,17 @@ class BetterMod(BaseCog):
                 _(
                     "Done. The warn commands (`warn [1|2|3|4|5]`) are now respectively named "
                     "`warn`, `mute`, `kick`, `softban` and `ban`. These commands will be removed "
-                    "from the Mod cog."
+                    "from the Mod cog. Reload the cog to apply the changes."
                 )
             )
         else:
             await self.data.renamecmd.set(False)
-            await ctx.send(_("Done. The commands are now called `warn [1|2|3|4|5]`."))
+            await ctx.send(
+                _(
+                    "Done. The commands are now called `warn [1|2|3|4|5]`. "
+                    "Reload the cog to apply the changes."
+                )
+            )
 
     @bmodset.group(name="substitutions")
     async def bmodset_substitutions(self, ctx: commands.Context):
@@ -755,7 +760,7 @@ class BetterMod(BaseCog):
 
     # all warning commands
     # if command renaming is not enabled, we use warn 1, warn 2, ...
-    @commands.group(invoke_without_context=True)
+    @commands.group(invoke_without_command=True, autohelp=False)
     @checks.mod_or_permissions(administrator=True)
     @commands.guild_only()
     async def warn(self, ctx: commands.Context, member: discord.Member, *, reason: str):
@@ -767,6 +772,8 @@ class BetterMod(BaseCog):
             await self.call_warn(ctx, 1, member, reason)
             if ctx.message:
                 await ctx.message.add_reaction("✅")
+        elif not ctx.invoked_subcommand:
+            await ctx.send_help()
 
     @warn.command(name="1", aliases=["simple"])
     async def warn_1(self, ctx: commands.Context, member: discord.Member, *, reason: str):
@@ -963,53 +970,6 @@ class BetterMod(BaseCog):
         await self.call_warn(ctx, 5, member, reason, time)
         if ctx.message:
             await ctx.message.add_reaction("✅")
-
-    # other moderation commands
-    @commands.command()
-    @checks.mod_or_permissions(manage_messages=True)
-    @commands.guild_only()
-    @commands.cooldown(1, 10, commands.BucketType.channel)
-    async def slowmode(
-        self, ctx: commands.Context, time: int, channel: discord.TextChannel = None
-    ):
-        """
-        Set the Discord slowmode in a text channel.
-
-        When sending a message, users will have to wait for the time you set before sending\
-        another message. This can reduce spam.
-
-        The slowmode is between 1 and 120 seconds and is included in the user client.
-        You can specify a channel. If not, the slowmode will be applied in the current channel.
-
-        Type `[p]slowmode 0` to disable. Note: `[p]slowoff` is an alias of `[p]slowmode 0`.
-        """
-        pass
-
-    @commands.command(hidden=True)
-    @checks.mod_or_permissions(manage_messages=True)
-    @commands.guild_only()
-    @commands.cooldown(1, 10, commands.BucketType.channel)
-    async def slowoff(self, ctx: commands.Context, channel: discord.TextChannel = None):
-        """
-        An alias to `[p]slowmode 0`
-        """
-        slowmode = self.bot.get_command("slowmode")
-        channel = ctx.channel if not channel else channel
-        await ctx.invoke(slowmode, time=0, channel=channel)
-
-    @commands.command()
-    @commands.guild_only()
-    @commands.cooldown(5, 60, commands.BucketType.member)  # no more spike in the API response time
-    async def report(self, ctx: commands.Context, user: discord.Member = None, reason: str = None):
-        """
-        Report a member to the moderation team.
-
-        You can attach files to your report. For that, drag files to Discord and type the command\
-        as the file comment.
-
-        Depending on the server settings, attaching a file to your report can be required.
-        """
-        pass
 
     @commands.command()
     @commands.guild_only()
