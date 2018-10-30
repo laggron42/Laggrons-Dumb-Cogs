@@ -993,7 +993,7 @@ class BetterMod(BaseCog):
 
     @commands.command()
     @commands.guild_only()
-    @commands.has_permissions(add_reactions=True, manage_messages=True)
+    @commands.bot_has_permissions(add_reactions=True, manage_messages=True)
     @commands.cooldown(1, 3, commands.BucketType.member)
     async def warnings(
         self, ctx: commands.Context, user: Union[discord.User, int] = None, index: int = 0
@@ -1022,6 +1022,7 @@ class BetterMod(BaseCog):
             return
         if 0 < index < len(cases):
             await ctx.send(_("That case doesn't exist."))
+            return
 
         total = lambda level: len([x for x in cases if x["level"] == level])
         warning_str = (
