@@ -28,7 +28,7 @@ def create_cache(path: Path):
         log.info(f"Created cache directory at {str(cache)}")
 
 
-async def ask_enable_sentry(bot, _):
+async def ask_enable_sentry(bot):
     owner = bot.get_user(bot.owner_id)
 
     def check(message):
