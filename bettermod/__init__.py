@@ -71,13 +71,10 @@ async def ask_enable_sentry(bot):
             return False
 
 
-async def wait_for_mod(bot, cog):
-    """Wait a bit to make sure we remove the commands when mod is loaded."""
-    await asyncio.sleep(10)
-    mod = bot.get_cog("Mod")
-    if mod:
-        [bot.remove_command(x) for x in ["mute", "kick", "softban", "ban"]]
-        log.info("Removed mute, kick, softban and ban commands from the Mod cog")
+def wait_for_mod(bot, cog):
+    """Remove the commands that may block the cog."""
+    [bot.remove_command(x) for x in ["mute", "kick", "softban", "ban"]]
+    log.info("Removed mute, kick, softban and ban commands from the Mod cog")
 
 
 async def check_for_commands(bot, cog):
@@ -127,7 +124,7 @@ async def setup(bot):
         n.sentry.enable()
     if should_rename:
         # side task
-        bot.loop.create_task(wait_for_mod(bot, n))
+        wait_for_mod(bot, n)
     n = await check_for_commands(bot, n)
     bot.add_cog(n)
     setup_commands(bot, n, should_rename)
