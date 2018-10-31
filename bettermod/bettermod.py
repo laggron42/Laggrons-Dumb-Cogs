@@ -446,7 +446,9 @@ class BetterMod(BaseCog):
                 _(
                     "Done. The warn commands (`warn [1|2|3|4|5]`) are now respectively named "
                     "`warn`, `mute`, `kick`, `softban` and `ban`. These commands will be removed "
-                    "from the Mod cog. Reload the cog to apply the changes."
+                    "from other cogs. Reload the cog to apply the changes.\n\n"
+                    "**Important:** If these commands comes from another cog, such as Mod, "
+                    "reload the cog to reorder the commands."
                 )
             )
         else:
