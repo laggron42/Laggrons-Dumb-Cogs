@@ -3,6 +3,3 @@ sphinxcontrib-asyncio
 sphinx_autodoc_napoleon_typehints
 Red-DiscordBot[voice]
 git+https://github.com/Rapptz/discord.py@rewrite
-yarl==0.18.0
-async-timeout==2.0.1
-aiohttp==2.2.5
