@@ -420,6 +420,61 @@ class BetterMod(BaseCog):
             await self.data.guild(guild).reinvite.set(False)
             await ctx.send(_("Done. The bot will no longer reinvite unbanned members."))
 
+    @bmodset.command("bandays")
+    async def bmodset_bandays(self, ctx: commands.Context, ban_type: str, days: int):
+        """
+        Set the number of messages to delete when a member is banned.
+
+        You can set a value for a softban or a ban.
+        When invoking the command, you must specify `ban` or `softban` as the first\
+        argument to specify which type of ban you want to edit, then a number between\
+        1 and 7, for the number of days of messages to delete.
+        These values will be always used for level 4/5 warnings.
+
+        __Examples__
+
+        - `[p]bmodset bandays softban 2`
+          The number of days of messages to delete will be set to 2 for softbans.
+
+        - `[p]bmodset bandays ban 7`
+          The number of days of messages to delete will be set to 7 for bans.
+
+        - `[p]bmodset bandays ban 0`
+          The bans will not delete any messages.
+        """
+        guild = ctx.guild
+        if all([ban_type != x for x in ["softban", "ban"]]):
+            await ctx.send(
+                _(
+                    "The first argument must be `ban` or `softban`.\n"
+                    "Type `{prefix}help bmodset bandays` for more details."
+                )
+            )
+            return
+        if not 0 <= days <= 7:
+            is_ban = _("You can set 0 to disable messages deletion.") if ban_type == "ban" else ""
+            await ctx.send(
+                _(
+                    "The number of days of messages to delete must be between "
+                    "1 and 7, due to Discord restrictions.\n"
+                )
+                + is_ban
+            )
+            return
+        if days == 0 and ban_type == "softban":
+            await ctx.send(
+                _(
+                    "The goal of a softban is to delete the members' messages. Disabling "
+                    "this would make the softban a simple kick. Enter a value between 1 and 7."
+                )
+            )
+            return
+        if ban_type == "softban":
+            await self.data.guild(guild).bandays.softban.set(days)
+        else:
+            await self.data.guild(guild).bandays.ban.set(days)
+        await ctx.send(_("The new value was successfully set!"))
+
     @checks.is_owner()
     @bmodset.command(name="renamecmd")
     async def bmodset_renamecmd(self, ctx: commands.Context, enable: bool = None):
