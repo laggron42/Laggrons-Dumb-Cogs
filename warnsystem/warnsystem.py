@@ -1,4 +1,4 @@
-# BetterMod by retke, aka El Laggron
+# WarnSystem by retke, aka El Laggron
 import discord
 import logging
 import re
@@ -16,7 +16,7 @@ from redbot.core.utils import predicates, menus, mod
 # from redbot.core.errors import BadArgument as RedBadArgument
 
 # creating this before importing other modules allows to import the translator
-_ = Translator("BetterMod", __file__)
+_ = Translator("WarnSystem", __file__)
 
 from .api import API
 from . import errors
@@ -75,13 +75,13 @@ EMBED_USER = lambda x: _("The moderation team set you a level {} warning.").form
 
 
 @cog_i18n(_)
-class BetterMod(BaseCog):
+class WarnSystem(BaseCog):
     """
     An alternative to the Red core moderation system, providing a different system of moderation\
     similar to Dyno.
 
     Report a bug or ask a question: https://discord.gg/AVzjfpR
-    Full documentation and FAQ: http://laggron.red/bettermod.html
+    Full documentation and FAQ: http://laggron.red/warnsystem.html
     """
 
     default_global = {
@@ -162,15 +162,15 @@ class BetterMod(BaseCog):
         "description": (
             "An alternative to the core moderation cog, similar to Dyno.\n"
             "The cog allows you to take actions against member and keep track with "
-            "a new modlog system.\n\n"
+            "a new modlog system. It also sends a DM to the warned members.\n\n"
             "This is the rewrite of the V2 BetterMod cog."
         ),
         "hidden": False,
         "install_msg": (
-            "Thank you for installing the bettermod cog. Please check the wiki "
+            "Thank you for installing the warnsystem cog. Please check the wiki "
             "for all informations about the cog.\n"
-            "https://laggrons-dumb-cogs.readthedocs.io/bettermod.html\n\n"
-            "Type `[p]help BetterMod` for a quick overview of the commands."
+            "https://laggrons-dumb-cogs.readthedocs.io/warnsystem.html\n\n"
+            "Type `[p]help WarnSystem` for a quick overview of the commands."
         ),
         "required_cogs": [],
         "requirements": [],
@@ -182,7 +182,7 @@ class BetterMod(BaseCog):
     def _set_log(self, sentry: "Log"):
         self.sentry = sentry
         global log
-        log = logging.getLogger("laggron.bettermod")
+        log = logging.getLogger("laggron.warnsystem")
         # this is called now so the logger is already initialized
 
     async def call_warn(self, ctx, level, member, reason, time=None):
@@ -216,7 +216,7 @@ class BetterMod(BaseCog):
             await ctx.send(
                 _(
                     "Please set up a modlog channel before warning a member.\n\n"
-                    "**With BetterMod**\n"
+                    "**With WarnSystem**\n"
                     "*Use the `[p]bmodset channel` command.*\n\n"
                     "**With Red Modlog**\n"
                     "*Load the `modlogs` cog and use the `[p]modlogset modlog` command.*"
@@ -243,10 +243,10 @@ class BetterMod(BaseCog):
     @checks.admin_or_permissions(administrator=True)
     async def bmodset(self, ctx: commands.Context):
         """
-        Set all BetterMod settings.
+        Set all WarnSystem settings.
 
-        For more informations about how to configure and use BetterMod, read the wiki:\
-        https://laggron.red/bettermod.html
+        For more informations about how to configure and use WarnSystem, read the wiki:\
+        https://laggron.red/warnsystem.html
         """
         pass
 
@@ -256,7 +256,7 @@ class BetterMod(BaseCog):
         self, ctx: commands.Context, channel: discord.TextChannel, level: int = None
     ):
         """
-        Set the channel for the BetterMod modlog.
+        Set the channel for the WarnSystem modlog.
 
         This will use the Red's modlog by default if it was set.
 
@@ -829,7 +829,7 @@ class BetterMod(BaseCog):
             await ctx.send(_("Starting conversion..."))
             total = await convert(guild_id, content)
         await ctx.send(
-            _("Done! {number} cases were added to the BetterMod V3 log.").format(number=total)
+            _("Done! {number} cases were added to the WarnSystem V3 log.").format(number=total)
         )
 
     # all warning commands
@@ -1255,7 +1255,7 @@ class BetterMod(BaseCog):
 
     @commands.command(hidden=True)
     @checks.is_owner()
-    async def bettermodinfo(self, ctx, sentry: str = None):
+    async def warnsysteminfo(self, ctx, sentry: str = None):
         """
         Get informations about the cog.
 
@@ -1303,10 +1303,10 @@ class BetterMod(BaseCog):
                 return
 
         message = _(
-            "Laggron's Dumb Cogs V3 - bettermod\n\n"
+            "Laggron's Dumb Cogs V3 - warnsystem\n\n"
             "Version: {0.__version__}\n"
             "Author: {0.__author__}\n"
-            "Sentry error reporting: {1}d (type `{2}bettermodinfo sentry` to change this)\n\n"
+            "Sentry error reporting: {1}d (type `{2}warnsysteminfo sentry` to change this)\n\n"
             "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
             "Discord server: https://discord.gg/AVzjfpR\n"
             "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"

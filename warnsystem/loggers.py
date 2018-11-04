@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from distutils.version import StrictVersion
 
 
-log = logging.getLogger("laggron.bettermod")
+log = logging.getLogger("laggron.warnsystem")
 if logging.getLogger("red").isEnabledFor(logging.DEBUG):
     log.setLevel(logging.DEBUG)
 else:
@@ -24,7 +24,7 @@ log.propagate = True
 
 class Log:
     """
-    Logging and error reporting management for BetterMod
+    Logging and error reporting management for WarnSystem
 
     Credit to Cog-Creators for the code base.
     """
@@ -40,7 +40,7 @@ class Log:
             transport=AioHttpTransport,
         )
         self.format = logging.Formatter(
-            "%(asctime)s %(levelname)s BetterMod: %(message)s", datefmt="[%d/%m/%Y %H:%M]"
+            "%(asctime)s %(levelname)s WarnSystem: %(message)s", datefmt="[%d/%m/%Y %H:%M]"
         )
         self.sentry_handler = self.init_logger()
 
@@ -61,9 +61,9 @@ class Log:
 
         # logging to a log file
         # file is automatically created by the module, if the parent foler exists
-        cog_path = cog_data_path(raw_name="BetterMod")
+        cog_path = cog_data_path(raw_name="WarnSystem")
         if cog_path.exists():
-            log_path = cog_path / "bettermod.log"
+            log_path = cog_path / "warnsystem.log"
             file_logger = logging.FileHandler(log_path)
             file_logger.setLevel(logging.DEBUG)
             file_logger.setFormatter(self.format)

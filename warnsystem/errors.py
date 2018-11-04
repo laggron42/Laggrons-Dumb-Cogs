@@ -5,7 +5,7 @@ If you need to prevent and exception, do it like this:
 
 .. code-block:: python
 
-    bettermod = bot.get_cog('BetterMod')
+    warnsystem = bot.get_cog('WarnSystem')
     api = cog.api
     errors = cog.errors
 
@@ -28,7 +28,7 @@ If you need to prevent and exception, do it like this:
 
 import logging
 
-log = logging.getLogger("laggron.bettermod")
+log = logging.getLogger("laggron.warnsystem")
 if logging.getLogger("red").isEnabledFor(logging.DEBUG):
     # debug mode enabled
     log.setLevel(logging.DEBUG)
@@ -40,7 +40,7 @@ __all__ = ["InvalidLevel", "NotFound"]
 
 class InvalidLevel(Exception):
     """
-    The level argument for :func:`~bettermod.api.warn` is wrong.
+    The level argument for :func:`~warnsystem.api.warn` is wrong.
     It must be between 1 and 5.
     """
 
@@ -50,8 +50,8 @@ class InvalidLevel(Exception):
 
 class NotFound(Exception):
     """
-    Something was not found in the BetterMod data. The meaning of this exception
-    depends of what you called, it may be a missing BetterMod channel.
+    Something was not found in the WarnSystem data. The meaning of this exception
+    depends of what you called, it may be a missing WarnSystem channel.
     """
 
     def __init__(self, exception):
@@ -61,7 +61,7 @@ class NotFound(Exception):
 class MissingMuteRole(Exception):
     """
     You requested a mute warn but the mute role doesn't exist. Call
-    :func:`~bettermod.api.API.maybe_create_role` to fix this.
+    :func:`~warnsystem.api.API.maybe_create_role` to fix this.
     """
 
     def __init__(self, exception):

@@ -5,10 +5,10 @@ import asyncio
 from redbot.core.data_manager import cog_data_path
 from pathlib import Path
 
-from .bettermod import BetterMod
+from .warnsystem import WarnSystem
 from .loggers import Log
 
-log = logging.getLogger("laggron.bettermod")
+log = logging.getLogger("laggron.warnsystem")
 # this should be called after initializing the logger
 
 
@@ -37,7 +37,7 @@ async def ask_enable_sentry(bot):
     if not owner.bot:  # make sure the owner is set
         await owner.send(
             _(
-                "Hello, thanks for installing `bettermod`. Would you like to enable error "
+                "Hello, thanks for installing `warnsystem`. Would you like to enable error "
                 "logging to help the developer to fix new errors? If you wish to "
                 'opt in the process, please type "yes"'
             )
@@ -48,7 +48,7 @@ async def ask_enable_sentry(bot):
             await owner.send(
                 _(
                     "Request timed out. Error logging disabled by default. You can "
-                    "change that by using the `[p]bettermodinfo` command."
+                    "change that by using the `[p]warnsysteminfo` command."
                 )
             )
             return None
@@ -56,7 +56,7 @@ async def ask_enable_sentry(bot):
             await owner.send(
                 _(
                     "Thank you for helping me with the development process!\n"
-                    "You can disable this at anytime by using `[p]bettermodinfo` command."
+                    "You can disable this at anytime by using `[p]warnsysteminfo` command."
                 )
             )
             log.info("Sentry error reporting was enabled for this instance.")
@@ -65,7 +65,7 @@ async def ask_enable_sentry(bot):
             await owner.send(
                 _(
                     "The error logging was not enabled. You can change that by "
-                    "using the `[p]bettermodinfo` command."
+                    "using the `[p]warnsysteminfo` command."
                 )
             )
             return False
@@ -104,7 +104,7 @@ def setup_commands(bot, cog, rename: bool):
 
 async def setup(bot):
     global _
-    n = BetterMod(bot)
+    n = WarnSystem(bot)
     _ = n.translator
     if "Warnings" in bot.cogs:
         raise CogLoadError(

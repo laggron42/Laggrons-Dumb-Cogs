@@ -6,10 +6,10 @@ from copy import deepcopy
 from typing import Union, Optional
 from datetime import datetime, timedelta
 
-from .bettermod import _  # translator
+from .warnsystem import _  # translator
 from . import errors
 
-log = logging.getLogger("laggron.bettermod")
+log = logging.getLogger("laggron.warnsystem")
 if logging.getLogger("red").isEnabledFor(logging.DEBUG):
     # debug mode enabled
     log.setLevel(logging.DEBUG)
@@ -19,15 +19,15 @@ else:
 
 class API:
     """
-    Interact with BetterMod from your cog.
+    Interact with WarnSystem from your cog.
 
     To import the cog and use the functions, type this in your code:
 
     .. code-block:: python
 
-        bettermod = bot.get_cog('BetterMod').api
+        warnsystem = bot.get_cog('WarnSystem').api
 
-    .. warning:: If ``bettermod`` is :py:obj:`None`, the cog is
+    .. warning:: If ``warnsystem`` is :py:obj:`None`, the cog is
       not loaded/installed. You won't be able to interact with
       the API at this point.
 
@@ -35,7 +35,7 @@ class API:
 
         .. code-block:: python
 
-            version = bot.get_cog('BetterMod').__version__
+            version = bot.get_cog('WarnSystem').__version__
     """
 
     def __init__(self, bot, config):
@@ -170,7 +170,7 @@ class API:
 
         Raises
         ------
-        ~bettermod.errors.NotFound
+        ~warnsystem.errors.NotFound
             The case requested doesn't exist.
         """
         try:
@@ -280,10 +280,10 @@ class API:
 
         Raises
         ------
-        ~bettermod.errors.BadArgument
+        ~warnsystem.errors.BadArgument
             The reason is above 1024 characters. Due to Discord embed rules, you have to make it
             shorter.
-        ~bettermod.errors.NotFound
+        ~warnsystem.errors.NotFound
             The case requested doesn't exist.
         """
         if len(new_reason) > 1024:
@@ -299,12 +299,12 @@ class API:
         self, guild: discord.Guild, level: Optional[Union[int, str]] = None
     ) -> discord.TextChannel:
         """
-        Get the BetterMod's modlog channel on the current guild.
+        Get the WarnSystem's modlog channel on the current guild.
 
         When you call this, the channel is get with the following order:
 
         #.  Get the modlog channel associated to the type, if provided
-        #.  Get the defult modlog channel set with BetterMod
+        #.  Get the defult modlog channel set with WarnSystem
         #.  Get the Red's modlog channel associated to the server
 
         Parameters
@@ -350,15 +350,12 @@ class API:
 
         Raises
         ------
-        ~bettermod.errors.NotFound
-            There is no modlog channel set with BetterMod or Red, ask the user to set one.
+        ~warnsystem.errors.NotFound
+            There is no modlog channel set with WarnSystem or Red, ask the user to set one.
         """
         # raise errors if the arguments are wrong
         if level:
-            msg = (
-                "The level must be an int between 1 and 5 ; or a string that "
-                'should be "all"'
-            )
+            msg = "The level must be an int between 1 and 5 ; or a string that " 'should be "all"'
             if not isinstance(level, int) and x != "all":
                 raise errors.InvalidLevel(msg)
             elif isinstance(level, int) and not 1 <= level <= 5:
@@ -371,11 +368,11 @@ class API:
             return default_channel
 
         if not default_channel and not channel:
-            # bettermod default channel doesn't exist, let's try to get Red's one
+            # warnsystem default channel doesn't exist, let's try to get Red's one
             try:
                 return await get_red_modlog_channel(guild)
             except RuntimeError:
-                raise errors.NotFound("No modlog found from BetterMod or Red")
+                raise errors.NotFound("No modlog found from WarnSystem or Red")
 
         return self.bot.get_channel(channel if channel else default_channel)
 
@@ -416,7 +413,7 @@ class API:
             A :py:class:`tuple` with the modlog embed at index 0, and the user embed at index 1.
 
         .. warning:: Unlike for the warning, the arguments are not checked and won't raise errors
-            if they are wrong. It is recommanded to call :func:`~bettermod.api.API.warn` and let
+            if they are wrong. It is recommanded to call :func:`~warnsystem.api.API.warn` and let
             it generate the embeds instead.
         """
         action = (
@@ -518,7 +515,7 @@ class API:
 
     async def maybe_create_mute_role(self, guild: discord.Guild) -> bool:
         """
-        Create the mod role for BetterMod if it doesn't exist.
+        Create the mod role for WarnSystem if it doesn't exist.
 
         Parameters
         ----------
@@ -535,7 +532,7 @@ class API:
 
         Raises
         ------
-        ~bettermod.errors.MissingPermissions
+        ~warnsystem.errors.MissingPermissions
             The bot lacks the :attr:`discord.PermissionOverwrite.create_roles` permission.
         discord.errors.HTTPException
             Creating the role failed.
@@ -554,7 +551,7 @@ class API:
         role = await guild.create_role(
             name="Muted",
             reason=_(
-                "BetterMod mute role. This role will be assigned to the muted members, "
+                "WarnSystem mute role. This role will be assigned to the muted members, "
                 "feel free to move it or modify its channel permissions."
             ),
         )
@@ -573,7 +570,7 @@ class API:
                     send_messages=False,
                     add_reactions=False,
                     reason=_(
-                        "Setting up BetterMod mute. All muted members will have this role, "
+                        "Setting up WarnSystem mute. All muted members will have this role, "
                         "feel free to edit its permissions."
                     ),
                 )
@@ -647,7 +644,7 @@ class API:
         take_action: bool = True,
     ) -> bool:
         """
-        Set a warning on a member of a Discord guild and log it with the BetterMod system.
+        Set a warning on a member of a Discord guild and log it with the WarnSystem system.
 
         Parameters
         ----------
@@ -686,9 +683,9 @@ class API:
 
         Raises
         ------
-        ~bettermod.errors.InvalidLevel
+        ~warnsystem.errors.InvalidLevel
             The level must be an :py:class:`int` between 1 and 5.
-        ~bettermod.errors.BadArgument
+        ~warnsystem.errors.BadArgument
             You need to provide a valid :class:`discord.Member` object, except for a
             hackban where a :class:`discord.User` works.
         """
@@ -811,7 +808,7 @@ class API:
                 reason += "."
             audit_reason = (
                 _(
-                    "BetterMod {action} requested by {author} (ID: "
+                    "WarnSystem {action} requested by {author} (ID: "
                     "{author.id}) against {member} for "
                 ).format(author=author, member=member, action=action)
                 + (
@@ -984,7 +981,7 @@ class API:
         await self.bot.wait_until_ready()
         log.debug(
             "Starting infinite loop for unmutes and unbans. Canel the "
-            'task with bot.get_cog("BetterMod").task.cancel()'
+            'task with bot.get_cog("WarnSystem").task.cancel()'
         )
         errors = 0
         while True:
