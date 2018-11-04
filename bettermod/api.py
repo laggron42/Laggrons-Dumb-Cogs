@@ -312,8 +312,8 @@ class API:
         guild: discord.Guild
             The guild you want to get the modlog from.
         level: Optional[Union[int, str]]
-            Can be an :py:class:`int` between 1 and 5, a :py:class:`str` (``"all"``
-            or ``"report"``) or :py:obj:`None`.
+            Can be an :py:class:`int` between 1 and 5, a :py:class:`str` (``"all"``)
+            or :py:obj:`None`.
 
             *   If the argument is omitted (or :py:obj:`None` is provided), the default modlog
                 channel will be returned.
@@ -322,10 +322,6 @@ class API:
                 level will be returned. If a specific channel was not set for this level, the
                 default modlog channel will be returned instead.
 
-            *   If ``"report"`` is given, the channel associated to the reports will be returned.
-                If a specific channel was not set for reports, the default modlog channel will
-                be returned instead.
-
             *   If ``"all"`` is returned, a :py:class:`dict` will be returned. It should be built
                 like this:
 
@@ -333,7 +329,6 @@ class API:
 
                     {
                         "main"      : 012345678987654321,
-                        "report"    : 579084368900053345,
                         "1"         : None,
                         "2"         : None,
                         "3"         : None,
@@ -362,9 +357,9 @@ class API:
         if level:
             msg = (
                 "The level must be an int between 1 and 5 ; or a string that "
-                'should be "all" or "report"'
+                'should be "all"'
             )
-            if not isinstance(level, int) and all([x != level for x in ["all", "report"]]):
+            if not isinstance(level, int) and x != "all":
                 raise errors.InvalidLevel(msg)
             elif isinstance(level, int) and not 1 <= level <= 5:
                 raise errors.InvalidLevel(msg)

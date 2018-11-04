@@ -96,7 +96,6 @@ class BetterMod(BaseCog):
         "reinvite": True,  # if the bot should try to send an invite to an unbanned/kicked member
         "channels": {  # modlog channels
             "main": None,  # default
-            "report": None,
             "1": None,
             "2": None,
             "3": None,
@@ -123,7 +122,6 @@ class BetterMod(BaseCog):
         },
         "substitutions": {},
         "thumbnails": {  # image at the top right corner of an embed
-            "report": "https://i.imgur.com/Bl62rGd.png",
             "1": "https://i.imgur.com/Bl62rGd.png",
             "2": "https://i.imgur.com/cVtzp1M.png",
             "3": "https://i.imgur.com/uhrYzyt.png",
@@ -131,9 +129,8 @@ class BetterMod(BaseCog):
             "5": "https://i.imgur.com/DfBvmic.png",
         },
         "colors": {  # color bar of an embed
-            "report": 0xF4AA42,
-            "1": 0xD1ED35,
-            "2": 0xEDCB35,
+            "1": 0xF4AA42,
+            "2": 0xD1ED35,
             "3": 0xED9735,
             "4": 0xED6F35,
             "5": 0xFF4C4C,
