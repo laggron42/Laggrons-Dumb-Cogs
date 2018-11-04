@@ -209,7 +209,7 @@ class WarnSystem(BaseCog):
             await ctx.send(
                 _(
                     "You need to set up the mute role before doing this.\n"
-                    "Use the `[p]bmodset mute` command for this."
+                    "Use the `[p]warnset mute` command for this."
                 )
             )
         except errors.NotFound:
@@ -217,7 +217,7 @@ class WarnSystem(BaseCog):
                 _(
                     "Please set up a modlog channel before warning a member.\n\n"
                     "**With WarnSystem**\n"
-                    "*Use the `[p]bmodset channel` command.*\n\n"
+                    "*Use the `[p]warnset channel` command.*\n\n"
                     "**With Red Modlog**\n"
                     "*Load the `modlogs` cog and use the `[p]modlogset modlog` command.*"
                 )
@@ -230,7 +230,7 @@ class WarnSystem(BaseCog):
                     "hierarchy. You can only warn members which top role is lower than yours.\n\n"
                 ).format(member=str(member))
                 + (
-                    _("You can disable this check by using the `[p]bmodset hierarchy` command.")
+                    _("You can disable this check by using the `[p]warnset hierarchy` command.")
                     if is_admin
                     else ""
                 )
@@ -241,7 +241,7 @@ class WarnSystem(BaseCog):
     # all settings
     @commands.group()
     @checks.admin_or_permissions(administrator=True)
-    async def bmodset(self, ctx: commands.Context):
+    async def warnset(self, ctx: commands.Context):
         """
         Set all WarnSystem settings.
 
@@ -251,8 +251,8 @@ class WarnSystem(BaseCog):
         pass
 
     # goes from most basic to advanced settings
-    @bmodset.command(name="channel")
-    async def bmodset_channel(
+    @warnset.command(name="channel")
+    async def warnset_channel(
         self, ctx: commands.Context, channel: discord.TextChannel, level: int = None
     ):
         """
@@ -279,7 +279,7 @@ class WarnSystem(BaseCog):
                         "Done. All events will be send to that channel by default.\n\nIf you want "
                         "to send a specific warning level in a different channel, you can use the "
                         "same command with the number after the channel.\nExample: "
-                        "`{prefix}bmodset channel #your-channel 3`"
+                        "`{prefix}warnset channel #your-channel 3`"
                     ).format(prefix=ctx.prefix)
                 )
             elif not 1 <= level <= 5:
@@ -297,8 +297,8 @@ class WarnSystem(BaseCog):
                     ).format(level=str(level))
                 )
 
-    @bmodset.command(name="mute")
-    async def bmodset_mute(self, ctx: commands.Context, *, role: discord.Role = None):
+    @warnset.command(name="mute")
+    async def warnset_mute(self, ctx: commands.Context, *, role: discord.Role = None):
         """
         Create the role used for muting members.
 
@@ -318,7 +318,7 @@ class WarnSystem(BaseCog):
                 await ctx.send(
                     _(
                         "A mute role was already created! You can change it by specifying "
-                        "a role when typing the command.\n`[p]bmodset mute <role name>`"
+                        "a role when typing the command.\n`[p]warnset mute <role name>`"
                     )
                 )
                 return
@@ -348,8 +348,8 @@ class WarnSystem(BaseCog):
             await self.data.guild(guild).mute_role.set(role.id)
             await ctx.send(_("The new mute role was successfully set!"))
 
-    @bmodset.command(name="hierarchy")
-    async def bmodset_hierarchy(self, ctx: commands.Context, enable: bool = None):
+    @warnset.command(name="hierarchy")
+    async def warnset_hierarchy(self, ctx: commands.Context, enable: bool = None):
         """
         Set if the bot should respect roles hierarchy.
 
@@ -365,7 +365,7 @@ class WarnSystem(BaseCog):
             await ctx.send(
                 _(
                     "The bot currently {respect} role hierarchy. If you want to change this, "
-                    "type `[p]bmodset hierarchy {opposite}`."
+                    "type `[p]warnset hierarchy {opposite}`."
                 ).format(
                     respect=_("respects") if current else _("doesn't respect"),
                     opposite=not current,
@@ -388,8 +388,8 @@ class WarnSystem(BaseCog):
                 )
             )
 
-    @bmodset.command(name="reinvite")
-    async def bmodset_reinvite(self, ctx: commands.Context, enable: bool = None):
+    @warnset.command(name="reinvite")
+    async def warnset_reinvite(self, ctx: commands.Context, enable: bool = None):
         """
         Set if the bot should send an invite after a temporary ban.
 
@@ -404,7 +404,7 @@ class WarnSystem(BaseCog):
             await ctx.send(
                 _(
                     "The bot {respect} reinvite unbanned members. If you want to "
-                    "change this, type `[p]bmodset reinvite {opposite}`."
+                    "change this, type `[p]warnset reinvite {opposite}`."
                 ).format(respect=_("does") if current else _("doesn't"), opposite=not current)
             )
         elif enable:
@@ -420,8 +420,8 @@ class WarnSystem(BaseCog):
             await self.data.guild(guild).reinvite.set(False)
             await ctx.send(_("Done. The bot will no longer reinvite unbanned members."))
 
-    @bmodset.command("bandays")
-    async def bmodset_bandays(self, ctx: commands.Context, ban_type: str, days: int):
+    @warnset.command("bandays")
+    async def warnset_bandays(self, ctx: commands.Context, ban_type: str, days: int):
         """
         Set the number of messages to delete when a member is banned.
 
@@ -433,13 +433,13 @@ class WarnSystem(BaseCog):
 
         __Examples__
 
-        - `[p]bmodset bandays softban 2`
+        - `[p]warnset bandays softban 2`
           The number of days of messages to delete will be set to 2 for softbans.
 
-        - `[p]bmodset bandays ban 7`
+        - `[p]warnset bandays ban 7`
           The number of days of messages to delete will be set to 7 for bans.
 
-        - `[p]bmodset bandays ban 0`
+        - `[p]warnset bandays ban 0`
           The bans will not delete any messages.
         """
         guild = ctx.guild
@@ -447,7 +447,7 @@ class WarnSystem(BaseCog):
             await ctx.send(
                 _(
                     "The first argument must be `ban` or `softban`.\n"
-                    "Type `{prefix}help bmodset bandays` for more details."
+                    "Type `{prefix}help warnset bandays` for more details."
                 )
             )
             return
@@ -476,8 +476,8 @@ class WarnSystem(BaseCog):
         await ctx.send(_("The new value was successfully set!"))
 
     @checks.is_owner()
-    @bmodset.command(name="renamecmd")
-    async def bmodset_renamecmd(self, ctx: commands.Context, enable: bool = None):
+    @warnset.command(name="renamecmd")
+    async def warnset_renamecmd(self, ctx: commands.Context, enable: bool = None):
         """
         Rename the warn commands to warn, mute, kick, softban and ban.
 
@@ -489,7 +489,7 @@ class WarnSystem(BaseCog):
             await ctx.send(
                 _(
                     "The bot {enabled} renamed commands. If you want to "
-                    "change this, type `[p]bmodset renamecmd {opposite}`."
+                    "change this, type `[p]warnset renamecmd {opposite}`."
                 ).format(enabled=_("has") if current else _("doesn't have"), opposite=not current)
             )
         elif enable:
@@ -512,8 +512,8 @@ class WarnSystem(BaseCog):
                 )
             )
 
-    @bmodset.group(name="substitutions")
-    async def bmodset_substitutions(self, ctx: commands.Context):
+    @warnset.group(name="substitutions")
+    async def warnset_substitutions(self, ctx: commands.Context):
         """
         Manage the reasons' substitutions
 
@@ -527,8 +527,8 @@ class WarnSystem(BaseCog):
         """
         pass
 
-    @bmodset_substitutions.command(name="add")
-    async def bmodset_substitutions_add(self, ctx: commands.Context, name: str, *, text: str):
+    @warnset_substitutions.command(name="add")
+    async def warnset_substitutions_add(self, ctx: commands.Context, name: str, *, text: str):
         """
         Create a new subsitution.
 
@@ -536,7 +536,7 @@ class WarnSystem(BaseCog):
         `text` is what will be replaced by `[name]`
 
         Example:
-        - `[p]bmodset substitutions add ad Advertising for a Discord server`
+        - `[p]warnset substitutions add ad Advertising for a Discord server`
         - `[p]warn 1 @noob [ad] + doesn't respect warnings`
         The reason will be "Advertising for a Discord server + doen't respect warnings".
         """
@@ -545,7 +545,7 @@ class WarnSystem(BaseCog):
                 await ctx.send(
                     _(
                         "The name you're using is already used by another substitution!\n"
-                        "Delete or edit it with `[p]bmodset substitutions delete`"
+                        "Delete or edit it with `[p]warnset substitutions delete`"
                     )
                 )
                 return
@@ -557,17 +557,17 @@ class WarnSystem(BaseCog):
             _(
                 "Your new subsitutions with the keyword `{keyword}` was successfully "
                 "created! Type `[{substitution}]` in your warning reason to use the text you "
-                "just set.\nManage your substitutions with the `{prefix}bmodset "
+                "just set.\nManage your substitutions with the `{prefix}warnset "
                 "substitutions` subcommands."
             ).format(keyword=name, substitution=name, prefix=ctx.prefix)
         )
 
-    @bmodset_substitutions.command(name="delete", aliases=["del"])
-    async def bmodset_substitutions_delete(self, ctx: commands.Context, name: str):
+    @warnset_substitutions.command(name="delete", aliases=["del"])
+    async def warnset_substitutions_delete(self, ctx: commands.Context, name: str):
         """
         Delete a previously set substitution.
 
-        The substitution must exist, see existing substitutions with the `[p]bmodset substitutions\
+        The substitution must exist, see existing substitutions with the `[p]warnset substitutions\
         list` command.
         """
         async with self.data.guild(ctx.guild).substitutions() as substitutions:
@@ -575,14 +575,14 @@ class WarnSystem(BaseCog):
                 await ctx.send(
                     _(
                         "That substitution doesn't exist!\nSee existing substitutions with the "
-                        "`{prefix}bmodset substitutions list` command."
+                        "`{prefix}warnset substitutions list` command."
                     ).format(prefix=ctx.prefix)
                 )
             del substitutions[name]
         await ctx.send(_("The substitutions was successfully deleted."))
 
-    @bmodset_substitutions.command(name="list")
-    async def bmodset_substitutions_list(self, ctx: commands.Context):
+    @warnset_substitutions.command(name="list")
+    async def warnset_substitutions_list(self, ctx: commands.Context):
         """
         List all existing substitutions on your server
         """
@@ -592,7 +592,7 @@ class WarnSystem(BaseCog):
             await ctx.send(
                 _(
                     "You don't have any existing substitution on this server!\n"
-                    "Create one with `{prefix}bmodset substitutions add`"
+                    "Create one with `{prefix}warnset substitutions add`"
                 ).format(prefix=ctx.prefix)
             )
             return
@@ -609,8 +609,8 @@ class WarnSystem(BaseCog):
             embeds.append(embed)
         await menus.menu(ctx, embeds, controls=menus.DEFAULT_CONTROLS)
 
-    @bmodset.command(name="showmod")
-    async def bmodset_showmod(self, ctx, enable: bool = None):
+    @warnset.command(name="showmod")
+    async def warnset_showmod(self, ctx, enable: bool = None):
         """
         Defines if the responsible moderator should be revealed to the warned member in DM.
 
@@ -624,7 +624,7 @@ class WarnSystem(BaseCog):
             await ctx.send(
                 _(
                     "The bot {respect} show the responsible moderator to the warned member in DM. "
-                    "If you want to change this, type `[p]bmodset reinvite {opposite}`."
+                    "If you want to change this, type `[p]warnset reinvite {opposite}`."
                 ).format(respect=_("does") if current else _("doesn't"), opposite=not current)
             )
         elif enable:
@@ -639,8 +639,8 @@ class WarnSystem(BaseCog):
             await self.data.guild(guild).reinvite.set(False)
             await ctx.send(_("Done. The bot will no longer show the responsible moderator."))
 
-    @bmodset.command(name="description")
-    async def bmodset_description(
+    @warnset.command(name="description")
+    async def warnset_description(
         self, ctx: commands.Context, level: int, destination: str, *, description: str
     ):
         """
@@ -663,14 +663,14 @@ class WarnSystem(BaseCog):
 
         __Examples:__
 
-        - `[p]bmodset description 1 user You were warned by a moderator for your behaviour,\
+        - `[p]warnset description 1 user You were warned by a moderator for your behaviour,\
         please read the rules.`
           This set the description for the first warning for the warned member.
 
-        - `[p]bmodset description 3 modlog A member was kicked from the server.`
+        - `[p]warnset description 3 modlog A member was kicked from the server.`
           This set the description for the 3rd warning (kick) for the modlog.
 
-        - `[p]bmodset description 4 user You were banned and unbanned to clear your messages\
+        - `[p]warnset description 4 user You were banned and unbanned to clear your messages\
         from the server. You can join the server back with this link: {invite}`
           This set the description for the 4th warning (softban) for the user, while generating\
           an invite which will be replace `{invite}`
@@ -694,8 +694,8 @@ class WarnSystem(BaseCog):
             _("The new description for {destination} (warn {level}) was successfully set!")
         ).format(destination=_("modlog") if destination == "modlog" else _("user"), level=level)
 
-    @bmodset.command(name="convert")
-    async def bmodset_convert(self, ctx: commands.Context, *, path: Path):
+    @warnset.command(name="convert")
+    async def warnset_convert(self, ctx: commands.Context, *, path: Path):
         """
         Convert BetterMod V2 logs to V3.
 
@@ -705,7 +705,7 @@ class WarnSystem(BaseCog):
         You can get your server ID with the `[p]serverinfo` command.
 
         Example:
-        `[p]bmodset convert\
+        `[p]warnset convert\
         /home/laggron/Desktop/Red-DiscordBot/data/bettermod/history/363008468602454017.json`
         """
 
@@ -892,7 +892,7 @@ class WarnSystem(BaseCog):
         Kick the member from the server.
 
         You can include an invite for the server in the message received by the kicked user by\
-        using the `[p]bmodset reinvite` command.
+        using the `[p]warnset reinvite` command.
         """
         await self.call_warn(ctx, 3, member, reason)
         if ctx.message:
@@ -907,7 +907,7 @@ class WarnSystem(BaseCog):
         messages in all channels.
 
         It will delete 7 days of messages by default, but you can edit this with the\
-        `[p]bmodset bandays` command.
+        `[p]warnset bandays` command.
         """
         await self.call_warn(ctx, 4, member, reason)
         if ctx.message:
@@ -922,7 +922,7 @@ class WarnSystem(BaseCog):
 
         This ban can be a normal ban, a temporary ban or a hack ban (bans a user not in the\
         server).
-        It won't delete messages by default, but you can edit this with the `[p]bmodset bandays`\
+        It won't delete messages by default, but you can edit this with the `[p]warnset bandays`\
         command.
 
         If you want to perform a temporary ban, provide the time before the reason. A hack ban\
@@ -987,7 +987,7 @@ class WarnSystem(BaseCog):
         Kick the member from the server.
 
         You can include an invite for the server in the message received by the kicked user by\
-        using the `[p]bmodset reinvite` command.
+        using the `[p]warnset reinvite` command.
         """
         await self.call_warn(ctx, 3, member, reason)
         if ctx.message:
@@ -1004,7 +1004,7 @@ class WarnSystem(BaseCog):
         messages in all channels.
 
         It will delete 7 days of messages by default, but you can edit this with the\
-        `[p]bmodset bandays` command.
+        `[p]warnset bandays` command.
         """
         await self.call_warn(ctx, 4, member, reason)
         if ctx.message:
@@ -1019,7 +1019,7 @@ class WarnSystem(BaseCog):
 
         This ban can be a normal ban, a temporary ban or a hack ban (bans a user not in the\
         server).
-        It won't delete messages by default, but you can edit this with the `[p]bmodset bandays`\
+        It won't delete messages by default, but you can edit this with the `[p]warnset bandays`\
         command.
 
         If you want to perform a temporary ban, provide the time before the reason. A hack ban\
