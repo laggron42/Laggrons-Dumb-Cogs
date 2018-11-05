@@ -726,7 +726,8 @@ class API:
                 ).format(channel=mod_channel.mention)
             )
         if (
-            isinstance(member, discord.Member)
+            level > 1
+            and isinstance(member, discord.Member)
             and guild.me.top_role.position <= member.top_role.position
         ):
             # check if the member is below the bot in the roles's hierarchy
