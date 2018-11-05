@@ -84,10 +84,7 @@ class WarnSystem(BaseCog):
     Full documentation and FAQ: http://laggron.red/warnsystem.html
     """
 
-    default_global = {
-        "enable_sentry": None,
-        "renamecmd": False,  # if the commands should be warn 1-5 or warn, mute, kick, softban...
-    }
+    default_global = {"enable_sentry": None}
     default_guild = {
         "delete_message": False,  # if the [p]warn commands should delete the context message
         "show_mod": False,  # if the responsible mod should be revealed to the warned user
@@ -575,43 +572,6 @@ class WarnSystem(BaseCog):
             await self.data.guild(guild).bandays.ban.set(days)
         await ctx.send(_("The new value was successfully set!"))
 
-    @checks.is_owner()
-    @warnset.command(name="renamecmd")
-    async def warnset_renamecmd(self, ctx: commands.Context, enable: bool = None):
-        """
-        Rename the warn commands to warn, mute, kick, softban and ban.
-
-        **The commands from the Mod cog won't be usable anymore.**
-        Note: This setting is global.
-        """
-        current = await self.data.renamecmd()
-        if enable is None:
-            await ctx.send(
-                _(
-                    "The bot {enabled} renamed commands. If you want to "
-                    "change this, type `[p]warnset renamecmd {opposite}`."
-                ).format(enabled=_("has") if current else _("doesn't have"), opposite=not current)
-            )
-        elif enable:
-            await self.data.renamecmd.set(True)
-            await ctx.send(
-                _(
-                    "Done. The warn commands (`warn [1|2|3|4|5]`) are now respectively named "
-                    "`warn`, `mute`, `kick`, `softban` and `ban`. These commands will be removed "
-                    "from other cogs. Reload the cog to apply the changes.\n\n"
-                    "**Important:** If these commands comes from another cog, such as Mod, "
-                    "reload the cog to reorder the commands."
-                )
-            )
-        else:
-            await self.data.renamecmd.set(False)
-            await ctx.send(
-                _(
-                    "Done. The commands are now called `warn [1|2|3|4|5]`. "
-                    "Reload the cog to apply the changes."
-                )
-            )
-
     @warnset.group(name="substitutions")
     async def warnset_substitutions(self, ctx: commands.Context):
         """
@@ -934,7 +894,7 @@ class WarnSystem(BaseCog):
 
     # all warning commands
     # if command renaming is not enabled, we use warn 1, warn 2, ...
-    @commands.group(invoke_without_command=True, autohelp=False)
+    @commands.group()
     @checks.mod_or_permissions(administrator=True)
     @commands.guild_only()
     async def warn(self, ctx: commands.Context, member: discord.Member, *, reason: str):
@@ -942,12 +902,7 @@ class WarnSystem(BaseCog):
         Take actions against a user and log it.
         The warned user will receive a DM.
         """
-        if await self.data.renamecmd():
-            await self.call_warn(ctx, 1, member, reason)
-            if ctx.message:
-                await ctx.message.add_reaction("✅")
-        elif not ctx.invoked_subcommand:
-            await ctx.send_help()
+        pass
 
     @warn.command(name="1", aliases=["simple"])
     async def warn_1(self, ctx: commands.Context, member: discord.Member, *, reason: str):
@@ -1017,103 +972,6 @@ class WarnSystem(BaseCog):
     async def warn_5(
         self, ctx: commands.Context, member: Union[discord.Member, int], *, reason: str
     ):
-        """
-        Ban the member from the server.
-
-        This ban can be a normal ban, a temporary ban or a hack ban (bans a user not in the\
-        server).
-        It won't delete messages by default, but you can edit this with the `[p]warnset bandays`\
-        command.
-
-        If you want to perform a temporary ban, provide the time before the reason. A hack ban\
-        needs a user ID, you can get it with the Developer mode (enable it in the Appearance tab\
-        of the user settings, then right click on the user and select "Copy ID").
-
-        Examples:
-        - `[p]warn 5 @user`: Ban for no reason :c
-        - `[p]warn 5 @user 7d Insults`: 7 days ban for the reason "Insults"
-        - `[p]warn 5 012345678987654321 Advertising and leave`: Ban the user with the ID provided\
-        while he's not in the server for the reason "Advertising and leave" (if the user shares\
-        another server with the bot, a DM will be sent).
-        """
-        time = None
-        potential_time = reason.split()[0]
-        try:
-            time = timedelta_converter(potential_time)
-        except RedBadArgument:
-            pass
-        else:
-            reason = " ".join(reason.split()[1:])  # removes time from string
-        await self.call_warn(ctx, 5, member, reason, time)
-        if ctx.message:
-            await ctx.message.add_reaction("✅")
-
-    # if command renaming is enabled, we use these commands instead
-    @commands.command(usage="<member> [time] <reason>")
-    @checks.mod_or_permissions(administrator=True)
-    @commands.guild_only()
-    async def mute(self, ctx: commands.Context, member: discord.Member, *, reason: str):
-        """
-        Mute the user in all channels, including voice channels.
-
-        This mute will use a role that will automatically be created, if it was not already done.
-        Feel free to edit the role's permissions and move it in the roles hierarchy.
-
-        You can set a timed mute by providing a valid time before the reason. Unmute the user with\
-        the `[p]
-
-        Examples:
-        - `[p]warn 2 @user 30m`: 30 minutes mute
-        - `[p]warn 2 @user 5h Spam`: 5 hours mute for the reason "Spam"
-        - `[p]warn 2 @user Advertising`: Infinite mute for the reason "Advertising"
-        """
-        time = None
-        potential_time = reason.split()[0]
-        try:
-            time = timedelta_converter(potential_time)
-        except RedBadArgument:
-            pass
-        else:
-            reason = " ".join(reason.split()[1:])  # removes time from string
-        await self.call_warn(ctx, 2, member, reason, time)
-        if ctx.message:
-            await ctx.message.add_reaction("✅")
-
-    @commands.command()
-    @checks.mod_or_permissions(administrator=True)
-    @commands.guild_only()
-    async def kick(self, ctx: commands.Context, member: discord.Member, *, reason: str):
-        """
-        Kick the member from the server.
-
-        You can include an invite for the server in the message received by the kicked user by\
-        using the `[p]warnset reinvite` command.
-        """
-        await self.call_warn(ctx, 3, member, reason)
-        if ctx.message:
-            await ctx.message.add_reaction("✅")
-
-    @commands.command()
-    @checks.mod_or_permissions(administrator=True)
-    @commands.guild_only()
-    async def softban(self, ctx: commands.Context, member: discord.Member, *, reason: str):
-        """
-        Softban the member from the server.
-
-        This means that the user will be banned and immediately unbanned, so it will purge his\
-        messages in all channels.
-
-        It will delete 7 days of messages by default, but you can edit this with the\
-        `[p]warnset bandays` command.
-        """
-        await self.call_warn(ctx, 4, member, reason)
-        if ctx.message:
-            await ctx.message.add_reaction("✅")
-
-    @commands.command(usage="<member> [time] <reason>")
-    @checks.mod_or_permissions(administrator=True)
-    @commands.guild_only()
-    async def ban(self, ctx: commands.Context, member: discord.Member, *, reason: str):
         """
         Ban the member from the server.
 

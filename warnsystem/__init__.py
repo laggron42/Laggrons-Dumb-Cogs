@@ -71,37 +71,6 @@ async def ask_enable_sentry(bot):
             return False
 
 
-def wait_for_mod(bot, cog):
-    """Remove the commands that may block the cog."""
-    [bot.remove_command(x) for x in ["mute", "kick", "softban", "ban"]]
-    log.info("Removed mute, kick, softban and ban commands from the Mod cog")
-
-
-async def check_for_commands(bot, cog):
-    """
-    If command renaming is enabled, remove any command which has that name
-    """
-    if not await cog.data.renamecmd():
-        return cog
-    commands = ["mute", "kick", "softban", "ban"]
-    for command in commands:
-        bot.remove_command(command)
-    return cog
-
-
-def setup_commands(bot, cog, rename: bool):
-    """
-    Delete the class' attributes, following what the used decided with the command naming.
-    """
-    commands = ["mute", "kick", "softban", "ban"]
-    if rename:
-        for i in range(1, 6):
-            cog.warn.remove_command(str(i))
-    else:
-        for x in commands:
-            bot.remove_command(x)
-
-
 async def setup(bot):
     global _
     n = WarnSystem(bot)
@@ -116,16 +85,10 @@ async def setup(bot):
     sentry = Log(bot, n.__version__)
     n._set_log(sentry)
     create_cache(cog_data_path(n))
-    should_rename = await n.data.renamecmd()
     if await n.data.enable_sentry() is None:
         response = await ask_enable_sentry(bot)
         await n.data.enable_sentry.set(response)
     if await n.data.enable_sentry():
         n.sentry.enable()
-    if should_rename:
-        # side task
-        wait_for_mod(bot, n)
-    n = await check_for_commands(bot, n)
     bot.add_cog(n)
-    setup_commands(bot, n, should_rename)
     log.debug("Cog successfully loaded on the instance.")
