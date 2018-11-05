@@ -251,6 +251,106 @@ class WarnSystem(BaseCog):
         pass
 
     # goes from most basic to advanced settings
+    @warnset.command(name="settings")
+    async def warnset_settings(self, ctx: commands.Context):
+        """
+        Show the current settings.
+        """
+        guild = ctx.guild
+        if not ctx.channel.permissions_for(guild.me).embed_links:
+            await ctx.send(_("I can't send embed links here!"))
+            return
+        async with ctx.typing():
+
+            # collect data and make strings
+            all_data = await self.data.guild(guild).all()
+            modlog_channels = await self.api.get_modlog_channel(guild, "all")
+            channels = ""
+            for key, channel in dict(modlog_channels).items():
+                if not channel:
+                    if key != "main":
+                        continue
+                    channel = _("Not set. Use `{prefix}warnset channel`").format(prefix=ctx.prefix)
+                else:
+                    channel = guild.get_channel(channel)
+                    channel = channel.mention if channel else _("Not found")
+                if key == "main":
+                    channels += _("Default channel: {channel}\n").format(channel=channel)
+                else:
+                    channels += _("Level {level} warnings channel: {channel}\n").format(
+                        channel=channel, level=key
+                    )
+            mute_role = guild.get_role(all_data["mute_role"])
+            mute_role = _("No mute role set.") if not mute_role else mute_role.name
+            hierarchy = _("Enabled") if all_data["respect_hierarchy"] else _("Disabled")
+            reinvite = _("Enabled") if all_data["reinvite"] else _("Disabled")
+            bandays = _("Softan: {softban}\nBan: {ban}").format(
+                softban=all_data["bandays"]["softban"], ban=all_data["bandays"]["ban"]
+            )
+            len_substitutions = len(all_data["substitutions"])
+            substitutions = (
+                _(
+                    "No substitution set.\nType `{prefix}help warnset "
+                    "substitutions` to get started."
+                ).format(prefix=ctx.prefix)
+                if len_substitutions < 1
+                else _(
+                    "{number} subsitution{plural} set.\n"
+                    "Type `{prefix}warnset substitutions list` to list them."
+                ).format(
+                    number=len_substitutions,
+                    plural=_("s") if len_substitutions > 1 else "",
+                    prefix=ctx.prefix,
+                )
+            )
+            modlog_dict = all_data["embed_description_modlog"]
+            modlog_descriptions = ""
+            for key, description in modlog_dict.items():
+                if key == "main":
+                    key == "Default"
+                modlog_descriptions += f"{key}: {description}\n"
+            if len(modlog_descriptions) > 1024:
+                modlog_descriptions = _("Too long to be shown...")
+            user_dict = all_data["embed_description_user"]
+            user_descriptions = ""
+            for key, description in user_dict.items():
+                if key == "main":
+                    key == "Default"
+                user_descriptions += f"{key}: {description}\n"
+            if len(user_descriptions) > 1024:
+                user_descriptions = _("Too long to be shown...")
+
+            # make embed
+            embed = discord.Embed(title=_("WarnSystem settings."))
+            embed.url = "https://laggron.red/warnsystem.html"
+            embed.description = _(
+                "You can change all of these values with {prefix}warnset"
+            ).format(prefix=ctx.prefix)
+            embed.add_field(name=_("Log channels"), value=channels)
+            embed.add_field(name=_("Mute role"), value=mute_role)
+            embed.add_field(name=_("Respect hierarchy"), value=hierarchy)
+            embed.add_field(name=_("Reinvite unbanned members"), value=reinvite)
+            embed.add_field(name=_("Days of messages to delete"), value=bandays)
+            embed.add_field(name=_("Substitutions"), value=substitutions)
+            embed.add_field(
+                name=_("Modlog embed descriptions"), value=modlog_descriptions, inline=False
+            )
+            embed.add_field(
+                name=_("User embed descriptions"), value=user_descriptions, inline=False
+            )
+            embed.set_footer(text=_("Cog made with ❤️ by Laggron"))
+            embed.color = self.bot.color
+        try:
+            await ctx.send(embed=embed)
+        except discord.errors.HTTPException as e:
+            log.error(f"Couldn't make embed for displaying settings.", exc_info=e)
+            await ctx.send(
+                _(
+                    "Error when sending the message. Check the warnsystem "
+                    "logs for more informations."
+                )
+            )
+
     @warnset.command(name="channel")
     async def warnset_channel(
         self, ctx: commands.Context, channel: discord.TextChannel, level: int = None
