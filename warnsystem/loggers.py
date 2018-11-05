@@ -52,7 +52,7 @@ class Log:
             {
                 "id": self.bot.user.id,
                 "name": str(self.bot.user),
-                "Owner": f"{str(owner)} (ID: {owner.id})",
+                "Owner": f"{str(owner)} (ID: {owner.id})" if owner else "Not defined",
             }
         )
         self.client.tags_context({"red_version": red_version})
