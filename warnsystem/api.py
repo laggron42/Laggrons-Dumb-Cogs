@@ -356,11 +356,13 @@ class API:
         # raise errors if the arguments are wrong
         if level:
             msg = "The level must be an int between 1 and 5 ; or a string that " 'should be "all"'
-            if not isinstance(level, int) and x != "all":
+            if not isinstance(level, int) and level != "all":
                 raise errors.InvalidLevel(msg)
             elif isinstance(level, int) and not 1 <= level <= 5:
                 raise errors.InvalidLevel(msg)
 
+        if level == "all":
+            return await self.data.guild(guild).channels.all()
         default_channel = await self.data.guild(guild).channels.main()
         if level:
             channel = await self.data.guild(guild).channels.get_raw(str(level))
