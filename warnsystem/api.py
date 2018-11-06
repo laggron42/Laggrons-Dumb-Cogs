@@ -557,6 +557,7 @@ class API:
                 "feel free to move it or modify its channel permissions."
             ),
         )
+        await asyncio.sleep(0.5)  # prevents an error when repositionning the role
         await role.edit(
             position=guild.me.top_role.position - 1,
             reason=_(
