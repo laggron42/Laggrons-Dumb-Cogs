@@ -753,7 +753,7 @@ class API:
             raise errors.NotAllowedByHierarchy(
                 "The moderator is lower than the member in the servers's role hierarchy."
             )
-        if level > 1 and isinstance(member, discord.Member) and member == guild.owner:
+        if level > 2 and isinstance(member, discord.Member) and member == guild.owner:
             raise errors.MissingPermissions(_("I can't take actions on the owner of the guild."))
         if level == 2:
             # mute with role
