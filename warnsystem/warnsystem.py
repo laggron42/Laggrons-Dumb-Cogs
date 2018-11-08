@@ -202,6 +202,8 @@ class WarnSystem(BaseCog):
             await ctx.send(e)
         except errors.MemberTooHigh as e:
             await ctx.send(e)
+        except errors.LostPermissions as e:
+            await ctx.send(e)
         except errors.MissingMuteRole:
             await ctx.send(
                 _(
