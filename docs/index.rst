@@ -64,6 +64,7 @@ Welcome to Laggron's Dumb Cogs's official documentation!
     :caption: API Reference
 
     roleinvite-api
+    bettermod-api
 
 Indices and tables
 ==================
