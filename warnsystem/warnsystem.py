@@ -182,10 +182,10 @@ class WarnSystem(BaseCog):
         log = logging.getLogger("laggron.warnsystem")
         # this is called now so the logger is already initialized
 
-    async def call_warn(self, ctx, level, member, reason, time=None):
+    async def call_warn(self, ctx, level, member, reason=None, time=None):
         """No need to repeat, let's do what's common to all 5 warnings."""
         reason = await self.api.format_reason(ctx.guild, reason)
-        if len(reason) > 1024:  # embed limits
+        if reason and len(reason) > 1024:  # embed limits
             await ctx.send(
                 _(
                     "The reason is too long for an embed.\n\n"
@@ -896,11 +896,10 @@ class WarnSystem(BaseCog):
         )
 
     # all warning commands
-    # if command renaming is not enabled, we use warn 1, warn 2, ...
     @commands.group()
     @checks.mod_or_permissions(administrator=True)
     @commands.guild_only()
-    async def warn(self, ctx: commands.Context, member: discord.Member, *, reason: str):
+    async def warn(self, ctx: commands.Context):
         """
         Take actions against a user and log it.
         The warned user will receive a DM.
@@ -908,7 +907,7 @@ class WarnSystem(BaseCog):
         pass
 
     @warn.command(name="1", aliases=["simple"])
-    async def warn_1(self, ctx: commands.Context, member: discord.Member, *, reason: str):
+    async def warn_1(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
         Set a simple warning on a user.
         """
@@ -917,7 +916,7 @@ class WarnSystem(BaseCog):
             await ctx.message.add_reaction("✅")
 
     @warn.command(name="2", aliases=["mute"], usage="<member> [time] <reason>")
-    async def warn_2(self, ctx: commands.Context, member: discord.Member, *, reason: str):
+    async def warn_2(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
         Mute the user in all channels, including voice channels.
 
@@ -945,7 +944,7 @@ class WarnSystem(BaseCog):
             await ctx.message.add_reaction("✅")
 
     @warn.command(name="3", aliases=["kick"])
-    async def warn_3(self, ctx: commands.Context, member: discord.Member, *, reason: str):
+    async def warn_3(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
         Kick the member from the server.
 
@@ -957,7 +956,7 @@ class WarnSystem(BaseCog):
             await ctx.message.add_reaction("✅")
 
     @warn.command(name="4", aliases=["softban"])
-    async def warn_4(self, ctx: commands.Context, member: discord.Member, *, reason: str):
+    async def warn_4(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
         Softban the member from the server.
 
@@ -973,7 +972,7 @@ class WarnSystem(BaseCog):
 
     @warn.command(name="5", aliases=["ban"], usage="<member> [time] <reason>")
     async def warn_5(
-        self, ctx: commands.Context, member: Union[discord.Member, int], *, reason: str
+        self, ctx: commands.Context, member: Union[discord.Member, int], *, reason: str = None
     ):
         """
         Ban the member from the server.

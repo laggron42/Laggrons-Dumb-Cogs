@@ -429,8 +429,10 @@ class API:
             if level == 5
             else _("warn")
         )
+        mod_message = ""
         if not reason:
-            reason = _("No reason was provided.\nEdit this with `[p]warnings @{name}`").format(
+            reason = _("No reason was provided.")
+            mod_message = _("\nEdit this with `[p]warnings @{name}`").format(
                 name=str(member)
             )
         logs = await self.data.custom("MODLOGS", guild.id, member.id).x()
@@ -487,7 +489,7 @@ class API:
         log_embed.add_field(name=_("Moderator"), value=author.mention, inline=True)
         if time:
             log_embed.add_field(name=_("Duration"), value=duration, inline=True)
-        log_embed.add_field(name=_("Reason"), value=reason, inline=False)
+        log_embed.add_field(name=_("Reason"), value=reason + mod_message, inline=False)
         log_embed.add_field(name=_("Status"), value=current_status(True), inline=False)
         log_embed.set_footer(text=today)
         log_embed.set_thumbnail(url=await self.data.guild(guild).thumbnails.get_raw(level))
@@ -503,6 +505,8 @@ class API:
         user_embed = deepcopy(log_embed)
         user_embed.set_author(name="")
         user_embed.description = format_description(user_description)
+        if mod_message:
+            user_embed.set_field_at(3 if time else 2, name=_("Reason"), value=reason)
         user_embed.remove_field(4 if time else 3)  # removes status field (gonna be added back)
         user_embed.remove_field(0)  # removes member field
         user_embed.add_field(name=_("Status"), value=current_status(False), inline=False)
@@ -613,7 +617,7 @@ class API:
         await self.data.guild(guild).mute_role.set(role.id)
         return errors if errors else True
 
-    async def format_reason(self, guild: discord.Guild, reason: str) -> str:
+    async def format_reason(self, guild: discord.Guild, reason: str = None) -> str:
         """
         Reformat a reason with the substitutions set on the guild.
 
@@ -629,6 +633,8 @@ class API:
         str
             The reformatted string
         """
+        if not reason:
+            return
         substitutions = await self.data.guild(guild).substitutions()
         for key, substitute in substitutions.items():
             reason = reason.replace(f"[{key}]", substitute)
@@ -808,7 +814,7 @@ class API:
                 if level == 5
                 else _("warn")
             )
-            if not reason.endswith("."):
+            if reason and not reason.endswith("."):
                 reason += "."
             audit_reason = (
                 _(
