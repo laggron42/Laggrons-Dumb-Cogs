@@ -932,13 +932,17 @@ class WarnSystem(BaseCog):
         - `[p]warn 2 @user Advertising`: Infinite mute for the reason "Advertising"
         """
         time = None
-        potential_time = reason.split()[0]
-        try:
-            time = timedelta_converter(potential_time)
-        except RedBadArgument:
-            pass
-        else:
-            reason = " ".join(reason.split()[1:])  # removes time from string
+        if reason:
+            potential_time = reason.split()[0]
+            try:
+                time = timedelta_converter(potential_time)
+            except RedBadArgument:
+                pass
+            else:
+                if len(reason.split()) <= 1:
+                    reason = None
+                else:
+                    reason = " ".join(reason.split()[1:])  # removes time from string
         await self.call_warn(ctx, 2, member, reason, time)
         if ctx.message:
             await ctx.message.add_reaction("✅")
@@ -994,13 +998,17 @@ class WarnSystem(BaseCog):
         another server with the bot, a DM will be sent).
         """
         time = None
-        potential_time = reason.split()[0]
-        try:
-            time = timedelta_converter(potential_time)
-        except RedBadArgument:
-            pass
-        else:
-            reason = " ".join(reason.split()[1:])  # removes time from string
+        if reason:
+            potential_time = reason.split()[0]
+            try:
+                time = timedelta_converter(potential_time)
+            except RedBadArgument:
+                pass
+            else:
+                if len(reason.split()) <= 1:
+                    reason = None
+                else:
+                    reason = " ".join(reason.split()[1:])  # removes time from string
         await self.call_warn(ctx, 5, member, reason, time)
         if ctx.message:
             await ctx.message.add_reaction("✅")
