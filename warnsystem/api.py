@@ -432,9 +432,7 @@ class API:
         mod_message = ""
         if not reason:
             reason = _("No reason was provided.")
-            mod_message = _("\nEdit this with `[p]warnings @{name}`").format(
-                name=str(member)
-            )
+            mod_message = _("\nEdit this with `[p]warnings @{name}`").format(name=str(member))
         logs = await self.data.custom("MODLOGS", guild.id, member.id).x()
 
         # prepare the status field
@@ -755,6 +753,8 @@ class API:
             raise errors.NotAllowedByHierarchy(
                 "The moderator is lower than the member in the servers's role hierarchy."
             )
+        if level > 1 and isinstance(member, discord.Member) and member == guild.owner:
+            raise errors.MissingPermissions(_("I can't take actions on the owner of the guild."))
         if level == 2:
             # mute with role
             if not guild.me.guild_permissions.manage_roles:
