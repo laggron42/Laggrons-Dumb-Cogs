@@ -751,8 +751,10 @@ class WarnSystem(BaseCog):
             "embed_description_" + destination, str(level), value=description
         )
         await ctx.send(
-            _("The new description for {destination} (warn {level}) was successfully set!")
-        ).format(destination=_("modlog") if destination == "modlog" else _("user"), level=level)
+            _("The new description for {destination} (warn {level}) was successfully set!").format(
+                destination=_("modlog") if destination == "modlog" else _("user"), level=level
+            )
+        )
 
     @warnset.command(name="convert")
     async def warnset_convert(self, ctx: commands.Context, *, path: Path):
