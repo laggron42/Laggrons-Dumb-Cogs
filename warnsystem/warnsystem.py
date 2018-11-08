@@ -403,6 +403,7 @@ class WarnSystem(BaseCog):
         If you don't specify a role, one will be created for you.
         """
         guild = ctx.guild
+        my_position = guild.me.top_role.position
         if not role:
             if not guild.me.guild_permissions.manage_roles:
                 await ctx.send(
