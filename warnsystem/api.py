@@ -718,7 +718,7 @@ class API:
             raise errors.MissingMuteRole("You need to create the mute role before doing this.")
 
         # we check for all permission problem that can occur before calling the API
-        if not any(
+        if not all(
             [  # checks if the bot has send_messages and embed_links permissions in modlog channel
                 getattr(mod_channel.permissions_for(guild.me), x)
                 for x in ["send_messages", "embed_links"]
