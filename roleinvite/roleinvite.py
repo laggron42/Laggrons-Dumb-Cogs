@@ -137,9 +137,7 @@ class RoleInvite(BaseCog):
     @checks.admin()
     async def roleset(self, ctx):
         """Roleinvite cog management"""
-
-        if not ctx.invoked_subcommand:
-            await ctx.send_help()
+        pass
 
     @roleset.command()
     async def add(self, ctx, invite: str, *, role: discord.Role):
