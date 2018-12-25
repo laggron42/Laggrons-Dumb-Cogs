@@ -31,19 +31,19 @@ class Errors:
         pass
 
     # errors used in the API
-    class EmptyRolesList:
+    class EmptyRolesList(Exception):
         """
         The list of roles that needs to be linked to an invite is empty.
         """
 
         pass
 
-    class NotInvite:
+    class NotInvite(Exception):
         """
         The invite sent is not found as a discord.Invite object.
         """
 
-    class InviteNotFound:
+    class InviteNotFound(Exception):
         """
         The invite sent isn't in the guild's invite list.
         """
@@ -51,7 +51,7 @@ class Errors:
         pass
 
     # errors used in the listener
-    class CannotGetInvites:
+    class CannotGetInvites(Exception):
         """
         The bot isn't allowed to get the guild invites.
         Manage server permission is needed.
@@ -59,7 +59,7 @@ class Errors:
 
         pass
 
-    class CannotAddRole:
+    class CannotAddRole(Exception):
         """
         The bot isn't allowed to give a role. 
         The role hierarchy was modified or a 3rd party module added the role without check.
