@@ -391,6 +391,10 @@ class API:
         """
         Return two embeds, one for the modlog and one for the member.
 
+        .. warning:: Unlike for the warning, the arguments are not checked and won't raise errors
+            if they are wrong. It is recommanded to call :func:`~warnsystem.api.API.warn` and let
+            it generate the embeds instead.
+
         Parameters
         ----------
         guild: discord.Guild
@@ -413,10 +417,6 @@ class API:
         -------
         tuple
             A :py:class:`tuple` with the modlog embed at index 0, and the user embed at index 1.
-
-        .. warning:: Unlike for the warning, the arguments are not checked and won't raise errors
-            if they are wrong. It is recommanded to call :func:`~warnsystem.api.API.warn` and let
-            it generate the embeds instead.
         """
         action = (
             _("mute")
@@ -653,6 +653,14 @@ class API:
         """
         Set a warning on a member of a Discord guild and log it with the WarnSystem system.
 
+        .. tip:: The message that comes with the following exceptions are already
+            translated and ready to be sent to Discord:
+
+            *   :class:`~warnsystem.errors.NotFound`
+            *   :class:`~warnsystem.errors.LostPermissions`
+            *   :class:`~warnsystem.errors.MemberTooHigh`
+            *   :class:`~warnsystem.errors.MissingPermissions`
+
         Parameters
         ----------
         guild: discord.Guild
@@ -695,6 +703,29 @@ class API:
         ~warnsystem.errors.BadArgument
             You need to provide a valid :class:`discord.Member` object, except for a
             hackban where a :class:`discord.User` works.
+        ~warnsystem.errors.NotFound
+            You provided an :py:class:`int` for a hackban, but the bot couldn't find
+            it by calling :func:`discord.Client.get_user_info`.
+        ~warnsystem.errors.MissingMuteRole
+            You're trying to mute someone but the mute role was not setup yet.
+            You can fix this by calling :func:`~warnsystem.api.API.maybe_create_mute_role`.
+        ~warnsystem.errors.LostPermissions
+            The bot lost a permission to do something (it had the perm before). This
+            can be lost permissions for sending messages to the modlog channel or
+            interacting with the mute role.
+        ~warnsystem.errors.MemberTooHigh
+            The bot is trying to take actions on someone but his top role is higher
+            than the bot's top role in the guild's hierarchy.
+        ~warnsystem.errors.NotAllowedByHierarchy
+            The moderator trying to warn someone is lower than him in the role hierarchy,
+            while the bot still has permissions to act. This is raised only if the
+            hierarchy check is enabled.
+        ~warnsystem.errors.MissingPermissions
+            The bot lacks a permissions to do something. Can be adding role, kicking
+            or banning members.
+        discord.errors.HTTPException
+            Unknown error from Discord API. It's recommanded to catch this
+            potential error too.
         """
         if not isinstance(level, int) or not 1 <= level <= 5:
             raise errors.InvalidLevel("The level must be between 1 and 5.")
