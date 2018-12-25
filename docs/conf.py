@@ -187,3 +187,6 @@ intersphinx_mapping = {
     "discord": ("https://discordpy.readthedocs.io/en/rewrite/", None),
     "redbot": ("https://red-discordbot.readthedocs.io/en/v3-develop/", None),
 }
+
+# Napoleon setting
+napoleon_numpy_docstrings = True

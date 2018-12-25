@@ -35,7 +35,16 @@ if logging.getLogger("red").isEnabledFor(logging.DEBUG):
 else:
     log.setLevel(logging.WARNING)
 
-__all__ = ["InvalidLevel", "NotFound"]
+__all__ = [
+    "InvalidLevel",
+    "NotFound",
+    "MissingMuteRole",
+    "BadArgument",
+    "MissingPermissions",
+    "MemberTooHigh",
+    "NotAllowedByHierarchy",
+    "LostPermissions",
+]
 
 
 class InvalidLevel(Exception):
@@ -95,7 +104,7 @@ class MemberTooHigh(Exception):
 
     To fix this, set the bot's top role **above** the member's top role.
     For more informations about Discord Permissions, read this:\
-    `https://support.discordapp.com/hc/en-us/articles/206029707`_
+    `<https://support.discordapp.com/hc/en-us/articles/206029707>`_
 
     This is raised instead of :class:`discord.errors.Forbidden` to prevent a useless
     API call, we check the bot's permissions before calling.
