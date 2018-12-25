@@ -1,20 +1,20 @@
 .. role:: python(code)
     :language: python
 
-=========
-BetterMod
-=========
+==========
+WarnSystem
+==========
 
 -------------
 API Reference
 -------------
 
-.. autoclass:: bettermod.api.API
+.. autoclass:: warnsystem.api.API
     :members:
 
 ------
 Errors
 ------
 
-.. automodule:: bettermod.errors
+.. automodule:: warnsystem.errors
     :members:
