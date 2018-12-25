@@ -3,9 +3,7 @@
 
 import discord
 import asyncio  # for coroutine checks
-import inspect  # for checking is value is a class
 import traceback
-import random
 
 from redbot.core import commands
 from redbot.core import checks
@@ -56,14 +54,14 @@ class InstantCommands(BaseCog):
         "tags": ["command", "listener", "code"],
     }
 
-    def get_config_identifier(self, name):
-        """
-        Get a random ID from a string for Config
-        """
+    # def get_config_identifier(self, name):
+    # """
+    # Get a random ID from a string for Config
+    # """
 
-        random.seed(name)
-        identifier = random.randint(0, 999999)
-        # self.env["config"] = Config.get_conf(self, identifier)
+    # random.seed(name)
+    # identifier = random.randint(0, 999999)
+    # self.env["config"] = Config.get_conf(self, identifier)
 
     def get_function_from_str(self, command, name=None):
         """
@@ -237,12 +235,7 @@ class InstantCommands(BaseCog):
             self.bot.remove_listener(function)
         _commands.pop(command)
         await self.data.commands.set(_commands)
-        await ctx.send(
-            "The command/listener `{}` was successfully removed.\n\n"
-            "**WARNING:** Since discord.py is glitchy with listeners, "
-            "they can't be removed for now. Restart to remove them (if already removed using that command). "
-            "If you want, join the conversation and refer discord.py#1284's issue.".format(command)
-        )
+        await ctx.send("The command/listener `{}` was successfully removed.\n\n".format(command))
 
     @instantcmd.command()
     async def info(self, ctx, command: str = None):
