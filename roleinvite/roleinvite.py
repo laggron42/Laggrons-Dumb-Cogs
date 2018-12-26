@@ -35,7 +35,7 @@ class RoleInvite(BaseCog):
         self.api = API(self.bot, self.data)  # loading the API
 
     __author__ = "retke (El Laggron)"
-    __version__ = "Laggrons-Dumb-Cogs/roleinvite beta 3"
+    __version__ = "Laggrons-Dumb-Cogs/roleinvite beta 4"
     __info__ = {
         "bot_version": "3.0.0b9",
         "description": (
