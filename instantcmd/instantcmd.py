@@ -168,7 +168,7 @@ class InstantCommands(BaseCog):
             message = (
                 "An exception has occured while compiling your code:\n"
                 "```py\n"
-                "{}```".format("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+                "".join(traceback.format_exception(type(e), e, e.__traceback__)) + "```"
             )
             for page in pagify(message):
                 await ctx.send(page)
@@ -186,9 +186,7 @@ class InstantCommands(BaseCog):
                 message = (
                     "An expetion has occured while adding the command to discord.py:\n"
                     "```py\n"
-                    "{}```".format(
-                        "".join(traceback.format_exception(type(e), e, e.__traceback__))
-                    )
+                    "".join(traceback.format_exception(type(e), e, e.__traceback__)) + "```"
                 )
                 for page in pagify(message):
                     await ctx.send(page)
@@ -196,7 +194,7 @@ class InstantCommands(BaseCog):
             else:
                 async with self.data.commands() as _commands:
                     _commands[function.name] = function_string
-                await ctx.send("The command `{}` was successfully added.".format(function.name))
+                await ctx.send(f"The command `{function.name}` was successfully added.")
 
         else:
             async with self.data.commands() as _commands:
@@ -209,9 +207,7 @@ class InstantCommands(BaseCog):
                 message = (
                     "An expetion has occured while adding the listener to discord.py:\n"
                     "```py\n"
-                    "{}```".format(
-                        "".join(traceback.format_exception(type(e), e, e.__traceback__))
-                    )
+                    "".join(traceback.format_exception(type(e), e, e.__traceback__)) + "```"
                 )
                 for page in pagify(message):
                     await ctx.send(page)
@@ -220,9 +216,7 @@ class InstantCommands(BaseCog):
                 self.listeners[function.__name__] = id(function)
                 async with self.data.commands() as _commands:
                     _commands[function.__name__] = function_string
-                await ctx.send(
-                    "The listener `{}` was successfully added.".format(function.__name__)
-                )
+                await ctx.send(f"The listener `{function.__name__}` was successfully added.")
 
     @instantcmd.command(aliases=["del", "remove"])
     async def delete(self, ctx, command_or_listener: str):
@@ -256,11 +250,11 @@ class InstantCommands(BaseCog):
             _commands = await self.data.commands()
 
             for name, command in _commands.items():
-                message += "+ {}\n".format(name)
+                message += f"+ {name}\n"
             message += (
                 "```\n"
                 "*Hint:* You can show the command source code by typing "
-                "`{}instacmd info <command>`".format(ctx.prefix)
+                f"`{ctx.prefix}instacmd info <command>`"
             )
 
             if _commands == {}:
@@ -278,7 +272,7 @@ class InstantCommands(BaseCog):
                 return
 
             message = (
-                "Source code for `{}{}`:\n".format(ctx.prefix, command)
+                f"Source code for `{ctx.prefix}{command}`:\n"
                 + "```Py\n"
                 + _commands[command]
                 + "```"
