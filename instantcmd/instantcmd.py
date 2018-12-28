@@ -165,10 +165,9 @@ class InstantCommands(BaseCog):
         try:
             function = self.get_function_from_str(function_string)
         except Exception as e:
+            exception = "".join(traceback.format_exception(type(e), e, e.__traceback__))
             message = (
-                "An exception has occured while compiling your code:\n"
-                "```py\n"
-                "".join(traceback.format_exception(type(e), e, e.__traceback__)) + "```"
+                f"An exception has occured while compiling your code:\n```py\n{exception}\n```"
             )
             for page in pagify(message):
                 await ctx.send(page)
@@ -183,10 +182,10 @@ class InstantCommands(BaseCog):
             try:
                 self.bot.add_command(function)
             except Exception as e:
+                exception = "".join(traceback.format_exception(type(e), e, e.__traceback__))
                 message = (
                     "An expetion has occured while adding the command to discord.py:\n"
-                    "```py\n"
-                    "".join(traceback.format_exception(type(e), e, e.__traceback__)) + "```"
+                    f"```py\n{exception}\n```"
                 )
                 for page in pagify(message):
                     await ctx.send(page)
@@ -204,10 +203,10 @@ class InstantCommands(BaseCog):
             try:
                 self.bot.add_listener(function)
             except Exception as e:
+                exception = "".join(traceback.format_exception(type(e), e, e.__traceback__))
                 message = (
                     "An expetion has occured while adding the listener to discord.py:\n"
-                    "```py\n"
-                    "".join(traceback.format_exception(type(e), e, e.__traceback__)) + "```"
+                    f"```py\n{exception}\n```"
                 )
                 for page in pagify(message):
                     await ctx.send(page)
