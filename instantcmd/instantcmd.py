@@ -9,6 +9,7 @@ import textwrap
 from redbot.core import commands
 from redbot.core import checks
 from redbot.core import Config
+from redbot.core.utils.predicates import MessagePredicate
 from redbot.core.utils.chat_formatting import pagify
 
 BaseCog = getattr(commands, "Cog", object)
@@ -146,10 +147,6 @@ class InstantCommands(BaseCog):
 
         If you want to make a listener, give its name instead of the command name.
         """
-
-        def check(message):
-            return message.author == ctx.author and message.channel == ctx.channel
-
         await ctx.send(
             "You're about to create a new command. \n"
             "Your next message will be the code of the command. \n\n"
@@ -157,15 +154,14 @@ class InstantCommands(BaseCog):
             "please read the wiki:\n"
             "<https://laggrons-dumb-cogs.readthedocs.io/instantcommands.html>"
         )
-
+        pred = MessagePredicate.same_context(ctx)
         try:
-            response = await self.bot.wait_for("message", timeout=900, check=check)
+            response = await self.bot.wait_for("message", timeout=900, check=pred)
         except asyncio.TimeoutError:
             await ctx.send("Question timed out.")
             return
 
         function_string = self.cleanup_code(response.content)
-
         try:
             function = self.get_function_from_str(function_string)
         except Exception as e:
@@ -180,15 +176,12 @@ class InstantCommands(BaseCog):
         # if the user used the command correctly, we should have one async function
 
         if isinstance(function, commands.Command):
-
             async with self.data.commands() as _commands:
                 if function.name in _commands:
                     await ctx.send("Error: That listener is already registered.")
                     return
-
             try:
                 self.bot.add_command(function)
-
             except Exception as e:
                 message = (
                     "An expetion has occured while adding the command to discord.py:\n"
@@ -200,22 +193,18 @@ class InstantCommands(BaseCog):
                 for page in pagify(message):
                     await ctx.send(page)
                 return
-
             else:
                 async with self.data.commands() as _commands:
                     _commands[function.name] = function_string
                 await ctx.send("The command `{}` was successfully added.".format(function.name))
 
         else:
-
             async with self.data.commands() as _commands:
                 if function.__name__ in _commands:
                     await ctx.send("Error: That listener is already registered.")
                     return
-
             try:
                 self.bot.add_listener(function)
-
             except Exception as e:
                 message = (
                     "An expetion has occured while adding the listener to discord.py:\n"
@@ -227,7 +216,6 @@ class InstantCommands(BaseCog):
                 for page in pagify(message):
                     await ctx.send(page)
                 return
-
             else:
                 self.listeners[function.__name__] = id(function)
                 async with self.data.commands() as _commands:
@@ -239,21 +227,20 @@ class InstantCommands(BaseCog):
     @instantcmd.command(aliases=["del", "remove"])
     async def delete(self, ctx, command_or_listener: str):
         """
-        Remove a command from the registered instant commands.
+        Remove a command or a listener from the registered instant commands.
         """
-
-        _commands = await self.data.commands()
-
-        if command not in _commands:
-            await ctx.send("That instant command doesn't exist")
-            return
+        command = command_or_listener
+        async with self.data.commands() as _commands:
+            if command not in _commands:
+                await ctx.send("That instant command doesn't exist")
+                return
             if command in self.listeners:
                 text = "listener"
                 self.bot.remove_listener(FakeListener(self.listeners[command]), name=command)
             else:
                 text = "command"
                 self.bot.remove_command(command)
-        _commands.pop(command)
+            _commands.pop(command)
         await ctx.send(f"The {text} `{command}` was successfully removed.")
 
     @instantcmd.command()
