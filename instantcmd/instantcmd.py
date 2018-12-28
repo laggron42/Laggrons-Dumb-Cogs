@@ -4,6 +4,7 @@
 import discord
 import asyncio  # for coroutine checks
 import traceback
+import textwrap
 
 from redbot.core import commands
 from redbot.core import checks
@@ -11,6 +12,26 @@ from redbot.core import Config
 from redbot.core.utils.chat_formatting import pagify
 
 BaseCog = getattr(commands, "Cog", object)
+
+
+class FakeListener:
+    """
+    A fake listener used to remove the extra listeners.
+
+    This is needed due to how extra listeners works, and how the cog stores these.
+    When adding a listener to the list, we get its ID. Then, when we need to remove\
+    the listener, we call this fake class with that ID, so discord.py thinks this is\
+    that listener.
+
+    Credit to mikeshardmind for finding this solution. For more info, please look at this issue:
+    https://github.com/Rapptz/discord.py/issues/1284
+    """
+
+    def __init__(self, idx):
+        self.idx = idx
+
+    def __eq__(self, function):
+        return self.idx == id(function)
 
 
 class InstantCommands(BaseCog):
@@ -27,6 +48,7 @@ class InstantCommands(BaseCog):
 
         def_global = {"commands": {}}
         self.data.register_global(**def_global)
+        self.listeners = {}
 
         # these are the availables values when creating an instant cmd
         self.env = {"bot": self.bot, "discord": discord, "commands": commands, "checks": checks}
@@ -69,18 +91,12 @@ class InstantCommands(BaseCog):
         """
 
         # self.get_config_identifier(name)
-
-        old_locals = dict(locals())
-        exec(command)
-
-        new_locals = dict(locals())
-        new_locals.pop("old_locals")
-
-        function = [b for a, b in new_locals.items() if a not in old_locals]
-
-        if function == []:
-            raise KeyError("Nothing detected.")
-        return function[0]
+        to_compile = "def func():\n%s" % textwrap.indent(command, "  ")
+        exec(to_compile, self.env)
+        result = self.env["func"]()
+        if not result:
+            raise KeyError("Nothing detected. Make sure to return a command or a listener")
+        return result
 
     def load_command_or_listener(self, function):
         """
@@ -91,6 +107,7 @@ class InstantCommands(BaseCog):
             self.bot.add_command(function)
         else:
             self.bot.add_listener(function)
+            self.listeners[function.__name__] = id(function)
 
     async def resume_commands(self):
         """
@@ -212,6 +229,7 @@ class InstantCommands(BaseCog):
                 return
 
             else:
+                self.listeners[function.__name__] = id(function)
                 async with self.data.commands() as _commands:
                     _commands[function.__name__] = function_string
                 await ctx.send(
@@ -219,7 +237,7 @@ class InstantCommands(BaseCog):
                 )
 
     @instantcmd.command(aliases=["del", "remove"])
-    async def delete(self, ctx, command: str):
+    async def delete(self, ctx, command_or_listener: str):
         """
         Remove a command from the registered instant commands.
         """
@@ -229,13 +247,14 @@ class InstantCommands(BaseCog):
         if command not in _commands:
             await ctx.send("That instant command doesn't exist")
             return
-
-        if not self.bot.remove_command(command):
-            function = self.get_function_from_str(_commands[command], command)
-            self.bot.remove_listener(function)
+            if command in self.listeners:
+                text = "listener"
+                self.bot.remove_listener(FakeListener(self.listeners[command]), name=command)
+            else:
+                text = "command"
+                self.bot.remove_command(command)
         _commands.pop(command)
-        await self.data.commands.set(_commands)
-        await ctx.send("The command/listener `{}` was successfully removed.\n\n".format(command))
+        await ctx.send(f"The {text} `{command}` was successfully removed.")
 
     @instantcmd.command()
     async def info(self, ctx, command: str = None):
