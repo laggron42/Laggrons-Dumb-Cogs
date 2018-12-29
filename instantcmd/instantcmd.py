@@ -5,12 +5,17 @@ import discord
 import asyncio  # for coroutine checks
 import traceback
 import textwrap
+import logging
 
+from typing import TYPE_CHECKING
 from redbot.core import commands
 from redbot.core import checks
 from redbot.core import Config
 from redbot.core.utils.predicates import MessagePredicate
 from redbot.core.utils.chat_formatting import pagify
+
+if TYPE_CHECKING:
+    from .loggers import Log
 
 BaseCog = getattr(commands, "Cog", object)
 
@@ -45,9 +50,10 @@ class InstantCommands(BaseCog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.sentry = None
         self.data = Config.get_conf(self, 260)
 
-        def_global = {"commands": {}}
+        def_global = {"commands": {}, "enable_sentry": None, "updated_body": False}
         self.data.register_global(**def_global)
         self.listeners = {}
 
@@ -57,7 +63,7 @@ class InstantCommands(BaseCog):
         bot.loop.create_task(self.resume_commands())
 
     __author__ = "retke (El Laggron)"
-    __version__ = "Laggrons-Dumb-Cogs/instantcmd beta 2b"
+    __version__ = "1.0.0"
     __info__ = {
         "bot_version": "3.0.0b9",
         "description": "Command and listener maker from a code snippet through Discord",
@@ -76,6 +82,11 @@ class InstantCommands(BaseCog):
         "short": "Instant command maker",
         "tags": ["command", "listener", "code"],
     }
+
+    def _set_log(self, sentry: "Log"):
+        self.sentry = sentry
+        global log
+        log = logging.getLogger("laggron.instantcmd")
 
     # def get_config_identifier(self, name):
     # """
@@ -278,3 +289,117 @@ class InstantCommands(BaseCog):
             )
             for page in pagify(message):
                 await ctx.send(page)
+
+    @commands.command()
+    async def error(self, ctx):
+        raise Exception("This is Major Laggron to Sentry control!")
+
+    @commands.command(hidden=True)
+    @checks.is_owner()
+    async def instantcmdinfo(self, ctx, sentry: str = None):
+        """
+        Get informations about the cog.
+
+        Type `sentry` after your command to modify its status.
+        """
+        current_status = await self.data.enable_sentry()
+        status = lambda x: "enable" if x else "disable"
+
+        if sentry is not None and "sentry" in sentry:
+            await ctx.send(
+                "You're about to {} error logging. Are you sure you want to do this? Type "
+                "`yes` to confirm.".format(status(not current_status))
+            )
+            predicate = MessagePredicate.yes_or_no(ctx)
+            try:
+                await self.bot.wait_for("message", timeout=60, check=predicate)
+            except asyncio.TimeoutError:
+                await ctx.send("Request timed out.")
+            else:
+                if predicate.result:
+                    await self.data.enable_sentry.set(not current_status)
+                    if not current_status:
+                        # now enabled
+                        self.sentry.enable()
+                        await ctx.send(
+                            "Upcoming errors will be reported automatically for a faster fix. "
+                            "Thank you for helping me with the development process!"
+                        )
+                    else:
+                        # disabled
+                        self.sentry.disable()
+                        await ctx.send("Error logging has been disabled.")
+                    log.info(
+                        f"Sentry error reporting was {status(not current_status)}d "
+                        "on this instance."
+                    )
+                else:
+                    await ctx.send(
+                        "Okay, error logging will stay {}d.".format(status(current_status))
+                    )
+                return
+
+        message = (
+            "Laggron's Dumb Cogs V3 - instantcmd\n\n"
+            "Version: {0.__version__}\n"
+            "Author: {0.__author__}\n"
+            "Sentry error reporting: {1}d (type `{2}instantcmdinfo sentry` to change this)\n\n"
+            "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
+            "Discord server: https://discord.gg/AVzjfpR\n"
+            "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"
+            "Support my work on Patreon: https://www.patreon.com/retke"
+        ).format(self, status(current_status), ctx.prefix)
+        await ctx.send(message)
+
+    # error handling
+    def _set_context(self, data):
+        self.sentry.client.extra_context(data)
+
+    async def on_command_error(self, ctx, error):
+        if not isinstance(error, commands.CommandInvokeError):
+            return
+        if not ctx.command.cog_name == self.__class__.__name__:
+            # That error doesn't belong to the cog
+            return
+        async with self.data.commands() as _commands:
+            if ctx.command.name in _commands:
+                log.info(f"Error in instant command {ctx.command.name}.", exc_info=error.original)
+                return
+        if isinstance(error, commands.MissingPermissions):
+            await ctx.send(
+                "I need the `Add reactions` and `Manage messages` in the "
+                "current channel if you want to use this command."
+            )
+        messages = "\n".join(
+            [
+                f"{x.author} %bot%: {x.content}".replace("%bot%", "(Bot)" if x.author.bot else "")
+                for x in await ctx.history(limit=5, reverse=True).flatten()
+            ]
+        )
+        log.propagate = False  # let's remove console output for this since Red already handle this
+        context = {
+            "command": {
+                "invoked": f"{ctx.author} (ID: {ctx.author.id})",
+                "command": f"{ctx.command.name} (cog: {ctx.cog})",
+                "arguments": ctx.kwargs,
+            }
+        }
+        if ctx.guild:
+            context["guild"] = f"{ctx.guild.name} (ID: {ctx.guild.id})"
+        self.sentry.disable_stdout()  # remove console output since red also handle this
+        log.error(
+            f"Exception in command '{ctx.command.qualified_name}'.\n\n"
+            f"Myself: {ctx.me}\n"
+            f"Last 5 messages:\n\n{messages}\n\n",
+            exc_info=error.original,
+        )
+        self.sentry.enable_stdout()  # re-enable console output for warnings
+        self._set_context({})  # remove context for future logs
+
+    # correctly unload the cog
+    def __unload(self):
+        log.debug("Cog unloaded from the instance.")
+
+        # remove all handlers from the logger, this prevents adding
+        # multiple times the same handler if the cog gets reloaded
+        log.handlers = []
