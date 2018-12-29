@@ -35,7 +35,7 @@ class RoleInvite(BaseCog):
         self.api = API(self.bot, self.data)  # loading the API
 
     __author__ = "retke (El Laggron)"
-    __version__ = "Laggrons-Dumb-Cogs/roleinvite beta 3"
+    __version__ = "Laggrons-Dumb-Cogs/roleinvite beta 4"
     __info__ = {
         "bot_version": "3.0.0b9",
         "description": (
@@ -137,9 +137,7 @@ class RoleInvite(BaseCog):
     @checks.admin()
     async def roleset(self, ctx):
         """Roleinvite cog management"""
-
-        if not ctx.invoked_subcommand:
-            await ctx.send_help()
+        pass
 
     @roleset.command()
     async def add(self, ctx, invite: str, *, role: discord.Role):
@@ -192,6 +190,10 @@ class RoleInvite(BaseCog):
 
         if role.position >= ctx.guild.me.top_role.position:
             await ctx.send("That role is higher than mine. I can't add it to new users.")
+            return
+
+        if role.position >= ctx.author.top_role.position:
+            await ctx.send("That role is higher than yours, you can't add it to yourself.")
             return
 
         if await commands.InviteConverter.convert(self, ctx, invite):
@@ -327,17 +329,17 @@ class RoleInvite(BaseCog):
                     # user will remove only one role from the invite link
 
                     if invite == "main":
-                        message = "You're about to unlink the `{}` role from the main autorole.".format(
-                            role.name
-                        )
+                        message = (
+                            "You're about to unlink the `{}` role from " "the main autorole."
+                        ).format(role.name)
                     elif invite == "default":
-                        message = "You're about to unlink the `{}` role from the default autorole.".format(
-                            role.name
-                        )
+                        message = (
+                            "You're about to unlink the `{}` role from " "the default autorole."
+                        ).format(role.name)
                     else:
-                        message = "You're about to unlink the `{}` role from the invite {}.".format(
-                            role.name, invite
-                        )
+                        message = (
+                            "You're about to unlink the `{}` role from " "the invite {}."
+                        ).format(role.name, invite)
                     await ctx.send(message + "\nProceed? (yes/no)")
 
                     if not await self.check(ctx):  # the user answered no
@@ -382,7 +384,10 @@ class RoleInvite(BaseCog):
                     value="\n".join([x.name for x in roles]),
                 )
                 embed.set_footer(
-                    text="These roles are given if the member joined with an other invite than those linked"
+                    text=(
+                        "These roles are given if the member joined with "
+                        "an other invite than those linked"
+                    )
                 )
             elif i == "default":
                 embed.add_field(
@@ -390,7 +395,10 @@ class RoleInvite(BaseCog):
                     value="\n".join([x.name for x in roles]),
                 )
                 embed.set_footer(
-                    text="These roles are always given to the new members, regardless of the invite used."
+                    text=(
+                        "These roles are always given to the new members, "
+                        "regardless of the invite used."
+                    )
                 )
             else:
                 embed.add_field(
@@ -406,9 +414,8 @@ class RoleInvite(BaseCog):
 
         if embeds == []:
             await ctx.send(
-                "There is nothing set on RoleInvite. Type `{}roleset` for more informations.".format(
-                    ctx.prefix
-                )
+                "There is nothing set on RoleInvite. Type `{}roleset` for more "
+                "informations.".format(ctx.prefix)
             )
             return
 
@@ -431,7 +438,8 @@ class RoleInvite(BaseCog):
         """
         Enable or disabe the autorole system.
 
-        If it was disabled within your action, that means that the bot somehow lost the `manage_roles` permission.
+        If it was disabled within your action, that means that the bot\
+        somehow lost the `manage_roles` permission.
         """
 
         if not ctx.guild.me.guild_permissions.manage_roles:
@@ -443,9 +451,8 @@ class RoleInvite(BaseCog):
             await ctx.send(
                 "The autorole system is now enabled on this server.\n"
                 "Type `{0.prefix}roleset list` to see what's the current role list.\n"
-                "If the bot lose the `Manage roles` permission, the autorole will be disabled.".format(
-                    ctx
-                )
+                "If the bot lose the `Manage roles` permission, the autorole "
+                "will be disabled.".format(ctx)
             )
 
         else:
@@ -453,9 +460,8 @@ class RoleInvite(BaseCog):
             await ctx.send(
                 "The autorole system is now disabled on this server.\n"
                 "Type `{0.prefix}roleset enable` to enable it back.\n\n"
-                "The settings are still saved, and you can also edit them. New members will just be ignored.".format(
-                    ctx
-                )
+                "The settings are still saved, and you can also edit them. New members "
+                "will just be ignored.".format(ctx)
             )
 
     async def on_member_join(self, member):
