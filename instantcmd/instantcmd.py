@@ -107,7 +107,7 @@ class InstantCommands(BaseCog):
         exec(to_compile, self.env)
         result = self.env["func"]()
         if not result:
-            raise KeyError("Nothing detected. Make sure to return a command or a listener")
+            raise RuntimeError("Nothing detected. Make sure to return a command or a listener")
         return result
 
     def load_command_or_listener(self, function):
