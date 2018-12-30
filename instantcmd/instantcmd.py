@@ -290,10 +290,6 @@ class InstantCommands(BaseCog):
             for page in pagify(message):
                 await ctx.send(page)
 
-    @commands.command()
-    async def error(self, ctx):
-        raise Exception("This is Major Laggron to Sentry control!")
-
     @commands.command(hidden=True)
     @checks.is_owner()
     async def instantcmdinfo(self, ctx, sentry: str = None):
