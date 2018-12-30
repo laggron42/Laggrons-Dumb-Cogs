@@ -24,7 +24,7 @@ log.propagate = True
 
 class Log:
     """
-    Logging and error reporting management for WarnSystem
+    Logging and error reporting management for InstantCommands
 
     Credit to Cog-Creators for the code base.
     """

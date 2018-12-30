@@ -27,20 +27,20 @@ async def ask_enable_sentry(bot):
         except asyncio.TimeoutError:
             await owner.send(
                 "Request timed out. Error logging disabled by default. You can "
-                "change that by using the `[p]warnsysteminfo` command."
+                "change that by using the `[p]instantcmdinfo` command."
             )
             return None
         if "yes" in message.content.lower():
             await owner.send(
                 "Thank you for helping me with the development process!\n"
-                "You can disable this at anytime by using `[p]warnsysteminfo` command."
+                "You can disable this at anytime by using `[p]instantcmdinfo` command."
             )
             log.info("Sentry error reporting was enabled for this instance.")
             return True
         else:
             await owner.send(
                 "The error logging was not enabled. You can change that by "
-                "using the `[p]warnsysteminfo` command."
+                "using the `[p]instantcmdinfo` command."
             )
             return False
 
