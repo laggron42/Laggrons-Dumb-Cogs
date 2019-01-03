@@ -1,10 +1,17 @@
 import asyncio
 import discord
 import logging
+import os
+import sys
 
 from copy import deepcopy
 from typing import Union, Optional
 from datetime import datetime, timedelta
+
+try:
+    from redbot.core.modlog import get_modlog_channel as get_red_modlog_channel
+except RuntimeError:
+    pass  # running sphinx-build raises an error when importing this module
 
 from .warnsystem import _  # translator
 from . import errors
@@ -43,8 +50,7 @@ class API:
         self.data = config
 
         # importing this here prevents a RuntimeError when building the documentation
-        global get_red_modlog_channel
-        from redbot.core.modlog import get_modlog_channel as get_red_modlog_channel
+        # TODO find another solution
 
     def _get_datetime(self, time: str) -> datetime:
         return datetime.strptime(time, "%a %d %B %Y %H:%M")
@@ -52,32 +58,32 @@ class API:
     def _format_timedelta(self, time: timedelta):
         """Format a timedelta object into a string"""
         # blame python for not creating a strftime attribute
-        plural = lambda x: _("s") if x > 1 else ""
+        plural = lambda name, amount: name[0] if amount > 1 else name[1]
         strings = []
-        units = {
-            _("year"): 0,
-            _("month"): 0,
-            _("week"): 0,
-            _("day"): 0,
-            _("hour"): 0,
-            _("minute"): 0,
-            _("second"): time.total_seconds(),
-        }
-        if units[_("second")] >= 31536000:
-            units[_("year")], units[_("second")] = divmod(units[_("second")], 365)
-        if units[_("second")] >= 2635200:
-            units[_("month")], units[_("second")] = divmod(units[_("second")], 2635200)
-        if units[_("second")] >= 86400:
-            units[_("week")], units[_("second")] = divmod(units[_("second")], 86400)
-        if units[_("second")] >= 3600:
-            units[_("hour")], units[_("second")] = divmod(units[_("second")], 3600)
-        if units[_("second")] >= 60:
-            units[_("minute")], units[_("second")] = divmod(units[_("second")], 60)
 
-        for unit, value in units.items():
+        seconds = time.total_seconds()
+        years, seconds = divmod(seconds, 31622400)
+        months, seconds = divmod(seconds, 2635200)
+        weeks, seconds = divmod(seconds, 86400)
+        hours, seconds = divmod(seconds, 3600)
+        minutes, seconds = divmod(seconds, 60)
+        units = [years, months, weeks, hours, minutes, seconds]
+
+        for i, value in enumerate(units):
             if value < 1:
                 continue
-            strings.append(f"{round(value)} {unit}{plural(value)}")
+            # tuples inspired from mikeshardmind
+            # https://github.com/mikeshardmind/SinbadCogs/blob/v3/scheduler/time_utils.py#L29
+            units_name = {
+                0: (_("year"), _("years")),
+                1: (_("month"), _("months")),
+                2: (_("week"), _("weeks")),
+                3: (_("hour"), _("hours")),
+                4: (_("minute"), _("minute")),
+                5: (_("second"), _("second")),
+            }
+            unit_name = plural(units_name.get(i), len(value))
+            strings.append(f"{round(value)} {unit_name}")
         string = ", ".join(strings[:-1])
         if len(strings) > 1:
             string += _(" and ") + strings[-1]
@@ -418,17 +424,13 @@ class API:
         tuple
             A :py:class:`tuple` with the modlog embed at index 0, and the user embed at index 1.
         """
-        action = (
-            _("mute")
-            if level == 2
-            else _("kick")
-            if level == 3
-            else _("softban")
-            if level == 4
-            else _("ban")
-            if level == 5
-            else _("warn")
-        )
+        action = {
+            1: (_("warn"), _("warns")),
+            2: (_("mute"), _("mutes")),
+            3: (_("kick"), _("kicks")),
+            4: (_("softban"), _("softbans")),
+            5: (_("ban"), _("bans")),
+        }.get(level, default=(_("unknown")))
         mod_message = ""
         if not reason:
             reason = _("No reason was provided.")
@@ -444,15 +446,14 @@ class API:
         # a lambda that returns a string; if True is given, a third person sentence is returned
         # (modlog), if False is given, a first person sentence is returned (DM user)
         current_status = lambda x: _(
-            "{who} now {verb} {total} warning{plural} ({total_type} {action}{plural_type})"
+            "{who} now {verb} {total} {warning} ({total_type} {action}{plural_type})"
         ).format(
             who=_("The member") if x else _("You"),
             verb=_("has") if x else _("have"),
             total=total_warns,
+            warning=_("warnings") if total_warns > 1 else _("warning"),
             total_type=total_type_warns,
-            action=action,
-            plural="s" if total_warns > 1 else "",
-            plural_type="s" if total_type_warns > 1 else "",
+            action=action[1] if total_type_warns > 1 else action[0],
         )
 
         # we set any value that can be used multiple times
@@ -481,7 +482,9 @@ class API:
         # embed for the modlog
         log_embed = discord.Embed()
         log_embed.set_author(name=f"{member.name} | {member.id}", icon_url=member.avatar_url)
-        log_embed.title = _("Level {level} warning ({action})").format(level=level, action=action)
+        log_embed.title = _("Level {level} warning ({action})").format(
+            level=level, action=action[0]
+        )
         log_embed.description = format_description(log_description)
         log_embed.add_field(name=_("Member"), value=member.mention, inline=True)
         log_embed.add_field(name=_("Moderator"), value=author.mention, inline=True)
@@ -613,7 +616,7 @@ class API:
                     exc_info=e,
                 )
         await self.data.guild(guild).mute_role.set(role.id)
-        return errors if errors else True
+        return errors
 
     async def format_reason(self, guild: discord.Guild, reason: str = None) -> str:
         """
@@ -834,16 +837,8 @@ class API:
 
         # take actions
         if take_action:
-            action = (
-                _("mute")
-                if level == 2
-                else _("kick")
-                if level == 3
-                else _("softban")
-                if level == 4
-                else _("ban")
-                if level == 5
-                else _("warn")
+            action = {1: _("warn"), 2: _("mute"), 3: _("kick"), 4: _("softban"), 5: _("ban")}.get(
+                level, default=_("unknown")
             )
             if reason and not reason.endswith("."):
                 reason += "."
@@ -906,9 +901,8 @@ class API:
                 channel = sorted(
                     [
                         x
-                        for x in guild.channels
-                        if isinstance(x, discord.TextChannel)
-                        and x.permissions_for(guild.me).create_instant_invite
+                        for x in guild.text_channels
+                        if x.permissions_for(guild.me).create_instant_invite
                     ],
                     key=lambda x: (x.position, len(x.members)),
                 )[0]
