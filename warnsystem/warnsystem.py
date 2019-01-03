@@ -46,6 +46,7 @@ class RedBadArgument(Exception):
     pass
 
 
+# also from Cog-Creators/Red-DiscordBot#2140
 def timedelta_converter(argument: str) -> timedelta:
     """
     Attempts to parse a user input string as a timedelta
@@ -90,6 +91,7 @@ class WarnSystem(BaseCog):
         "show_mod": False,  # if the responsible mod should be revealed to the warned user
         "mute_role": None,  # the role used for mute
         "respect_hierarchy": False,  # if the bot should check if the mod is allowed by hierarchy
+        # TODO use bot settingfor respect_hierarchy ?
         "reinvite": True,  # if the bot should try to send an invite to an unbanned/kicked member
         "channels": {  # modlog channels
             "main": None,  # default
@@ -222,7 +224,7 @@ class WarnSystem(BaseCog):
                 )
             )
         except errors.NotAllowedByHierarchy:
-            is_admin = mod.is_admin_or_superior(member)
+            is_admin = mod.is_admin_or_superior(self.bot, member)
             await ctx.send(
                 _(
                     "You are not allowed to do this, {member} is higher than you in the role "
@@ -342,7 +344,7 @@ class WarnSystem(BaseCog):
         try:
             await ctx.send(embed=embed)
         except discord.errors.HTTPException as e:
-            log.error(f"Couldn't make embed for displaying settings.", exc_info=e)
+            log.error("Couldn't make embed for displaying settings.", exc_info=e)
             await ctx.send(
                 _(
                     "Error when sending the message. Check the warnsystem "
@@ -412,9 +414,9 @@ class WarnSystem(BaseCog):
                     _("I can't manage roles, please give me this permission to continue.")
                 )
                 return
-            role = await self.api.maybe_create_mute_role(guild)
+            fails = await self.api.maybe_create_mute_role(guild)
             my_position = guild.me.top_role.position
-            if not role:
+            if fails is False:
                 await ctx.send(
                     _(
                         "A mute role was already created! You can change it by specifying "
@@ -423,10 +425,10 @@ class WarnSystem(BaseCog):
                 )
                 return
             else:
-                if isinstance(role, list):
+                if fails:
                     errors = _(
                         "\n\nSome errors occured when editing the channel permissions:\n"
-                    ) + "\n".join(role)
+                    ) + "\n".join(fails)
                 else:
                     errors = ""
                 await ctx.send(
@@ -792,15 +794,12 @@ class WarnSystem(BaseCog):
             for member, logs in data.items():
                 cases = []
                 for case in [y for x, y in logs.items() if x.startswith("case")]:
-                    level = (
-                        1
-                        if case["level"] == "Simple"
-                        else 3
-                        if case["level"] == "Kick"
-                        else 4
-                        if case["level"] == "Softban"
-                        else 5
-                    )
+                    level = {
+                        "Simple": 1,
+                        "Kick": 3,
+                        "Softban": 4,
+                        "Ban": 5,
+                    }.get(case["level"], default=1)
                     cases.append(
                         {
                             "level": level,
@@ -1303,7 +1302,7 @@ class WarnSystem(BaseCog):
             )
         messages = "\n".join(
             [
-                f"{x.author} %bot%: {x.content}".replace("%bot%", "(Bot)" if x.author.bot else "")
+                f"{x.author} {'(Bot)' if x.author.bot else ''}: {x.content}"
                 for x in await ctx.history(limit=5, reverse=True).flatten()
             ]
         )
