@@ -69,19 +69,19 @@ class API:
         minutes, seconds = divmod(seconds, 60)
         units = [years, months, weeks, hours, minutes, seconds]
 
+        # tuples inspired from mikeshardmind
+        # https://github.com/mikeshardmind/SinbadCogs/blob/v3/scheduler/time_utils.py#L29
+        units_name = {
+            0: (_("year"), _("years")),
+            1: (_("month"), _("months")),
+            2: (_("week"), _("weeks")),
+            3: (_("hour"), _("hours")),
+            4: (_("minute"), _("minute")),
+            5: (_("second"), _("second")),
+        }
         for i, value in enumerate(units):
             if value < 1:
                 continue
-            # tuples inspired from mikeshardmind
-            # https://github.com/mikeshardmind/SinbadCogs/blob/v3/scheduler/time_utils.py#L29
-            units_name = {
-                0: (_("year"), _("years")),
-                1: (_("month"), _("months")),
-                2: (_("week"), _("weeks")),
-                3: (_("hour"), _("hours")),
-                4: (_("minute"), _("minute")),
-                5: (_("second"), _("second")),
-            }
             unit_name = plural(units_name.get(i), len(value))
             strings.append(f"{round(value)} {unit_name}")
         string = ", ".join(strings[:-1])
