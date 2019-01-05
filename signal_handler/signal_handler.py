@@ -1,7 +1,6 @@
 import signal
 import logging
 import sys
-import asyncio
 
 from redbot.core.commands import Cog
 
