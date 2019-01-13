@@ -81,3 +81,9 @@ class Sentry:
     def disable(self):
         """Disable error reporting for Sentry."""
         self.logger.removeHandler(self.handler)
+
+    def enable_stdout(self):
+        self.logger.addHandler(self.stdout_handler)
+
+    def disable_stdout(self):
+        self.logger.removeHandler(self.stdout_handler)

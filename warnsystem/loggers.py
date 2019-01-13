@@ -86,6 +86,12 @@ class Log:
         loop = asyncio.get_event_loop()
         loop.create_task(self.close())
 
+    def enable_stdout(self):
+        log.addHandler(self.stdout_handler)
+
+    def disable_stdout(self):
+        log.removeHandler(self.stdout_handler)
+
     async def close(self):
         """Wait for the Sentry client to send pending messages and shut down."""
         await self.client.remote.get_transport().close()
