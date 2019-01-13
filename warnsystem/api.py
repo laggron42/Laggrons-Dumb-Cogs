@@ -972,7 +972,7 @@ class API:
                 if not member:
                     to_remove.append(action)
                     continue
-    
+
                 reason = _(
                     "End of timed {action} of {member} requested by {author} that lasted "
                     "for {time}. Reason of the {action}: {reason}"
