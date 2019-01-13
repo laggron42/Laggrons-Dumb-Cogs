@@ -913,8 +913,10 @@ class WarnSystem(BaseCog):
         Set a simple warning on a user.
         """
         await self.call_warn(ctx, 1, member, reason)
-        if ctx.message:
+        if ctx.channel.permissions_for(ctx.guild.me).add_reactions and ctx.message:
             await ctx.message.add_reaction("✅")
+        else:
+            await ctx.send("Done.")
 
     @warn.command(name="2", aliases=["mute"], usage="<member> [time] <reason>")
     async def warn_2(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
@@ -924,8 +926,7 @@ class WarnSystem(BaseCog):
         This mute will use a role that will automatically be created, if it was not already done.
         Feel free to edit the role's permissions and move it in the roles hierarchy.
 
-        You can set a timed mute by providing a valid time before the reason. Unmute the user with\
-        the `[p]
+        You can set a timed mute by providing a valid time before the reason.
 
         Examples:
         - `[p]warn 2 @user 30m`: 30 minutes mute
@@ -945,8 +946,10 @@ class WarnSystem(BaseCog):
                 else:
                     reason = " ".join(reason.split()[1:])  # removes time from string
         await self.call_warn(ctx, 2, member, reason, time)
-        if ctx.message:
+        if ctx.channel.permissions_for(ctx.guild.me).add_reactions and ctx.message:
             await ctx.message.add_reaction("✅")
+        else:
+            await ctx.send("Done.")
 
     @warn.command(name="3", aliases=["kick"])
     async def warn_3(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
@@ -957,8 +960,10 @@ class WarnSystem(BaseCog):
         using the `[p]warnset reinvite` command.
         """
         await self.call_warn(ctx, 3, member, reason)
-        if ctx.message:
+        if ctx.channel.permissions_for(ctx.guild.me).add_reactions and ctx.message:
             await ctx.message.add_reaction("✅")
+        else:
+            await ctx.send("Done.")
 
     @warn.command(name="4", aliases=["softban"])
     async def warn_4(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
@@ -972,8 +977,10 @@ class WarnSystem(BaseCog):
         `[p]warnset bandays` command.
         """
         await self.call_warn(ctx, 4, member, reason)
-        if ctx.message:
+        if ctx.channel.permissions_for(ctx.guild.me).add_reactions and ctx.message:
             await ctx.message.add_reaction("✅")
+        else:
+            await ctx.send("Done.")
 
     @warn.command(name="5", aliases=["ban"], usage="<member> [time] <reason>")
     async def warn_5(
@@ -1011,8 +1018,10 @@ class WarnSystem(BaseCog):
                 else:
                     reason = " ".join(reason.split()[1:])  # removes time from string
         await self.call_warn(ctx, 5, member, reason, time)
-        if ctx.message:
+        if ctx.channel.permissions_for(ctx.guild.me).add_reactions and ctx.message:
             await ctx.message.add_reaction("✅")
+        else:
+            await ctx.send("Done.")
 
     @commands.command()
     @commands.guild_only()
