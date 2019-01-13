@@ -19,7 +19,6 @@ if logging.getLogger("red").isEnabledFor(logging.DEBUG):
     log.setLevel(logging.DEBUG)
 else:
     log.setLevel(logging.INFO)
-log.propagate = True
 
 
 class Log:

@@ -83,6 +83,7 @@ async def setup(bot):
             )
         )
     sentry = Log(bot, n.__version__)
+    sentry.enable_stdout()
     n._set_log(sentry)
     create_cache(cog_data_path(n))
     if await n.data.enable_sentry() is None:
