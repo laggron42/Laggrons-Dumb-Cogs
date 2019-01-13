@@ -1037,9 +1037,8 @@ class WarnSystem(BaseCog):
             await ctx.send_help()
             return
         if isinstance(user, int):
-            try:
-                user = self.bot.get_user_info(user)
-            except discord.errors.NotFound:
+            user = self.api._get_user_info(user)
+            if not user:
                 await ctx.send(_("User not found."))
                 return
         if not await mod.is_mod_or_superior(self.bot, ctx.author) and user != ctx.author:
@@ -1141,7 +1140,7 @@ class WarnSystem(BaseCog):
             )
         await message.clear_reactions()
         embed = message.embeds[0]
-        member = await self.bot.get_user_info(
+        member = await self.api._get_user_info(
             int(embed.author.name.rpartition("|")[2].replace(" ", ""))
         )
         embed.clear_fields()
@@ -1202,7 +1201,7 @@ class WarnSystem(BaseCog):
             )
         await message.clear_reactions()
         embed = message.embeds[0]
-        member = await self.bot.get_user_info(
+        member = await self.api._get_user_info(
             int(embed.author.name.rpartition("|")[2].replace(" ", ""))
         )
         embed.clear_fields()
