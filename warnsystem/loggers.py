@@ -19,7 +19,6 @@ if logging.getLogger("red").isEnabledFor(logging.DEBUG):
     log.setLevel(logging.DEBUG)
 else:
     log.setLevel(logging.INFO)
-log.propagate = True
 
 
 class Log:
@@ -42,7 +41,7 @@ class Log:
         self.format = logging.Formatter(
             "%(asctime)s %(levelname)s WarnSystem: %(message)s", datefmt="[%d/%m/%Y %H:%M]"
         )
-        self.sentry_handler = self.init_logger()
+        self.sentry_handler, self.stdout_handler = self.init_logger()
 
     def init_logger(self) -> SentryHandler:
         # sentry stuff
@@ -72,9 +71,8 @@ class Log:
         # stdout stuff
         stdout_handler = logging.StreamHandler()
         stdout_handler.setFormatter(self.format)
-        log.addHandler(stdout_handler)
 
-        return sentry_handler
+        return (sentry_handler, stdout_handler)
 
     def enable(self):
         """Enable error reporting for Sentry."""
@@ -85,6 +83,12 @@ class Log:
         log.removeHandler(self.sentry_handler)
         loop = asyncio.get_event_loop()
         loop.create_task(self.close())
+
+    def enable_stdout(self):
+        log.addHandler(self.stdout_handler)
+
+    def disable_stdout(self):
+        log.removeHandler(self.stdout_handler)
 
     async def close(self):
         """Wait for the Sentry client to send pending messages and shut down."""

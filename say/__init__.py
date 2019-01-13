@@ -1,9 +1,13 @@
 import pathlib
 import asyncio
+import logging
 
 from .say import Say
+from .loggers import Log
 
 from redbot.core.data_manager import cog_data_path
+
+log = logging.getLogger("laggron.say")
 
 
 def create_cache(path: pathlib.Path):
@@ -14,7 +18,7 @@ def create_cache(path: pathlib.Path):
         (path / "cache").mkdir()
 
 
-async def ask_enable_sentry(bot, _):
+async def ask_enable_sentry(bot):
     owner = bot.get_user(bot.owner_id)
 
     def check(message):
@@ -45,6 +49,7 @@ async def ask_enable_sentry(bot, _):
                     "You can disable this at anytime by using `[p]sayinfo` command."
                 )
             )
+            log.info("Sentry error reporting was enabled for this instance.")
             return True
         else:
             await owner.send(
@@ -57,11 +62,17 @@ async def ask_enable_sentry(bot, _):
 
 
 async def setup(bot):
+    global _
     n = Say(bot)
+    _ = n.translator
+    sentry = Log(bot, n.__version__)
+    sentry.enable_stdout()
+    n._set_log(sentry)
     create_cache(cog_data_path(n))
     if await n.data.enable_sentry() is None:
-        response = await ask_enable_sentry(bot, n.translator)
+        response = await ask_enable_sentry(bot)
         await n.data.enable_sentry.set(response)
     if await n.data.enable_sentry():
         n.sentry.enable()
     bot.add_cog(n)
+    log.debug("Cog successfully loaded on the instance.")
