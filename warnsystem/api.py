@@ -964,14 +964,16 @@ class API:
                 taken_on = action["time"]
                 until = self._get_datetime(action["until"])
                 author = guild.get_member(action["author"])
-                member = await self._get_user_info(action["member"])
+                member = guild.get_member(action["member"])
                 case_reason = action["reason"]
                 level = action["level"]
                 action_str = _("mute") if level == 2 else _("ban")
                 action_past = _("muted") if level == 2 else _("banned")
                 if not member:
-                    to_remove.append(action)
-                    continue
+                    if level == 2:
+                        to_remove.append(action)
+                        continue
+                    member = await self._get_user_info(action["member"])
 
                 reason = _(
                     "End of timed {action} of {member} requested by {author} that lasted "
