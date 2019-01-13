@@ -46,6 +46,7 @@ class RedBadArgument(Exception):
     pass
 
 
+# also from Cog-Creators/Red-DiscordBot#2140
 def timedelta_converter(argument: str) -> timedelta:
     """
     Attempts to parse a user input string as a timedelta
@@ -90,6 +91,7 @@ class WarnSystem(BaseCog):
         "show_mod": False,  # if the responsible mod should be revealed to the warned user
         "mute_role": None,  # the role used for mute
         "respect_hierarchy": False,  # if the bot should check if the mod is allowed by hierarchy
+        # TODO use bot settingfor respect_hierarchy ?
         "reinvite": True,  # if the bot should try to send an invite to an unbanned/kicked member
         "channels": {  # modlog channels
             "main": None,  # default
@@ -152,7 +154,7 @@ class WarnSystem(BaseCog):
 
         self.task = bot.loop.create_task(self.api._loop_task())
 
-    __version__ = "relase 1.0.0"
+    __version__ = "1.0.1"
     __author__ = "retke (El Laggron)"
     __info__ = {
         "bot_version": "3.0.0rc1",
@@ -222,7 +224,7 @@ class WarnSystem(BaseCog):
                 )
             )
         except errors.NotAllowedByHierarchy:
-            is_admin = mod.is_admin_or_superior(member)
+            is_admin = mod.is_admin_or_superior(self.bot, member)
             await ctx.send(
                 _(
                     "You are not allowed to do this, {member} is higher than you in the role "
@@ -342,7 +344,7 @@ class WarnSystem(BaseCog):
         try:
             await ctx.send(embed=embed)
         except discord.errors.HTTPException as e:
-            log.error(f"Couldn't make embed for displaying settings.", exc_info=e)
+            log.error("Couldn't make embed for displaying settings.", exc_info=e)
             await ctx.send(
                 _(
                     "Error when sending the message. Check the warnsystem "
@@ -412,9 +414,9 @@ class WarnSystem(BaseCog):
                     _("I can't manage roles, please give me this permission to continue.")
                 )
                 return
-            role = await self.api.maybe_create_mute_role(guild)
+            fails = await self.api.maybe_create_mute_role(guild)
             my_position = guild.me.top_role.position
-            if not role:
+            if fails is False:
                 await ctx.send(
                     _(
                         "A mute role was already created! You can change it by specifying "
@@ -423,10 +425,10 @@ class WarnSystem(BaseCog):
                 )
                 return
             else:
-                if isinstance(role, list):
+                if fails:
                     errors = _(
                         "\n\nSome errors occured when editing the channel permissions:\n"
-                    ) + "\n".join(role)
+                    ) + "\n".join(fails)
                 else:
                     errors = ""
                 await ctx.send(
@@ -792,14 +794,8 @@ class WarnSystem(BaseCog):
             for member, logs in data.items():
                 cases = []
                 for case in [y for x, y in logs.items() if x.startswith("case")]:
-                    level = (
-                        1
-                        if case["level"] == "Simple"
-                        else 3
-                        if case["level"] == "Kick"
-                        else 4
-                        if case["level"] == "Softban"
-                        else 5
+                    level = {"Simple": 1, "Kick": 3, "Softban": 4, "Ban": 5}.get(
+                        case["level"], default=1
                     )
                     cases.append(
                         {
@@ -914,8 +910,10 @@ class WarnSystem(BaseCog):
         Set a simple warning on a user.
         """
         await self.call_warn(ctx, 1, member, reason)
-        if ctx.message:
+        if ctx.channel.permissions_for(ctx.guild.me).add_reactions and ctx.message:
             await ctx.message.add_reaction("✅")
+        else:
+            await ctx.send("Done.")
 
     @warn.command(name="2", aliases=["mute"], usage="<member> [time] <reason>")
     async def warn_2(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
@@ -925,8 +923,7 @@ class WarnSystem(BaseCog):
         This mute will use a role that will automatically be created, if it was not already done.
         Feel free to edit the role's permissions and move it in the roles hierarchy.
 
-        You can set a timed mute by providing a valid time before the reason. Unmute the user with\
-        the `[p]
+        You can set a timed mute by providing a valid time before the reason.
 
         Examples:
         - `[p]warn 2 @user 30m`: 30 minutes mute
@@ -946,8 +943,10 @@ class WarnSystem(BaseCog):
                 else:
                     reason = " ".join(reason.split()[1:])  # removes time from string
         await self.call_warn(ctx, 2, member, reason, time)
-        if ctx.message:
+        if ctx.channel.permissions_for(ctx.guild.me).add_reactions and ctx.message:
             await ctx.message.add_reaction("✅")
+        else:
+            await ctx.send("Done.")
 
     @warn.command(name="3", aliases=["kick"])
     async def warn_3(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
@@ -958,8 +957,10 @@ class WarnSystem(BaseCog):
         using the `[p]warnset reinvite` command.
         """
         await self.call_warn(ctx, 3, member, reason)
-        if ctx.message:
+        if ctx.channel.permissions_for(ctx.guild.me).add_reactions and ctx.message:
             await ctx.message.add_reaction("✅")
+        else:
+            await ctx.send("Done.")
 
     @warn.command(name="4", aliases=["softban"])
     async def warn_4(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
@@ -973,8 +974,10 @@ class WarnSystem(BaseCog):
         `[p]warnset bandays` command.
         """
         await self.call_warn(ctx, 4, member, reason)
-        if ctx.message:
+        if ctx.channel.permissions_for(ctx.guild.me).add_reactions and ctx.message:
             await ctx.message.add_reaction("✅")
+        else:
+            await ctx.send("Done.")
 
     @warn.command(name="5", aliases=["ban"], usage="<member> [time] <reason>")
     async def warn_5(
@@ -1012,8 +1015,10 @@ class WarnSystem(BaseCog):
                 else:
                     reason = " ".join(reason.split()[1:])  # removes time from string
         await self.call_warn(ctx, 5, member, reason, time)
-        if ctx.message:
+        if ctx.channel.permissions_for(ctx.guild.me).add_reactions and ctx.message:
             await ctx.message.add_reaction("✅")
+        else:
+            await ctx.send("Done.")
 
     @commands.command()
     @commands.guild_only()
@@ -1032,9 +1037,8 @@ class WarnSystem(BaseCog):
             await ctx.send_help()
             return
         if isinstance(user, int):
-            try:
-                user = self.bot.get_user_info(user)
-            except discord.errors.NotFound:
+            user = self.api._get_user_info(user)
+            if not user:
                 await ctx.send(_("User not found."))
                 return
         if not await mod.is_mod_or_superior(self.bot, ctx.author) and user != ctx.author:
@@ -1136,7 +1140,7 @@ class WarnSystem(BaseCog):
             )
         await message.clear_reactions()
         embed = message.embeds[0]
-        member = await self.bot.get_user_info(
+        member = await self.api._get_user_info(
             int(embed.author.name.rpartition("|")[2].replace(" ", ""))
         )
         embed.clear_fields()
@@ -1197,7 +1201,7 @@ class WarnSystem(BaseCog):
             )
         await message.clear_reactions()
         embed = message.embeds[0]
-        member = await self.bot.get_user_info(
+        member = await self.api._get_user_info(
             int(embed.author.name.rpartition("|")[2].replace(" ", ""))
         )
         embed.clear_fields()
@@ -1301,13 +1305,6 @@ class WarnSystem(BaseCog):
                     "current channel if you want to use this command."
                 )
             )
-        messages = "\n".join(
-            [
-                f"{x.author} %bot%: {x.content}".replace("%bot%", "(Bot)" if x.author.bot else "")
-                for x in await ctx.history(limit=5, reverse=True).flatten()
-            ]
-        )
-        log.propagate = False  # let's remove console output for this since Red already handle this
         context = {
             "command": {
                 "invoked": f"{ctx.author} (ID: {ctx.author.id})",
@@ -1318,13 +1315,11 @@ class WarnSystem(BaseCog):
         if ctx.guild:
             context["guild"] = f"{ctx.guild.name} (ID: {ctx.guild.id})"
         self._set_context(context)
+        self.sentry.disable_stdout()  # remove console output since red also handle this
         log.error(
-            f"Exception in command '{ctx.command.qualified_name}'.\n\n"
-            f"Myself: {ctx.me}\n"
-            f"Last 5 messages:\n\n{messages}\n\n",
-            exc_info=error.original,
+            f"Exception in command '{ctx.command.qualified_name}'.\n\n", exc_info=error.original
         )
-        log.propagate = True  # re-enable console output for warnings
+        self.sentry.enable_stdout()  # re-enable console output for warnings
         self._set_context({})  # remove context for future logs
 
     # correctly unload the cog

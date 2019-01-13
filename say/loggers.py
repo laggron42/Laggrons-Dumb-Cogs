@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from distutils.version import StrictVersion
 
 
-log = logging.getLogger("laggron.instantcmd")
+log = logging.getLogger("laggron.say")
 if logging.getLogger("red").isEnabledFor(logging.DEBUG):
     log.setLevel(logging.DEBUG)
 else:
@@ -23,7 +23,7 @@ else:
 
 class Log:
     """
-    Logging and error reporting management for InstantCommands
+    Logging and error reporting management for Say
 
     Credit to Cog-Creators for the code base.
     """
@@ -32,14 +32,14 @@ class Log:
         self.bot = bot
         self.client = Client(
             dsn=(
-                "https://b44948703f8f46ff8a69b79d27357874:afd51031d51841bb998879e4a2822aa1"
-                "@sentry.io/1361811"
+                "https://ff90c52be55a43b1914be6dd26ac7b57:dc1b6820fcfc4a149a2ff276a12b6ccf"
+                "@sentry.io/1253554"
             ),
             release=version,
             transport=AioHttpTransport,
         )
         self.format = logging.Formatter(
-            "%(asctime)s %(levelname)s InstantCommands: %(message)s", datefmt="[%d/%m/%Y %H:%M]"
+            "%(asctime)s %(levelname)s Say: %(message)s", datefmt="[%d/%m/%Y %H:%M]"
         )
         self.sentry_handler, self.stdout_handler = self.init_logger()
 
@@ -60,9 +60,9 @@ class Log:
 
         # logging to a log file
         # file is automatically created by the module, if the parent foler exists
-        cog_path = cog_data_path(raw_name="InstantCommands")
+        cog_path = cog_data_path(raw_name="Say")
         if cog_path.exists():
-            log_path = cog_path / "instantcmd.log"
+            log_path = cog_path / "say.log"
             file_logger = logging.FileHandler(log_path)
             file_logger.setLevel(logging.DEBUG)
             file_logger.setFormatter(self.format)

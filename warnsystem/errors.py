@@ -53,8 +53,7 @@ class InvalidLevel(Exception):
     It must be between 1 and 5.
     """
 
-    def __init__(self, exception):
-        log.debug(f"API error: InvalidLevel\n{exception}\n")
+    pass
 
 
 class NotFound(Exception):
@@ -63,8 +62,7 @@ class NotFound(Exception):
     depends of what you called, it may be a missing WarnSystem channel.
     """
 
-    def __init__(self, exception):
-        log.debug(f"API error: NotFound\n{exception}\n")
+    pass
 
 
 class MissingMuteRole(Exception):
@@ -73,8 +71,7 @@ class MissingMuteRole(Exception):
     :func:`~warnsystem.api.API.maybe_create_role` to fix this.
     """
 
-    def __init__(self, exception):
-        log.debug(f"API error: MissingMuteRole\n{exception}\n")
+    pass
 
 
 class BadArgument(Exception):
@@ -82,8 +79,7 @@ class BadArgument(Exception):
     The arguments provided for your request are wrong, check the types.
     """
 
-    def __init__(self, exception):
-        log.debug(f"API error: NotFound\n{exception}\n")
+    pass
 
 
 class MissingPermissions(Exception):
@@ -94,8 +90,7 @@ class MissingPermissions(Exception):
     API call, we check the bot's permissions before calling.
     """
 
-    def __init__(self, exception):
-        log.debug(f"API error: MissingPermissions\n{exception}\n")
+    pass
 
 
 class MemberTooHigh(Exception):
@@ -110,8 +105,7 @@ class MemberTooHigh(Exception):
     API call, we check the bot's permissions before calling.
     """
 
-    def __init__(self, exception):
-        log.debug(f"API error: MemberTooHigh\n{exception}\n")
+    pass
 
 
 class NotAllowedByHierarchy(Exception):
@@ -125,8 +119,7 @@ class NotAllowedByHierarchy(Exception):
     .. note:: This cannot be raised if the admins disabled the role hierarchy check.
     """
 
-    def __init__(self, exception):
-        log.debug(f"API error: NotAllowedByHierarchy\n{exception}\n")
+    pass
 
 
 class LostPermissions(Exception):
@@ -136,3 +129,5 @@ class LostPermissions(Exception):
     This can be the permission to send messages in the modlog channel or use\
     the mute role.
     """
+
+    pass
