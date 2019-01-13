@@ -49,6 +49,7 @@ async def ask_enable_sentry(bot):
                     "You can disable this at anytime by using `[p]sayinfo` command."
                 )
             )
+            log.info("Sentry error reporting was enabled for this instance.")
             return True
         else:
             await owner.send(
