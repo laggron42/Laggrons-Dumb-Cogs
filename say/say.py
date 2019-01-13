@@ -6,6 +6,7 @@ import asyncio
 import sys
 import logging
 
+from typing import TYPE_CHECKING
 from redbot.core import checks
 from redbot.core import Config
 from redbot.core.i18n import Translator, cog_i18n
@@ -13,16 +14,10 @@ from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.tunnel import Tunnel
 from redbot.core import commands
 
-from .sentry import Sentry
+if TYPE_CHECKING:
+    from .loggers import Log
 
-log = logging.getLogger("laggron.say")
-if logging.getLogger("red").isEnabledFor(logging.DEBUG):
-    # debug mode enabled
-    log.setLevel(logging.DEBUG)
-else:
-    log.setLevel(logging.WARNING)
 _ = Translator("Say", __file__)
-
 BaseCog = getattr(commands, "Cog", object)
 
 
@@ -40,12 +35,11 @@ class Say(BaseCog):
         self.data = Config.get_conf(self, 260)
         self.data.register_global(enable_sentry=None)
         self.translator = _
-        self.sentry = Sentry(log, self.__version__, bot)
         self.interaction = []
         self.cache = cog_data_path(self) / "cache"
 
     __author__ = "retke (El Laggron)"
-    __version__ = "1.4.7"
+    __version__ = "1.4.8"
     __info__ = {
         "bot_version": "3.0.0b14",
         "description": (
@@ -65,16 +59,13 @@ class Say(BaseCog):
         "tags": ["rift", "upload", "interact"],
     }
 
-    def _set_context(self, data: dict):
-        """
-        Set any extra context information before logging something.
-        This is an alias of ``self.sentry.client.extra_context()``
+    def _set_log(self, sentry: "Log"):
+        self.sentry = sentry
+        global log
+        log = logging.getLogger("laggron.say")
+        # this is called now so the logger is already initialized
 
-        Arguments
-        ---------
-        data: dict
-            The dictionnary that must appear on Sentry panel
-        """
+    def _set_context(self, data: dict):
         self.sentry.client.extra_context(data)
 
     async def say(self, ctx, text, files):
