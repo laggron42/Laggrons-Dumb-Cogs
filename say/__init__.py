@@ -3,7 +3,7 @@ import asyncio
 import logging
 
 from .say import Say
-from .sentry import Log
+from .loggers import Log
 
 from redbot.core.data_manager import cog_data_path
 
