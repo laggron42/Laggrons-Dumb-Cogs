@@ -430,7 +430,7 @@ class API:
             3: (_("kick"), _("kicks")),
             4: (_("softban"), _("softbans")),
             5: (_("ban"), _("bans")),
-        }.get(level, default=(_("unknown")))
+        }.get(level, _("unknown"))
         mod_message = ""
         if not reason:
             reason = _("No reason was provided.")
@@ -838,7 +838,7 @@ class API:
         # take actions
         if take_action:
             action = {1: _("warn"), 2: _("mute"), 3: _("kick"), 4: _("softban"), 5: _("ban")}.get(
-                level, default=_("unknown")
+                level, _("unknown")
             )
             if reason and not reason.endswith("."):
                 reason += "."
