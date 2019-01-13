@@ -1300,7 +1300,6 @@ class WarnSystem(BaseCog):
                     "current channel if you want to use this command."
                 )
             )
-        log.propagate = False  # let's remove console output for this since Red already handle this
         context = {
             "command": {
                 "invoked": f"{ctx.author} (ID: {ctx.author.id})",
@@ -1311,11 +1310,12 @@ class WarnSystem(BaseCog):
         if ctx.guild:
             context["guild"] = f"{ctx.guild.name} (ID: {ctx.guild.id})"
         self._set_context(context)
+        self.sentry.disable_stdout()  # remove console output since red also handle this
         log.error(
             f"Exception in command '{ctx.command.qualified_name}'.\n\n",
             exc_info=error.original,
         )
-        log.propagate = True  # re-enable console output for warnings
+        self.sentry.enable_stdout()  # re-enable console output for warnings
         self._set_context({})  # remove context for future logs
 
     # correctly unload the cog

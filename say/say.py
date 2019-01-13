@@ -324,7 +324,6 @@ class Say(BaseCog):
         if not ctx.command.cog_name == self.__class__.__name__:
             # That error doesn't belong to the cog
             return
-        log.propagate = False  # let's remove console output for this since Red already handle this
         context = {
             "command": {
                 "invoked": f"{ctx.author} (ID: {ctx.author.id})",
@@ -334,10 +333,11 @@ class Say(BaseCog):
         if ctx.guild:
             context["guild"] = f"{ctx.guild.name} (ID: {ctx.guild.id})"
         self._set_context(context)
+        self.sentry.disable_stdout()  # remove console output since red also handle this
         log.error(
             f"Exception in command '{ctx.command.qualified_name}'.\n\n", exc_info=error.original
         )
-        log.propagate = True  # re-enable console output for warnings
+        self.sentry.enable_stdout()  # re-enable console output for warnings
         self._set_context({})  # remove context for future logs
 
     async def stop_interaction(self, user):
