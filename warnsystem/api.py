@@ -99,6 +99,21 @@ class API:
             warns.append(case)
         return True
 
+    async def _get_user_info(self, user_id: int):
+        user = self.bot.get_user(user_id)
+        if not user:
+            try:
+                await self.bot.get_user_info(user_id)
+            except discord.errors.NotFound:
+                user = None
+            except discord.errors.HTTPException as e:
+                log.error(
+                    "Received HTTPException when trying to get user info. "
+                    "This is probaby a cooldown from Discord.",
+                    exc_info=e,
+                )
+        return user
+
     async def _mute(self, member: discord.Member, reason: Optional[str] = None):
         """Mute an user on the guild."""
         guild = member.guild
@@ -737,10 +752,8 @@ class API:
                 raise errors.BadArgument(
                     "You need to provide a valid discord.Member object for this action."
                 )
-            try:
-                # we re-create a discord.User object to do not break the functions
-                member = await self.bot.get_user_info(member)
-            except discord.errors.NotFound:
+            member = await self._get_user_info(member)
+            if not member:
                 raise errors.NotFound(_("The requested member does not exist."))
 
         # we get the modlog channel now to make sure it exists before doing anything
@@ -950,18 +963,16 @@ class API:
             for action in data:
                 taken_on = action["time"]
                 until = self._get_datetime(action["until"])
-                member = guild.get_member(action["member"])
                 author = guild.get_member(action["author"])
+                member = await self._get_user_info(action["member"])
                 case_reason = action["reason"]
                 level = action["level"]
                 action_str = _("mute") if level == 2 else _("ban")
-                action_past = "muted" if level == 2 else "banned"
+                action_past = _("muted") if level == 2 else _("banned")
                 if not member:
-                    if level == 2:
-                        to_remove.append(action)
-                        continue
-                    else:
-                        member = await self.bot.get_user_info(action["member"])
+                    to_remove.append(action)
+                    continue
+    
                 reason = _(
                     "End of timed {action} of {member} requested by {author} that lasted "
                     "for {time}. Reason of the {action}: {reason}"
