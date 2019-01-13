@@ -1300,12 +1300,6 @@ class WarnSystem(BaseCog):
                     "current channel if you want to use this command."
                 )
             )
-        messages = "\n".join(
-            [
-                f"{x.author} {'(Bot)' if x.author.bot else ''}: {x.content}"
-                for x in await ctx.history(limit=5, reverse=True).flatten()
-            ]
-        )
         log.propagate = False  # let's remove console output for this since Red already handle this
         context = {
             "command": {
@@ -1318,9 +1312,7 @@ class WarnSystem(BaseCog):
             context["guild"] = f"{ctx.guild.name} (ID: {ctx.guild.id})"
         self._set_context(context)
         log.error(
-            f"Exception in command '{ctx.command.qualified_name}'.\n\n"
-            f"Myself: {ctx.me}\n"
-            f"Last 5 messages:\n\n{messages}\n\n",
+            f"Exception in command '{ctx.command.qualified_name}'.\n\n",
             exc_info=error.original,
         )
         log.propagate = True  # re-enable console output for warnings
