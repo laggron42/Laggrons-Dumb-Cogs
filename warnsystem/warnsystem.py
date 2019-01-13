@@ -154,7 +154,7 @@ class WarnSystem(BaseCog):
 
         self.task = bot.loop.create_task(self.api._loop_task())
 
-    __version__ = "relase 1.0.0"
+    __version__ = "1.0.1"
     __author__ = "retke (El Laggron)"
     __info__ = {
         "bot_version": "3.0.0rc1",
