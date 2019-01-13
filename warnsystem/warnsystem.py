@@ -794,12 +794,9 @@ class WarnSystem(BaseCog):
             for member, logs in data.items():
                 cases = []
                 for case in [y for x, y in logs.items() if x.startswith("case")]:
-                    level = {
-                        "Simple": 1,
-                        "Kick": 3,
-                        "Softban": 4,
-                        "Ban": 5,
-                    }.get(case["level"], default=1)
+                    level = {"Simple": 1, "Kick": 3, "Softban": 4, "Ban": 5}.get(
+                        case["level"], default=1
+                    )
                     cases.append(
                         {
                             "level": level,
@@ -1321,8 +1318,7 @@ class WarnSystem(BaseCog):
         self._set_context(context)
         self.sentry.disable_stdout()  # remove console output since red also handle this
         log.error(
-            f"Exception in command '{ctx.command.qualified_name}'.\n\n",
-            exc_info=error.original,
+            f"Exception in command '{ctx.command.qualified_name}'.\n\n", exc_info=error.original
         )
         self.sentry.enable_stdout()  # re-enable console output for warnings
         self._set_context({})  # remove context for future logs
