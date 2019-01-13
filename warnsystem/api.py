@@ -813,7 +813,7 @@ class API:
                     _(
                         "The mute role `{mute_role}` was moved above my top role `{my_role}`. "
                         "Please move the roles so my top role is above the mute role."
-                    )
+                    ).format(mute_role=mute_role.name, my_role=guild.me.top_role.name)
                 )
         if level == 3:
             # kick
