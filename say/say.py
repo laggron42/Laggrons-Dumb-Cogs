@@ -295,7 +295,8 @@ class Say(BaseCog):
             "Sentry error reporting: {1}d (type `{2}sayinfo sentry` to change this)\n\n"
             "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
             "Discord server: https://discord.gg/AVzjfpR\n"
-            "Documentation: http://laggrons-dumb-cogs.readthedocs.io/"
+            "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"
+            "Support my work on Patreon: https://www.patreon.com/retke"
         ).format(self, status(current_status), ctx.prefix)
         await ctx.send(message)
 
