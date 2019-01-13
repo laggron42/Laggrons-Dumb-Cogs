@@ -82,7 +82,7 @@ class API:
         for i, value in enumerate(units):
             if value < 1:
                 continue
-            unit_name = plural(units_name.get(i), len(value))
+            unit_name = plural(units_name.get(i), value)
             strings.append(f"{round(value)} {unit_name}")
         string = ", ".join(strings[:-1])
         if len(strings) > 1:
@@ -446,7 +446,7 @@ class API:
         # a lambda that returns a string; if True is given, a third person sentence is returned
         # (modlog), if False is given, a first person sentence is returned (DM user)
         current_status = lambda x: _(
-            "{who} now {verb} {total} {warning} ({total_type} {action}{plural_type})"
+            "{who} now {verb} {total} {warning} ({total_type} {action})"
         ).format(
             who=_("The member") if x else _("You"),
             verb=_("has") if x else _("have"),
