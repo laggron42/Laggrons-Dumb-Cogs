@@ -41,7 +41,7 @@ class Log:
         self.format = logging.Formatter(
             "%(asctime)s %(levelname)s WarnSystem: %(message)s", datefmt="[%d/%m/%Y %H:%M]"
         )
-        self.sentry_handler = self.init_logger()
+        self.sentry_handler, self.stdout_handler = self.init_logger()
 
     def init_logger(self) -> SentryHandler:
         # sentry stuff
@@ -71,9 +71,8 @@ class Log:
         # stdout stuff
         stdout_handler = logging.StreamHandler()
         stdout_handler.setFormatter(self.format)
-        log.addHandler(stdout_handler)
 
-        return sentry_handler
+        return (sentry_handler, stdout_handler)
 
     def enable(self):
         """Enable error reporting for Sentry."""
