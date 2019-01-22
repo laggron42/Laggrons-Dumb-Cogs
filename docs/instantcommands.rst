@@ -102,6 +102,8 @@ It can be a command (you will need to add the ``commands`` decorator) or a liste
 .. note::
 
     Here are the available values for your code snippet:
+
+    * ``bot`` (client object)
     
     * ``discord``
     
