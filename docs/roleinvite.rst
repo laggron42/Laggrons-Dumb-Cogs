@@ -2,7 +2,7 @@
 RoleInvite
 ==========
 
-.. note:: These docs refers to the **beta 2b** version.
+.. note:: These docs refers to the version **2.0.0**.
     Make sure you're under the good version by typing ``[p]cog update``.
 
 This is the guide for the ``roleinvite`` cog. Everything you need is here.
@@ -244,10 +244,3 @@ An invite link was removed without any action
 
 Invite links will be deleted if the invite doesn't exist anymore
 (manual delete or invite expired).
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-I lost all of my data on the guild
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The bot will delete your server's data after a restart if he's
-not anymore on your server. Don't kick the bot and use the disable function instead.
