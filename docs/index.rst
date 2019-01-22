@@ -55,9 +55,10 @@ Welcome to Laggron's Dumb Cogs's official documentation!
    :maxdepth: 2
    :caption: Cog guides
 
-   say
-   roleinvite
    instantcommands
+   roleinvite
+   say
+   warnsystem
 
 .. toctree::
     :maxdepth: 2

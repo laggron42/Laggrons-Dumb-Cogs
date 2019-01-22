@@ -88,16 +88,22 @@ It can be a command (you will need to add the ``commands`` decorator) or a liste
 
             await ctx.send("You excepted to see your text, "
                             "but it was I, Dio!")
+        
+        return command
                             
     .. code-block:: python
     
         async def on_reaction_add(reaction, user):
             await reaction.message.add_reaction('❤')
             await message.channel.send("Here's some love for " + user.mention)
+        
+        return on_reaction_add
             
 .. note::
 
     Here are the available values for your code snippet:
+
+    * ``bot`` (client object)
     
     * ``discord``
     
@@ -137,12 +143,6 @@ instantcommad delete
 **Description**
 
 Remove an instant command or a listener from what you registered before.
-
-.. warning::
-
-    Listeners won't be removed from discord.py uneless you restart, since 
-    their function to remove listeners doesn't seem to work. Restart the bot to make 
-    sure the listener is well removed.
     
 **Arguments**
 
@@ -197,15 +197,6 @@ give a simple function (don't put the command decorator) and make sure
 its name is matching the lowercased `Discord API listeners 
 <https://discordapp.com/developers/docs/topics/gateway#commands-and-events>`_.
 
-.. attention:: 
-
-    The :func:`~discord.ext.commands.remove_listener` function is not really
-    working at the moment and the listeners are not removed from the bot when
-    using the :ref:`delete <command-instantcommand-delete>` command. 
-    
-    Please restart the bot after using :ref:`delete 
-    <command-instantcommand-delete>` on a listener to make sure it was removed.
-
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 My command was added but doesn't respond when invoked.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -236,6 +227,8 @@ you just need to use it as in a cog.
         
             await config.guild(ctx.guild).foo.set("bar")
             await ctx.send("Well done")
+        
+        return my_command
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 How can limit a command for some users?
@@ -251,23 +244,24 @@ You can use the :class:`~redbot.core.checks` module, like in a normal cog.
         @checks.admin_or_permissions(administrator=True)
         async def command(ctx):
             # your code
+        
+        return command
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 How can I import a module without problem?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Just import, but inside the function. You can use the :py:meth:`__import__`
-method or use the :py:const:`from ... import ...` built-in method.
+You can import your modules outside the function as you wish.
 
 .. tip:: Here's an example
 
     .. code-block:: python
 
+        from redbot.core import modlog
+        import time
+
         @commands.command()
         async def command(ctx):
-
-            from redbot.core import modlog
-            import time
-            __import__('random').randint
-
             # your code
+        
+        return command
