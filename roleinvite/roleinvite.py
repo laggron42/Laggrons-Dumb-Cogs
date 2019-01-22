@@ -76,7 +76,7 @@ class RoleInvite(BaseCog):
     def _set_log(self, sentry: "Log"):
         self.sentry = sentry
         global log
-        log = logging.getLogger("laggron.warnsystem")
+        log = logging.getLogger("laggron.roleinvite")
         # this is called now so the logger is already initialized
 
     async def _check(self, ctx: commands.Context):
