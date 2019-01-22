@@ -2,7 +2,7 @@
 WarnSystem
 ==========
 
-.. note:: These docs refers to the **release 1.0.0** version.
+.. note:: These docs refers to the version **1.0.1**.
     Make sure you're under the good version by typing ``[p]cog update``.
 
 This is the guide for the ``warnsystem`` cog. Everything you need is here.

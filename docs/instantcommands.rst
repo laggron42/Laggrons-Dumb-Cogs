@@ -2,7 +2,7 @@
 InstantCommands
 ===============
 
-.. note:: These docs refers to the **beta 2b** version. 
+.. note:: These docs refers to the version **1.0.0**. 
     Make sure you're under the good version by typing ``[p]cog update``.
 
 This is the guide for the ``instantcmd`` cog. Everything you need is here.
