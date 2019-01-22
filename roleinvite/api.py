@@ -4,12 +4,7 @@ import logging
 from .roleinvite import _  # translator
 from . import errors
 
-log = logging.getLogger("laggron.warnsystem")
-if logging.getLogger("red").isEnabledFor(logging.DEBUG):
-    # debug mode enabled
-    log.setLevel(logging.DEBUG)
-else:
-    log.setLevel(logging.WARNING)
+log = logging.getLogger("laggron.roleinvite")
 
 
 class API:
@@ -84,7 +79,7 @@ class API:
                 # manage_roles permission was removed
                 # we disable the autorole to prevent more errors
                 await self.data.guild(guild).enabled.set(False)
-                self.log.warning(
+                log.warning(
                     "The manage_server permission was lost. "
                     "RoleInvite is now disabled on this guild.\n"
                     f"Guild: {guild.name} (ID: {guild.id})"

@@ -4,7 +4,7 @@ import asyncio
 from .roleinvite import RoleInvite
 from .loggers import Log
 
-log = logging.getLogger("laggron.warnsystem")
+log = logging.getLogger("laggron.roleinvite")
 # this should be called after initializing the logger
 
 
