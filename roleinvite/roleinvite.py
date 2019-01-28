@@ -34,12 +34,14 @@ class RoleInvite(BaseCog):
     Full documentation and FAQ: https://laggrons-dumb-cogs.readthedocs.io/roleinvite.html
     """
 
+    def_global = {"enable_sentry": None}
     def_guild = {"invites": {}, "enabled": False}
 
     def __init__(self, bot):
         self.bot = bot
 
         self.data = Config.get_conf(self, 260)
+        self.data.register_global(**self.def_global)
         self.data.register_guild(**self.def_guild)
 
         self.api = API(bot, self.data)
