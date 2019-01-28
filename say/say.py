@@ -12,6 +12,7 @@ from redbot.core import Config
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.tunnel import Tunnel
+from redbot.core.utils.predicates import MessagePredicate
 from redbot.core import commands
 
 if TYPE_CHECKING:
@@ -253,25 +254,21 @@ class Say(BaseCog):
         Type `sentry` after your command to modify its status.
         """
         current_status = await self.data.enable_sentry()
-        status = lambda x: _("enable") if x else _("disable")
-
+        status = lambda x: (_("enable"), _("enabled")) if x else (_("disable"), _("disabled"))
         if sentry is not None and "sentry" in sentry:
-
-            def check(message):
-                return message.author == ctx.author and message.channel == ctx.author.dm_channel
-
             await ctx.send(
                 _(
                     "You're about to {} error logging. Are you sure you want "
                     "to do this? Type `yes` to confirm."
-                ).format(not current_status)
+                ).format(status(not current_status)[0])
             )
+            predicate = MessagePredicate.yes_or_no(ctx)
             try:
-                response = await self.bot.wait_for("message", timeout=60, check=check)
+                await self.bot.wait_for("message", timeout=60, check=predicate)
             except asyncio.TimeoutError:
                 await ctx.send(_("Request timed out."))
             else:
-                if "yes" in response.content.lower():
+                if predicate.result:
                     await self.data.enable_sentry.set(not current_status)
                     if not current_status:
                         # now enabled
@@ -286,18 +283,26 @@ class Say(BaseCog):
                         # disabled
                         await ctx.send(_("Error logging has been disabled."))
                         await self.sentry.disable()
-                    return
+                    log.info(
+                        f"Sentry error reporting was {status(not current_status)[1]} "
+                        "on this instance."
+                    )
+                else:
+                    await ctx.send(
+                        _("Okay, error logging will stay {}.").format(status(current_status)[1])
+                    )
+                return
 
         message = _(
             "Laggron's Dumb Cogs V3 - say\n\n"
             "Version: {0.__version__}\n"
             "Author: {0.__author__}\n"
-            "Sentry error reporting: {1}d (type `{2}sayinfo sentry` to change this)\n\n"
+            "Sentry error reporting: {1} (type `{2}sayinfo sentry` to change this)\n\n"
             "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
             "Discord server: https://discord.gg/AVzjfpR\n"
             "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"
             "Support my work on Patreon: https://www.patreon.com/retke"
-        ).format(self, status(current_status), ctx.prefix)
+        ).format(self, status(current_status)[1], ctx.prefix)
         await ctx.send(message)
 
     async def on_reaction_add(self, reaction, user):

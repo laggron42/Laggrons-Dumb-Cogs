@@ -5,35 +5,35 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2018-10-07 20:28+0200\n"
+"POT-Creation-Date: 2019-01-24 14:14+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: redgettext 2.1\n"
+"Generated-By: redgettext 2.2\n"
 
 
-#: say/__init__.py:25
+#: say/__init__.py:29
 msgid "Hello, thanks for installing `say`. Would you like to enable error logging to help the developer to fix new errors? If you wish to opt in the process, please type \"yes\""
 msgstr ""
 
-#: say/__init__.py:35
+#: say/__init__.py:39
 msgid "Request timed out. Error logging disabled by default. You can change that by using the `[p]sayinfo` command."
 msgstr ""
 
-#: say/__init__.py:43
+#: say/__init__.py:47
 msgid ""
 "Thank you for helping me with the development process!\n"
 "You can disable this at anytime by using `[p]sayinfo` command."
 msgstr ""
 
-#: say/__init__.py:51
+#: say/__init__.py:56
 msgid "The error logging was not enabled. You can change that by using the `[p]sayinfo` command."
 msgstr ""
 
-#: say/say.py:29
+#: say/say.py:26
 #, docstring
 msgid ""
 "\n"
@@ -44,57 +44,15 @@ msgid ""
 "    "
 msgstr ""
 
-#: say/say.py:104
-msgid "The files got removed because they were too big. The limit for bots is 8mb."
-msgstr ""
-
-#: say/say.py:117
-msgid ""
-"An error occured while downloading the file.\n"
-"Error code "
-msgstr ""
-
-#: say/say.py:119
-msgid "1: `wget` program not found, install it on your machine"
-msgstr ""
-
-#: say/say.py:121
-msgid "3: File I/O error (write permission)"
-msgstr ""
-
-#: say/say.py:123
-msgid "4: Network failure"
-msgstr ""
-
-#: say/say.py:125
-msgid "5: SSL verification failure"
-msgstr ""
-
-#: say/say.py:127
-msgid "7: Protocol error"
-msgstr ""
-
-#: say/say.py:129
-msgid "8: Server issued an error response"
-msgstr ""
-
-#: say/say.py:131
-msgid "2048: Image not found"
-msgstr ""
-
-#: say/say.py:133
-msgid "unknown."
-msgstr ""
-
-#: say/say.py:184 say/say.py:188
+#: say/say.py:110 say/say.py:115
 msgid "I am not allowed to send messages in "
 msgstr ""
 
-#: say/say.py:195 say/say.py:199
+#: say/say.py:122 say/say.py:126
 msgid "I am not allowed to upload files in "
 msgstr ""
 
-#: say/say.py:211
+#: say/say.py:139
 #, docstring
 msgid ""
 "\n"
@@ -109,34 +67,34 @@ msgid ""
 "        "
 msgstr ""
 
-#: say/say.py:228
+#: say/say.py:156
 #, docstring
 msgid ""
 "\n"
 "        Same as say command, except it deletes your message.\n"
-"        \n"
+"\n"
 "        If the message wasn't removed, then I don't have enough permissions.\n"
 "        "
 msgstr ""
 
-#: say/say.py:242 say/say.py:244
+#: say/say.py:170 say/say.py:172
 msgid "Not enough permissions to delete messages."
 msgstr ""
 
-#: say/say.py:251
+#: say/say.py:179
 #, docstring
 msgid "Start receiving and sending messages as the bot through DM"
 msgstr ""
 
-#: say/say.py:257
+#: say/say.py:185
 msgid "You need to give a channel to enable this in DM. You can give the channel ID too."
 msgstr ""
 
-#: say/say.py:266
+#: say/say.py:195
 msgid "A session is already running."
 msgstr ""
 
-#: say/say.py:270
+#: say/say.py:199
 msgid ""
 "I will start sending you messages from {0}.\n"
 "Just send me any message and I will send it in that channel.\n"
@@ -144,11 +102,11 @@ msgid ""
 "If no message was send or received in the last 5 minutes, the request will time out and stop."
 msgstr ""
 
-#: say/say.py:289
+#: say/say.py:218
 msgid "Request timed out. Session closed"
 msgstr ""
 
-#: say/say.py:329
+#: say/say.py:250
 #, docstring
 msgid ""
 "\n"
@@ -158,31 +116,31 @@ msgid ""
 "        "
 msgstr ""
 
-#: say/say.py:335
+#: say/say.py:256
 msgid "enable"
 msgstr ""
 
-#: say/say.py:335
+#: say/say.py:256
 msgid "disable"
 msgstr ""
 
-#: say/say.py:343
+#: say/say.py:264
 msgid "You're about to {} error logging. Are you sure you want to do this? Type `yes` to confirm."
 msgstr ""
 
-#: say/say.py:350
+#: say/say.py:272
 msgid "Request timed out."
 msgstr ""
 
-#: say/say.py:357
+#: say/say.py:279
 msgid "Upcoming errors will be reported automatically for a faster fix. Thank you for helping me with the development process!"
 msgstr ""
 
-#: say/say.py:365
+#: say/say.py:287
 msgid "Error logging has been disabled."
 msgstr ""
 
-#: say/say.py:369
+#: say/say.py:291
 msgid ""
 "Laggron's Dumb Cogs V3 - say\n"
 "\n"
@@ -192,10 +150,12 @@ msgid ""
 "\n"
 "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
 "Discord server: https://discord.gg/AVzjfpR\n"
-"Documentation: http://laggrons-dumb-cogs.readthedocs.io/"
+"Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n"
+"\n"
+"Support my work on Patreon: https://www.patreon.com/retke"
 msgstr ""
 
-#: say/say.py:423
+#: say/say.py:337
 msgid "Session closed"
 msgstr ""
 

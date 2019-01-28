@@ -1053,32 +1053,20 @@ class WarnSystem(BaseCog):
             return
 
         total = lambda level: len([x for x in cases if x["level"] == level])
-        warning_str = (
-            lambda x: _("Mute")
-            if x == 2
-            else _("Kick")
-            if x == 3
-            else _("Softban")
-            if x == 4
-            else _("Ban")
-            if x == 5
-            else _("Warning")
-        )
+        warning_str = lambda level: {
+            1: (_("Warning"), _("Warnings")),
+            2: (_("Mute"), _("Mutes")),
+            3: (_("Kick"), _("Kicks")),
+            4: (_("Softban"), _("Softbans")),
+            5: (_("Ban"), _("Bans")),
+        }.get(level, _("unknown"))
 
         embeds = []
         msg = []
         for i in range(6):
             total_warns = total(i)
             if total_warns > 0:
-                msg.append(
-                    _(
-                        "{action}{plural}: {number}".format(
-                            action=warning_str(i),
-                            plural=_("s") if total_warns > 1 else "",
-                            number=total_warns,
-                        )
-                    )
-                )
+                msg.append(f"{warning_str(i)}: {total_warns}")
         warn_field = "\n".join(msg) if len(msg) > 1 else msg[0]
         embed = discord.Embed(description=_("User modlog summary."))
         embed.set_author(name=f"{user} | {user.id}", icon_url=user.avatar_url)
