@@ -952,9 +952,6 @@ class WarnSystem(BaseCog):
     async def warn_3(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
         Kick the member from the server.
-
-        You can include an invite for the server in the message received by the kicked user by\
-        using the `[p]warnset reinvite` command.
         """
         await self.call_warn(ctx, 3, member, reason)
         if ctx.channel.permissions_for(ctx.guild.me).add_reactions and ctx.message:
