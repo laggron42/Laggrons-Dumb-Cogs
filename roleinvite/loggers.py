@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
 
 log = logging.getLogger("laggron.roleinvite")
+log.setLevel(logging.DEBUG)
 
 
 class Log:
