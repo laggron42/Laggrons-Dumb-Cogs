@@ -446,10 +446,6 @@ class RoleInvite(BaseCog):
         ).format(self, status(current_status)[1], ctx.prefix)
         await ctx.send(message)
 
-    @commands.command()
-    async def error(self, ctx):
-        raise KeyError("Hello it's RoleInvite")
-
     async def on_member_join(self, member):
         async def add_roles(invite):
             invites_data = bot_invites[invite]
