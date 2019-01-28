@@ -13,7 +13,7 @@ from redbot.core.utils.predicates import MessagePredicate
 from redbot.core.utils.chat_formatting import pagify
 
 # creating this before importing other modules allows to import the translator
-_ = Translator("WarnSystem", __file__)
+_ = Translator("RoleInvite", __file__)
 
 from .api import API
 from . import errors
