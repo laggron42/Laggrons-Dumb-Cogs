@@ -53,7 +53,7 @@ class API:
         # TODO find another solution
 
     def _get_datetime(self, time: str) -> datetime:
-        return datetime.strptime(time, "%a %d %B %Y %H:%M")
+        return datetime.strptime(time, "%a %d %B %Y %H:%M:%S")
 
     def _format_timedelta(self, time: timedelta):
         """Format a timedelta object into a string"""
@@ -149,11 +149,11 @@ class API:
             if not isinstance(author, (discord.User, discord.Member))
             else author.id,
             "reason": reason,
-            "time": time.strftime("%a %d %B %Y %H:%M"),
+            "time": time.strftime("%a %d %B %Y %H:%M:%S"),
             "duration": None if not duration else self._format_timedelta(duration),
             "until": None
             if not duration
-            else (datetime.today() + duration).strftime("%a %d %B %Y %H:%M"),
+            else (datetime.today() + duration).strftime("%a %d %B %Y %H:%M:%S"),
         }
         async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
             logs.append(data)
@@ -968,7 +968,6 @@ class API:
                 case_reason = action["reason"]
                 level = action["level"]
                 action_str = _("mute") if level == 2 else _("ban")
-                action_past = _("muted") if level == 2 else _("banned")
                 if not member:
                     if level == 2:
                         to_remove.append(action)
@@ -1009,9 +1008,11 @@ class API:
                         )
                     else:
                         log.debug(
-                            f"{member} was successfully un{action_past} on guild {guild} (ID: "
-                            f'{guild.id}), ending the warn set on {taken_on} for the reason "'
-                            f'{case_reason}".'
+                            f"Ended timed {'mute' if level == 2 else 'ban'} of {member} (ID: "
+                            f"{member.id}) taken on {taken_on} requested by {author} (ID: "
+                            f"{author.id}) that lasted for {action['duration']} on guild "
+                            f'{guild} (ID: {guild.id} for the reason "{reason}"\nCurrent time: '
+                            f"{now}\nExpected end time of warn: {until}"
                         )
                     to_remove.append(action)
             for item in to_remove:
