@@ -693,7 +693,7 @@ class WarnSystem(BaseCog):
                 ).format(respect=_("does") if current else _("doesn't"), opposite=not current)
             )
         elif enable:
-            await self.data.guild(guild).reinvite.set(True)
+            await self.data.guild(guild).show_mod.set(True)
             await ctx.send(
                 _(
                     "Done. The moderator responsible of a warn will now be shown to the warned "
@@ -701,7 +701,7 @@ class WarnSystem(BaseCog):
                 )
             )
         else:
-            await self.data.guild(guild).reinvite.set(False)
+            await self.data.guild(guild).show_mod.set(False)
             await ctx.send(_("Done. The bot will no longer show the responsible moderator."))
 
     @warnset.command(name="description")
