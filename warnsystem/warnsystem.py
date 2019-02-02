@@ -1012,7 +1012,7 @@ class WarnSystem(BaseCog):
         - `[p]warn 5 @user`: Ban for no reason :c
         - `[p]warn 5 @user 7d Insults`: 7 days ban for the reason "Insults"
         - `[p]warn 5 012345678987654321 Advertising and leave`: Ban the user with the ID provided\
-        while he's not in the server for the reason "Advertising and leave" (if the user shares\
+        while they're not in the server for the reason "Advertising and leave" (if the user shares\
         another server with the bot, a DM will be sent).
         """
         time = None
