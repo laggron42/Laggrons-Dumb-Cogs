@@ -693,7 +693,7 @@ class WarnSystem(BaseCog):
                 ).format(respect=_("does") if current else _("doesn't"), opposite=not current)
             )
         elif enable:
-            await self.data.guild(guild).reinvite.set(True)
+            await self.data.guild(guild).show_mod.set(True)
             await ctx.send(
                 _(
                     "Done. The moderator responsible of a warn will now be shown to the warned "
@@ -701,7 +701,7 @@ class WarnSystem(BaseCog):
                 )
             )
         else:
-            await self.data.guild(guild).reinvite.set(False)
+            await self.data.guild(guild).show_mod.set(False)
             await ctx.send(_("Done. The bot will no longer show the responsible moderator."))
 
     @warnset.command(name="description")
@@ -910,10 +910,14 @@ class WarnSystem(BaseCog):
         Set a simple warning on a user.
         """
         await self.call_warn(ctx, 1, member, reason)
-        if ctx.channel.permissions_for(ctx.guild.me).add_reactions and ctx.message:
-            await ctx.message.add_reaction("✅")
-        else:
-            await ctx.send("Done.")
+        if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
+            try:
+                await ctx.message.add_reaction("✅")
+                return
+            except discord.errors.HTTPException:
+                # probably deleted message
+                pass
+        await ctx.send("Done.")
 
     @warn.command(name="2", aliases=["mute"], usage="<member> [time] <reason>")
     async def warn_2(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
@@ -943,24 +947,29 @@ class WarnSystem(BaseCog):
                 else:
                     reason = " ".join(reason.split()[1:])  # removes time from string
         await self.call_warn(ctx, 2, member, reason, time)
-        if ctx.channel.permissions_for(ctx.guild.me).add_reactions and ctx.message:
-            await ctx.message.add_reaction("✅")
-        else:
-            await ctx.send("Done.")
+        if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
+            try:
+                await ctx.message.add_reaction("✅")
+                return
+            except discord.errors.HTTPException:
+                # probably deleted message
+                pass
+        await ctx.send("Done.")
 
     @warn.command(name="3", aliases=["kick"])
     async def warn_3(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
         Kick the member from the server.
-
-        You can include an invite for the server in the message received by the kicked user by\
-        using the `[p]warnset reinvite` command.
         """
         await self.call_warn(ctx, 3, member, reason)
-        if ctx.channel.permissions_for(ctx.guild.me).add_reactions and ctx.message:
-            await ctx.message.add_reaction("✅")
-        else:
-            await ctx.send("Done.")
+        if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
+            try:
+                await ctx.message.add_reaction("✅")
+                return
+            except discord.errors.HTTPException:
+                # probably deleted message
+                pass
+        await ctx.send("Done.")
 
     @warn.command(name="4", aliases=["softban"])
     async def warn_4(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
@@ -974,10 +983,14 @@ class WarnSystem(BaseCog):
         `[p]warnset bandays` command.
         """
         await self.call_warn(ctx, 4, member, reason)
-        if ctx.channel.permissions_for(ctx.guild.me).add_reactions and ctx.message:
-            await ctx.message.add_reaction("✅")
-        else:
-            await ctx.send("Done.")
+        if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
+            try:
+                await ctx.message.add_reaction("✅")
+                return
+            except discord.errors.HTTPException:
+                # probably deleted message
+                pass
+        await ctx.send("Done.")
 
     @warn.command(name="5", aliases=["ban"], usage="<member> [time] <reason>")
     async def warn_5(
@@ -1015,10 +1028,14 @@ class WarnSystem(BaseCog):
                 else:
                     reason = " ".join(reason.split()[1:])  # removes time from string
         await self.call_warn(ctx, 5, member, reason, time)
-        if ctx.channel.permissions_for(ctx.guild.me).add_reactions and ctx.message:
-            await ctx.message.add_reaction("✅")
-        else:
-            await ctx.send("Done.")
+        if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
+            try:
+                await ctx.message.add_reaction("✅")
+                return
+            except discord.errors.HTTPException:
+                # probably deleted message
+                pass
+        await ctx.send("Done.")
 
     @commands.command()
     @commands.guild_only()
@@ -1053,32 +1070,20 @@ class WarnSystem(BaseCog):
             return
 
         total = lambda level: len([x for x in cases if x["level"] == level])
-        warning_str = (
-            lambda x: _("Mute")
-            if x == 2
-            else _("Kick")
-            if x == 3
-            else _("Softban")
-            if x == 4
-            else _("Ban")
-            if x == 5
-            else _("Warning")
-        )
+        warning_str = lambda level, plural: {
+            1: (_("Warning"), _("Warnings")),
+            2: (_("Mute"), _("Mutes")),
+            3: (_("Kick"), _("Kicks")),
+            4: (_("Softban"), _("Softbans")),
+            5: (_("Ban"), _("Bans")),
+        }.get(level, _("unknown"))[1 if plural else 0]
 
         embeds = []
         msg = []
         for i in range(6):
             total_warns = total(i)
             if total_warns > 0:
-                msg.append(
-                    _(
-                        "{action}{plural}: {number}".format(
-                            action=warning_str(i),
-                            plural=_("s") if total_warns > 1 else "",
-                            number=total_warns,
-                        )
-                    )
-                )
+                msg.append(f"{warning_str(i, total_warns > 1)}: {total_warns}")
         warn_field = "\n".join(msg) if len(msg) > 1 else msg[0]
         embed = discord.Embed(description=_("User modlog summary."))
         embed.set_author(name=f"{user} | {user.id}", icon_url=user.avatar_url)
@@ -1095,7 +1100,9 @@ class WarnSystem(BaseCog):
                 description=_("Case #{number} informations").format(number=i + 1)
             )
             embed.set_author(name=f"{user} | {user.id}", icon_url=user.avatar_url)
-            embed.add_field(name=_("Level"), value=f"{warning_str(level)} ({level})", inline=True)
+            embed.add_field(
+                name=_("Level"), value=f"{warning_str(level, False)} ({level})", inline=True
+            )
             embed.add_field(name=_("Moderator"), value=moderator, inline=True)
             if case["duration"]:
                 embed.add_field(
