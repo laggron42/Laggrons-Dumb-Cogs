@@ -14,13 +14,13 @@ if TYPE_CHECKING:
     from distutils.version import StrictVersion
 
 
-log = logging.getLogger("laggron.instantcmd")
+log = logging.getLogger("laggron.roleinvite")
 log.setLevel(logging.DEBUG)
 
 
 class Log:
     """
-    Logging and error reporting management for InstantCommands
+    Logging and error reporting management for RoleInvite
 
     Credit to Cog-Creators for the code base.
     """
@@ -29,14 +29,14 @@ class Log:
         self.bot = bot
         self.client = Client(
             dsn=(
-                "https://b44948703f8f46ff8a69b79d27357874:afd51031d51841bb998879e4a2822aa1"
-                "@sentry.io/1361811"
+                "https://569a1369052245218133d2157028e6f6:bea00ed8961e408d8a7988628fe59607"
+                "@sentry.io/1256931"
             ),
             release=version,
             transport=AioHttpTransport,
         )
         self.format = logging.Formatter(
-            "%(asctime)s %(levelname)s InstantCommands: %(message)s", datefmt="[%d/%m/%Y %H:%M]"
+            "%(asctime)s %(levelname)s RoleInvite: %(message)s", datefmt="[%d/%m/%Y %H:%M]"
         )
         self.sentry_handler, self.stdout_handler = self.init_logger()
 
@@ -57,9 +57,9 @@ class Log:
 
         # logging to a log file
         # file is automatically created by the module, if the parent foler exists
-        cog_path = cog_data_path(raw_name="InstantCommands")
+        cog_path = cog_data_path(raw_name="RoleInvite")
         if cog_path.exists():
-            log_path = cog_path / "instantcmd.log"
+            log_path = cog_path / "roleinvite.log"
             file_logger = logging.FileHandler(log_path)
             file_logger.setLevel(logging.DEBUG)
             file_logger.setFormatter(self.format)

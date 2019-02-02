@@ -15,10 +15,7 @@ if TYPE_CHECKING:
 
 
 log = logging.getLogger("laggron.warnsystem")
-if logging.getLogger("red").isEnabledFor(logging.DEBUG):
-    log.setLevel(logging.DEBUG)
-else:
-    log.setLevel(logging.INFO)
+log.setLevel(logging.DEBUG)
 
 
 class Log:
@@ -71,6 +68,11 @@ class Log:
         # stdout stuff
         stdout_handler = logging.StreamHandler()
         stdout_handler.setFormatter(self.format)
+        # if --debug flag is passed, we also set our debugger on debug mode
+        if logging.getLogger("red").isEnabledFor(logging.DEBUG):
+            stdout_handler.setLevel(logging.DEBUG)
+        else:
+            stdout_handler.setLevel(logging.INFO)
 
         return (sentry_handler, stdout_handler)
 
