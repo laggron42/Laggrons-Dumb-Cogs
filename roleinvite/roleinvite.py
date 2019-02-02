@@ -13,7 +13,7 @@ from redbot.core.utils.predicates import MessagePredicate
 from redbot.core.utils.chat_formatting import pagify
 
 # creating this before importing other modules allows to import the translator
-_ = Translator("WarnSystem", __file__)
+_ = Translator("RoleInvite", __file__)
 
 from .api import API
 from . import errors
@@ -34,12 +34,14 @@ class RoleInvite(BaseCog):
     Full documentation and FAQ: https://laggrons-dumb-cogs.readthedocs.io/roleinvite.html
     """
 
+    def_global = {"enable_sentry": None}
     def_guild = {"invites": {}, "enabled": False}
 
     def __init__(self, bot):
         self.bot = bot
 
         self.data = Config.get_conf(self, 260)
+        self.data.register_global(**self.def_global)
         self.data.register_guild(**self.def_guild)
 
         self.api = API(bot, self.data)
@@ -445,10 +447,6 @@ class RoleInvite(BaseCog):
             "Support my work on Patreon: https://www.patreon.com/retke"
         ).format(self, status(current_status)[1], ctx.prefix)
         await ctx.send(message)
-
-    @commands.command()
-    async def error(self, ctx):
-        raise KeyError("Hello it's RoleInvite")
 
     async def on_member_join(self, member):
         async def add_roles(invite):
