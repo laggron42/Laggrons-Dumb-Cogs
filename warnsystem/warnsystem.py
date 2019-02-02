@@ -455,9 +455,9 @@ class WarnSystem(BaseCog):
         """
         Set if the bot should respect roles hierarchy.
 
-        If enabled, a member cannot ban another member above him in the roles hierarchy, like\
+        If enabled, a member cannot ban another member above them in the roles hierarchy, like\
         with manual bans.
-        If disabled, mods can ban everyone while the bot can.
+        If disabled, mods can ban everyone the bot can.
 
         Invoke the command without arguments to get the current status.
         """
@@ -478,7 +478,7 @@ class WarnSystem(BaseCog):
             await ctx.send(
                 _(
                     "Done. Moderators will not be able to take actions on the members higher "
-                    "than himself in the role hierarchy of the server."
+                    "than themselves in the role hierarchy of the server."
                 )
             )
         else:
@@ -495,7 +495,7 @@ class WarnSystem(BaseCog):
         """
         Set if the bot should send an invite after a temporary ban.
 
-        If enabled, any unbanned member will receive a DM with an invite to join the server back.
+        If enabled, any unbanned member will receive a DM with an invite to join back to the server.
         The bot needs to share a server with the member to send a DM.
 
         Invoke the command without arguments to get the current status.
@@ -582,7 +582,7 @@ class WarnSystem(BaseCog):
         """
         Manage the reasons' substitutions
 
-        A substitution is a text replaced by a key you place in your warn reason.
+        A substitution is text replaced by a key you place in your warn reason.
 
         For example, if you set a substitution with the keyword `last warn` associated with the\
         text `This is your last warning!`, this is what will happen with your next warnings:
@@ -603,7 +603,7 @@ class WarnSystem(BaseCog):
         Example:
         - `[p]warnset substitutions add ad Advertising for a Discord server`
         - `[p]warn 1 @noob [ad] + doesn't respect warnings`
-        The reason will be "Advertising for a Discord server + doen't respect warnings".
+        The reason will be "Advertising for a Discord server + doesn't respect warnings".
         """
         async with self.data.guild(ctx.guild).substitutions() as substitutions:
             if name in substitutions:
@@ -679,7 +679,7 @@ class WarnSystem(BaseCog):
         """
         Defines if the responsible moderator should be revealed to the warned member in DM.
 
-        If enabled, any warned member will be able to see who warned him, else he won't know.
+        If enabled, any warned member will be able to see who warned them, else they won't know.
 
         Invoke the command without arguments to get the current status.
         """
@@ -976,7 +976,7 @@ class WarnSystem(BaseCog):
         """
         Softban the member from the server.
 
-        This means that the user will be banned and immediately unbanned, so it will purge his\
+        This means that the user will be banned and immediately unbanned, so it will purge their\
         messages in all channels.
 
         It will delete 7 days of messages by default, but you can edit this with the\
@@ -1012,7 +1012,7 @@ class WarnSystem(BaseCog):
         - `[p]warn 5 @user`: Ban for no reason :c
         - `[p]warn 5 @user 7d Insults`: 7 days ban for the reason "Insults"
         - `[p]warn 5 012345678987654321 Advertising and leave`: Ban the user with the ID provided\
-        while he's not in the server for the reason "Advertising and leave" (if the user shares\
+        while they're not in the server for the reason "Advertising and leave" (if the user shares\
         another server with the bot, a DM will be sent).
         """
         time = None
@@ -1154,7 +1154,7 @@ class WarnSystem(BaseCog):
         embed.description = _(
             "Case #{number} edition.\n\n**Please type the new reason to set**"
         ).format(number=page)
-        embed.set_footer(text=_("You have two minuts to type your text in the chat."))
+        embed.set_footer(text=_("You have two minutes to type your text in the chat."))
         case = (await self.data.custom("MODLOGS", guild.id, member.id).x())[page - 1]
         await message.edit(embed=embed)
         try:
