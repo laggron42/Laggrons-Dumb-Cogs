@@ -63,7 +63,7 @@ class InstantCommands(BaseCog):
         bot.loop.create_task(self.resume_commands())
 
     __author__ = "retke (El Laggron)"
-    __version__ = "1.0.0"
+    __version__ = "1.0.1"
     __info__ = {
         "bot_version": "3.0.0b9",
         "description": "Command and listener maker from a code snippet through Discord",
@@ -117,9 +117,11 @@ class InstantCommands(BaseCog):
 
         if isinstance(function, commands.Command):
             self.bot.add_command(function)
+            log.debug(f"Added command {function.name}")
         else:
             self.bot.add_listener(function)
             self.listeners[function.__name__] = id(function)
+            log.debug(f"Added listener {function.__name__} (ID of the function: {id(function)})")
 
     async def resume_commands(self):
         """
