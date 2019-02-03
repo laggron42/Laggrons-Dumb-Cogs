@@ -147,9 +147,7 @@ class InstantCommands(BaseCog):
     @commands.group(aliases=["instacmd", "instantcommand"])
     async def instantcmd(self, ctx):
         """Instant Commands cog management"""
-
-        if not ctx.invoked_subcommand:
-            await ctx.send_help()
+        pass
 
     @instantcmd.command()
     async def create(self, ctx):
