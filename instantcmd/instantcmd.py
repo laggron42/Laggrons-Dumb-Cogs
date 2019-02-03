@@ -2,7 +2,7 @@
 # Idea by Malarne
 
 import discord
-import asyncio  # for coroutine checks
+import asyncio
 import traceback
 import textwrap
 import logging
@@ -131,6 +131,18 @@ class InstantCommands(BaseCog):
         for name, command_string in _commands.items():
             function = self.get_function_from_str(command_string, name)
             self.load_command_or_listener(function)
+
+    async def remove_commands(self):
+        async with self.data.commands() as _commands:
+            for command in _commands:
+                if command in self.listeners:
+                    # remove a listener
+                    self.bot.remove_listener(FakeListener(self.listeners[command]), name=command)
+                    log.debug(f"Removed listener {command} due to cog unload.")
+                else:
+                    # remove a command
+                    self.bot.remove_command(command)
+                    log.debug(f"Removed command {command} due to cog unload.")
 
     # from DEV cog, made by Cog Creators (tekulvw)
     @staticmethod
@@ -385,6 +397,15 @@ class InstantCommands(BaseCog):
     def __unload(self):
         log.debug("Cog unloaded from the instance.")
 
-        # remove all handlers from the logger, this prevents adding
-        # multiple times the same handler if the cog gets reloaded
-        log.handlers = []
+        async def unload():
+            # removes commands and listeners
+            await self.remove_commands()
+
+            # remove all handlers from the logger, this prevents adding
+            # multiple times the same handler if the cog gets reloaded
+            log.handlers = []
+
+        # I am forced to put everything in an async function to execute the remove_commands
+        # function, and then remove the handlers. Using loop.create_task on remove_commands only
+        # executes it after removing the log handlers, while it needs to log...
+        self.bot.loop.create_task(unload())
