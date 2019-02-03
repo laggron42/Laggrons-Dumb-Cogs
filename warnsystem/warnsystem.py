@@ -414,31 +414,32 @@ class WarnSystem(BaseCog):
                     _("I can't manage roles, please give me this permission to continue.")
                 )
                 return
-            fails = await self.api.maybe_create_mute_role(guild)
-            my_position = guild.me.top_role.position
-            if fails is False:
-                await ctx.send(
-                    _(
-                        "A mute role was already created! You can change it by specifying "
-                        "a role when typing the command.\n`[p]warnset mute <role name>`"
+            async with ctx.typing():
+                fails = await self.api.maybe_create_mute_role(guild)
+                my_position = guild.me.top_role.position
+                if fails is False:
+                    await ctx.send(
+                        _(
+                            "A mute role was already created! You can change it by specifying "
+                            "a role when typing the command.\n`[p]warnset mute <role name>`"
+                        )
                     )
-                )
-                return
-            else:
-                if fails:
-                    errors = _(
-                        "\n\nSome errors occured when editing the channel permissions:\n"
-                    ) + "\n".join(fails)
+                    return
                 else:
-                    errors = ""
-                await ctx.send(
-                    _(
-                        "The role `Muted` was successfully created at position {pos}. Feel free "
-                        "to drag it in the hierarchy and edit its permissions, as long as my "
-                        "top role is above and the members to mute are below."
-                    ).format(pos=my_position - 1)
-                    + errors
-                )
+                    if fails:
+                        errors = _(
+                            "\n\nSome errors occured when editing the channel permissions:\n"
+                        ) + "\n".join(fails)
+                    else:
+                        errors = ""
+                    await ctx.send(
+                        _(
+                            "The role `Muted` was successfully created at position {pos}. Feel "
+                            "free to drag it in the hierarchy and edit its permissions, as long "
+                            "as my top role is above and the members to mute are below."
+                        ).format(pos=my_position - 1)
+                        + errors
+                    )
         elif role.position >= my_position:
             await ctx.send(
                 _(
