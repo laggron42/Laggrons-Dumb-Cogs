@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2019-01-24 14:14+0100\n"
+"POT-Creation-Date: 2019-02-08 21:59+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -48,11 +48,11 @@ msgid ""
 "    "
 msgstr ""
 
-#: roleinvite/roleinvite.py:90 roleinvite/roleinvite.py:410
+#: roleinvite/roleinvite.py:92 roleinvite/roleinvite.py:412
 msgid "Request timed out."
 msgstr ""
 
-#: roleinvite/roleinvite.py:97
+#: roleinvite/roleinvite.py:99
 #, docstring
 msgid ""
 "\n"
@@ -63,7 +63,7 @@ msgid ""
 "        "
 msgstr ""
 
-#: roleinvite/roleinvite.py:107
+#: roleinvite/roleinvite.py:109
 #, docstring
 msgid ""
 "\n"
@@ -76,11 +76,11 @@ msgid ""
 "        "
 msgstr ""
 
-#: roleinvite/roleinvite.py:132
+#: roleinvite/roleinvite.py:134
 msgid "That role is already linked to the invite."
 msgstr ""
 
-#: roleinvite/roleinvite.py:143
+#: roleinvite/roleinvite.py:145
 msgid ""
 "**Warning**: This invite is already registered and currently linked to the role(s) `{}`.\n"
 "If you continue, this invite will give all roles given to the new member. \n"
@@ -89,44 +89,44 @@ msgid ""
 "Do you want to link this invite to {} roles? (yes/no)"
 msgstr ""
 
-#: roleinvite/roleinvite.py:158
+#: roleinvite/roleinvite.py:160
 msgid "That role is higher than mine. I can't add it to new users."
 msgstr ""
 
-#: roleinvite/roleinvite.py:161
+#: roleinvite/roleinvite.py:163
 msgid "I need the `Manage server` permission!"
 msgstr ""
 
-#: roleinvite/roleinvite.py:164
+#: roleinvite/roleinvite.py:166
 msgid "I need the `Manage roles` permission!"
 msgstr ""
 
-#: roleinvite/roleinvite.py:172 roleinvite/roleinvite.py:218
-#: roleinvite/roleinvite.py:235
+#: roleinvite/roleinvite.py:174 roleinvite/roleinvite.py:220
+#: roleinvite/roleinvite.py:237
 msgid "That invite cannot be found"
 msgstr ""
 
-#: roleinvite/roleinvite.py:176
+#: roleinvite/roleinvite.py:178
 msgid "That invite doesn't belong to this server!"
 msgstr ""
 
-#: roleinvite/roleinvite.py:179
+#: roleinvite/roleinvite.py:181
 msgid "There are no invites generated on this server."
 msgstr ""
 
-#: roleinvite/roleinvite.py:188
+#: roleinvite/roleinvite.py:190
 msgid "The role `{}` is now linked to the main autorole system. (new members will get it if they join with an invite not registered)"
 msgstr ""
 
-#: roleinvite/roleinvite.py:199
+#: roleinvite/roleinvite.py:201
 msgid "The role `{}` is now linked to the default autorole system. (new members will always get this role, whatever invite he used.)"
 msgstr ""
 
-#: roleinvite/roleinvite.py:212
+#: roleinvite/roleinvite.py:214
 msgid "The role `{}` is now linked to the invite `{}`"
 msgstr ""
 
-#: roleinvite/roleinvite.py:222
+#: roleinvite/roleinvite.py:224
 #, docstring
 msgid ""
 "\n"
@@ -138,26 +138,26 @@ msgid ""
 "        "
 msgstr ""
 
-#: roleinvite/roleinvite.py:244
+#: roleinvite/roleinvite.py:246
 msgid "That invite lost all of its linked roles and was deleted."
-msgstr ""
-
-#: roleinvite/roleinvite.py:248
-msgid ""
-"You're about to remove all roles linked to the main autorole.\n"
 msgstr ""
 
 #: roleinvite/roleinvite.py:250
 msgid ""
-"You're about to remove all roles linked to the default autorole.\n"
+"You're about to remove all roles linked to the main autorole.\n"
 msgstr ""
 
 #: roleinvite/roleinvite.py:252
 msgid ""
-"You're about to remove all roles linked to this invite.\n"
+"You're about to remove all roles linked to the default autorole.\n"
 msgstr ""
 
 #: roleinvite/roleinvite.py:254
+msgid ""
+"You're about to remove all roles linked to this invite.\n"
+msgstr ""
+
+#: roleinvite/roleinvite.py:256
 msgid ""
 "List of roles:\n"
 "{}\n"
@@ -165,45 +165,45 @@ msgid ""
 "\n"
 msgstr ""
 
-#: roleinvite/roleinvite.py:259
+#: roleinvite/roleinvite.py:261
 msgid "Remember that you can remove a single role from this list by typing `{}inviteset remove {} [role name]`"
 msgstr ""
 
-#: roleinvite/roleinvite.py:266
+#: roleinvite/roleinvite.py:268
 msgid "Alright, invite is kept."
 msgstr ""
 
-#: roleinvite/roleinvite.py:271
+#: roleinvite/roleinvite.py:273
 msgid "The invite `{}` has been removed from the list."
 msgstr ""
 
-#: roleinvite/roleinvite.py:279
+#: roleinvite/roleinvite.py:281
 msgid "main autorole."
 msgstr ""
 
-#: roleinvite/roleinvite.py:281
+#: roleinvite/roleinvite.py:283
 msgid "default autorole."
 msgstr ""
 
-#: roleinvite/roleinvite.py:283
+#: roleinvite/roleinvite.py:285
 msgid "invite `{}`."
 msgstr ""
 
-#: roleinvite/roleinvite.py:285
+#: roleinvite/roleinvite.py:287
 msgid ""
 "You're about to unlink the `{}` role from the {}\n"
 "Proceed? (yes/no)"
 msgstr ""
 
-#: roleinvite/roleinvite.py:291
+#: roleinvite/roleinvite.py:293
 msgid "Alright, role is kept."
 msgstr ""
 
-#: roleinvite/roleinvite.py:296
+#: roleinvite/roleinvite.py:298
 msgid "The role `{}` is now unlinked from the {}"
 msgstr ""
 
-#: roleinvite/roleinvite.py:301
+#: roleinvite/roleinvite.py:303
 #, docstring
 msgid ""
 "\n"
@@ -211,21 +211,21 @@ msgid ""
 "        "
 msgstr ""
 
-#: roleinvite/roleinvite.py:342
+#: roleinvite/roleinvite.py:344
 msgid "There is nothing set on RoleInvite. Type `{}help inviteset` for more informations."
 msgstr ""
 
-#: roleinvite/roleinvite.py:349
+#: roleinvite/roleinvite.py:351
 msgid ""
 "**Info:** RoleInvite is currently disabled and won't give roles on member join.\n"
 "Type `{}inviteset enable` to enable it."
 msgstr ""
 
-#: roleinvite/roleinvite.py:355
+#: roleinvite/roleinvite.py:357
 msgid "List of invites linked to an autorole on this server:"
 msgstr ""
 
-#: roleinvite/roleinvite.py:363
+#: roleinvite/roleinvite.py:365
 #, docstring
 msgid ""
 "\n"
@@ -235,22 +235,22 @@ msgid ""
 "        "
 msgstr ""
 
-#: roleinvite/roleinvite.py:371
+#: roleinvite/roleinvite.py:373
 msgid "I need the `Manage roles` permission."
 msgstr ""
 
-#: roleinvite/roleinvite.py:374
+#: roleinvite/roleinvite.py:376
 msgid "I need the `Manage server` permission."
 msgstr ""
 
-#: roleinvite/roleinvite.py:381
+#: roleinvite/roleinvite.py:383
 msgid ""
 "The autorole system is now enabled on this server.\n"
 "Type `{0.prefix}inviteset list` to see what's the current role list.\n"
 "If the bot lose the `Manage roles` or the `Manage server` permissions "
 msgstr ""
 
-#: roleinvite/roleinvite.py:391
+#: roleinvite/roleinvite.py:393
 #, docstring
 msgid ""
 "\n"
@@ -260,39 +260,39 @@ msgid ""
 "        "
 msgstr ""
 
-#: roleinvite/roleinvite.py:398
+#: roleinvite/roleinvite.py:400
 msgid "enable"
 msgstr ""
 
-#: roleinvite/roleinvite.py:398
+#: roleinvite/roleinvite.py:400
 msgid "enabled"
 msgstr ""
 
-#: roleinvite/roleinvite.py:398
+#: roleinvite/roleinvite.py:400
 msgid "disable"
 msgstr ""
 
-#: roleinvite/roleinvite.py:398
+#: roleinvite/roleinvite.py:400
 msgid "disabled"
 msgstr ""
 
-#: roleinvite/roleinvite.py:401
+#: roleinvite/roleinvite.py:403
 msgid "You're about to {} error logging. Are you sure you want to do this? Type `yes` to confirm."
 msgstr ""
 
-#: roleinvite/roleinvite.py:418
+#: roleinvite/roleinvite.py:420
 msgid "Upcoming errors will be reported automatically for a faster fix. Thank you for helping me with the development process!"
 msgstr ""
 
-#: roleinvite/roleinvite.py:426
+#: roleinvite/roleinvite.py:428
 msgid "Error logging has been disabled."
 msgstr ""
 
-#: roleinvite/roleinvite.py:433
+#: roleinvite/roleinvite.py:435
 msgid "Okay, error logging will stay {}."
 msgstr ""
 
-#: roleinvite/roleinvite.py:437
+#: roleinvite/roleinvite.py:439
 msgid ""
 "Laggron's Dumb Cogs V3 - roleinvite\n"
 "\n"
@@ -307,19 +307,19 @@ msgid ""
 "Support my work on Patreon: https://www.patreon.com/retke"
 msgstr ""
 
-#: roleinvite/roleinvite.py:457
+#: roleinvite/roleinvite.py:455
 msgid "Joined with an unknown invite, main roles given."
 msgstr ""
 
-#: roleinvite/roleinvite.py:459
+#: roleinvite/roleinvite.py:457
 msgid "Default roles given."
 msgstr ""
 
-#: roleinvite/roleinvite.py:461
+#: roleinvite/roleinvite.py:459
 msgid "Joined with {}"
 msgstr ""
 
-#: roleinvite/roleinvite.py:521
+#: roleinvite/roleinvite.py:519
 msgid "Roleinvite autorole. "
 msgstr ""
 

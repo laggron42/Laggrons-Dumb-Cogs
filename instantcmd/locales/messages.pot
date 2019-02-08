@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2019-01-24 14:14+0100\n"
+"POT-Creation-Date: 2019-02-08 21:59+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15,12 +15,12 @@ msgstr ""
 "Generated-By: redgettext 2.2\n"
 
 
-#: instantcmd/instantcmd.py:149
+#: instantcmd/instantcmd.py:163
 #, docstring
 msgid "Instant Commands cog management"
 msgstr ""
 
-#: instantcmd/instantcmd.py:156
+#: instantcmd/instantcmd.py:168
 #, docstring
 msgid ""
 "\n"
@@ -30,7 +30,7 @@ msgid ""
 "        "
 msgstr ""
 
-#: instantcmd/instantcmd.py:233
+#: instantcmd/instantcmd.py:245
 #, docstring
 msgid ""
 "\n"
@@ -38,7 +38,7 @@ msgid ""
 "        "
 msgstr ""
 
-#: instantcmd/instantcmd.py:252
+#: instantcmd/instantcmd.py:264
 #, docstring
 msgid ""
 "\n"
@@ -48,7 +48,7 @@ msgid ""
 "        "
 msgstr ""
 
-#: instantcmd/instantcmd.py:296
+#: instantcmd/instantcmd.py:308
 #, docstring
 msgid ""
 "\n"
