@@ -645,6 +645,7 @@ class WarnSystem(BaseCog):
                         "`{prefix}warnset substitutions list` command."
                     ).format(prefix=ctx.prefix)
                 )
+                return
             del substitutions[name]
         await ctx.send(_("The substitutions was successfully deleted."))
 
