@@ -1096,7 +1096,7 @@ class WarnSystem(BaseCog):
         for i, case in enumerate(cases):
             level = case["level"]
             moderator = ctx.guild.get_member(case["author"])
-            moderator = "ID: " + case["author"] if not moderator else moderator.mention
+            moderator = "ID: " + str(case["author"]) if not moderator else moderator.mention
 
             embed = discord.Embed(
                 description=_("Case #{number} informations").format(number=i + 1)
