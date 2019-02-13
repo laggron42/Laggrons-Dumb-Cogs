@@ -798,7 +798,7 @@ class WarnSystem(BaseCog):
                 cases = []
                 for case in [y for x, y in logs.items() if x.startswith("case")]:
                     level = {"Simple": 1, "Kick": 3, "Softban": 4, "Ban": 5}.get(
-                        case["level"], default=1
+                        case["level"], 1
                     )
                     cases.append(
                         {
