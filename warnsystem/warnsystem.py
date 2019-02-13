@@ -242,6 +242,7 @@ class WarnSystem(BaseCog):
     # all settings
     @commands.group()
     @checks.admin_or_permissions(administrator=True)
+    @commands.guild_only()
     async def warnset(self, ctx: commands.Context):
         """
         Set all WarnSystem settings.
