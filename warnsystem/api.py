@@ -64,7 +64,8 @@ class API:
         seconds = time.total_seconds()
         years, seconds = divmod(seconds, 31622400)
         months, seconds = divmod(seconds, 2635200)
-        weeks, seconds = divmod(seconds, 86400)
+        weeks, seconds = divmod(seconds, 604800)
+        days, seconds = divmod(seconds, 86400)
         hours, seconds = divmod(seconds, 3600)
         minutes, seconds = divmod(seconds, 60)
         units = [years, months, weeks, hours, minutes, seconds]
@@ -75,9 +76,10 @@ class API:
             0: (_("year"), _("years")),
             1: (_("month"), _("months")),
             2: (_("week"), _("weeks")),
-            3: (_("hour"), _("hours")),
-            4: (_("minute"), _("minute")),
-            5: (_("second"), _("second")),
+            3: (_("day"), _("days")),
+            4: (_("hour"), _("hours")),
+            5: (_("minute"), _("minute")),
+            6: (_("second"), _("second")),
         }
         for i, value in enumerate(units):
             if value < 1:
