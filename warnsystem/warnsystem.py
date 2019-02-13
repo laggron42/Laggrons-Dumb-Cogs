@@ -285,7 +285,7 @@ class WarnSystem(BaseCog):
             mute_role = _("No mute role set.") if not mute_role else mute_role.name
             hierarchy = _("Enabled") if all_data["respect_hierarchy"] else _("Disabled")
             reinvite = _("Enabled") if all_data["reinvite"] else _("Disabled")
-            bandays = _("Softan: {softban}\nBan: {ban}").format(
+            bandays = _("Softban: {softban}\nBan: {ban}").format(
                 softban=all_data["bandays"]["softban"], ban=all_data["bandays"]["ban"]
             )
             len_substitutions = len(all_data["substitutions"])
