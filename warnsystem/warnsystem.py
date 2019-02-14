@@ -2,6 +2,7 @@
 import discord
 import logging
 import re
+import time
 
 from typing import Union, TYPE_CHECKING
 from asyncio import TimeoutError as AsyncTimeoutError
@@ -797,9 +798,7 @@ class WarnSystem(BaseCog):
             for member, logs in data.items():
                 cases = []
                 for case in [y for x, y in logs.items() if x.startswith("case")]:
-                    level = {"Simple": 1, "Kick": 3, "Softban": 4, "Ban": 5}.get(
-                        case["level"], 1
-                    )
+                    level = {"Simple": 1, "Kick": 3, "Softban": 4, "Ban": 5}.get(case["level"], 1)
                     cases.append(
                         {
                             "level": level,
@@ -867,6 +866,7 @@ class WarnSystem(BaseCog):
                     "Check your console or logs for details."
                 )
             )
+            return
         await ctx.send(
             _(
                 "Would you like to **append** the logs or **overwrite** them?\n\n"
@@ -883,17 +883,28 @@ class WarnSystem(BaseCog):
         except AsyncTimeoutError:
             await ctx.send(_("Request timed out."))
             return
+        t1 = time.time()
         guild_id = path.name.partition(".")[0]
         if pred.result == 0:
-            await ctx.send(_("Starting conversion..."))
+            await ctx.send(_("Starting conversion... This might take a long time."))
             total = await convert(guild_id, content)
         elif pred.result == 1:
             await ctx.send(_("Deleting server logs... Settings, such as channels, are kept."))
             await self.data.custom("MODLOGS").set({})
-            await ctx.send(_("Starting conversion..."))
+            await ctx.send(_("Starting conversion... This might take a long time."))
             total = await convert(guild_id, content)
+        t2 = time.time()
         await ctx.send(
-            _("Done! {number} cases were added to the WarnSystem V3 log.").format(number=total)
+            _(
+                "Done! {number} cases were added to the WarnSystem V3 log.\n"
+                "This took {time} seconds."
+            ).format(number=total, time=round(t2 - t1, 2))
+        )
+        log.info(
+            f"{ctx.author.name} (ID: {ctx.author.id}) used the BetterMod data converter and "
+            f"converted {total} cases, added on the guild {ctx.guild} (ID: {ctx.guild.id}) with "
+            f"the {'append' if pred.result == 0 else 'overwrite'} strategy.\n"
+            f"The file used to convert is located at {path}"
         )
 
     # all warning commands
