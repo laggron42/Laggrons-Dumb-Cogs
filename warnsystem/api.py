@@ -53,7 +53,12 @@ class API:
         # TODO find another solution
 
     def _get_datetime(self, time: str) -> datetime:
-        return datetime.strptime(time, "%a %d %B %Y %H:%M:%S")
+        try:
+            time = datetime.strptime(time, "%a %d %B %Y %H:%M:%S")
+        except ValueError:
+            # seconds were added in an update, this might be a case made before that update
+            time = datetime.strptime(time, "%a %d %B %Y %H:%M")
+        return time
 
     def _format_timedelta(self, time: timedelta):
         """Format a timedelta object into a string"""
@@ -105,10 +110,11 @@ class API:
         user = self.bot.get_user(user_id)
         if not user:
             try:
-                await self.bot.get_user_info(user_id)
+                user = await self.bot.get_user_info(user_id)
             except discord.errors.NotFound:
                 user = None
             except discord.errors.HTTPException as e:
+                user = None
                 log.error(
                     "Received HTTPException when trying to get user info. "
                     "This is probaby a cooldown from Discord.",
