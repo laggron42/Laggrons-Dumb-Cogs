@@ -6,7 +6,7 @@ import time
 
 from typing import Union, TYPE_CHECKING
 from asyncio import TimeoutError as AsyncTimeoutError
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from json import loads
 
@@ -786,7 +786,7 @@ class WarnSystem(BaseCog):
             except Exception:
                 pass
 
-        async def convert(guild_id: int, data: dict) -> int:
+        async def convert(data: dict) -> int:
             """
             Convert V2 logs to V3 format.
             """
@@ -799,17 +799,20 @@ class WarnSystem(BaseCog):
                 cases = []
                 for case in [y for x, y in logs.items() if x.startswith("case")]:
                     level = {"Simple": 1, "Kick": 3, "Softban": 4, "Ban": 5}.get(case["level"], 1)
+                    timestamp = datetime.strptime(case["timestamp"], "%d %b %Y %H:%M").strftime(
+                        "%a %d %B %Y %H:%M:%S"
+                    )
                     cases.append(
                         {
                             "level": level,
                             "author": "Unknown",
                             "reason": case["reason"],
-                            "time": case["timestamp"],  # only day of the week missing
+                            "time": timestamp,  # only day of the week missing
                             "duration": None,
                         }
                     )
                     total_cases += 1
-                async with self.data.custom("MODLOGS", guild, int(member)).x() as logs:
+                async with self.data.custom("MODLOGS", guild.id, int(member)).x() as logs:
                     logs.extend(cases)
             return total_cases
 
@@ -884,15 +887,14 @@ class WarnSystem(BaseCog):
             await ctx.send(_("Request timed out."))
             return
         t1 = time.time()
-        guild_id = path.name.partition(".")[0]
         if pred.result == 0:
             await ctx.send(_("Starting conversion... This might take a long time."))
-            total = await convert(guild_id, content)
+            total = await convert(content)
         elif pred.result == 1:
             await ctx.send(_("Deleting server logs... Settings, such as channels, are kept."))
             await self.data.custom("MODLOGS").set({})
             await ctx.send(_("Starting conversion... This might take a long time."))
-            total = await convert(guild_id, content)
+            total = await convert(content)
         t2 = time.time()
         await ctx.send(
             _(
@@ -1068,7 +1070,7 @@ class WarnSystem(BaseCog):
             await ctx.send_help()
             return
         if isinstance(user, int):
-            user = self.api._get_user_info(user)
+            user = await self.api._get_user_info(user)
             if not user:
                 await ctx.send(_("User not found."))
                 return
