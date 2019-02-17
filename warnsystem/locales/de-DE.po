@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Laggron's Dumb Cogs\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-02-14 20:06+0100\n"
-"PO-Revision-Date: 2019-02-14 21:34+0100\n"
+"PO-Revision-Date: 2019-02-17 14:32+0100\n"
 "Last-Translator: \n"
 "Language-Team: FortniteDE Discord Mod Team\n"
 "Language: de_DE\n"
@@ -1316,22 +1316,22 @@ msgid "overwrite"
 msgstr "überschreiben"
 
 #: warnsystem/warnsystem.py:889 warnsystem/warnsystem.py:894
-#, fuzzy
-#| msgid "Starting conversion..."
 msgid "Starting conversion... This might take a long time."
-msgstr "Konvertierung wird gestartet..."
+msgstr ""
+"Konvertierung wird gestartet... Es kann sein, dass diese Handlung eine Zeit "
+"lang dauert."
 
 #: warnsystem/warnsystem.py:892
 msgid "Deleting server logs... Settings, such as channels, are kept."
 msgstr "Lösche Server logs... Einstellungen, wie Kanäle, werden beibehalten."
 
 #: warnsystem/warnsystem.py:898
-#, fuzzy
-#| msgid "Done! {number} cases were added to the WarnSystem V3 log."
 msgid ""
 "Done! {number} cases were added to the WarnSystem V3 log.\n"
 "This took {time} seconds."
-msgstr "Erledigt! {number} Fälle wurden zum WarnSystem V3 log hinzugefügt."
+msgstr ""
+"Erledigt! {number} Fälle wurden zum WarnSystem V3 log hinzugefügt.\n"
+"Dies hat {time} Sekunden gedauert."
 
 #: warnsystem/warnsystem.py:915
 msgid ""
