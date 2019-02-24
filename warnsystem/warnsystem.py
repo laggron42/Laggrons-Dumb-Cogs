@@ -6,13 +6,14 @@ import time
 
 from typing import Union, TYPE_CHECKING
 from asyncio import TimeoutError as AsyncTimeoutError
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from json import loads
 
 from redbot.core import commands, Config, checks
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils import predicates, menus, mod
+from redbot.core.utils.chat_formatting import pagify
 
 # from redbot.core.errors import BadArgument as RedBadArgument
 
@@ -155,7 +156,7 @@ class WarnSystem(BaseCog):
 
         self.task = bot.loop.create_task(self.api._loop_task())
 
-    __version__ = "1.0.3"
+    __version__ = "1.0.4"
     __author__ = "retke (El Laggron)"
     __info__ = {
         "bot_version": "3.0.0rc1",
@@ -665,18 +666,17 @@ class WarnSystem(BaseCog):
                 ).format(prefix=ctx.prefix)
             )
             return
-        embeds = []
-        while True:
-            embed = discord.Embed()
-            embed.set_author(
-                name=_("Substitutions for {guild}").format(guild=guild), icon_url=guild.icon_url
+        text = ""
+        for substitution, content in substitutions.items():
+            text += f"+ {substitution}\n{content}\n\n"
+        messages = [x for x in pagify(text, page_length=1900)]
+        total_pages = len(messages)
+        for i, page in enumerate(messages):
+            await ctx.send(
+                _("Substitutions for {server}:").format(server=guild.name)
+                + f"\n```diff\n{text}\n```"
+                + _("Page {page}/{max}").format(page=i + 1, max=total_pages)
             )
-            for i, (a, b) in enumerate(substitutions.items()):
-                embed.add_field(name=a, value=b, inline=False)
-                if i >= 25:
-                    break
-            embeds.append(embed)
-        await menus.menu(ctx, embeds, controls=menus.DEFAULT_CONTROLS)
 
     @warnset.command(name="showmod")
     async def warnset_showmod(self, ctx, enable: bool = None):
@@ -786,7 +786,7 @@ class WarnSystem(BaseCog):
             except Exception:
                 pass
 
-        async def convert(guild_id: int, data: dict) -> int:
+        async def convert(data: dict) -> int:
             """
             Convert V2 logs to V3 format.
             """
@@ -799,17 +799,20 @@ class WarnSystem(BaseCog):
                 cases = []
                 for case in [y for x, y in logs.items() if x.startswith("case")]:
                     level = {"Simple": 1, "Kick": 3, "Softban": 4, "Ban": 5}.get(case["level"], 1)
+                    timestamp = datetime.strptime(case["timestamp"], "%d %b %Y %H:%M").strftime(
+                        "%a %d %B %Y %H:%M:%S"
+                    )
                     cases.append(
                         {
                             "level": level,
                             "author": "Unknown",
                             "reason": case["reason"],
-                            "time": case["timestamp"],  # only day of the week missing
+                            "time": timestamp,  # only day of the week missing
                             "duration": None,
                         }
                     )
                     total_cases += 1
-                async with self.data.custom("MODLOGS", guild, int(member)).x() as logs:
+                async with self.data.custom("MODLOGS", guild.id, int(member)).x() as logs:
                     logs.extend(cases)
             return total_cases
 
@@ -884,15 +887,14 @@ class WarnSystem(BaseCog):
             await ctx.send(_("Request timed out."))
             return
         t1 = time.time()
-        guild_id = path.name.partition(".")[0]
         if pred.result == 0:
             await ctx.send(_("Starting conversion... This might take a long time."))
-            total = await convert(guild_id, content)
+            total = await convert(content)
         elif pred.result == 1:
             await ctx.send(_("Deleting server logs... Settings, such as channels, are kept."))
             await self.data.custom("MODLOGS").set({})
             await ctx.send(_("Starting conversion... This might take a long time."))
-            total = await convert(guild_id, content)
+            total = await convert(content)
         t2 = time.time()
         await ctx.send(
             _(
@@ -1068,7 +1070,7 @@ class WarnSystem(BaseCog):
             await ctx.send_help()
             return
         if isinstance(user, int):
-            user = self.api._get_user_info(user)
+            user = await self.api._get_user_info(user)
             if not user:
                 await ctx.send(_("User not found."))
                 return
