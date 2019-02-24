@@ -13,6 +13,7 @@ from json import loads
 from redbot.core import commands, Config, checks
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils import predicates, menus, mod
+from redbot.core.utils.chat_formatting import pagify
 
 # from redbot.core.errors import BadArgument as RedBadArgument
 
@@ -665,18 +666,17 @@ class WarnSystem(BaseCog):
                 ).format(prefix=ctx.prefix)
             )
             return
-        embeds = []
-        while True:
-            embed = discord.Embed()
-            embed.set_author(
-                name=_("Substitutions for {guild}").format(guild=guild), icon_url=guild.icon_url
+        text = ""
+        for substitution, content in substitutions.items():
+            text += f"+ {substitution}\n{content}\n\n"
+        messages = [x for x in pagify(text, page_length=1900)]
+        total_pages = len(messages)
+        for i, page in enumerate(messages):
+            await ctx.send(
+                _("Substitutions for {server}:").format(server=guild.name)
+                + f"\n```diff\n{text}\n```"
+                + _("Page {page}/{max}").format(page=i + 1, max=total_pages)
             )
-            for i, (a, b) in enumerate(substitutions.items()):
-                embed.add_field(name=a, value=b, inline=False)
-                if i >= 25:
-                    break
-            embeds.append(embed)
-        await menus.menu(ctx, embeds, controls=menus.DEFAULT_CONTROLS)
 
     @warnset.command(name="showmod")
     async def warnset_showmod(self, ctx, enable: bool = None):
