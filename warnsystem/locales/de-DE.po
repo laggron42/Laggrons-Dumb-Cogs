@@ -126,43 +126,43 @@ msgstr " und "
 
 #: warnsystem/api.py:445 warnsystem/api.py:855
 msgid "warn"
-msgstr "warn"
+msgstr "Warnung"
 
 #: warnsystem/api.py:445
 msgid "warns"
-msgstr "warnt"
+msgstr "Warnungen"
 
 #: warnsystem/api.py:446 warnsystem/api.py:855 warnsystem/api.py:972
 msgid "mute"
-msgstr "stummschalten"
+msgstr "Stummschaltung"
 
 #: warnsystem/api.py:446
 msgid "mutes"
-msgstr "schaltet stumm"
+msgstr "Stummschaltungen"
 
 #: warnsystem/api.py:447 warnsystem/api.py:855
 msgid "kick"
-msgstr "kick"
+msgstr "Kick"
 
 #: warnsystem/api.py:447
 msgid "kicks"
-msgstr "kcikt"
+msgstr "Kicks"
 
 #: warnsystem/api.py:448 warnsystem/api.py:855
 msgid "softban"
-msgstr "softban"
+msgstr "Softbann"
 
 #: warnsystem/api.py:448
 msgid "softbans"
-msgstr "softbannt"
+msgstr "Softbanns"
 
 #: warnsystem/api.py:449 warnsystem/api.py:855 warnsystem/api.py:972
 msgid "ban"
-msgstr "bannen"
+msgstr "Bann"
 
 #: warnsystem/api.py:449
 msgid "bans"
-msgstr "bannt"
+msgstr "Banns"
 
 #: warnsystem/api.py:450 warnsystem/api.py:856 warnsystem/warnsystem.py:1093
 msgid "unknown"
