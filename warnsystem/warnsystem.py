@@ -695,7 +695,7 @@ class WarnSystem(BaseCog):
             await ctx.send(
                 _(
                     "The bot {respect} show the responsible moderator to the warned member in DM. "
-                    "If you want to change this, type `[p]warnset reinvite {opposite}`."
+                    "If you want to change this, type `[p]warnset showmod {opposite}`."
                 ).format(respect=_("does") if current else _("doesn't"), opposite=not current)
             )
         elif enable:
