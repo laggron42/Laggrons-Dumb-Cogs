@@ -1,21 +1,10 @@
-import pathlib
 import asyncio
 import logging
 
 from .say import Say
 from .loggers import Log
 
-from redbot.core.data_manager import cog_data_path
-
 log = logging.getLogger("laggron.say")
-
-
-def create_cache(path: pathlib.Path):
-    if not path.exists():
-        return
-    directories = [x for x in path.iterdir() if x.is_dir()]
-    if (path / "cache") not in directories:
-        (path / "cache").mkdir()
 
 
 async def ask_enable_sentry(bot):
@@ -68,7 +57,6 @@ async def setup(bot):
     sentry = Log(bot, n.__version__)
     sentry.enable_stdout()
     n._set_log(sentry)
-    create_cache(cog_data_path(n))
     if await n.data.enable_sentry() is None:
         response = await ask_enable_sentry(bot)
         await n.data.enable_sentry.set(response)

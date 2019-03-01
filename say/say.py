@@ -1,7 +1,6 @@
 # Say by retke, aka El Laggron
 
 import discord
-import os
 import asyncio
 import sys
 import logging
@@ -10,7 +9,6 @@ from typing import TYPE_CHECKING
 from redbot.core import checks
 from redbot.core import Config
 from redbot.core.i18n import Translator, cog_i18n
-from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.tunnel import Tunnel
 from redbot.core.utils.predicates import MessagePredicate
 from redbot.core import commands
@@ -35,9 +33,7 @@ class Say(BaseCog):
         self.bot = bot
         self.data = Config.get_conf(self, 260)
         self.data.register_global(enable_sentry=None)
-        self.translator = _
         self.interaction = []
-        self.cache = cog_data_path(self) / "cache"
 
     __author__ = "retke (El Laggron)"
     __version__ = "1.4.8"
@@ -341,12 +337,7 @@ class Say(BaseCog):
         self.interaction.remove(user)
         await user.send(_("Session closed"))
 
-    def clear_cache(self):
-        for file in self.cache.iterdir():
-            os.remove(str(file.absolute()))
-
     def __unload(self):
         for user in self.interaction:
             self.bot.loop.create_task(self.stop_interaction(user))
-        self.clear_cache()
         self.sentry.disable()
