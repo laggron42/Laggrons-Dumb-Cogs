@@ -340,4 +340,4 @@ class Say(BaseCog):
     def __unload(self):
         for user in self.interaction:
             self.bot.loop.create_task(self.stop_interaction(user))
-        self.sentry.disable()
+        log.handlers = []
