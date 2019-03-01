@@ -159,6 +159,9 @@ class RoleInvite(BaseCog):
         if role.position >= ctx.guild.me.top_role.position:
             await ctx.send(_("That role is higher than mine. I can't add it to new users."))
             return
+        if role.position >= ctx.author.top_role.position and ctx.author != ctx.guild.owner:
+            await ctx.send(_("That role is higher than your top role, you can't do that!"))
+            return
         if not ctx.guild.me.guild_permissions.manage_guild:
             await ctx.send(_("I need the `Manage server` permission!"))
             return
