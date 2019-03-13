@@ -5,7 +5,7 @@ import re
 import os
 import time
 
-from typing import Union, TYPE_CHECKING
+from typing import Union
 from asyncio import TimeoutError as AsyncTimeoutError
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -19,16 +19,13 @@ from redbot.core.utils.chat_formatting import pagify
 
 # from redbot.core.errors import BadArgument as RedBadArgument
 
-# creating this before importing other modules allows to import the translator
-_ = Translator("WarnSystem", __file__)
-
 from .api import API
 from . import errors
 
-if TYPE_CHECKING:
-    from .loggers import Log
-
 log = logging.getLogger("laggron.warnsystem")
+log.setLevel(logging.DEBUG)
+
+_ = Translator("WarnSystem", __file__)
 BaseCog = getattr(commands, "Cog", object)
 
 
