@@ -6,16 +6,17 @@ import asyncio
 import traceback
 import textwrap
 import logging
+import os
 
-from typing import TYPE_CHECKING
 from redbot.core import commands
 from redbot.core import checks
 from redbot.core import Config
+from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.predicates import MessagePredicate
 from redbot.core.utils.chat_formatting import pagify
 
-if TYPE_CHECKING:
-    from .loggers import Log
+log = logging.getLogger("laggron.instantcmd")
+log.setLevel(logging.DEBUG)
 
 BaseCog = getattr(commands, "Cog", object)
 
@@ -61,6 +62,7 @@ class InstantCommands(BaseCog):
         self.env = {"bot": self.bot, "discord": discord, "commands": commands, "checks": checks}
         # resume all commands and listeners
         bot.loop.create_task(self.resume_commands())
+        self._init_logger()
 
     __author__ = "retke (El Laggron)"
     __version__ = "1.0.1"
@@ -83,10 +85,31 @@ class InstantCommands(BaseCog):
         "tags": ["command", "listener", "code"],
     }
 
-    def _set_log(self, sentry: "Log"):
-        self.sentry = sentry
-        global log
-        log = logging.getLogger("laggron.instantcmd")
+    def _init_logger(self):
+        log_format = logging.Formatter(
+            f"%(asctime)s %(levelname)s {self.__class__.__name__}: %(message)s",
+            datefmt="[%d/%m/%Y %H:%M]",
+        )
+        # logging to a log file
+        # file is automatically created by the module, if the parent foler exists
+        cog_path = cog_data_path(self)
+        if cog_path.exists():
+            log_path = cog_path / f"{os.path.basename(__file__)[:-3]}.log"
+            file_handler = logging.FileHandler(log_path)
+            file_handler.setLevel(logging.DEBUG)
+            file_handler.setFormatter(log_format)
+            log.addHandler(file_handler)
+
+        # stdout stuff
+        stdout_handler = logging.StreamHandler()
+        stdout_handler.setFormatter(log_format)
+        # if --debug flag is passed, we also set our debugger on debug mode
+        if logging.getLogger("red").isEnabledFor(logging.DEBUG):
+            stdout_handler.setLevel(logging.DEBUG)
+        else:
+            stdout_handler.setLevel(logging.INFO)
+        log.addHandler(stdout_handler)
+        self.stdout_handler = stdout_handler
 
     # def get_config_identifier(self, name):
     # """
@@ -359,10 +382,6 @@ class InstantCommands(BaseCog):
         ).format(self, status(current_status)[1], ctx.prefix)
         await ctx.send(message)
 
-    # error handling
-    def _set_context(self, data):
-        self.sentry.client.extra_context(data)
-
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
@@ -378,26 +397,15 @@ class InstantCommands(BaseCog):
                 "I need the `Add reactions` and `Manage messages` in the "
                 "current channel if you want to use this command."
             )
-        log.propagate = False  # let's remove console output for this since Red already handle this
-        context = {
-            "command": {
-                "invoked": f"{ctx.author} (ID: {ctx.author.id})",
-                "command": f"{ctx.command.name} (cog: {ctx.cog})",
-                "arguments": ctx.kwargs,
-            }
-        }
-        if ctx.guild:
-            context["guild"] = f"{ctx.guild.name} (ID: {ctx.guild.id})"
-        self.sentry.disable_stdout()  # remove console output since red also handle this
+        log.removeHandler(self.stdout_handler)  # remove console output since red also handle this
         log.error(
             f"Exception in command '{ctx.command.qualified_name}'.\n\n", exc_info=error.original
         )
-        self.sentry.enable_stdout()  # re-enable console output for warnings
-        self._set_context({})  # remove context for future logs
+        log.addHandler(self.stdout_handler)  # re-enable console output for warnings
 
     # correctly unload the cog
     def __unload(self):
-        log.debug("Cog unloaded from the instance.")
+        log.debug("Unloading cog...")
 
         async def unload():
             # removes commands and listeners
