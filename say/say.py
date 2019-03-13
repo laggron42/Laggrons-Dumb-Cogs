@@ -33,7 +33,7 @@ class Say(BaseCog):
         self.interaction = []
         self._init_logger()
 
-    __author__ = "retke (El Laggron)"
+    __author__ = ["retke (El Laggron)"]
     __version__ = "1.4.8"
     __info__ = {
         "bot_version": "3.0.0b14",

@@ -18,7 +18,7 @@ class Default:
     This contains the documentation of the repository
     """
 
-    __author__ = "El Laggron"
+    __author__ = ["El Laggron"]
     __info__ = {
         "description": (
             "A buch of utility and quality cogs "

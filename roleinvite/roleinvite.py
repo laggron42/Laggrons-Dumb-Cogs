@@ -50,7 +50,7 @@ class RoleInvite(BaseCog):
         bot.loop.create_task(self.api.update_invites())
         self._init_logger()
 
-    __author__ = "retke (El Laggron)"
+    __author__ = ["retke (El Laggron)"]
     __version__ = "2.0.0"
     __info__ = {
         "bot_version": "3.0.0b14",
