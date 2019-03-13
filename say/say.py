@@ -266,7 +266,7 @@ class Say(BaseCog):
         """
         await ctx.send(
             _(
-                "Laggron's Dumb Cogs V3 - warnsystem\n\n"
+                "Laggron's Dumb Cogs V3 - say\n\n"
                 "Version: {0.__version__}\n"
                 "Author: {0.__author__}\n"
                 "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
