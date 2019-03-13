@@ -2,19 +2,16 @@
 
 import discord
 import asyncio
-import sys
+import os
 import logging
 
-from typing import TYPE_CHECKING
-from redbot.core import checks
-from redbot.core import Config
+from redbot.core import checks, commands, Config
+from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils.tunnel import Tunnel
-from redbot.core.utils.predicates import MessagePredicate
-from redbot.core import commands
 
-if TYPE_CHECKING:
-    from .loggers import Log
+log = logging.getLogger("laggron.say")
+log.setLevel(logging.DEBUG)
 
 _ = Translator("Say", __file__)
 BaseCog = getattr(commands, "Cog", object)
@@ -34,6 +31,7 @@ class Say(BaseCog):
         self.data = Config.get_conf(self, 260)
         self.data.register_global(enable_sentry=None)
         self.interaction = []
+        self._init_logger()
 
     __author__ = "retke (El Laggron)"
     __version__ = "1.4.8"
@@ -56,11 +54,31 @@ class Say(BaseCog):
         "tags": ["rift", "upload", "interact"],
     }
 
-    def _set_log(self, sentry: "Log"):
-        self.sentry = sentry
-        global log
-        log = logging.getLogger("laggron.say")
-        # this is called now so the logger is already initialized
+    def _init_logger(self):
+        log_format = logging.Formatter(
+            f"%(asctime)s %(levelname)s {self.__class__.__name__}: %(message)s",
+            datefmt="[%d/%m/%Y %H:%M]",
+        )
+        # logging to a log file
+        # file is automatically created by the module, if the parent foler exists
+        cog_path = cog_data_path(self)
+        if cog_path.exists():
+            log_path = cog_path / f"{os.path.basename(__file__)[:-3]}.log"
+            file_handler = logging.FileHandler(log_path)
+            file_handler.setLevel(logging.DEBUG)
+            file_handler.setFormatter(log_format)
+            log.addHandler(file_handler)
+
+        # stdout stuff
+        stdout_handler = logging.StreamHandler()
+        stdout_handler.setFormatter(log_format)
+        # if --debug flag is passed, we also set our debugger on debug mode
+        if logging.getLogger("red").isEnabledFor(logging.DEBUG):
+            stdout_handler.setLevel(logging.DEBUG)
+        else:
+            stdout_handler.setLevel(logging.INFO)
+        log.addHandler(stdout_handler)
+        self.stdout_handler = stdout_handler
 
     def _set_context(self, data: dict):
         self.sentry.client.extra_context(data)
@@ -128,7 +146,6 @@ class Say(BaseCog):
                     f"Unknown permissions error when sending a message.\n{error_message}",
                     exc_info=e,
                 )
-        self.clear_cache()
 
     @commands.command(name="say")
     @checks.guildowner()
@@ -243,63 +260,21 @@ class Say(BaseCog):
 
     @commands.command(hidden=True)
     @checks.is_owner()
-    async def sayinfo(self, ctx, sentry: str = None):
+    async def sayinfo(self, ctx):
         """
         Get informations about the cog.
-
-        Type `sentry` after your command to modify its status.
         """
-        current_status = await self.data.enable_sentry()
-        status = lambda x: (_("enable"), _("enabled")) if x else (_("disable"), _("disabled"))
-        if sentry is not None and "sentry" in sentry:
-            await ctx.send(
-                _(
-                    "You're about to {} error logging. Are you sure you want "
-                    "to do this? Type `yes` to confirm."
-                ).format(status(not current_status)[0])
-            )
-            predicate = MessagePredicate.yes_or_no(ctx)
-            try:
-                await self.bot.wait_for("message", timeout=60, check=predicate)
-            except asyncio.TimeoutError:
-                await ctx.send(_("Request timed out."))
-            else:
-                if predicate.result:
-                    await self.data.enable_sentry.set(not current_status)
-                    if not current_status:
-                        # now enabled
-                        await ctx.send(
-                            _(
-                                "Upcoming errors will be reported automatically for a faster fix. "
-                                "Thank you for helping me with the development process!"
-                            )
-                        )
-                        await self.sentry.enable()
-                    else:
-                        # disabled
-                        await ctx.send(_("Error logging has been disabled."))
-                        await self.sentry.disable()
-                    log.info(
-                        f"Sentry error reporting was {status(not current_status)[1]} "
-                        "on this instance."
-                    )
-                else:
-                    await ctx.send(
-                        _("Okay, error logging will stay {}.").format(status(current_status)[1])
-                    )
-                return
-
-        message = _(
-            "Laggron's Dumb Cogs V3 - say\n\n"
-            "Version: {0.__version__}\n"
-            "Author: {0.__author__}\n"
-            "Sentry error reporting: {1} (type `{2}sayinfo sentry` to change this)\n\n"
-            "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
-            "Discord server: https://discord.gg/AVzjfpR\n"
-            "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"
-            "Support my work on Patreon: https://www.patreon.com/retke"
-        ).format(self, status(current_status)[1], ctx.prefix)
-        await ctx.send(message)
+        await ctx.send(
+            _(
+                "Laggron's Dumb Cogs V3 - warnsystem\n\n"
+                "Version: {0.__version__}\n"
+                "Author: {0.__author__}\n"
+                "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
+                "Discord server: https://discord.gg/AVzjfpR\n"
+                "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"
+                "Support my work on Patreon: https://www.patreon.com/retke"
+            ).format(self)
+        )
 
     async def on_reaction_add(self, reaction, user):
         if user in self.interaction:
@@ -307,9 +282,9 @@ class Say(BaseCog):
             if isinstance(channel, discord.DMChannel):
                 await self.stop_interaction(user)
 
-    async def on_error(self, event, *args, **kwargs):
-        error = sys.exc_info()
-        log.error(f"Exception in {event}.\nArgs: {args}\nKwargs: {kwargs}\n\n", exc_info=error)
+    @commands.command()
+    async def error_2(self, ctx):
+        raise RuntimeError
 
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
@@ -317,27 +292,18 @@ class Say(BaseCog):
         if not ctx.command.cog_name == self.__class__.__name__:
             # That error doesn't belong to the cog
             return
-        context = {
-            "command": {
-                "invoked": f"{ctx.author} (ID: {ctx.author.id})",
-                "command": f"{ctx.command.name} (cog: {ctx.cog})",
-            }
-        }
-        if ctx.guild:
-            context["guild"] = f"{ctx.guild.name} (ID: {ctx.guild.id})"
-        self._set_context(context)
-        self.sentry.disable_stdout()  # remove console output since red also handle this
+        log.removeHandler(self.stdout_handler)  # remove console output since red also handle this
         log.error(
             f"Exception in command '{ctx.command.qualified_name}'.\n\n", exc_info=error.original
         )
-        self.sentry.enable_stdout()  # re-enable console output for warnings
-        self._set_context({})  # remove context for future logs
+        log.addHandler(self.stdout_handler)  # re-enable console output for warnings
 
     async def stop_interaction(self, user):
         self.interaction.remove(user)
         await user.send(_("Session closed"))
 
     def __unload(self):
+        log.debug("Unloading cog...")
         for user in self.interaction:
             self.bot.loop.create_task(self.stop_interaction(user))
         log.handlers = []
