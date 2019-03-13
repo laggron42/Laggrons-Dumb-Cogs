@@ -182,7 +182,8 @@ class WarnSystem(BaseCog):
 
     def init_logger(self):
         log_format = logging.Formatter(
-            "%(asctime)s %(levelname)s WarnSystem: %(message)s", datefmt="[%d/%m/%Y %H:%M]"
+            f"%(asctime)s %(levelname)s {self.__class__.__name__}: %(message)s",
+            datefmt="[%d/%m/%Y %H:%M]",
         )
         # logging to a log file
         # file is automatically created by the module, if the parent foler exists
