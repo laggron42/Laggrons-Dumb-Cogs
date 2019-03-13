@@ -64,7 +64,7 @@ class InstantCommands(BaseCog):
         bot.loop.create_task(self.resume_commands())
         self._init_logger()
 
-    __author__ = "retke (El Laggron)"
+    __author__ = ["retke (El Laggron)"]
     __version__ = "1.0.1"
     __info__ = {
         "bot_version": "3.0.0b9",

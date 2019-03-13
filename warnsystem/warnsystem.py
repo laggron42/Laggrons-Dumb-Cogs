@@ -153,7 +153,7 @@ class WarnSystem(BaseCog):
         self._init_logger()
 
     __version__ = "1.0.4"
-    __author__ = "retke (El Laggron)"
+    __author__ = ["retke (El Laggron)"]
     __info__ = {
         "bot_version": "3.0.0rc1",
         "description": (
