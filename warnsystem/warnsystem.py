@@ -16,8 +16,9 @@ from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils import predicates, menus, mod
 from redbot.core.utils.chat_formatting import pagify
-
 # from redbot.core.errors import BadArgument as RedBadArgument
+
+_ = Translator("WarnSystem", __file__)
 
 from .api import API
 from . import errors
@@ -25,7 +26,6 @@ from . import errors
 log = logging.getLogger("laggron.warnsystem")
 log.setLevel(logging.DEBUG)
 
-_ = Translator("WarnSystem", __file__)
 BaseCog = getattr(commands, "Cog", object)
 
 
