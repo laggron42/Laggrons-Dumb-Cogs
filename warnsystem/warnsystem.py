@@ -153,7 +153,7 @@ class WarnSystem(BaseCog):
         self.errors = errors
 
         self.task = bot.loop.create_task(self.api._loop_task())
-        self.init_logger()
+        self._init_logger()
 
     __version__ = "1.0.4"
     __author__ = "retke (El Laggron)"
@@ -180,7 +180,7 @@ class WarnSystem(BaseCog):
         "tags": ["warn", "warning", "bettermod", "punish", "modlog"],
     }
 
-    def init_logger(self):
+    def _init_logger(self):
         log_format = logging.Formatter(
             f"%(asctime)s %(levelname)s {self.__class__.__name__}: %(message)s",
             datefmt="[%d/%m/%Y %H:%M]",
