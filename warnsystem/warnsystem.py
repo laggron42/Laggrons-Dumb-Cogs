@@ -1160,10 +1160,6 @@ class WarnSystem(BaseCog):
             ctx=ctx, pages=embeds, controls=controls, message=None, page=index, timeout=60
         )
 
-    @commands.command()
-    async def error(self, ctx):
-        raise RuntimeError("This is a test")
-
     async def _edit_case(
         self,
         ctx: commands.Context,
