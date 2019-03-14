@@ -36,7 +36,7 @@ class Say(BaseCog):
     __author__ = ["retke (El Laggron)"]
     __version__ = "1.4.8"
     __info__ = {
-        "bot_version": "3.0.0b14",
+        "bot_version": [3, 0, 0],
         "description": (
             "Speak as the bot through multiple options.\n"
             "Allow file upload, rift in DM and specific destinations."

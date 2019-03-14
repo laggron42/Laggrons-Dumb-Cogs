@@ -67,7 +67,7 @@ class InstantCommands(BaseCog):
     __author__ = ["retke (El Laggron)"]
     __version__ = "1.0.1"
     __info__ = {
-        "bot_version": "3.0.0b9",
+        "bot_version": [3, 0, 0],
         "description": "Command and listener maker from a code snippet through Discord",
         "hidden": False,
         "install_msg": (
