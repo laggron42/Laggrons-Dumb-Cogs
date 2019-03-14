@@ -32,19 +32,16 @@ class RoleInvite(BaseCog):
     Full documentation and FAQ: https://laggrons-dumb-cogs.readthedocs.io/roleinvite.html
     """
 
-    def_global = {"enable_sentry": None}
     def_guild = {"invites": {}, "enabled": False}
 
     def __init__(self, bot):
         self.bot = bot
 
         self.data = Config.get_conf(self, 260)
-        self.data.register_global(**self.def_global)
         self.data.register_guild(**self.def_guild)
 
         self.api = API(bot, self.data)
         self.errors = errors
-        self.sentry = None
         self.translator = _
 
         bot.loop.create_task(self.api.update_invites())
@@ -549,10 +546,6 @@ class RoleInvite(BaseCog):
         if "main" in bot_invites:
             if not await add_roles("main"):
                 return
-
-    # error handling
-    def _set_context(self, data):
-        self.sentry.client.extra_context(data)
 
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):

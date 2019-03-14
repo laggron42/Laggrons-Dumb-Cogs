@@ -676,14 +676,10 @@ warnsysteminfo
 
 .. code-block:: none
 
-    [p]warnsysteminfo [sentry]
+    [p]warnsysteminfo
 
 **Description**
 
 Shows multiple informations about WarnSystem such as its author, its version,
-the status of Sentry logging, the link for the Github repository, the Discord
-server and the documentation, and a link for my Patreon if you want to support
-my work ;)
-
-If you provide ``sentry`` after your command, you will enable or disable Sentry
-logging on the instance for the cog.
+the link for the Github repository, the Discord server and the documentation,
+and a link for my Patreon if you want to support my work ;)
