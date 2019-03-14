@@ -27,7 +27,7 @@ If you need to prevent and exception, do it like this
 """
 
 
-class EmptyRolesList:
+class EmptyRolesList(Exception):
     """
     The list of roles that needs to be linked to an invite is empty.
     """
@@ -35,7 +35,7 @@ class EmptyRolesList:
     pass
 
 
-class NotInvite:
+class NotInvite(Exception):
     """
     The invite sent is not found as a discord.Invite object.
     """
@@ -43,7 +43,7 @@ class NotInvite:
     pass
 
 
-class InviteNotFound:
+class InviteNotFound(Exception):
     """
     The invite sent isn't in the guild's invite list.
     """
@@ -51,7 +51,7 @@ class InviteNotFound:
     pass
 
 
-class CannotGetInvites:
+class CannotGetInvites(Exception):
     """
     The bot isn't allowed to get the guild invites.
     Manage server permission is needed.
@@ -60,7 +60,7 @@ class CannotGetInvites:
     pass
 
 
-class CannotAddRole:
+class CannotAddRole(Exception):
     """
     The bot isn't allowed to give a role. 
     The role hierarchy was modified or a 3rd party module added the role without check.
