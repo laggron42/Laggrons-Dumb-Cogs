@@ -53,7 +53,7 @@ class RoleInvite(BaseCog):
     __author__ = ["retke (El Laggron)"]
     __version__ = "2.0.0"
     __info__ = {
-        "bot_version": "3.0.0b14",
+        "bot_version": [3, 0, 0],
         "description": (
             "Autorole based on the invite the user used.\n"
             "If the user joined using invite x, he will get "

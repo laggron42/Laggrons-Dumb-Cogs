@@ -155,7 +155,7 @@ class WarnSystem(BaseCog):
     __version__ = "1.0.4"
     __author__ = ["retke (El Laggron)"]
     __info__ = {
-        "bot_version": "3.0.0rc1",
+        "bot_version": [3, 0, 0],
         "description": (
             "An alternative to the core moderation cog, similar to Dyno.\n"
             "The cog allows you to take actions against member and keep track with "
