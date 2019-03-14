@@ -2,9 +2,10 @@
 import discord
 import logging
 import re
+import os
 import time
 
-from typing import Union, TYPE_CHECKING
+from typing import Union
 from asyncio import TimeoutError as AsyncTimeoutError
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -12,21 +13,19 @@ from json import loads
 
 from redbot.core import commands, Config, checks
 from redbot.core.i18n import Translator, cog_i18n
+from redbot.core.data_manager import cog_data_path
 from redbot.core.utils import predicates, menus, mod
 from redbot.core.utils.chat_formatting import pagify
-
 # from redbot.core.errors import BadArgument as RedBadArgument
 
-# creating this before importing other modules allows to import the translator
 _ = Translator("WarnSystem", __file__)
 
 from .api import API
 from . import errors
 
-if TYPE_CHECKING:
-    from .loggers import Log
+log = logging.getLogger("laggron.warnsystem")
+log.setLevel(logging.DEBUG)
 
-log = None
 BaseCog = getattr(commands, "Cog", object)
 
 
@@ -87,7 +86,6 @@ class WarnSystem(BaseCog):
     Full documentation and FAQ: http://laggron.red/warnsystem.html
     """
 
-    default_global = {"enable_sentry": None}
     default_guild = {
         "delete_message": False,  # if the [p]warn commands should delete the context message
         "show_mod": False,  # if the responsible mod should be revealed to the warned user
@@ -145,33 +143,33 @@ class WarnSystem(BaseCog):
         self.bot = bot
 
         self.data = Config.get_conf(self, 260, force_registration=True)
-        self.data.register_global(**self.default_global)
         self.data.register_guild(**self.default_guild)
         self.data.register_custom("MODLOGS", **self.default_custom_member)
 
         self.api = API(bot, self.data)
         self.errors = errors
-        self.sentry = None
-        self.translator = _
 
         self.task = bot.loop.create_task(self.api._loop_task())
+        self._init_logger()
 
     __version__ = "1.0.4"
-    __author__ = "retke (El Laggron)"
+    __author__ = ["retke (El Laggron)"]
     __info__ = {
-        "bot_version": "3.0.0rc1",
+        "bot_version": [3, 0, 0],
         "description": (
             "An alternative to the core moderation cog, similar to Dyno.\n"
             "The cog allows you to take actions against member and keep track with "
             "a new modlog system. It also sends a DM to the warned members.\n\n"
-            "This is the rewrite of the V2 BetterMod cog."
+            "This is the rewrite of the V2 BetterMod cog. **Note that this cog "
+            "conflicts with Warnings which must be unloaded.**"
         ),
         "hidden": False,
         "install_msg": (
             "Thank you for installing the warnsystem cog. Please check the wiki "
             "for all informations about the cog.\n"
             "https://laggrons-dumb-cogs.readthedocs.io/warnsystem.html\n\n"
-            "Type `[p]help WarnSystem` for a quick overview of the commands."
+            "Type `[p]help WarnSystem` for a quick overview of the commands\n"
+            "**This cog conflicts with Warnings which must be unloaded.**"
         ),
         "required_cogs": [],
         "requirements": [],
@@ -179,13 +177,33 @@ class WarnSystem(BaseCog):
         "tags": ["warn", "warning", "bettermod", "punish", "modlog"],
     }
 
-    # helpers
-    def _set_log(self, sentry: "Log"):
-        self.sentry = sentry
-        global log
-        log = logging.getLogger("laggron.warnsystem")
-        # this is called now so the logger is already initialized
+    def _init_logger(self):
+        log_format = logging.Formatter(
+            f"%(asctime)s %(levelname)s {self.__class__.__name__}: %(message)s",
+            datefmt="[%d/%m/%Y %H:%M]",
+        )
+        # logging to a log file
+        # file is automatically created by the module, if the parent foler exists
+        cog_path = cog_data_path(self)
+        if cog_path.exists():
+            log_path = cog_path / f"{os.path.basename(__file__)[:-3]}.log"
+            file_handler = logging.FileHandler(log_path)
+            file_handler.setLevel(logging.DEBUG)
+            file_handler.setFormatter(log_format)
+            log.addHandler(file_handler)
 
+        # stdout stuff
+        stdout_handler = logging.StreamHandler()
+        stdout_handler.setFormatter(log_format)
+        # if --debug flag is passed, we also set our debugger on debug mode
+        if logging.getLogger("red").isEnabledFor(logging.DEBUG):
+            stdout_handler.setLevel(logging.DEBUG)
+        else:
+            stdout_handler.setLevel(logging.INFO)
+        log.addHandler(stdout_handler)
+        self.stdout_handler = stdout_handler
+
+    # helpers
     async def call_warn(self, ctx, level, member, reason=None, time=None):
         """No need to repeat, let's do what's common to all 5 warnings."""
         reason = await self.api.format_reason(ctx.guild, reason)
@@ -693,7 +711,7 @@ class WarnSystem(BaseCog):
             await ctx.send(
                 _(
                     "The bot {respect} show the responsible moderator to the warned member in DM. "
-                    "If you want to change this, type `[p]warnset reinvite {opposite}`."
+                    "If you want to change this, type `[p]warnset showmod {opposite}`."
                 ).format(respect=_("does") if current else _("doesn't"), opposite=not current)
             )
         elif enable:
@@ -1141,6 +1159,10 @@ class WarnSystem(BaseCog):
             ctx=ctx, pages=embeds, controls=controls, message=None, page=index, timeout=60
         )
 
+    @commands.command()
+    async def error(self, ctx):
+        raise RuntimeError("This is a test")
+
     async def _edit_case(
         self,
         ctx: commands.Context,
@@ -1252,68 +1274,21 @@ class WarnSystem(BaseCog):
 
     @commands.command(hidden=True)
     @checks.is_owner()
-    async def warnsysteminfo(self, ctx, sentry: str = None):
+    async def warnsysteminfo(self, ctx):
         """
         Get informations about the cog.
-
-        Type `sentry` after your command to modify its status.
         """
-        current_status = await self.data.enable_sentry()
-        status = lambda x: _("enable") if x else _("disable")
-
-        if sentry is not None and "sentry" in sentry:
-            await ctx.send(
-                _(
-                    "You're about to {} error logging. Are you sure you want to do this? Type "
-                    "`yes` to confirm."
-                ).format(status(not current_status))
-            )
-            predicate = predicates.MessagePredicate.yes_or_no(ctx)
-            try:
-                await self.bot.wait_for("message", timeout=60, check=predicate)
-            except AsyncTimeoutError:
-                await ctx.send(_("Request timed out."))
-            else:
-                if predicate.result:
-                    await self.data.enable_sentry.set(not current_status)
-                    if not current_status:
-                        # now enabled
-                        self.sentry.enable()
-                        await ctx.send(
-                            _(
-                                "Upcoming errors will be reported automatically for a faster fix. "
-                                "Thank you for helping me with the development process!"
-                            )
-                        )
-                    else:
-                        # disabled
-                        self.sentry.disable()
-                        await ctx.send(_("Error logging has been disabled."))
-                    log.info(
-                        f"Sentry error reporting was {status(not current_status)}d "
-                        "on this instance."
-                    )
-                else:
-                    await ctx.send(
-                        _("Okay, error logging will stay {}d.").format(status(current_status))
-                    )
-                return
-
-        message = _(
-            "Laggron's Dumb Cogs V3 - warnsystem\n\n"
-            "Version: {0.__version__}\n"
-            "Author: {0.__author__}\n"
-            "Sentry error reporting: {1}d (type `{2}warnsysteminfo sentry` to change this)\n\n"
-            "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
-            "Discord server: https://discord.gg/AVzjfpR\n"
-            "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"
-            "Support my work on Patreon: https://www.patreon.com/retke"
-        ).format(self, status(current_status), ctx.prefix)
-        await ctx.send(message)
-
-    # error handling
-    def _set_context(self, data):
-        self.sentry.client.extra_context(data)
+        await ctx.send(
+            _(
+                "Laggron's Dumb Cogs V3 - warnsystem\n\n"
+                "Version: {0.__version__}\n"
+                "Author: {0.__author__}\n"
+                "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
+                "Discord server: https://discord.gg/AVzjfpR\n"
+                "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"
+                "Support my work on Patreon: https://www.patreon.com/retke"
+            ).format(self)
+        )
 
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
@@ -1328,26 +1303,16 @@ class WarnSystem(BaseCog):
                     "current channel if you want to use this command."
                 )
             )
-        context = {
-            "command": {
-                "invoked": f"{ctx.author} (ID: {ctx.author.id})",
-                "command": f"{ctx.command.name} (cog: {ctx.cog})",
-                "arguments": ctx.kwargs,
-            }
-        }
-        if ctx.guild:
-            context["guild"] = f"{ctx.guild.name} (ID: {ctx.guild.id})"
-        self._set_context(context)
-        self.sentry.disable_stdout()  # remove console output since red also handle this
+            return
+        log.removeHandler(self.stdout_handler)  # remove console output since red also handle this
         log.error(
             f"Exception in command '{ctx.command.qualified_name}'.\n\n", exc_info=error.original
         )
-        self.sentry.enable_stdout()  # re-enable console output for warnings
-        self._set_context({})  # remove context for future logs
+        log.addHandler(self.stdout_handler)  # re-enable console output for warnings
 
     # correctly unload the cog
     def __unload(self):
-        log.debug("Cog unloaded from the instance.")
+        log.debug("Unloading cog...")
 
         # remove all handlers from the logger, this prevents adding
         # multiple times the same handler if the cog gets reloaded

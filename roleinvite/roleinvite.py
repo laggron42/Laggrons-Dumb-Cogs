@@ -2,26 +2,24 @@
 import asyncio
 import logging
 import discord
-
-from typing import TYPE_CHECKING
+import os
 
 from redbot.core import commands
 from redbot.core import Config
 from redbot.core import checks
+from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import cog_i18n, Translator
 from redbot.core.utils.predicates import MessagePredicate
 from redbot.core.utils.chat_formatting import pagify
 
-# creating this before importing other modules allows to import the translator
 _ = Translator("RoleInvite", __file__)
 
 from .api import API
 from . import errors
 
-if TYPE_CHECKING:
-    from .loggers import Log
+log = logging.getLogger("laggron.roleinvite")
+log.setLevel(logging.DEBUG)
 
-log = None
 BaseCog = getattr(commands, "Cog", object)
 
 
@@ -50,11 +48,12 @@ class RoleInvite(BaseCog):
         self.translator = _
 
         bot.loop.create_task(self.api.update_invites())
+        self._init_logger()
 
-    __author__ = "retke (El Laggron)"
+    __author__ = ["retke (El Laggron)"]
     __version__ = "2.0.0"
     __info__ = {
-        "bot_version": "3.0.0b14",
+        "bot_version": [3, 0, 0],
         "description": (
             "Autorole based on the invite the user used.\n"
             "If the user joined using invite x, he will get "
@@ -75,11 +74,31 @@ class RoleInvite(BaseCog):
         "tags": ["autorole", "role", "join", "invite"],
     }
 
-    def _set_log(self, sentry: "Log"):
-        self.sentry = sentry
-        global log
-        log = logging.getLogger("laggron.roleinvite")
-        # this is called now so the logger is already initialized
+    def _init_logger(self):
+        log_format = logging.Formatter(
+            f"%(asctime)s %(levelname)s {self.__class__.__name__}: %(message)s",
+            datefmt="[%d/%m/%Y %H:%M]",
+        )
+        # logging to a log file
+        # file is automatically created by the module, if the parent foler exists
+        cog_path = cog_data_path(self)
+        if cog_path.exists():
+            log_path = cog_path / f"{os.path.basename(__file__)[:-3]}.log"
+            file_handler = logging.FileHandler(log_path)
+            file_handler.setLevel(logging.DEBUG)
+            file_handler.setFormatter(log_format)
+            log.addHandler(file_handler)
+
+        # stdout stuff
+        stdout_handler = logging.StreamHandler()
+        stdout_handler.setFormatter(log_format)
+        # if --debug flag is passed, we also set our debugger on debug mode
+        if logging.getLogger("red").isEnabledFor(logging.DEBUG):
+            stdout_handler.setLevel(logging.DEBUG)
+        else:
+            stdout_handler.setLevel(logging.INFO)
+        log.addHandler(stdout_handler)
+        self.stdout_handler = stdout_handler
 
     async def _check(self, ctx: commands.Context):
         """
@@ -158,6 +177,9 @@ class RoleInvite(BaseCog):
         # permission checks
         if role.position >= ctx.guild.me.top_role.position:
             await ctx.send(_("That role is higher than mine. I can't add it to new users."))
+            return
+        if role.position >= ctx.author.top_role.position and ctx.author != ctx.guild.owner:
+            await ctx.send(_("That role is higher than your top role, you can't do that!"))
             return
         if not ctx.guild.me.guild_permissions.manage_guild:
             await ctx.send(_("I need the `Manage server` permission!"))
@@ -389,64 +411,21 @@ class RoleInvite(BaseCog):
 
     @commands.command(hidden=True)
     @checks.is_owner()
-    async def roleinviteinfo(self, ctx, sentry: str = None):
+    async def roleinviteinfo(self, ctx):
         """
         Get informations about the cog.
-
-        Type `sentry` after your command to modify its status.
         """
-
-        current_status = await self.data.enable_sentry()
-        status = lambda x: (_("enable"), _("enabled")) if x else (_("disable"), _("disabled"))
-        if sentry is not None and "sentry" in sentry:
-            await ctx.send(
-                _(
-                    "You're about to {} error logging. Are you sure you want to do this? Type "
-                    "`yes` to confirm."
-                ).format(status(not current_status)[0])
-            )
-            predicate = MessagePredicate.yes_or_no(ctx)
-            try:
-                await self.bot.wait_for("message", timeout=60, check=predicate)
-            except asyncio.TimeoutError:
-                await ctx.send(_("Request timed out."))
-            else:
-                if predicate.result:
-                    await self.data.enable_sentry.set(not current_status)
-                    if not current_status:
-                        # now enabled
-                        self.sentry.enable()
-                        await ctx.send(
-                            _(
-                                "Upcoming errors will be reported automatically for a faster fix. "
-                                "Thank you for helping me with the development process!"
-                            )
-                        )
-                    else:
-                        # disabled
-                        self.sentry.disable()
-                        await ctx.send(_("Error logging has been disabled."))
-                    log.info(
-                        f"Sentry error reporting was {status(not current_status)[1]} "
-                        "on this instance."
-                    )
-                else:
-                    await ctx.send(
-                        _("Okay, error logging will stay {}.").format(status(current_status)[1])
-                    )
-                return
-
-        message = _(
-            "Laggron's Dumb Cogs V3 - roleinvite\n\n"
-            "Version: {0.__version__}\n"
-            "Author: {0.__author__}\n"
-            "Sentry error reporting: {1} (type `{2}roleinviteinfo sentry` to change this)\n\n"
-            "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
-            "Discord server: https://discord.gg/AVzjfpR\n"
-            "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"
-            "Support my work on Patreon: https://www.patreon.com/retke"
-        ).format(self, status(current_status)[1], ctx.prefix)
-        await ctx.send(message)
+        await ctx.send(
+            _(
+                "Laggron's Dumb Cogs V3 - roleinvite\n\n"
+                "Version: {0.__version__}\n"
+                "Author: {0.__author__}\n"
+                "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
+                "Discord server: https://discord.gg/AVzjfpR\n"
+                "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"
+                "Support my work on Patreon: https://www.patreon.com/retke"
+            ).format(self)
+        )
 
     async def on_member_join(self, member):
         async def add_roles(invite):
@@ -581,23 +560,15 @@ class RoleInvite(BaseCog):
         if not ctx.command.cog_name == self.__class__.__name__:
             # That error doesn't belong to the cog
             return
-        context = {
-            "command": {
-                "invoked": f"{ctx.author} (ID: {ctx.author.id})",
-                "command": f"{ctx.command.name} (cog: {ctx.cog})",
-                "arguments": ctx.kwargs,
-            }
-        }
-        if ctx.guild:
-            context["guild"] = f"{ctx.guild.name} (ID: {ctx.guild.id})"
-        self._set_context(context)
-        self.sentry.disable_stdout()  # remove console output since Red already handle this
+        log.removeHandler(self.stdout_handler)  # remove console output since red also handle this
         log.error(
             f"Exception in command '{ctx.command.qualified_name}'.\n\n", exc_info=error.original
         )
-        self.sentry.enable_stdout()  # re-enable console output for warnings
-        self._set_context({})  # remove context for future logs
+        log.addHandler(self.stdout_handler)  # re-enable console output for warnings
 
     def __unload(self):
-        self.sentry.disable()
+        log.debug("Unloading cog...")
+
+        # remove all handlers from the logger, this prevents adding
+        # multiple times the same handler if the cog gets reloaded
         log.handlers = []
