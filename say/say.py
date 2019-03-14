@@ -5,7 +5,7 @@ import asyncio
 import os
 import logging
 
-from redbot.core import checks, commands, Config
+from redbot.core import checks, commands
 from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils.tunnel import Tunnel
@@ -28,8 +28,6 @@ class Say(BaseCog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.data = Config.get_conf(self, 260)
-        self.data.register_global(enable_sentry=None)
         self.interaction = []
         self._init_logger()
 
@@ -79,9 +77,6 @@ class Say(BaseCog):
             stdout_handler.setLevel(logging.INFO)
         log.addHandler(stdout_handler)
         self.stdout_handler = stdout_handler
-
-    def _set_context(self, data: dict):
-        self.sentry.client.extra_context(data)
 
     async def say(self, ctx, text, files):
 

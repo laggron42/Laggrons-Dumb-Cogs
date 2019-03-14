@@ -51,10 +51,9 @@ class InstantCommands(BaseCog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.sentry = None
         self.data = Config.get_conf(self, 260)
 
-        def_global = {"commands": {}, "enable_sentry": None, "updated_body": False}
+        def_global = {"commands": {}, "updated_body": False}
         self.data.register_global(**def_global)
         self.listeners = {}
 
@@ -327,60 +326,21 @@ class InstantCommands(BaseCog):
 
     @commands.command(hidden=True)
     @checks.is_owner()
-    async def instantcmdinfo(self, ctx, sentry: str = None):
+    async def instantcmdinfo(self, ctx):
         """
         Get informations about the cog.
-
-        Type `sentry` after your command to modify its status.
         """
-        current_status = await self.data.enable_sentry()
-        status = lambda x: ("enable", "enabled") if x else ("disable", "disabled")
-
-        if sentry is not None and "sentry" in sentry:
-            await ctx.send(
-                "You're about to {} error logging. Are you sure you want to do this? Type "
-                "`yes` to confirm.".format(status(not current_status)[0])
-            )
-            predicate = MessagePredicate.yes_or_no(ctx)
-            try:
-                await self.bot.wait_for("message", timeout=60, check=predicate)
-            except asyncio.TimeoutError:
-                await ctx.send("Request timed out.")
-            else:
-                if predicate.result:
-                    await self.data.enable_sentry.set(not current_status)
-                    if not current_status:
-                        # now enabled
-                        self.sentry.enable()
-                        await ctx.send(
-                            "Upcoming errors will be reported automatically for a faster fix. "
-                            "Thank you for helping me with the development process!"
-                        )
-                    else:
-                        # disabled
-                        self.sentry.disable()
-                        await ctx.send("Error logging has been disabled.")
-                    log.info(
-                        f"Sentry error reporting was {status(not current_status)[1]} "
-                        "on this instance."
-                    )
-                else:
-                    await ctx.send(
-                        "Okay, error logging will stay {}.".format(status(current_status)[1])
-                    )
-                return
-
-        message = (
-            "Laggron's Dumb Cogs V3 - instantcmd\n\n"
-            "Version: {0.__version__}\n"
-            "Author: {0.__author__}\n"
-            "Sentry error reporting: {1} (type `{2}instantcmdinfo sentry` to change this)\n\n"
-            "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
-            "Discord server: https://discord.gg/AVzjfpR\n"
-            "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"
-            "Support my work on Patreon: https://www.patreon.com/retke"
-        ).format(self, status(current_status)[1], ctx.prefix)
-        await ctx.send(message)
+        await ctx.send(
+            _(
+                "Laggron's Dumb Cogs V3 - instantcmd\n\n"
+                "Version: {0.__version__}\n"
+                "Author: {0.__author__}\n"
+                "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
+                "Discord server: https://discord.gg/AVzjfpR\n"
+                "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"
+                "Support my work on Patreon: https://www.patreon.com/retke"
+            ).format(self)
+        )
 
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
