@@ -30,7 +30,7 @@ class Default:
             "for all informations about the cogs.\n"
             "https://laggrons-dumb-cogs.readthedocs.io/\n"
             "Join the official discord server for questions or suggestions.\n"
-            "https://discord.gg/AVzjfpR\"
+            "https://discord.gg/AVzjfpR"
         ),
         "short": "Utility cogs for your server.",
     }
