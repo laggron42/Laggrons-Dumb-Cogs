@@ -16,6 +16,7 @@ from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils import predicates, menus, mod
 from redbot.core.utils.chat_formatting import pagify
+
 # from redbot.core.errors import BadArgument as RedBadArgument
 
 _ = Translator("WarnSystem", __file__)
