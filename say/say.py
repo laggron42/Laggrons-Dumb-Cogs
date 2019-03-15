@@ -277,10 +277,6 @@ class Say(BaseCog):
             if isinstance(channel, discord.DMChannel):
                 await self.stop_interaction(user)
 
-    @commands.command()
-    async def error_2(self, ctx):
-        raise RuntimeError
-
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
