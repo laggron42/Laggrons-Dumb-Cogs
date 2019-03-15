@@ -23,11 +23,11 @@ help:
 
 reformat:
 	@echo "Starting..."
-	@python3 -m black -l 99 --skip-numeric-underscore-normalization `git ls-files "*.py"`
+	@python3 -m black -l 99 `git ls-files "*.py"`
 
 stylecheck:
 	@echo "Starting..."
-	@python3 -m black -l 99 --skip-numeric-underscore-normalization --check --diff `git ls-files "*.py"`
+	@python3 -m black -l 99 --check --diff `git ls-files "*.py"`
 
 gettext:
 	@echo "Starting..."
