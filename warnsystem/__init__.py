@@ -14,10 +14,8 @@ async def setup(bot):
     # the cog conflicts with the core Warnings cog, we must check that
     if "Warnings" in bot.cogs:
         raise CogLoadError(
-            _(
-                "You need to unload the Warnings cog to load "
-                "this cog. Type `[p]unload warnings` and try again."
-            )
+            "You need to unload the Warnings cog to load "
+            "this cog. Type `[p]unload warnings` and try again."
         )
     bot.add_cog(n)
     log.debug("Cog successfully loaded on the instance.")
