@@ -863,16 +863,12 @@ class API:
             )
             if reason and not reason.endswith("."):
                 reason += "."
-            audit_reason = (
-                _(
-                    "WarnSystem {action} requested by {author} (ID: "
-                    "{author.id}) against {member}. "
-                ).format(author=author, member=member, action=action)
-                + (
-                    _("\n\nDuration: {time} ").format(time=self._format_timedelta(time))
-                    if time
-                    else ""
-                )
+            audit_reason = _(
+                "WarnSystem {action} requested by {author} (ID: " "{author.id}) against {member}. "
+            ).format(author=author, member=member, action=action) + (
+                _("\n\nDuration: {time} ").format(time=self._format_timedelta(time))
+                if time
+                else ""
             )
             if reason:
                 if len(audit_reason + reason) < 490:
