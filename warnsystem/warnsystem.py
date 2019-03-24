@@ -153,7 +153,7 @@ class WarnSystem(BaseCog):
         self.task = bot.loop.create_task(self.api._loop_task())
         self._init_logger()
 
-    __version__ = "1.0.4"
+    __version__ = "1.0.5"
     __author__ = ["retke (El Laggron)"]
     __info__ = {
         "bot_version": [3, 0, 0],
@@ -208,7 +208,7 @@ class WarnSystem(BaseCog):
     async def call_warn(self, ctx, level, member, reason=None, time=None):
         """No need to repeat, let's do what's common to all 5 warnings."""
         reason = await self.api.format_reason(ctx.guild, reason)
-        if reason and len(reason) > 1024:  # embed limits
+        if reason and len(reason) > 2000:  # embed limits
             await ctx.send(
                 _(
                     "The reason is too long for an embed.\n\n"
