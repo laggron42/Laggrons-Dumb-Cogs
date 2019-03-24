@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2019-02-08 21:59+0100\n"
+"POT-Creation-Date: 2019-03-24 01:26+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15,12 +15,12 @@ msgstr ""
 "Generated-By: redgettext 2.2\n"
 
 
-#: instantcmd/instantcmd.py:163
+#: instantcmd/instantcmd.py:185
 #, docstring
 msgid "Instant Commands cog management"
 msgstr ""
 
-#: instantcmd/instantcmd.py:168
+#: instantcmd/instantcmd.py:190
 #, docstring
 msgid ""
 "\n"
@@ -30,7 +30,7 @@ msgid ""
 "        "
 msgstr ""
 
-#: instantcmd/instantcmd.py:245
+#: instantcmd/instantcmd.py:267
 #, docstring
 msgid ""
 "\n"
@@ -38,7 +38,7 @@ msgid ""
 "        "
 msgstr ""
 
-#: instantcmd/instantcmd.py:264
+#: instantcmd/instantcmd.py:286
 #, docstring
 msgid ""
 "\n"
@@ -48,13 +48,24 @@ msgid ""
 "        "
 msgstr ""
 
-#: instantcmd/instantcmd.py:308
+#: instantcmd/instantcmd.py:330
 #, docstring
 msgid ""
 "\n"
 "        Get informations about the cog.\n"
-"\n"
-"        Type `sentry` after your command to modify its status.\n"
 "        "
+msgstr ""
+
+#: instantcmd/instantcmd.py:334
+msgid ""
+"Laggron's Dumb Cogs V3 - instantcmd\n"
+"\n"
+"Version: {0.__version__}\n"
+"Author: {0.__author__}\n"
+"Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
+"Discord server: https://discord.gg/AVzjfpR\n"
+"Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n"
+"\n"
+"Support my work on Patreon: https://www.patreon.com/retke"
 msgstr ""
 

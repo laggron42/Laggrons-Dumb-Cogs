@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2019-02-08 21:59+0100\n"
+"POT-Creation-Date: 2019-03-24 01:26+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15,25 +15,7 @@ msgstr ""
 "Generated-By: redgettext 2.2\n"
 
 
-#: say/__init__.py:29
-msgid "Hello, thanks for installing `say`. Would you like to enable error logging to help the developer to fix new errors? If you wish to opt in the process, please type \"yes\""
-msgstr ""
-
-#: say/__init__.py:39
-msgid "Request timed out. Error logging disabled by default. You can change that by using the `[p]sayinfo` command."
-msgstr ""
-
-#: say/__init__.py:47
-msgid ""
-"Thank you for helping me with the development process!\n"
-"You can disable this at anytime by using `[p]sayinfo` command."
-msgstr ""
-
-#: say/__init__.py:56
-msgid "The error logging was not enabled. You can change that by using the `[p]sayinfo` command."
-msgstr ""
-
-#: say/say.py:27
+#: say/say.py:22
 #, docstring
 msgid ""
 "\n"
@@ -44,15 +26,15 @@ msgid ""
 "    "
 msgstr ""
 
-#: say/say.py:111 say/say.py:116
+#: say/say.py:120 say/say.py:125
 msgid "I am not allowed to send messages in "
 msgstr ""
 
-#: say/say.py:123 say/say.py:127
+#: say/say.py:132 say/say.py:136
 msgid "I am not allowed to upload files in "
 msgstr ""
 
-#: say/say.py:140
+#: say/say.py:148
 #, docstring
 msgid ""
 "\n"
@@ -67,7 +49,7 @@ msgid ""
 "        "
 msgstr ""
 
-#: say/say.py:157
+#: say/say.py:165
 #, docstring
 msgid ""
 "\n"
@@ -77,24 +59,24 @@ msgid ""
 "        "
 msgstr ""
 
-#: say/say.py:171 say/say.py:173
+#: say/say.py:179 say/say.py:181
 msgid "Not enough permissions to delete messages."
 msgstr ""
 
-#: say/say.py:180
+#: say/say.py:188
 #, docstring
 msgid "Start receiving and sending messages as the bot through DM"
 msgstr ""
 
-#: say/say.py:186
+#: say/say.py:194
 msgid "You need to give a channel to enable this in DM. You can give the channel ID too."
 msgstr ""
 
-#: say/say.py:196
+#: say/say.py:204
 msgid "A session is already running."
 msgstr ""
 
-#: say/say.py:200
+#: say/say.py:208
 msgid ""
 "I will start sending you messages from {0}.\n"
 "Just send me any message and I will send it in that channel.\n"
@@ -102,64 +84,24 @@ msgid ""
 "If no message was send or received in the last 5 minutes, the request will time out and stop."
 msgstr ""
 
-#: say/say.py:219
+#: say/say.py:227
 msgid "Request timed out. Session closed"
 msgstr ""
 
-#: say/say.py:251
+#: say/say.py:259
 #, docstring
 msgid ""
 "\n"
 "        Get informations about the cog.\n"
-"\n"
-"        Type `sentry` after your command to modify its status.\n"
 "        "
 msgstr ""
 
-#: say/say.py:257
-msgid "enable"
-msgstr ""
-
-#: say/say.py:257
-msgid "enabled"
-msgstr ""
-
-#: say/say.py:257
-msgid "disable"
-msgstr ""
-
-#: say/say.py:257
-msgid "disabled"
-msgstr ""
-
-#: say/say.py:260
-msgid "You're about to {} error logging. Are you sure you want to do this? Type `yes` to confirm."
-msgstr ""
-
-#: say/say.py:269
-msgid "Request timed out."
-msgstr ""
-
-#: say/say.py:276
-msgid "Upcoming errors will be reported automatically for a faster fix. Thank you for helping me with the development process!"
-msgstr ""
-
-#: say/say.py:284
-msgid "Error logging has been disabled."
-msgstr ""
-
-#: say/say.py:292
-msgid "Okay, error logging will stay {}."
-msgstr ""
-
-#: say/say.py:296
+#: say/say.py:263
 msgid ""
 "Laggron's Dumb Cogs V3 - say\n"
 "\n"
 "Version: {0.__version__}\n"
 "Author: {0.__author__}\n"
-"Sentry error reporting: {1} (type `{2}sayinfo sentry` to change this)\n"
-"\n"
 "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
 "Discord server: https://discord.gg/AVzjfpR\n"
 "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n"
@@ -167,7 +109,7 @@ msgid ""
 "Support my work on Patreon: https://www.patreon.com/retke"
 msgstr ""
 
-#: say/say.py:342
+#: say/say.py:294
 msgid "Session closed"
 msgstr ""
 

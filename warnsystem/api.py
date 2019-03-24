@@ -863,22 +863,18 @@ class API:
             )
             if reason and not reason.endswith("."):
                 reason += "."
-            audit_reason = (
-                _(
-                    "WarnSystem {action} requested by {author} (ID: "
-                    "{author.id}) against {member} for "
-                ).format(author=author, member=member, action=action)
-                + (
-                    _("the following reason:\n{reason}").format(reason=reason)
-                    if reason
-                    else _("no reason.")
+            audit_reason = _(
+                "WarnSystem {action} requested by {author} (ID: " "{author.id}) against {member}. "
+            ).format(author=author, member=member, action=action)
+            if time:
+                audit_reason += _("\n\nDuration: {time} ").format(
+                    time=self._format_timedelta(time)
                 )
-                + (
-                    _("\n\nDuration: {time}").format(time=self._format_timedelta(time))
-                    if time
-                    else ""
-                )
-            )
+            if reason:
+                if len(audit_reason + reason) < 490:
+                    audit_reason += _("Reason: {reason}").format(reason=reason)
+                else:
+                    audit_reason += _("Reason too long to be shown.")
             if level == 2:
                 await self._mute(member, audit_reason)
             if level == 3:
