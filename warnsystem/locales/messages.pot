@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2019-03-24 00:46+0100\n"
+"POT-Creation-Date: 2019-03-24 01:26+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -83,7 +83,7 @@ msgstr ""
 msgid "warns"
 msgstr ""
 
-#: warnsystem/api.py:452 warnsystem/api.py:861 warnsystem/api.py:978
+#: warnsystem/api.py:452 warnsystem/api.py:861 warnsystem/api.py:974
 msgid "mute"
 msgstr ""
 
@@ -107,7 +107,7 @@ msgstr ""
 msgid "softbans"
 msgstr ""
 
-#: warnsystem/api.py:455 warnsystem/api.py:861 warnsystem/api.py:978
+#: warnsystem/api.py:455 warnsystem/api.py:861 warnsystem/api.py:974
 msgid "ban"
 msgstr ""
 
@@ -248,36 +248,36 @@ msgstr ""
 msgid "I can't ban members, please give me this permission to continue."
 msgstr ""
 
-#: warnsystem/api.py:867
+#: warnsystem/api.py:866
 msgid "WarnSystem {action} requested by {author} (ID: {author.id}) against {member}. "
 msgstr ""
 
-#: warnsystem/api.py:872
+#: warnsystem/api.py:870
 msgid ""
 "\n"
 "\n"
 "Duration: {time} "
 msgstr ""
 
-#: warnsystem/api.py:879
-msgid "Reason: {time}"
+#: warnsystem/api.py:875
+msgid "Reason: {reason}"
 msgstr ""
 
-#: warnsystem/api.py:881
+#: warnsystem/api.py:877
 msgid "Reason too long to be shown."
 msgstr ""
 
-#: warnsystem/api.py:894
+#: warnsystem/api.py:890
 msgid "Unbanning the softbanned member after cleaning up the messages."
 msgstr ""
 
-#: warnsystem/api.py:949
+#: warnsystem/api.py:945
 msgid ""
 "You were unbanned from {guild}, your temporary ban (reason: {reason}) just ended after {duration}.\n"
 "You can join back using this invite: {invite}"
 msgstr ""
 
-#: warnsystem/api.py:985
+#: warnsystem/api.py:981
 msgid "End of timed {action} of {member} requested by {author} that lasted for {time}. Reason of the {action}: {reason}"
 msgstr ""
 
