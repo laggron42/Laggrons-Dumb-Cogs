@@ -867,7 +867,9 @@ class API:
                 "WarnSystem {action} requested by {author} (ID: " "{author.id}) against {member}. "
             ).format(author=author, member=member, action=action)
             if time:
-                audit_reason += _("\n\nDuration: {time} ").format(time=self._format_timedelta(time))
+                audit_reason += _("\n\nDuration: {time} ").format(
+                    time=self._format_timedelta(time)
+                )
             if reason:
                 if len(audit_reason + reason) < 490:
                     audit_reason += _("Reason: {reason}").format(reason=reason)
