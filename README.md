@@ -16,6 +16,8 @@ If you still don't have Red installed, I suggest you to install it [here](https:
 
 Please join the [Discord server](https://discord.gg/AVzjfpRM) to stay tuned about everything, or if you want to ask a question, submit a bug or a suggestion. You can also [submit an issue](https://github.com/retke/Laggrons-Dumb-Cogs/issues/new/choose).
 
+[![Discord server](https://discordapp.com/api/guilds/363008468602454017/embed.png?style=banner3)](https://discord.gg/AVzjfpRM)
+
 ## Tutorials, FAQ and API
 
 If you want to know in details how to use my cogs, please go check the [Laggron's Dumb Cogs wiki](https://laggron.red/). Everything you need is wrote there. You will be able to find
