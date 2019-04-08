@@ -26,7 +26,7 @@ Welcome to Laggron's Dumb Cogs's official documentation!
 .. Badges and artwork
 
 .. image:: https://discordapp.com/api/guilds/363008468602454017/embed.png
-    :target: https://discord.gg/AVzjfpRM
+    :target: https://discord.gg/AVzjfpR
     :alt: Discord server
 
 .. image:: https://img.shields.io/badge/discord-py-blue.svg
