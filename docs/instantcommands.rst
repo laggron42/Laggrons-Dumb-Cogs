@@ -186,7 +186,7 @@ Frequently Asked Questions
 
     **Your question is not in the list or you got an unexcpected issue?**
 
-    You should join the `Discord server <https://discord.gg/AVzjfpRM>`_ or
+    You should join the `Discord server <https://discord.gg/AVzjfpR>`_ or
     `post an issue <https://github.com/retke/Laggrons-Dumb-Cogs/issues/new/choose>`_
     on the repo.
 

@@ -1,6 +1,6 @@
 # Laggron's Dumb Cogs - Red V3
 
-[![Discord server](https://discordapp.com/api/guilds/363008468602454017/embed.png)](https://discord.gg/AVzjfpRM)
+[![Discord server](https://discordapp.com/api/guilds/363008468602454017/embed.png)](https://discord.gg/AVzjfpR)
 [![Red cogs](https://img.shields.io/badge/Red--DiscordBot-cogs-red.svg)](https://github.com/Cog-Creators/Red-DiscordBot/tree/V3/develop)
 [![discord.py](https://img.shields.io/badge/discord-py-blue.svg)](https://github.com/Rapptz/discord.py)
 [![Black coding style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
@@ -14,9 +14,9 @@ Hello and welcome there, this is the repository for the **Laggron's Dumb Cogs**,
 
 If you still don't have Red installed, I suggest you to install it [here](https://red-discordbot.readthedocs.io/en/v3-develop/), there's no coding skill required, it's the best bot you can have, it has everything (including the cogs of that repo)!
 
-Please join the [Discord server](https://discord.gg/AVzjfpRM) to stay tuned about everything, or if you want to ask a question, submit a bug or a suggestion. You can also [submit an issue](https://github.com/retke/Laggrons-Dumb-Cogs/issues/new/choose).
+Please join the [Discord server](https://discord.gg/AVzjfpR) to stay tuned about everything, or if you want to ask a question, submit a bug or a suggestion. You can also [submit an issue](https://github.com/retke/Laggrons-Dumb-Cogs/issues/new/choose).
 
-[![Discord server](https://discordapp.com/api/guilds/363008468602454017/embed.png?style=banner3)](https://discord.gg/AVzjfpRM)
+[![Discord server](https://discordapp.com/api/guilds/363008468602454017/embed.png?style=banner3)](https://discord.gg/AVzjfpR)
 
 ## Tutorials, FAQ and API
 
@@ -38,7 +38,7 @@ I'm creating these cogs on my free time. If you like my work, please consider do
 
 My name on Discord is `El Laggron#0260`.
 
-You can contact me on my [Discord server](https://discord.gg/AVzjfpRM) or [Red main discord server](https://discord.gg/red). My DMs are open, feel free to contact me!
+You can contact me on my [Discord server](https://discord.gg/AVzjfpR) or [Red main discord server](https://discord.gg/red). My DMs are open, feel free to contact me!
 
 You can also contact be by email: `laggron42@gmail.com`.
 
