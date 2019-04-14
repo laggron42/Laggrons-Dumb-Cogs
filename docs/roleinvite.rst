@@ -59,30 +59,30 @@ Here's a schema for a better understanding:
 
 Here's the list of all commands of this cog.
 
-.. _command-roleset:
+.. _command-inviteset:
 
-~~~~~~~
-roleset
-~~~~~~~
+~~~~~~~~~
+inviteset
+~~~~~~~~~
 
 **Syntax**::
 
-    [p]roleset
+    [p]inviteset
 
 **Description**
 
 This is the main command used for setting up the code.
 It will be used for all other commands.
 
-.. _command-roleset-add:
+.. _command-inviteset-add:
 
-~~~~~~~~~~~
-roleset add
-~~~~~~~~~~~
+~~~~~~~~~~~~~
+inviteset add
+~~~~~~~~~~~~~
 
 **Syntax**::
 
-    [p]roleset add <invite|main|default> <role>
+    [p]inviteset add <invite|main|default> <role>
 
 **Description**
 
@@ -112,15 +112,15 @@ You can link more roles by typing the command with the same argument.
 * ``<role>`` The role to be linked. Please give the **exact role name**
   or the ID.
 
-.. _command-roleset-remove:
+.. _command-inviteset-remove:
 
-~~~~~~~~~~~~~~
-roleset remove
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
+inviteset remove
+~~~~~~~~~~~~~~~~
 
 **Syntax**::
 
-    [p]roleset remove <invite|main|default> [role]
+    [p]inviteset remove <invite|main|default> [role]
 
 **Description**
 
@@ -142,33 +142,33 @@ will be removed.
   **exact role name** or the ID. If not given, the entire
   autorole will be removed.
 
-.. _command-roleset-list:
+.. _command-inviteset-list:
 
-~~~~~~~~~~~~
-roleset list
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~
+inviteset list
+~~~~~~~~~~~~~~
 
 **Syntax**
 
 .. code-block:: none
 
-    [p]roleset list
+    [p]inviteset list
 
 **Description**
 
 List all of the existing autoroles on the guild, with their linked roles.
 
-.. _command-roleset-enable:
+.. _command-inviteset-enable:
 
-~~~~~~~~~~~~~~
-roleset enable
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
+inviteset enable
+~~~~~~~~~~~~~~~~
 
 **Syntax**
 
 .. code-block:: none
 
-    [p]roleset enable
+    [p]inviteset enable
 
 **Description**
 
@@ -196,7 +196,7 @@ Can I make it so the bot adds x roles if the invite used is unknown?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Yes, by using the ``main`` value instead of using a discord invite
-when creating a new invite link. See :ref:`roleset add <command-roleset-add>` command's
+when creating a new invite link. See :ref:`inviteset add <command-inviteset-add>` command's
 arguments for more informations.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -204,7 +204,7 @@ Can I make it so the bot always adds x roles, regardless of the invite used?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Yes, by using the ``default`` value instead of using a discord invite
-when creating a new invite link. See :ref:`roleset add <command-roleset-add>` command's
+when creating a new invite link. See :ref:`inviteset add <command-inviteset-add>` command's
 arguments for more informations.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -225,7 +225,7 @@ The bot will automatically turn off the autorole system if he lose the ``Manage
 sever`` or the ``Add roles`` permissions, which are absolutely necessary for the cog.
 
 If you added the permissions back, enable the autorole again with the command 
-:ref:`enable <command-roleset-enable>`.
+:ref:`enable <command-inviteset-enable>`.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Some roles are not added to the new members
