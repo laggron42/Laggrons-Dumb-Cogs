@@ -2,14 +2,12 @@ language: python
 
 matrix:
   include:
-    - python: 3.6.6
     - python: 3.7
       dist: xenial
       sudo: true
 
 install:
- - pip install -U --process-dependency-links Red-DiscordBot[voice]
- - pip install -U --process-dependency-links git+https://github.com/Rapptz/discord.py@rewrite
+ - pip install -U Red-DiscordBot
  - pip install yarl==0.18.0
  - pip install black
 
