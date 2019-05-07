@@ -145,6 +145,10 @@ class WarnSystem(BaseCog):
 
         self.data = Config.get_conf(self, 260, force_registration=True)
         self.data.register_guild(**self.default_guild)
+        try:
+            self.data.init_custom("MODLOGS", 2)
+        except AttributeError:
+            pass
         self.data.register_custom("MODLOGS", **self.default_custom_member)
 
         self.api = API(bot, self.data)
