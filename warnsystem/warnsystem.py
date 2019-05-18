@@ -32,6 +32,7 @@ BaseCog = getattr(commands, "Cog", object)
 # Red 3.0 backwards compatibility, thanks Sinbad
 listener = getattr(commands.Cog, "listener", None)
 if listener is None:
+
     def listener(name=None):
         return lambda x: x
 
