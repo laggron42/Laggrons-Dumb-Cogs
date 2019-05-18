@@ -157,7 +157,7 @@ class WarnSystem(BaseCog):
         self.task = bot.loop.create_task(self.api._loop_task())
         self._init_logger()
 
-    __version__ = "1.0.5"
+    __version__ = "1.0.6"
     __author__ = ["retke (El Laggron)"]
     __info__ = {
         "bot_version": [3, 0, 0],
@@ -1267,6 +1267,10 @@ class WarnSystem(BaseCog):
         if pred.result:
             async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
                 logs.remove(logs[page - 1])
+            log.debug(
+                f"Removed case #{page} from member {member} (ID: {member.id}) "
+                f"on guild {guild} (ID: {guild.id})."
+            )
             await message.clear_reactions()
             await message.edit(content=_("The case was successfully deleted!"), embed=None)
         else:
@@ -1291,6 +1295,7 @@ class WarnSystem(BaseCog):
             ).format(self)
         )
 
+    @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
@@ -1312,7 +1317,7 @@ class WarnSystem(BaseCog):
         log.addHandler(self.stdout_handler)  # re-enable console output for warnings
 
     # correctly unload the cog
-    def __unload(self):
+    def cog_unload(self):
         log.debug("Unloading cog...")
 
         # remove all handlers from the logger, this prevents adding
