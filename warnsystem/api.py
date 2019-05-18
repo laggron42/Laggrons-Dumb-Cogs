@@ -17,11 +17,6 @@ from .warnsystem import _  # translator
 from . import errors
 
 log = logging.getLogger("laggron.warnsystem")
-if logging.getLogger("red").isEnabledFor(logging.DEBUG):
-    # debug mode enabled
-    log.setLevel(logging.DEBUG)
-else:
-    log.setLevel(logging.WARNING)
 
 
 class API:
@@ -114,7 +109,7 @@ class API:
                 try:
                     user = await self.bot.fetch_user(user_id)
                 except AttributeError:
-                    user = await self.bot.get_user_user(user_id)
+                    user = await self.bot.get_user_info(user_id)
             except discord.errors.NotFound:
                 user = None
             except discord.errors.HTTPException as e:
