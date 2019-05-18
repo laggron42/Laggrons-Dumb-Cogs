@@ -17,11 +17,6 @@ from .warnsystem import _  # translator
 from . import errors
 
 log = logging.getLogger("laggron.warnsystem")
-if logging.getLogger("red").isEnabledFor(logging.DEBUG):
-    # debug mode enabled
-    log.setLevel(logging.DEBUG)
-else:
-    log.setLevel(logging.WARNING)
 
 
 class API:
@@ -109,13 +104,17 @@ class API:
     async def _get_user_info(self, user_id: int):
         user = self.bot.get_user(user_id)
         if not user:
+            log.debug(f"Calling highly rate-limited fetch_user endpoint with {user_id}...")
             try:
-                user = await self.bot.get_user_info(user_id)
+                try:
+                    user = await self.bot.fetch_user(user_id)
+                except AttributeError:
+                    user = await self.bot.get_user_info(user_id)
             except discord.errors.NotFound:
                 user = None
             except discord.errors.HTTPException as e:
                 user = None
-                log.error(
+                log.warn(
                     "Received HTTPException when trying to get user info. "
                     "This is probaby a cooldown from Discord.",
                     exc_info=e,
@@ -322,6 +321,10 @@ class API:
         case["time"] = case["time"].strftime("%a %d %B %Y %H:%M")
         async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
             logs[index - 1] = case
+        log.debug(
+            f"Case #{index} from {user} (ID: {user.id}) on guild {guild} "
+            f"(ID: {guild.id}) edited. New reason: {new_reason}"
+        )
         return True
 
     async def get_modlog_channel(
@@ -639,6 +642,7 @@ class API:
                     exc_info=e,
                 )
         await self.data.guild(guild).mute_role.set(role.id)
+        log.debug(f"Created mute role for guild {guild} (ID: {guild.id}). Role ID: {role.id}")
         return errors
 
     async def format_reason(self, guild: discord.Guild, reason: str = None) -> str:
@@ -907,6 +911,11 @@ class API:
             await self._start_timer(guild, data)
 
         # all good!
+        log.debug(
+            f"Warn taken on guild {guild} (ID: {guild.id}) by {author} (ID: {author.id}) against "
+            f"{member} (ID: {member.id}). Level = {level} ; Time = {time} : Modlog = {log_modlog} "
+            f"; DM = {log_dm} ; Actions taken = {take_action} ; Reason = {reason}"
+        )
         return True
 
     async def _check_endwarn(self):

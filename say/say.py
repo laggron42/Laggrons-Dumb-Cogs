@@ -16,6 +16,13 @@ log.setLevel(logging.DEBUG)
 _ = Translator("Say", __file__)
 BaseCog = getattr(commands, "Cog", object)
 
+# Red 3.0 backwards compatibility, thanks Sinbad
+listener = getattr(commands.Cog, "listener", None)
+if listener is None:
+
+    def listener(name=None):
+        return lambda x: x
+
 
 @cog_i18n(_)
 class Say(BaseCog):
@@ -32,7 +39,7 @@ class Say(BaseCog):
         self._init_logger()
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.4.8"
+    __version__ = "1.4.9"
     __info__ = {
         "bot_version": [3, 0, 0],
         "description": (
@@ -271,12 +278,14 @@ class Say(BaseCog):
             ).format(self)
         )
 
+    @listener()
     async def on_reaction_add(self, reaction, user):
         if user in self.interaction:
             channel = reaction.message.channel
             if isinstance(channel, discord.DMChannel):
                 await self.stop_interaction(user)
 
+    @listener()
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
@@ -294,6 +303,9 @@ class Say(BaseCog):
         await user.send(_("Session closed"))
 
     def __unload(self):
+        self.cog_unload()
+
+    def cog_unload(self):
         log.debug("Unloading cog...")
         for user in self.interaction:
             self.bot.loop.create_task(self.stop_interaction(user))
