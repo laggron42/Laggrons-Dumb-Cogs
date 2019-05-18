@@ -1042,7 +1042,7 @@ class API:
         """
         await self.bot.wait_until_ready()
         log.debug(
-            "Starting infinite loop for unmutes and unbans. Canel the "
+            "Starting infinite loop for unmutes and unbans. Cancel the "
             'task with bot.get_cog("WarnSystem").task.cancel()'
         )
         errors = 0
