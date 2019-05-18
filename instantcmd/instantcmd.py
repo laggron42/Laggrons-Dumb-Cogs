@@ -20,6 +20,12 @@ log.setLevel(logging.DEBUG)
 
 BaseCog = getattr(commands, "Cog", object)
 
+# Red 3.0 backwards compatibility, thanks Sinbad
+listener = getattr(commands.Cog, "listener", None)
+if listener is None:
+    def listener(name=None):
+        return lambda x: x
+
 
 class FakeListener:
     """
@@ -342,6 +348,7 @@ class InstantCommands(BaseCog):
             ).format(self)
         )
 
+    @listener()
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
@@ -365,6 +372,9 @@ class InstantCommands(BaseCog):
 
     # correctly unload the cog
     def __unload(self):
+        self.cog_unload()
+
+    def cog_unload(self):
         log.debug("Unloading cog...")
 
         async def unload():
