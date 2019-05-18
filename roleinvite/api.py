@@ -149,7 +149,11 @@ class API:
 
         if all(invite != x for x in ["default", "main"]):  # the invite given is a true invite
             try:
-                invite_object = await self.bot.fetch_invite(invite)
+                # breaking change get_invite -> fetch_invite
+                try:
+                    invite_object = await self.bot.fetch_invite(invite)
+                except AttributeError:
+                    invite_object = await self.bot.get_invite(invite)
             except discord.errors.NotFound:
                 raise errors.NotInvite(f"Cannot get discord.Invite object from {invite}")
 

@@ -29,6 +29,12 @@ log.setLevel(logging.DEBUG)
 
 BaseCog = getattr(commands, "Cog", object)
 
+# Red 3.0 backwards compatibility, thanks Sinbad
+listener = getattr(commands.Cog, "listener", None)
+if listener is None:
+    def listener(name=None):
+        return lambda x: x
+
 
 # from Cog-Creators/Red-DiscordBot#2140
 TIME_RE_STRING = r"\s?".join(
@@ -1295,7 +1301,7 @@ class WarnSystem(BaseCog):
             ).format(self)
         )
 
-    @commands.Cog.listener()
+    @listener()
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
@@ -1317,6 +1323,9 @@ class WarnSystem(BaseCog):
         log.addHandler(self.stdout_handler)  # re-enable console output for warnings
 
     # correctly unload the cog
+    def __unload(self):
+        self.cog_unload()
+
     def cog_unload(self):
         log.debug("Unloading cog...")
 

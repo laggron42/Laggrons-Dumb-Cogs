@@ -109,9 +109,12 @@ class API:
     async def _get_user_info(self, user_id: int):
         user = self.bot.get_user(user_id)
         if not user:
-            log.debug(f"Calling highly rate-limited get_user_info endpoint with {user_id}...")
+            log.debug(f"Calling highly rate-limited fetch_user endpoint with {user_id}...")
             try:
-                user = await self.bot.fetch_user(user_id)
+                try:
+                    user = await self.bot.fetch_user(user_id)
+                except AttributeError:
+                    user = await self.bot.get_user_user(user_id)
             except discord.errors.NotFound:
                 user = None
             except discord.errors.HTTPException as e:
