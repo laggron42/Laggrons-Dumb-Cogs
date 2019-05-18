@@ -22,6 +22,13 @@ log.setLevel(logging.DEBUG)
 
 BaseCog = getattr(commands, "Cog", object)
 
+# Red 3.0 backwards compatibility, thanks Sinbad
+listener = getattr(commands.Cog, "listener", None)
+if listener is None:
+
+    def listener(name=None):
+        return lambda x: x
+
 
 @cog_i18n(_)
 class RoleInvite(BaseCog):
@@ -48,7 +55,7 @@ class RoleInvite(BaseCog):
         self._init_logger()
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "2.0.0"
+    __version__ = "2.0.1"
     __info__ = {
         "bot_version": [3, 0, 0],
         "description": (
@@ -332,7 +339,11 @@ class RoleInvite(BaseCog):
         for i, invite in invites.items():
             if all(i != x for x in ["default", "main"]):
                 try:
-                    await self.bot.get_invite(i)
+                    # breaking change get_invite -> fetch_invite
+                    try:
+                        await self.bot.fetch_invite(i)
+                    except AttributeError:
+                        await self.bot.get_invite(i)
                 except discord.errors.NotFound:
                     to_delete.append(i)  # if the invite got deleted
                     continue
@@ -424,6 +435,7 @@ class RoleInvite(BaseCog):
             ).format(self)
         )
 
+    @listener()
     async def on_member_join(self, member):
         async def add_roles(invite):
             invites_data = bot_invites[invite]
@@ -547,6 +559,7 @@ class RoleInvite(BaseCog):
             if not await add_roles("main"):
                 return
 
+    @listener()
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
@@ -560,6 +573,10 @@ class RoleInvite(BaseCog):
         log.addHandler(self.stdout_handler)  # re-enable console output for warnings
 
     def __unload(self):
+        # breaking change __unload -> cog_unload
+        self.cog_unload()
+
+    def cog_unload(self):
         log.debug("Unloading cog...")
 
         # remove all handlers from the logger, this prevents adding
