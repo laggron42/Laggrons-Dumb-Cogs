@@ -32,7 +32,7 @@ class Say(BaseCog):
         self._init_logger()
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.4.8"
+    __version__ = "1.4.9"
     __info__ = {
         "bot_version": [3, 0, 0],
         "description": (
@@ -271,12 +271,14 @@ class Say(BaseCog):
             ).format(self)
         )
 
+    @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         if user in self.interaction:
             channel = reaction.message.channel
             if isinstance(channel, discord.DMChannel):
                 await self.stop_interaction(user)
 
+    @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
@@ -293,7 +295,7 @@ class Say(BaseCog):
         self.interaction.remove(user)
         await user.send(_("Session closed"))
 
-    def __unload(self):
+    def cog_unload(self):
         log.debug("Unloading cog...")
         for user in self.interaction:
             self.bot.loop.create_task(self.stop_interaction(user))
