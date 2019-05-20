@@ -1185,11 +1185,11 @@ class WarnSystem(BaseCog):
                 ctx, pages, controls, message=message, page=page, timeout=timeout
             )
         await message.clear_reactions()
-        embed = message.embeds[0]
+        old_embed = message.embeds[0]
+        embed = discord.Embed()
         member = await self.api._get_user_info(
-            int(embed.author.name.rpartition("|")[2].replace(" ", ""))
+            int(re.match(r"(?:.*#[0-9]{4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1))
         )
-        embed.clear_fields()
         embed.description = _(
             "Case #{number} edition.\n\n**Please type the new reason to set**"
         ).format(number=page)
@@ -1203,13 +1203,14 @@ class WarnSystem(BaseCog):
         except AsyncTimeoutError:
             await message.delete()
             return
+        case = (await self.data.custom("MODLOGS", guild.id, member.id).x())[page - 1]
         new_reason = await self.api.format_reason(guild, response.content)
         embed.description = _("Case #{number} edition.").format(number=page)
         embed.add_field(name=_("Old reason"), value=case["reason"], inline=False)
         embed.add_field(name=_("New reason"), value=new_reason, inline=False)
         embed.set_footer(text=_("Click on ✅ to confirm the changes."))
         await message.edit(embed=embed)
-        await menus.start_adding_reactions(message, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
+        menus.start_adding_reactions(message, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
         pred = predicates.ReactionPredicate.yes_or_no(message, ctx.author)
         try:
             await ctx.bot.wait_for("reaction_add", check=pred, timeout=30)
@@ -1246,17 +1247,28 @@ class WarnSystem(BaseCog):
                 ctx, pages, controls, message=message, page=page, timeout=timeout
             )
         await message.clear_reactions()
-        embed = message.embeds[0]
+        old_embed = message.embeds[0]
+        embed = discord.Embed()
         member = await self.api._get_user_info(
-            int(embed.author.name.rpartition("|")[2].replace(" ", ""))
+            int(re.match(r"(?:.*#[0-9]{4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1))
         )
-        embed.clear_fields()
-        embed.set_footer(text="")
-        embed.description = _(
+        level = int(re.match(r".*\(([0-9]*)\)", old_embed.fields[0].value).group(1))
+        can_unmute = False
+        if level == 2:
+            mute_role = guild.get_role(await self.data.guild(guild).mute_role())
+            member = guild.get_member(member.id)
+            if mute_role and member and mute_role in member.roles:
+                can_unmute = True
+        description = _(
             "Case #{number} deletion.\n\n**Click on the reaction to confirm your action.**"
         ).format(number=page)
+        if can_unmute:
+            description += _(
+                "\nNote: Deleting the case will also unmute the currently muted member."
+            )
+        embed.description = description
         await message.edit(embed=embed)
-        await menus.start_adding_reactions(message, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
+        menus.start_adding_reactions(message, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
         pred = predicates.ReactionPredicate.yes_or_no(message, ctx.author)
         try:
             await ctx.bot.wait_for("reaction_add", check=pred, timeout=30)
@@ -1268,7 +1280,11 @@ class WarnSystem(BaseCog):
             async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
                 logs.remove(logs[page - 1])
             await message.clear_reactions()
-            await message.edit(content=_("The case was successfully deleted!"), embed=None)
+            content = _("The case was successfully deleted!")
+            if can_unmute:
+                await member.remove_roles(mute_role)
+                content += _("\nThe member was also unmuted.")
+            await message.edit(content=content, embed=None)
         else:
             await message.clear_reactions()
             await message.edit(content=_("The case was not deleted."), embed=None)
