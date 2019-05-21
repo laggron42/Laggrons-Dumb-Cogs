@@ -933,20 +933,32 @@ class WarnSystem(BaseCog):
         )
 
     # all warning commands
-    @commands.group()
+    @commands.group(invoke_without_command=True)
     @checks.mod_or_permissions(administrator=True)
     @commands.guild_only()
-    async def warn(self, ctx: commands.Context):
+    async def warn(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
         Take actions against a user and log it.
         The warned user will receive a DM.
+
+        If not given, the warn level will be 1.
         """
-        pass
+        await self.call_warn(ctx, 1, member, reason)
+        if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
+            try:
+                await ctx.message.add_reaction("✅")
+                return
+            except discord.errors.HTTPException:
+                # probably deleted message
+                pass
+        await ctx.send("Done.")
 
     @warn.command(name="1", aliases=["simple"])
     async def warn_1(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
         Set a simple warning on a user.
+
+        Note: You can either call `[p]warn 1` or `[p]warn`.
         """
         await self.call_warn(ctx, 1, member, reason)
         if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
