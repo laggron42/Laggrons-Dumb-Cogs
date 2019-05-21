@@ -199,6 +199,10 @@ give a simple function (don't put the command decorator) and make sure
 its name is matching the lowercased `Discord API listeners 
 <https://discordapp.com/developers/docs/topics/gateway#commands-and-events>`_.
 
+.. warning:: **Do not use** the new ``@commands.Cog.listener`` decorator
+    introduced in Red 3.1. The bot uses ``bot.add_listener`` which
+    doesn't need a decorator.
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 My command was added but doesn't respond when invoked.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
