@@ -1,5 +1,5 @@
 -i https://pypi.org/simple
 sphinxcontrib-asyncio
 sphinx_autodoc_napoleon_typehints
-Red-DiscordBot[voice]
-git+https://github.com/Rapptz/discord.py@rewrite
+sphinx_rtd_theme
+Red-DiscordBot

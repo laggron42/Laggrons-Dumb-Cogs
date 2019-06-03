@@ -184,7 +184,7 @@ texinfo_documents = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.6", None),
-    "discord": ("https://discordpy.readthedocs.io/en/rewrite/", None),
+    "discord": ("https://discordpy.readthedocs.io/en/latest/", None),
     "redbot": ("https://red-discordbot.readthedocs.io/en/v3-develop/", None),
 }
 
