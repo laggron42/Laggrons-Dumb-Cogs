@@ -1,4 +1,3 @@
-.. automodule:: roleinvite.roleinvite
 
 .. role:: python(code)
     :language: python
@@ -11,12 +10,12 @@ RoleInvite
 API Reference
 -------------
 
-.. autoclass:: API
+.. autoclass:: roleinvite.api.API
     :members:
 
 ------
 Errors
 ------
 
-.. autoclass:: Errors
+.. automodule:: roleinvite.errors
     :members:
