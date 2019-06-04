@@ -5,19 +5,18 @@ import re
 import os
 import time
 
-from typing import Union
+from typing import Union, Optional
 from asyncio import TimeoutError as AsyncTimeoutError
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from json import loads
 
 from redbot.core import commands, Config, checks
+from redbot.core.commands.converter import parse_timedelta
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils import predicates, menus, mod
 from redbot.core.utils.chat_formatting import pagify
-
-# from redbot.core.errors import BadArgument as RedBadArgument
 
 _ = Translator("WarnSystem", __file__)
 
@@ -35,49 +34,6 @@ if listener is None:
 
     def listener(name=None):
         return lambda x: x
-
-
-# from Cog-Creators/Red-DiscordBot#2140
-TIME_RE_STRING = r"\s?".join(
-    [
-        r"((?P<days>\d+?)\s?(d(ays?)?))?",
-        r"((?P<hours>\d+?)\s?(hours?|hrs|hr?))?",
-        r"((?P<minutes>\d+?)\s?(minutes?|mins?|m))?",
-        r"((?P<seconds>\d+?)\s?(seconds?|secs?|s))?",
-    ]
-)
-TIME_RE = re.compile(TIME_RE_STRING, re.I)
-
-
-class RedBadArgument(Exception):
-    """For testing, wait for release with errors.py"""
-
-    pass
-
-
-# also from Cog-Creators/Red-DiscordBot#2140
-def timedelta_converter(argument: str) -> timedelta:
-    """
-    Attempts to parse a user input string as a timedelta
-    Arguments
-    ---------
-    argument: str
-        String to attempt to treat as a timedelta
-    Returns
-    -------
-    datetime.timedelta
-        The parsed timedelta
-
-    Raises
-    ------
-    ~discord.ext.commands.BadArgument
-        No time was found from the given string.
-    """
-    matches = TIME_RE.match(argument)
-    params = {k: int(v) for k, v in matches.groupdict().items() if v is not None}
-    if not params:
-        raise RedBadArgument("I couldn't turn that into a valid time period.")
-    return timedelta(**params)
 
 
 EMBED_MODLOG = lambda x: _("A member got a level {} warning.").format(x)
@@ -167,7 +123,7 @@ class WarnSystem(BaseCog):
     __version__ = "1.0.6"
     __author__ = ["retke (El Laggron)"]
     __info__ = {
-        "bot_version": [3, 0, 0],
+        "bot_version": [3, 1, 2],
         "description": (
             "An alternative to the core moderation cog, similar to Dyno.\n"
             "The cog allows you to take actions against member and keep track with "
@@ -977,8 +933,15 @@ class WarnSystem(BaseCog):
                 pass
         await ctx.send("Done.")
 
-    @warn.command(name="2", aliases=["mute"], usage="<member> [time] <reason>")
-    async def warn_2(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
+    @warn.command(name="2", aliases=["mute"])
+    async def warn_2(
+        self,
+        ctx: commands.Context,
+        member: discord.Member,
+        time: Optional[parse_timedelta],
+        *,
+        reason: str = None,
+    ):
         """
         Mute the user in all channels, including voice channels.
 
@@ -1052,7 +1015,12 @@ class WarnSystem(BaseCog):
 
     @warn.command(name="5", aliases=["ban"], usage="<member> [time] <reason>")
     async def warn_5(
-        self, ctx: commands.Context, member: Union[discord.Member, int], *, reason: str = None
+        self,
+        ctx: commands.Context,
+        member: Union[discord.Member, int],
+        time: Optional[parse_timedelta],
+        *,
+        reason: str = None,
     ):
         """
         Ban the member from the server.
