@@ -116,8 +116,8 @@ class RoleInvite(BaseCog):
             return False
         return pred.result
 
-    @commands.group()
-    @checks.admin(name="roleinviteset")
+    @commands.group(name="roleinviteset")
+    @checks.admin()
     async def inviteset(self, ctx):
         """
         Roleinvite cog management
