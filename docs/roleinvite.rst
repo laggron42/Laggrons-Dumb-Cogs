@@ -67,7 +67,7 @@ inviteset
 
 **Syntax**::
 
-    [p]inviteset
+    [p]roleinviteset
 
 **Description**
 
@@ -82,7 +82,7 @@ inviteset add
 
 **Syntax**::
 
-    [p]inviteset add <invite|main|default> <role>
+    [p]roleinviteset add <invite|main|default> <role>
 
 **Description**
 
@@ -120,7 +120,7 @@ inviteset remove
 
 **Syntax**::
 
-    [p]inviteset remove <invite|main|default> [role]
+    [p]roleinviteset remove <invite|main|default> [role]
 
 **Description**
 
@@ -152,7 +152,7 @@ inviteset list
 
 .. code-block:: none
 
-    [p]inviteset list
+    [p]roleinviteset list
 
 **Description**
 
@@ -168,7 +168,7 @@ inviteset enable
 
 .. code-block:: none
 
-    [p]inviteset enable
+    [p]roleinviteset enable
 
 **Description**
 
@@ -196,7 +196,7 @@ Can I make it so the bot adds x roles if the invite used is unknown?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Yes, by using the ``main`` value instead of using a discord invite
-when creating a new invite link. See :ref:`inviteset add <command-inviteset-add>` command's
+when creating a new invite link. See :ref:`roleinviteset add <command-inviteset-add>` command's
 arguments for more informations.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -204,7 +204,7 @@ Can I make it so the bot always adds x roles, regardless of the invite used?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Yes, by using the ``default`` value instead of using a discord invite
-when creating a new invite link. See :ref:`inviteset add <command-inviteset-add>` command's
+when creating a new invite link. See :ref:`roleinviteset add <command-inviteset-add>` command's
 arguments for more informations.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
