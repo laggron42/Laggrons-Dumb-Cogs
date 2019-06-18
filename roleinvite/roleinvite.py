@@ -117,7 +117,7 @@ class RoleInvite(BaseCog):
         return pred.result
 
     @commands.group()
-    @checks.admin()
+    @checks.admin(name="roleinviteset")
     async def inviteset(self, ctx):
         """
         Roleinvite cog management
@@ -132,7 +132,7 @@ class RoleInvite(BaseCog):
         """
         Link a role to an invite for the autorole system.
 
-        Example: `[p]inviteset add https://discord.gg/laggron Member`
+        Example: `[p]roleinviteset add https://discord.gg/laggron Member`
         If this message still shows after using the command, you probably gave a wrong role name.
         If you want to link roles to the main autorole system (user joined with an unknown invite),\
         give `main` instead of a discord invite.
@@ -169,7 +169,7 @@ class RoleInvite(BaseCog):
                         "**Warning**: This invite is already registered and currently linked to "
                         "the role(s) `{}`.\nIf you continue, this invite will give all roles "
                         "given to the new member. \nIf you want to edit it, first delete the link "
-                        "using `{}inviteset remove`.\n\nDo you want to link this invite to {} "
+                        "using `{}roleinviteset remove`.\n\nDo you want to link this invite to {} "
                         "roles? (yes/no)"
                     ).format("`, `".join(current_roles), ctx.prefix, len(current_roles) + 1)
                 )
@@ -286,7 +286,7 @@ class RoleInvite(BaseCog):
             if len(bot_invite["roles"]) > 1:
                 message += _(
                     "Remember that you can remove a single role from this list by typing "
-                    "`{}inviteset remove {} [role name]`"
+                    "`{}roleinviteset remove {} [role name]`"
                 ).format(ctx.prefix, invite)
 
             await ctx.send(message)
@@ -373,14 +373,14 @@ class RoleInvite(BaseCog):
             await ctx.send(
                 _(
                     "There is nothing set on RoleInvite. "
-                    "Type `{}help inviteset` for more informations."
+                    "Type `{}help roleinviteset` for more informations."
                 ).format(ctx.prefix)
             )
             return
         if not await self.data.guild(ctx.guild).enabled():
             text += _(
                 "**Info:** RoleInvite is currently disabled and won't give roles on member "
-                "join.\nType `{}inviteset enable` to enable it."
+                "join.\nType `{}roleinviteset enable` to enable it."
             ).format(ctx.prefix)
 
         text = (
@@ -412,7 +412,7 @@ class RoleInvite(BaseCog):
             await ctx.send(
                 _(
                     "The autorole system is now enabled on this server.\n"
-                    "Type `{0.prefix}inviteset list` to see what's the current role list.\n"
+                    "Type `{0.prefix}roleinviteset list` to see what's the current role list.\n"
                     "If the bot lose the `Manage roles` or the `Manage server` permissions "
                 ).format(ctx)
             )
