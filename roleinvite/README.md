@@ -25,7 +25,7 @@ The cog is built with an API, allowing you to use RoleInvite without a context o
     [p]load roleinvite
     ```
 
-RoleInvite is now installed! You can create a link with the command `[p]inviteset`.
+RoleInvite is now installed! You can create a link with the command `[p]roleinviteset`.
 
 ## Discord server
 
