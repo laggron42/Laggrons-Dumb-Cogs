@@ -806,7 +806,7 @@ class API:
             and await self.data.guild(guild).respect_hierarchy()
             and (
                 member.top_role >= author.top_role
-                and not (self.bot.is_owner(author) or author.owner)
+                and not (self.bot.is_owner(author) or guild.owner == author)
             )
         ):
             raise errors.NotAllowedByHierarchy(
