@@ -804,7 +804,7 @@ class API:
             )
         if (
             isinstance(member, discord.Member)
-            and not await is_allowed_by_hierarchy(self.bot, self.data, author, member)
+            and not await is_allowed_by_hierarchy(self.bot, self.data, guild, author, member)
         ):
             raise errors.NotAllowedByHierarchy(
                 "The moderator is lower than the member in the servers's role hierarchy."
