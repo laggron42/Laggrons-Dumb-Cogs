@@ -7,6 +7,7 @@ import sys
 from copy import deepcopy
 from typing import Union, Optional
 from datetime import datetime, timedelta
+from redbot.core.utils.mod import is_allowed_by_hierarchy
 
 try:
     from redbot.core.modlog import get_modlog_channel as get_red_modlog_channel
@@ -803,11 +804,7 @@ class API:
             )
         if (
             isinstance(member, discord.Member)
-            and await self.data.guild(guild).respect_hierarchy()
-            and (
-                member.top_role >= author.top_role
-                and not (self.bot.is_owner(author) or author.owner)
-            )
+            and not await is_allowed_by_hierarchy(self.bot, self.data, guild, author, member)
         ):
             raise errors.NotAllowedByHierarchy(
                 "The moderator is lower than the member in the servers's role hierarchy."
