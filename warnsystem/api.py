@@ -802,9 +802,8 @@ class API:
                     "Modify the hierarchy so my top role ({bot_role}) is above {member_role}."
                 ).format(bot_role=guild.me.top_role.name, member_role=member.top_role.name)
             )
-        if (
-            isinstance(member, discord.Member)
-            and not await is_allowed_by_hierarchy(self.bot, self.data, guild, author, member)
+        if isinstance(member, discord.Member) and not await is_allowed_by_hierarchy(
+            self.bot, self.data, guild, author, member
         ):
             raise errors.NotAllowedByHierarchy(
                 "The moderator is lower than the member in the servers's role hierarchy."
