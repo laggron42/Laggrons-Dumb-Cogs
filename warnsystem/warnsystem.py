@@ -699,7 +699,7 @@ class WarnSystem(BaseCog):
         text = ""
         for substitution, content in substitutions.items():
             text += f"+ {substitution}\n{content}\n\n"
-        messages = [x for x in pagify(text, page_length=1900)]
+        messages = [x for x in pagify(text, page_length=1800)]
         total_pages = len(messages)
         for i, page in enumerate(messages):
             await ctx.send(
