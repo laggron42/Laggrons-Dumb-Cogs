@@ -871,13 +871,7 @@ class API:
             if log_modlog:
                 await mod_channel.send(embed=modlog_e)
             data = await self._create_case(
-                guild,
-                member,
-                author,
-                level,
-                datetime.now(),
-                reason,
-                time,
+                guild, member, author, level, datetime.now(), reason, time
             )
             # start timer if there is a temporary warning
             if time and (level == 2 or level == 5):
