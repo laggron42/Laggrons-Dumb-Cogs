@@ -4,7 +4,8 @@ import re
 
 from dateutil import parser
 from discord.ext.commands.converter import RoleConverter, MemberConverter
-from discord.ext.commands.errors import BadArgument
+from redbot.core.commands import BadArgument
+from redbot.core.commands.converter import parse_timedelta
 
 from .warnsystem import _
 
@@ -30,9 +31,11 @@ class AdvancedMemberSelect:
 
     Actions
     -------
-    --take-action
+    --take-action --take-actions
     --send-dm
     --send-modlog
+    --reason <text>
+    --time --length <duration>
 
     Member search
     -------------
@@ -75,9 +78,13 @@ class AdvancedMemberSelect:
             description="Mass member selection in a server for WarnSystem.", add_help=False
         )
 
-        parser.add_argument("--take-action", dest="take_action", action="store_true")
+        parser.add_argument(
+            "--take-action", "--take-actions", dest="take_action", action="store_true"
+        )
         parser.add_argument("--send-dm", dest="send_dm", action="store_true")
-        parser.add_argument("--send-modlog", dest="send_moglog", action="store_true")
+        parser.add_argument("--send-modlog", dest="send_modlog", action="store_true")
+        parser.add_argument("--reason", dest="reason", nargs="*")
+        parser.add_argument("--length", "--time", dest="time", nargs="*")
 
         parser.add_argument("--everyone", dest="everyone", action="store_true")
         parser.add_argument("--select", dest="select", nargs="+")
@@ -119,7 +126,7 @@ class AdvancedMemberSelect:
         guild = self.ctx.guild
         members = []
 
-        if not args.take_action and not args.send_dm and not args.send_moglog:
+        if not args.take_action and not args.send_dm and not args.send_modlog:
             raise BadArgument(
                 _(
                     "I'm not doing anything! Please provide at least one of these "
@@ -365,5 +372,10 @@ class AdvancedMemberSelect:
         self.ctx = ctx
         async with ctx.typing():
             args = self.parse_arguments(arguments)
-            members = await self.process_arguments(args)
-            return members
+            self.reason = " ".join(args.reason or "")
+            self.time = parse_timedelta(" ".join(args.time or []))
+            self.take_action = args.take_action
+            self.send_dm = args.send_dm
+            self.send_modlog = args.send_modlog
+            self.members = await self.process_arguments(args)
+            return self

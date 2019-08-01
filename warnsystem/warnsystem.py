@@ -1,6 +1,7 @@
 # WarnSystem by retke, aka El Laggron
 import discord
 import logging
+import asyncio
 import re
 import os
 import time
@@ -22,6 +23,7 @@ _ = Translator("WarnSystem", __file__)
 
 from .api import API
 from . import errors
+from .converters import AdvancedMemberSelect
 
 log = logging.getLogger("laggron.warnsystem")
 log.setLevel(logging.DEBUG)
@@ -187,7 +189,9 @@ class WarnSystem(BaseCog):
             )
             return
         try:
-            await self.api.warn(ctx.guild, member, ctx.author, level, reason, time)
+            fail = await self.api.warn(ctx.guild, [member], ctx.author, level, reason, time)
+            if fail:
+                raise fail[0]
         except errors.MissingPermissions as e:
             await ctx.send(e)
         except errors.MemberTooHigh as e:
@@ -226,6 +230,170 @@ class WarnSystem(BaseCog):
             )
         if await self.data.guild(ctx.guild).delete_message():
             await ctx.message.delete()
+
+    async def call_masswarn(
+        self, ctx, level, members, log_modlog, log_dm, take_action, reason=None, time=None
+    ):
+        guild = ctx.guild
+        message = None
+        i = 0
+        total_members = len(members)
+        tick1 = "✅" if log_modlog else "❌"
+        tick2 = "✅" if log_dm else "❌"
+        tick3 = f"{'✅' if take_action else '❌'} Take action\n" if level != 1 else ""
+        tick4 = f"{'✅' if time else '❌'} Time: " if (level == 2 or level == 5) else ""
+        tick5 = "✅" if reason else "❌"
+        time_str = (self.api._format_timedelta(time) + "\n") if time else ""
+
+        async def update_count(count):
+            nonlocal i
+            i = count
+
+        async def update_message():
+            while True:
+                nonlocal message
+                content = _(
+                    "Processing mass warning...\n"
+                    "{i}/{total} {members} warned ({percent}%)\n\n"
+                    "{tick1} Log to the modlog\n"
+                    "{tick2} Send a DM to all members\n"
+                    "{tick3}"
+                    "{tick4} {time}"
+                    "{tick5} Reason: {reason}"
+                ).format(
+                    i=i,
+                    total=total_members,
+                    members=_("members") if i != 1 else _("member"),
+                    percent=round((i / total_members) * 100, 2),
+                    tick1=tick1,
+                    tick2=tick2,
+                    tick3=tick3,
+                    tick4=tick4,
+                    time=time_str,
+                    tick5=tick5,
+                    reason=reason or "Not set",
+                )
+                if message:
+                    await message.edit(content=content)
+                else:
+                    message = await ctx.send(content)
+                await asyncio.sleep(5)
+
+        reason = await self.api.format_reason(ctx.guild, reason)
+        if (log_modlog or log_dm) and reason and len(reason) > 2000:  # embed limits
+            await ctx.send(
+                _(
+                    "The reason is too long for an embed.\n\n"
+                    "*Tip: You can use Github Gist to write a long text formatted in Markdown, "
+                    "create a new file with the extension `.md` at the end and write as if you "
+                    "were on Discord.\n<https://gist.github.com/>*"
+                    # I was paid $99999999 for this, you're welcome
+                )
+            )
+            return
+        cache = cog_data_path(self) / "cache"
+        if not cache.exists():
+            cache.mkdir()
+        file = cache / "list of members.txt"
+        try:
+            file.write_text("\n".join([f"{str(x)} ({x.id})" for x in members]))
+        except Exception as e:
+            log.error("Failed to write cache files.", exc_info=e)
+            await ctx.send(_("Failed to write cache files, check your logs for details."))
+            return
+        msg = await ctx.send(
+            _(
+                "You're about to set a level {level} warning "
+                "on {total} {members} ({percent}% of the server).\n\n"
+                "{tick1} Log to the modlog\n"
+                "{tick2} Send a DM to all members\n"
+                "{tick3}"
+                "{tick4} {time}"
+                "{tick5} Reason: {reason}\n\n"
+                "Continue?"
+            ).format(
+                level=level,
+                total=total_members,
+                members=_("members") if total_members > 1 else _("member"),
+                percent=round((total_members / len(guild.members) * 100), 2),
+                tick1=tick1,
+                tick2=tick2,
+                tick3=tick3,
+                tick4=tick4,
+                time=time_str,
+                tick5=tick5,
+                reason=reason or "Not set",
+            ),
+            file=discord.File(str(file.absolute())),
+        )
+        menus.start_adding_reactions(msg, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
+        pred = predicates.ReactionPredicate.yes_or_no(msg, ctx.author)
+        try:
+            result = await self.bot.wait_for("reaction_add", check=pred, timeout=120)
+        except AsyncTimeoutError:
+            if ctx.guild.me.guild_permissions.manage_messages:
+                await msg.clear_reactions()
+            else:
+                for reaction in msg.reactions():
+                    await msg.remove_reaction(reaction, ctx.guild.me)
+            return
+        if not result:
+            await ctx.send(_("Mass warn cancelled."))
+            return
+        task = self.bot.loop.create_task(update_message())
+        try:
+            fails = await self.api.warn(
+                guild=guild,
+                members=members,
+                author=ctx.author,
+                level=level,
+                reason=reason,
+                time=time,
+                log_modlog=log_modlog,
+                log_dm=log_dm,
+                take_action=take_action,
+                progress_tracker=update_count,
+            )
+        except errors.MissingPermissions as e:
+            await ctx.send(e)
+        except errors.LostPermissions as e:
+            await ctx.send(e)
+        except errors.MissingMuteRole:
+            await ctx.send(
+                _(
+                    "You need to set up the mute role before doing this.\n"
+                    "Use the `[p]warnset mute` command for this."
+                )
+            )
+        except errors.NotFound:
+            await ctx.send(
+                _(
+                    "Please set up a modlog channel before warning a member.\n\n"
+                    "**With WarnSystem**\n"
+                    "*Use the `[p]warnset channel` command.*\n\n"
+                    "**With Red Modlog**\n"
+                    "*Load the `modlogs` cog and use the `[p]modlogset modlog` command.*"
+                )
+            )
+        else:
+            if fails:
+                await ctx.send(
+                    _("Done! {failed} {members} out of {total} couldn't be warned.").format(
+                        failed=len(fails),
+                        members=_("members") if len(fails) > 1 else _("member"),
+                        total=total_members,
+                    )
+                )
+            else:
+                await ctx.send(
+                    _("Done! {total} {members} successfully warned.").format(
+                        total=total_members,
+                        members=_("members") if total_members > 1 else _("member"),
+                    )
+                )
+        finally:
+            task.cancel()
+            await message.delete()
 
     # all settings
     @commands.group()
@@ -955,18 +1123,6 @@ class WarnSystem(BaseCog):
         - `[p]warn 2 @user 5h Spam`: 5 hours mute for the reason "Spam"
         - `[p]warn 2 @user Advertising`: Infinite mute for the reason "Advertising"
         """
-        time = None
-        if reason:
-            potential_time = reason.split()[0]
-            try:
-                time = timedelta_converter(potential_time)
-            except RedBadArgument:
-                pass
-            else:
-                if len(reason.split()) <= 1:
-                    reason = None
-                else:
-                    reason = " ".join(reason.split()[1:])  # removes time from string
         await self.call_warn(ctx, 2, member, reason, time)
         if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
             try:
@@ -1041,18 +1197,6 @@ class WarnSystem(BaseCog):
         while they're not in the server for the reason "Advertising and leave" (if the user shares\
         another server with the bot, a DM will be sent).
         """
-        time = None
-        if reason:
-            potential_time = reason.split()[0]
-            try:
-                time = timedelta_converter(potential_time)
-            except RedBadArgument:
-                pass
-            else:
-                if len(reason.split()) <= 1:
-                    reason = None
-                else:
-                    reason = " ".join(reason.split()[1:])  # removes time from string
         await self.call_warn(ctx, 5, member, reason, time)
         if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
             try:
@@ -1062,6 +1206,164 @@ class WarnSystem(BaseCog):
                 # probably deleted message
                 pass
         await ctx.send("Done.")
+
+    @commands.group(invoke_without_command=True)
+    @commands.guild_only()
+    @checks.mod_or_permissions(administrator=True)
+    @commands.cooldown(1, 10, commands.BucketType.guild)
+    async def masswarn(self, ctx, *selection: str):
+        """
+        Perform a warn on multiple members at once.
+
+        To select members, you have to use UNIX-like flags to add conditions\
+        which will be checked for each member.
+
+        Example: `[p]masswarn 3 --take-action --send-dm --has-role "Danger"\
+        --joined-after "May 2019" --reason "Cleaning dangerous members"`
+
+        To get the full list of flags and how to use them, please read the\
+        wiki: https://laggrons-dumb-cogs.readthedocs.io/
+        """
+        if not selection:
+            await ctx.send_help()
+            return
+        try:
+            selection = await AdvancedMemberSelect().convert(ctx, selection)
+        except commands.BadArgument as e:
+            await ctx.send(e)
+            return
+        await self.call_masswarn(
+            ctx,
+            1,
+            selection.members,
+            selection.send_modlog,
+            selection.send_dm,
+            selection.take_action,
+            selection.reason,
+        )
+
+    @masswarn.command(name="1", aliases=["simple"])
+    async def masswarn_1(self, ctx, *selection: str):
+        """
+        Perform a simple mass warning.
+        """
+        if not selection:
+            await ctx.send_help()
+            return
+        try:
+            selection = await AdvancedMemberSelect().convert(ctx, selection)
+        except commands.BadArgument as e:
+            await ctx.send(e)
+            return
+        await self.call_masswarn(
+            ctx,
+            1,
+            selection.members,
+            selection.send_modlog,
+            selection.send_dm,
+            selection.take_action,
+            selection.reason,
+        )
+
+    @masswarn.command(name="2", aliases=["mute"])
+    async def masswarn_2(self, ctx, *selection: str):
+        """
+        Perform a mass mute.
+
+        You can provide a duration with the `--time` flag, the format is the same as the simple\
+        level 2 warning.
+        """
+        if not selection:
+            await ctx.send_help()
+            return
+        try:
+            selection = await AdvancedMemberSelect().convert(ctx, selection)
+        except commands.BadArgument as e:
+            await ctx.send(e)
+            return
+        await self.call_masswarn(
+            ctx,
+            2,
+            selection.members,
+            selection.send_modlog,
+            selection.send_dm,
+            selection.take_action,
+            selection.reason,
+            selection.time,
+        )
+
+    @masswarn.command(name="3", aliases=["kick"])
+    async def masswarn_3(self, ctx, *selection: str):
+        """
+        Perform a mass kick.
+        """
+        if not selection:
+            await ctx.send_help()
+            return
+        try:
+            selection = await AdvancedMemberSelect().convert(ctx, selection)
+        except commands.BadArgument as e:
+            await ctx.send(e)
+            return
+        await self.call_masswarn(
+            ctx,
+            3,
+            selection.members,
+            selection.send_modlog,
+            selection.send_dm,
+            selection.take_action,
+            selection.reason,
+        )
+
+    @masswarn.command(name="4", aliases=["softban"])
+    async def masswarn_4(self, ctx, *selection: str):
+        """
+        Perform a mass softban.
+        """
+        if not selection:
+            await ctx.send_help()
+            return
+        try:
+            selection = await AdvancedMemberSelect().convert(ctx, selection)
+        except commands.BadArgument as e:
+            await ctx.send(e)
+            return
+        await self.call_masswarn(
+            ctx,
+            4,
+            selection.members,
+            selection.send_modlog,
+            selection.send_dm,
+            selection.take_action,
+            selection.reason,
+        )
+
+    @masswarn.command(name="5", aliases=["ban"])
+    async def masswarn_5(self, ctx, *selection: str):
+        """
+        Perform a mass ban.
+
+        You can provide a duration with the `--time` flag, the format is the same as the simple\
+        level 5 warning.
+        """
+        if not selection:
+            await ctx.send_help()
+            return
+        try:
+            selection = await AdvancedMemberSelect().convert(ctx, selection)
+        except commands.BadArgument as e:
+            await ctx.send(e)
+            return
+        await self.call_masswarn(
+            ctx,
+            5,
+            selection.members,
+            selection.send_modlog,
+            selection.send_dm,
+            selection.take_action,
+            selection.reason,
+            selection.time,
+        )
 
     @commands.command()
     @commands.guild_only()
@@ -1177,6 +1479,7 @@ class WarnSystem(BaseCog):
         member = await self.api._get_user_info(
             int(re.match(r"(?:.*#[0-9]{4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1))
         )
+        embed.clear_fields()
         embed.description = _(
             "Case #{number} edition.\n\n**Please type the new reason to set**"
         ).format(number=page)

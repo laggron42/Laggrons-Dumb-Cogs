@@ -1,11 +1,10 @@
 import asyncio
 import discord
 import logging
-import os
-import sys
+import re
 
 from copy import deepcopy
-from typing import Union, Optional
+from typing import Union, Optional, Iterable, Callable, Awaitable
 from datetime import datetime, timedelta
 
 try:
@@ -17,6 +16,26 @@ from .warnsystem import _  # translator
 from . import errors
 
 log = logging.getLogger("laggron.warnsystem")
+id_pattern = re.compile(r"([0-9]{15,21})$")
+
+
+class UnavailableMember:
+    """
+    A class that reproduces the behaviour of a discord.Member instance, except
+    the member is not in the guild. This is used to prevent calling bot.get_user_info
+    which has a very high cooldown.
+    """
+
+    def __init__(self, member_id: int):
+        self._check_id(member_id)
+
+    def _check_id(self, member_id):
+        if not id_pattern.match(str(member_id)):
+            raise ValueError("You provided an invalid ID.")
+        self.id = member_id
+
+    def __str__(self):
+        return str(self.id)
 
 
 class API:
@@ -104,17 +123,13 @@ class API:
     async def _get_user_info(self, user_id: int):
         user = self.bot.get_user(user_id)
         if not user:
-            log.debug(f"Calling highly rate-limited fetch_user endpoint with {user_id}...")
             try:
-                try:
-                    user = await self.bot.fetch_user(user_id)
-                except AttributeError:
-                    user = await self.bot.get_user_info(user_id)
+                user = await self.bot.get_user_info(user_id)
             except discord.errors.NotFound:
                 user = None
             except discord.errors.HTTPException as e:
                 user = None
-                log.warn(
+                log.error(
                     "Received HTTPException when trying to get user info. "
                     "This is probaby a cooldown from Discord.",
                     exc_info=e,
@@ -321,10 +336,6 @@ class API:
         case["time"] = case["time"].strftime("%a %d %B %Y %H:%M")
         async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
             logs[index - 1] = case
-        log.debug(
-            f"Case #{index} from {user} (ID: {user.id}) on guild {guild} "
-            f"(ID: {guild.id}) edited. New reason: {new_reason}"
-        )
         return True
 
     async def get_modlog_channel(
@@ -413,7 +424,7 @@ class API:
     async def get_embeds(
         self,
         guild: discord.Guild,
-        member: Union[discord.Member, discord.User],
+        member: Union[discord.Member, UnavailableMember],
         author: Union[discord.Member, str],
         level: int,
         reason: Optional[str] = None,
@@ -431,8 +442,8 @@ class API:
         ----------
         guild: discord.Guild
             The Discord guild where the warning takes place.
-        member: Union[discord.Member, discord.User]
-            The warned member. Should only be :class:`discord.User` in case of a hack ban.
+        member: Union[discord.Member, UnavailableMember]
+            The warned member. Should only be :class:`UnavailableMember` in case of a hack ban.
         author: Union[discord.Member, str]
             The moderator that warned the user. If it's not a Discord user, you can specify a
             :py:class:`str` instead (e.g. "Automod").
@@ -642,7 +653,6 @@ class API:
                     exc_info=e,
                 )
         await self.data.guild(guild).mute_role.set(role.id)
-        log.debug(f"Created mute role for guild {guild} (ID: {guild.id}). Role ID: {role.id}")
         return errors
 
     async def format_reason(self, guild: discord.Guild, reason: str = None) -> str:
@@ -671,14 +681,15 @@ class API:
     async def warn(
         self,
         guild: discord.Guild,
-        member: Union[discord.Member, int],
+        members: Iterable[Union[discord.Member, UnavailableMember]],
         author: Union[discord.Member, str],
         level: int,
         reason: Optional[str] = None,
         time: Optional[timedelta] = None,
-        log_modlog: bool = True,
-        log_dm: bool = True,
-        take_action: bool = True,
+        log_modlog: Optional[bool] = True,
+        log_dm: Optional[bool] = True,
+        take_action: Optional[bool] = True,
+        progress_tracker: Optional[Callable[[int], Awaitable[None]]] = None,
     ) -> bool:
         """
         Set a warning on a member of a Discord guild and log it with the WarnSystem system.
@@ -695,9 +706,10 @@ class API:
         ----------
         guild: discord.Guild
             The guild of the member to warn
-        member: Union[discord.Member, int]
-            The member that will be warned. It can be an :py:class:`int` only if you need to
-            ban someone not in the guild.
+        member: Iterable[Union[discord.Member, UnavailableMember]]
+            The member that will be warned. It can be an instance of
+            :py:class:`warnsystem.api.UnavailableMember` if you need
+            to ban someone not in the guild.
         author: Union[discord.Member, str]
             The member that called the action, which will be associated to the log.
         level: int
@@ -712,19 +724,37 @@ class API:
             The optional reason of the warning. It is strongly recommanded to set one.
         time: Optional[timedelta]
             The time before cancelling the action. This only works for a mute or a ban.
-        log_modlog: bool
+        log_modlog: Optional[bool]
             Specify if an embed should be posted to the modlog channel. Default to :py:obj:`True`.
-        log_dm: bool
+        log_dm: Optional[bool]
             Specify if an embed should be sent to the warned user. Default to :py:obj:`True`.
-        take_action: bool
+        take_action: Optional[bool]
             Specify if the bot should take action on the member (mute, kick, softban, ban). If set
             to :py:obj:`False`, the bot will only send a log embed to the member and in the modlog.
             Default to :py:obj:`True`.
+        progress_tracker: Optional[Callable[[int], Awaitable[None]]]
+            an async callable (function or lambda) which takes one argument to follow the progress
+            of the warn. The argument is the number of warns committed. Here's an example:
+
+            .. code-block:: python3
+
+                i = 0
+                message = await ctx.send("Mass warn started...")
+
+                async def update_count(count):
+                    i = count
+
+                async def update_msg():
+                    await message.edit(content=f"{i}/{len(members)} members warned.")
+                    await asyncio.sleep(1)
+
+                await api.warn(guild, members, ctx.author, 1, progress_tracker=update_count)
 
         Returns
         -------
-        bool
-            :py:obj:`True` if the action was successful.
+        dict
+            A dict of members which couldn't be warned associated to the exception related.
+
 
         Raises
         ------
@@ -757,31 +787,119 @@ class API:
             Unknown error from Discord API. It's recommanded to catch this
             potential error too.
         """
-        if not isinstance(level, int) or not 1 <= level <= 5:
-            raise errors.InvalidLevel("The level must be between 1 and 5.")
-        if isinstance(member, int):
-            if level != 5:
-                raise errors.BadArgument(
-                    "You need to provide a valid discord.Member object for this action."
+
+        async def warn_member(member: discord.Member, audit_reason: str):
+            nonlocal i
+            # permissions check
+            if level > 1 and guild.me.top_role.position <= member.top_role.position:
+                # check if the member is below the bot in the roles's hierarchy
+                return errors.MemberTooHigh(
+                    _(
+                        "Cannot take actions on this member, he is "
+                        "above than me in the roles hierarchy. Modify "
+                        "the hierarchy so my top role ({bot_role}) is above {member_role}."
+                    ).format(bot_role=guild.me.top_role.name, member_role=member.top_role.name)
                 )
-            member = await self._get_user_info(member)
-            if not member:
-                raise errors.NotFound(_("The requested member does not exist."))
+            if await self.data.guild(guild).respect_hierarchy() and (
+                not (self.bot.is_owner(author) or author.owner)
+                and member.top_role.position >= author.top_role.position
+            ):
+                return errors.NotAllowedByHierarchy(
+                    "The moderator is lower than the member in the servers's role hierarchy."
+                )
+            if level > 2 and member == guild.owner:
+                return errors.MissingPermissions(
+                    _("I can't take actions on the owner of the guild.")
+                )
+            # send the message to the user
+            if log_modlog or log_dm:
+                modlog_e, user_e = await self.get_embeds(
+                    guild, member, author, level, reason, time
+                )
+            if log_dm:
+                try:
+                    await member.send(embed=user_e)
+                except discord.errors.Forbidden:
+                    modlog_e = (
+                        await self.get_embeds(
+                            guild, member, author, level, reason, time, message_sent=False
+                        )
+                    )[0]
+                except discord.errors.HTTPException as e:
+                    modlog_e = (
+                        await self.get_embeds(
+                            guild, member, author, level, reason, time, message_sent=False
+                        )
+                    )[0]
+                    log.warn(
+                        f"Couldn't send a message to {member} (ID: {member.id}) "
+                        "because of an HTTPException.",
+                        exc_info=e,
+                    )
+            # take actions
+            if take_action:
+                audit_reason = audit_reason.format(member=member)
+                try:
+                    if level == 2:
+                        await self._mute(member, audit_reason)
+                    elif level == 3:
+                        await guild.kick(member, reason=audit_reason)
+                    elif level == 4:
+                        await guild.ban(
+                            member,
+                            reason=audit_reason,
+                            delete_message_days=await self.data.guild(guild).bandays.softban(),
+                        )
+                        await guild.unban(
+                            member,
+                            reason=_(
+                                "Unbanning the softbanned member after cleaning up the messages."
+                            ),
+                        )
+                    elif level == 5:
+                        await guild.ban(
+                            member,
+                            reason=audit_reason,
+                            delete_message_days=await self.data.guild(guild).bandays.ban(),
+                        )
+                except discord.errors.HTTPException as e:
+                    log.warn(
+                        f"Failed to warn {member} because of an error from Discord.", exc_info=e
+                    )
+                    return e
+            # actions were taken, time to log
+            if log_modlog:
+                await mod_channel.send(embed=modlog_e)
+            data = await self._create_case(
+                guild,
+                member,
+                author,
+                level,
+                datetime.now(),
+                reason,
+                time,
+            )
+            # start timer if there is a temporary warning
+            if time and (level == 2 or level == 5):
+                data["member"] = member.id
+                await self._start_timer(guild, data)
+            i += 1
+            if progress_tracker:
+                await progress_tracker(i)
 
+        if not 1 <= level <= 5:
+            raise errors.InvalidLevel("The level must be between 1 and 5.")
         # we get the modlog channel now to make sure it exists before doing anything
-        mod_channel = await self.get_modlog_channel(guild, level)
-
-        # check that the mute role exists
+        if log_modlog:
+            mod_channel = await self.get_modlog_channel(guild, level)
+        # check if the mute role exists
         mute_role = guild.get_role(await self.data.guild(guild).mute_role())
         if not mute_role and level == 2:
             raise errors.MissingMuteRole("You need to create the mute role before doing this.")
-
         # we check for all permission problem that can occur before calling the API
-        if not all(
-            [  # checks if the bot has send_messages and embed_links permissions in modlog channel
-                getattr(mod_channel.permissions_for(guild.me), x)
-                for x in ["send_messages", "embed_links"]
-            ]
+        # checks if the bot has send_messages and embed_links permissions in modlog channel
+        if not (
+            guild.me.guild_permissions.send_messages and guild.me.guild_permissions.embed_links
         ):
             raise errors.LostPermissions(
                 _(
@@ -789,31 +907,6 @@ class API:
                     "permissions in {channel} to do this."
                 ).format(channel=mod_channel.mention)
             )
-        if (
-            level > 1
-            and isinstance(member, discord.Member)
-            and guild.me.top_role.position <= member.top_role.position
-        ):
-            # check if the member is below the bot in the roles's hierarchy
-            raise errors.MemberTooHigh(
-                _(
-                    "Cannot take actions on this member, he is above me in the roles hierarchy. "
-                    "Modify the hierarchy so my top role ({bot_role}) is above {member_role}."
-                ).format(bot_role=guild.me.top_role.name, member_role=member.top_role.name)
-            )
-        if (
-            isinstance(member, discord.Member)
-            and await self.data.guild(guild).respect_hierarchy()
-            and (
-                member.top_role >= author.top_role
-                and not (self.bot.is_owner(author) or author.owner)
-            )
-        ):
-            raise errors.NotAllowedByHierarchy(
-                "The moderator is lower than the member in the servers's role hierarchy."
-            )
-        if level > 2 and isinstance(member, discord.Member) and member == guild.owner:
-            raise errors.MissingPermissions(_("I can't take actions on the owner of the guild."))
         if level == 2:
             # mute with role
             if not guild.me.guild_permissions.manage_roles:
@@ -833,90 +926,33 @@ class API:
                 raise errors.MissingPermissions(
                     _("I can't kick members, please give me this permission to continue.")
                 )
-        if level == 4 or level == 5:
+        if level >= 4:
             # softban or ban
             if not guild.me.guild_permissions.ban_members:
                 raise errors.MissingPermissions(
                     _("I can't ban members, please give me this permission to continue.")
                 )
 
-        # send the message to the user
-        if log_modlog or log_dm:
-            modlog_e, user_e = await self.get_embeds(guild, member, author, level, reason, time)
-        if log_dm:
-            try:
-                await member.send(embed=user_e)
-            except discord.errors.Forbidden:
-                modlog_e, user_e = await self.get_embeds(
-                    guild, member, author, level, reason, time, message_sent=False
-                )
-            except discord.errors.HTTPException as e:
-                modlog_e, user_e = await self.get_embeds(
-                    guild, member, author, level, reason, time, message_sent=False
-                )
-                log.warn(
-                    f"Couldn't send a message to {member} (ID: {member.id}) "
-                    "because of an HTTPException.",
-                    exc_info=e,
-                )
-
-        # take actions
-        if take_action:
-            action = {1: _("warn"), 2: _("mute"), 3: _("kick"), 4: _("softban"), 5: _("ban")}.get(
-                level, _("unknown")
-            )
-            if reason and not reason.endswith("."):
-                reason += "."
-            audit_reason = _(
-                "WarnSystem {action} requested by {author} (ID: " "{author.id}) against {member}. "
-            ).format(author=author, member=member, action=action)
-            if time:
-                audit_reason += _("\n\nDuration: {time} ").format(
-                    time=self._format_timedelta(time)
-                )
-            if reason:
-                if len(audit_reason + reason) < 490:
-                    audit_reason += _("Reason: {reason}").format(reason=reason)
-                else:
-                    audit_reason += _("Reason too long to be shown.")
-            if level == 2:
-                await self._mute(member, audit_reason)
-            if level == 3:
-                await guild.kick(member, reason=audit_reason)
-            if level == 4:
-                await guild.ban(
-                    member,
-                    reason=audit_reason,
-                    delete_message_days=await self.data.guild(guild).bandays.softban(),
-                )
-                await guild.unban(
-                    member,
-                    reason=_("Unbanning the softbanned member after cleaning up the messages."),
-                )
-            if level == 5:
-                await guild.ban(
-                    member,
-                    reason=audit_reason,
-                    delete_message_days=await self.data.guild(guild).bandays.ban(),
-                )
-
-        # actions were taken, time to log
-        if log_modlog:
-            await mod_channel.send(embed=modlog_e)
-        data = await self._create_case(guild, member, author, level, datetime.now(), reason, time)
-
-        # start timer if there is a temporary warning
-        if time and (level == 2 or level == 5):
-            data["member"] = member.id
-            await self._start_timer(guild, data)
-
-        # all good!
-        log.debug(
-            f"Warn taken on guild {guild} (ID: {guild.id}) by {author} (ID: {author.id}) against "
-            f"{member} (ID: {member.id}). Level = {level} ; Time = {time} : Modlog = {log_modlog} "
-            f"; DM = {log_dm} ; Actions taken = {take_action} ; Reason = {reason}"
+        action = {1: _("warn"), 2: _("mute"), 3: _("kick"), 4: _("softban"), 5: _("ban")}.get(
+            level, _("unknown")
         )
-        return True
+        audit_reason = _(
+            "[WarnSystem] {action} requested by {author} (ID: {author.id}) against {member}. "
+        ).format(
+            author=author, action=action, member="{member}"
+        )  # member will be edited later
+        if time:
+            audit_reason += _("\n\nDuration: {time} ").format(time=self._format_timedelta(time))
+        if reason:
+            if len(audit_reason + reason) < 490:
+                audit_reason += _("Reason: {reason}").format(reason=reason)
+            else:
+                audit_reason += _("Reason too long to be shown.")
+
+        i = 0
+        fails = [await warn_member(x, audit_reason) for x in members if x]
+        # all good!
+        return list(filter(None, fails))
 
     async def _check_endwarn(self):
         async def reinvite(guild, user, reason, duration):
@@ -1024,7 +1060,7 @@ class API:
                             f"Ended timed {'mute' if level == 2 else 'ban'} of {member} (ID: "
                             f"{member.id}) taken on {taken_on} requested by {author} (ID: "
                             f"{author.id}) that lasted for {action['duration']} on guild "
-                            f'{guild} (ID: {guild.id} for the reason "{reason}"\nCurrent time: '
+                            f'{guild} (ID: {guild.id} for the reason "{case_reason}"\nCurrent time: '
                             f"{now}\nExpected end time of warn: {until}"
                         )
                     to_remove.append(action)
@@ -1042,7 +1078,7 @@ class API:
         """
         await self.bot.wait_until_ready()
         log.debug(
-            "Starting infinite loop for unmutes and unbans. Cancel the "
+            "Starting infinite loop for unmutes and unbans. Canel the "
             'task with bot.get_cog("WarnSystem").task.cancel()'
         )
         errors = 0
