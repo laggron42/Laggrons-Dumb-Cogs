@@ -40,6 +40,7 @@ class AdvancedMemberSelect:
     Member search
     -------------
     --select [member, ...]
+    --exclude [member, ...]
     --everyone
     --name <regex>
     --nickname <regex>
