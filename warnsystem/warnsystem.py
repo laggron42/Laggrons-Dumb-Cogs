@@ -122,7 +122,7 @@ class WarnSystem(BaseCog):
         self.task = bot.loop.create_task(self.api._loop_task())
         self._init_logger()
 
-    __version__ = "1.0.6"
+    __version__ = "1.0.7"
     __author__ = ["retke (El Laggron)"]
     __info__ = {
         "bot_version": [3, 1, 2],
@@ -823,12 +823,12 @@ class WarnSystem(BaseCog):
         text = ""
         for substitution, content in substitutions.items():
             text += f"+ {substitution}\n{content}\n\n"
-        messages = [x for x in pagify(text, page_length=1900)]
+        messages = [x for x in pagify(text, page_length=1800)]
         total_pages = len(messages)
         for i, page in enumerate(messages):
             await ctx.send(
                 _("Substitutions for {server}:").format(server=guild.name)
-                + f"\n```diff\n{text}\n```"
+                + f"\n```diff\n{page}\n```"
                 + _("Page {page}/{max}").format(page=i + 1, max=total_pages)
             )
 
