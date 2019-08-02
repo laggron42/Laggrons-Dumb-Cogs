@@ -228,8 +228,11 @@ class WarnSystem(BaseCog):
                     else ""
                 )
             )
-        if await self.data.guild(ctx.guild).delete_message():
-            await ctx.message.delete()
+        else:
+            if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
+                await ctx.message.add_reaction("✅")
+            else:
+                await ctx.send(_("Done."))
 
     async def call_masswarn(
         self, ctx, level, members, log_modlog, log_dm, take_action, reason=None, time=None
@@ -1075,14 +1078,6 @@ class WarnSystem(BaseCog):
         If not given, the warn level will be 1.
         """
         await self.call_warn(ctx, 1, member, reason)
-        if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
-            try:
-                await ctx.message.add_reaction("✅")
-                return
-            except discord.errors.HTTPException:
-                # probably deleted message
-                pass
-        await ctx.send("Done.")
 
     @warn.command(name="1", aliases=["simple"])
     async def warn_1(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
@@ -1092,14 +1087,6 @@ class WarnSystem(BaseCog):
         Note: You can either call `[p]warn 1` or `[p]warn`.
         """
         await self.call_warn(ctx, 1, member, reason)
-        if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
-            try:
-                await ctx.message.add_reaction("✅")
-                return
-            except discord.errors.HTTPException:
-                # probably deleted message
-                pass
-        await ctx.send("Done.")
 
     @warn.command(name="2", aliases=["mute"])
     async def warn_2(
@@ -1124,14 +1111,6 @@ class WarnSystem(BaseCog):
         - `[p]warn 2 @user Advertising`: Infinite mute for the reason "Advertising"
         """
         await self.call_warn(ctx, 2, member, reason, time)
-        if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
-            try:
-                await ctx.message.add_reaction("✅")
-                return
-            except discord.errors.HTTPException:
-                # probably deleted message
-                pass
-        await ctx.send("Done.")
 
     @warn.command(name="3", aliases=["kick"])
     async def warn_3(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
@@ -1139,14 +1118,6 @@ class WarnSystem(BaseCog):
         Kick the member from the server.
         """
         await self.call_warn(ctx, 3, member, reason)
-        if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
-            try:
-                await ctx.message.add_reaction("✅")
-                return
-            except discord.errors.HTTPException:
-                # probably deleted message
-                pass
-        await ctx.send("Done.")
 
     @warn.command(name="4", aliases=["softban"])
     async def warn_4(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
@@ -1160,14 +1131,6 @@ class WarnSystem(BaseCog):
         `[p]warnset bandays` command.
         """
         await self.call_warn(ctx, 4, member, reason)
-        if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
-            try:
-                await ctx.message.add_reaction("✅")
-                return
-            except discord.errors.HTTPException:
-                # probably deleted message
-                pass
-        await ctx.send("Done.")
 
     @warn.command(name="5", aliases=["ban"], usage="<member> [time] <reason>")
     async def warn_5(
@@ -1198,14 +1161,6 @@ class WarnSystem(BaseCog):
         another server with the bot, a DM will be sent).
         """
         await self.call_warn(ctx, 5, member, reason, time)
-        if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
-            try:
-                await ctx.message.add_reaction("✅")
-                return
-            except discord.errors.HTTPException:
-                # probably deleted message
-                pass
-        await ctx.send("Done.")
 
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
