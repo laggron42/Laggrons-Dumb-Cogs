@@ -396,7 +396,8 @@ class WarnSystem(BaseCog):
                 )
         finally:
             task.cancel()
-            await message.delete()
+            if message:
+                await message.delete()
 
     # all settings
     @commands.group()
