@@ -1574,7 +1574,7 @@ class WarnSystem(BaseCog):
                 f"The temporary ban of user {user} (ID: {user.id}) on guild {guild} "
                 f"(ID: {guild.id} was cancelled due to his manual unban."
             )
-    
+
     @listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         guild = after.guild
