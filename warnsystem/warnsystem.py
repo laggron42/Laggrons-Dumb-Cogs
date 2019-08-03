@@ -1558,6 +1558,46 @@ class WarnSystem(BaseCog):
         )
 
     @listener()
+    async def on_member_unban(self, guild: discord.Guild, user: discord.User):
+        # if a member gets unbanned, we check if he was temp banned with warnsystem
+        # if it was, we remove the case so it won't unban him a second time
+        async with self.data.guild(guild).temporary_warns() as temp_warns:
+            to_remove = []
+            for case in temp_warns:
+                if case["level"] == 2 or case["member"] != user.id:
+                    continue
+                to_remove.append(case)
+            for removal in to_remove:
+                temp_warns.remove(removal)
+        if to_remove:
+            log.info(
+                f"The temporary ban of user {user} (ID: {user.id}) on guild {guild} "
+                f"(ID: {guild.id} was cancelled due to his manual unban."
+            )
+    
+    @listener()
+    async def on_member_update(self, before: discord.Member, after: discord.Member):
+        guild = after.guild
+        mute_role = guild.get_role(await self.data.guild(guild).mute_role())
+        if not mute_role:
+            return
+        if not (mute_role in before.roles and mute_role not in after.roles):
+            return
+        async with self.data.guild(guild).temporary_warns() as temp_warns:
+            to_remove = []
+            for case in temp_warns:
+                if case["level"] == 5 or case["member"] != after.id:
+                    continue
+                to_remove.append(case)
+            for removal in to_remove:
+                temp_warns.remove(removal)
+        if to_remove:
+            log.info(
+                f"The temporary mute of member {after} (ID: {after.id}) on guild {guild} "
+                f"(ID: {guild.id}) was ended due to a manual unmute (role removed)."
+            )
+
+    @listener()
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
