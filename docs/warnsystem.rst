@@ -42,7 +42,7 @@ the rewrite of the BetterMod cog for Red V3. Here is a quick start guide.
 1. Define a modlog channel
 
     You can define a channel where all actions will be logged, either with the
-    ``[p]warnset channel` command or with the ``[p]modlogset modlog`` command,
+    ``[p]warnset channel`` command or with the ``[p]modlogset modlog`` command,
     from Modlog cog.
 
 2. Set your moderators
@@ -556,7 +556,7 @@ Now it's time to list all of the flags.
         the search, they won't be warned*
 
     *   ``--everyone`` *Includes everyone in the server, your search will
-        therefore not be committed, the ``--exclude`` flag will also not be
+        therefore not be committed, the* ``--exclude`` *flag will also not be
         used*
     
     *   ``--name <regex>`` *Only includes the members which names validates to
@@ -600,8 +600,8 @@ Now it's time to list all of the flags.
     
     *   ``--has-perm-int <number>`` *Includes the members whose permission
         integer matches what you gave, you can calculate your permission
-        integer on the `permissions calculator
-        <https://discordapi.com/permissions.html>`_*
+        integer on the* `permissions calculator
+        <https://discordapi.com/permissions.html>`_
 
 *   **Role search**
 
