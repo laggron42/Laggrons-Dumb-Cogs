@@ -1,9 +1,17 @@
 import logging
+import importlib.util
 
 try:
     from redbot.core.errors import CogLoadError
 except ImportError:
     CogLoadError = RuntimeError
+
+if not importlib.util.find_spec("dateutil"):
+    raise CogLoadError(
+        "You need the `python-dateutil` package for this cog. "
+        "Use the command `[p]pipinstall python-dateutil` or type "
+        "`pip3 install python-dateutil` in the terminal to install the library."
+    )
 from .warnsystem import WarnSystem
 
 log = logging.getLogger("laggron.warnsystem")

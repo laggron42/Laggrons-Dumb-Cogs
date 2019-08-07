@@ -158,6 +158,8 @@ You can check the warnings set on a specific member later with the
 ``[p]warnings`` command. This command also allows to edit the reason of the
 warning, or delete them.
 
+.. tip:: The warn level defaults to 1 if you omit it.
+
 """"""
 warn 1
 """"""
@@ -383,6 +385,266 @@ You can also stack them like this:
 
 *   ``[reason]``: The reason of the warn. Omitting this will set the reason as
     "No reason set.".
+
+^^^^^^^^
+masswarn
+^^^^^^^^
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]masswarn
+
+**Description**
+
+Warn multiple members at once. This advanced command allows you to filter
+members to warn with UNIX-like arguments, called flags.
+
+Each "flag" is one more condition for the search. For example, ``[p]masswarn
+--has-role "New Member" --joined-after "16 june 2019"`` will filter the
+member who have the "New Member" role **and** who joined after the 16th of
+June of 2019. The search begins with all members on the server, then each
+condition is checked on each member to know if it should be kept in the
+masswarn or not.
+
+You also have to tell to the bot what to do. Unlike the warn command where it
+takes actions, sends a message to the member and one in the modlog, you can
+decide what the bot should do, to make it faster or prevent spam.
+
+*   ``--take-actions`` will perform the action related to the warn (add the
+    mute role, kick or ban a member...)
+
+*   ``--log-modlog`` will send a message in the modlog
+
+*   ``--log-dm`` will send a DM to the member
+
+.. warning:: You have to put at least one of those flags.
+
+You can then put the optional ``--reason`` flag to set the reason of the
+warning. Be sure to put it enclosed in quotes. If you're performing a level 2
+or 5 warning, you can also use the ``--time`` flag to define the duration of
+the mute/ban if you want to make it temporary, the format of the time is the
+same as for the simple warnings.
+
+""""""""""""
+
+Some flags needs an input with them, it can be a date, a set of
+roles, a regex expression... We will explain how input works for those
+flags. Note that if you need to put multiple words, you'll have to use quotes.
+
+**Date imput**
+
+For the flags ``--joined-before`` and ``--joined-after``, you will need to
+put a specific date. A lot of formats are supported, here are some
+examples:
+
+*   ``27 june 2018``
+*   ``13/2/18``
+*   ``august 2019`` (will be the first day of the month)
+*   ``2017`` (will be the first day of the year)
+*   ``monday`` (will be the first monday of the month)
+*   ``23 jun 12:00`` (you can also specify the hour)
+*   ``Wednesday, 19th of September of 2018`` (if you really want to lose
+    time, that works too)
+
+**Role input**
+
+The flags ``--has-role``, ``--has-any-role``, ``--has-all-roles``,
+``--has-none-roles``, ``--above`` and ``--below`` requires you to type one
+or more roles. You can provide the role ID or the role name, in quotes if
+there are spaces. Here are some examples:
+
+*   ``--has-role Moderator``
+*   ``--has-any-role Member Staff "Nitro Booster" 168091848718417920``
+*   ``--has-none-roles "Reddit Moderator"``
+*   ``--below Administrators``
+
+**Permission input**
+
+The flags ``--has-perm``, ``--has-any-perm``, ``--has-all-perms`` and
+``--has-none-perms`` requires discord permissions, formatted as provided
+by the API. Here are the names you have to use:
+
+.. code-block:: yaml
+    
+    General permissions:
+    - administrator
+    - view_audit_log
+    - manage_guild
+    - manage_roles
+    - manage_channels
+    - kick_members
+    - ban_members
+    - create_instant_invite
+    - change_nickname
+    - manage_nicknames
+    - manage_emojis
+    - manage_webhooks
+
+    Text permissions:
+    - read_messages
+    - read_message_history
+    - send_messages
+    - send_tts_messages
+    - attach_files
+    - embed_links
+    - external_emojis
+    - mention_everyone
+    - manage_messages
+    - add_reactions
+
+    Voice permissions:
+    - connect
+    - speak
+    - stream
+    - use_voice_activation
+    - priority_speaker
+    - move_members
+    - mute_members
+    - deafen_members
+
+Here are some examples:
+
+*   ``--has-perm send_messages``
+*   ``--has-any-perm manage_messages manage_channels manage_roles``
+*   ``--has-none-perms administrator manage_guild``
+*   ``--has-all-perms send_messages connect``
+
+**Member input**
+
+The flags ``--include`` and ``--exclude`` requires you to pass multiple
+members, either with their name, their nickname, their name+tag, their ID or
+by mentionning them. Here are some examples:
+
+*   ``--include "El Laggron#0260" 133801473317404673 Twentysix``
+*   ``--exclude aikaterna#1393 "Kowlin, That silver Yuumi main"``
+
+**Regual expressions input (regex)**
+
+The flags ``--name``, ``--nickname`` and ``--display-name`` requires
+regular expressions. Not going to explain how those work here, you can
+learn how to use those on `Python's guide
+<https://docs.python.org/3/library/re.html>`_ and test your expressions
+with `regex101 <https://regex101.com/>`_. Just keep in mind you have to
+keep your expression enclosed in quotes.
+
+""""""""""""
+
+Now it's time to list all of the flags.
+
+*   **Actions**
+
+    *   ``--take-action`` ``take-actions`` *Defines if the bot should take an
+        action (add the mute role, kick/ban the member)*
+    
+    *   ``--send-dm`` *Defines if the bot should send a DM to the warned
+        members*
+    
+    *   ``--send-modlog`` *Defines if the bot should send a message in the
+        modlog channel*
+    
+    *   ``--reason <text>`` *The reason of the masswarn, substitutions works*
+    *   ``--time`` ``--length`` *The duration of the warn, for mutes and bans*
+
+*   **Member search**
+
+    *   ``--select [member, ...]`` *Select multiple members to include in the
+        masswarn, they are not affected by your search*
+    
+    *   ``--exclude [member, ...]`` *Select multiple members to exclude from
+        the search, they won't be warned*
+
+    *   ``--everyone`` *Includes everyone in the server, your search will
+        therefore not be committed, the ``--exclude`` flag will also not be
+        used*
+    
+    *   ``--name <regex>`` *Only includes the members which names validates to
+        the given expression*
+    
+    *   ``--nickname <regex>`` *Only includes the members which nicknames
+        validates to the given expression, this excludes members without
+        nicknames*
+    
+    *   ``--display-name <regex>`` *Only includes the members which nicknames,
+        or name if nickname isn't set, validates to the given expression*
+    
+    *   ``--only-humans`` *Excludes all bots from the search*
+    *   ``--only-bots`` *Only includes bots in the search*
+
+    *   ``--joined-before <date>`` *Members who joined after the given date
+        will be excluded from the masswarn*
+    
+    *   ``--joined-after <date>`` *Members who joined before the given date
+        will be excluded from the masswarn*
+    
+    *   ``--last-njoins <number>`` *Includes the last x members of the server,
+        this is useful in case of a raid*
+    
+    *   ``--first-njoins <number>`` *Includes the first x members of the
+        server, if you want to purge the elders you monster*
+
+*   **Permissions search**
+
+    *   ``--has-perm <permission>`` *Includes the members with the given
+        permission, this is based on roles, not channel permissions*
+    
+    *   ``--has-any-perm [permission, ...]`` *Includes the members who have any
+        of the given permissions*
+    
+    *   ``--has-all-perms [permission, ...]`` *Includes the members who have
+        all of the given permissions*
+    
+    *   ``--has-none-perms [permission, ...]`` *Include the members who have
+        none of the given permissions*
+    
+    *   ``--has-perm-int <number>`` *Includes the members whose permission
+        integer matches what you gave, you can calculate your permission
+        integer on the `permissions calculator
+        <https://discordapi.com/permissions.html>`_*
+
+*   **Role search**
+
+    *   ``--has-role <role>`` *Includes the members who have the given role*
+
+    *   ``--has-any-role [role, ...]`` *Includes the members who have any of
+        the given roles*
+    
+    *   ``--has-all-roles [role, ...]`` *Includes the members who have all of
+        the given roles*
+    
+    *   ``--has-none-roles [role, ...]`` *Include the members who have none of
+        the given roles*
+    
+    *   ``--has-no-role`` *Excludes the members with any custom role*
+
+    *   ``--has-exactly-nroles <number>`` *Includes the members who have the
+        number of roles given, this doesn't count the @everyone role*
+    
+    *   ``--has-more-than-nroles`` *Includes the members who have more roles
+        than the number given, this doesn't count the @everyone role*
+    
+    *   ``--has-less-than-nroles`` *Includes the members who have less roles
+        than the number given, this doesn't count the @everyone role*
+    
+    *   ``--above <role>`` *Includes the members whose top role is above the
+        given role*
+    
+    *   ``--below <role>`` *Includes the members whose top role is below the
+        given role*
+
+""""""""""""
+
+Enough info, time for explained examples.
+
+*   ``[p]masswarn 2 --take-actions --send-dm --send-modlog --reason "Potential
+    raid" --time 24h --joined-after "12 august 14:30" --has-no-roles
+    --only-humans`` This will mute for a day all members who joined after the
+    12th of august at 2:30 p.m. without roles and excluding bots. Everyone will
+    receive a message and this will be logged in the modlog.
+
+*   ``[p]masswarn 5 --take-actions --send-dm --reason "toxic potatoes"
+    --has-role Starbucks`` Just bans everone with the role "Starbucks"
 
 ^^^^^^^
 warnset
