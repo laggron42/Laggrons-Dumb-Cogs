@@ -46,7 +46,7 @@ class NSFW(BaseCog):
         self.rule34 = Rule34(self.session)
         self.e621 = e621(self.session)
         self._init_logger()
-    
+
     def _init_logger(self):
         log_format = logging.Formatter(
             f"%(asctime)s %(levelname)s {self.__class__.__name__}: %(message)s",
@@ -95,7 +95,7 @@ class NSFW(BaseCog):
             embed.set_image(url=post.file_url)
             embeds.append(embed)
         await menus.menu(ctx, embeds, menus.DEFAULT_CONTROLS, timeout=60)
-    
+
     @commands.command()
     @commands.cooldown(1, 2, commands.BucketType.channel)
     @commands.is_nsfw()

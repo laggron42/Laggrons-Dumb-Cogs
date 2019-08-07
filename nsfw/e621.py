@@ -8,7 +8,6 @@ log = logging.getLogger("laggron.nsfw")
 
 
 class e621Post:
-    
     def __init__(self, data: dict):
         self.tags = data["tags"]
         self.description = data["description"]
@@ -20,17 +19,14 @@ class e621Post:
         self.rating = data["rating"]
         self.artist = data["artist"]
 
-class e621(APIWrapper):
 
+class e621(APIWrapper):
     def __init__(self, session: aiohttp.client.ClientSession):
         super().__init__(session)
         self.base_link = "https://e621.net/post/index.json"
-    
+
     async def get_images(self, tags: list = None):
-        params = {
-            "limit": 100,
-            "tags": "+".join(tags),
-        }
+        params = {"limit": 100, "tags": "+".join(tags)}
         response = await self.request(params)
         if not response:
             raise errors.NotFound
