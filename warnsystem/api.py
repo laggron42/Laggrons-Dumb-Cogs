@@ -802,7 +802,7 @@ class API:
                     ).format(bot_role=guild.me.top_role.name, member_role=member.top_role.name)
                 )
             if await self.data.guild(guild).respect_hierarchy() and (
-                not (self.bot.is_owner(author) or author.owner)
+                not (await self.bot.is_owner(author) or author == guild.owner)
                 and member.top_role.position >= author.top_role.position
             ):
                 return errors.NotAllowedByHierarchy(
