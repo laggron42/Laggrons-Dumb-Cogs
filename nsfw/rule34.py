@@ -40,7 +40,7 @@ class Rule34(APIWrapper):
         self.base_link = "https://rule34.xxx/index.php"
 
     async def get_images(self, tags: list = None):
-        params = {"page": "dapi", "s": "random", "q": "index", "rating": "explicit"}
+        params = {"page": "dapi", "s": "post", "q": "index", "rating": "explicit"}
         if tags:
             params["tags"] = "+".join(tags)
         response = await self.request(params, content_type="xml")

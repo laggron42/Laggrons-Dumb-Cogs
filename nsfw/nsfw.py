@@ -176,5 +176,5 @@ class NSFW(BaseCog):
             embeds.append(embed)
         await menus.menu(ctx, embeds, menus.DEFAULT_CONTROLS, timeout=60)
 
-    async def cog_unload(self):
+    def cog_unload(self):
         self.session.close()

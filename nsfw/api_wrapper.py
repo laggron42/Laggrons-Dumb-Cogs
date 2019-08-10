@@ -14,8 +14,8 @@ class APIWrapper:
         self.base_link = None
 
     async def request(self, parameters: dict = None, content_type: str = "json"):
-        log.debug(f"GET request to {self.base_link} with the following parameters: {parameters}")
         async with self.session.get(self.base_link, params=parameters) as response:
+            log.debug(f"GET request to {str(response.url)}")
             if response.status >= 400:
                 log.error(
                     f"Unexpected error with {self.base_link}, status code: {response.status}, "
