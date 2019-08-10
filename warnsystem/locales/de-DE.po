@@ -3,9 +3,9 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-08-04 19:32+0000\n"
-"PO-Revision-Date: 2019-08-05 18:42+0000\n"
+"PO-Revision-Date: 2019-08-10 14:37+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Unknown\n"
+"Language-Team: No linguistic content\n"
 "Language: zxx\n"
 "Plural-Forms: nplurals=2; plural=n!=1;\n"
 "MIME-Version: 1.0\n"
@@ -102,11 +102,11 @@ msgstr "kickt"
 
 #: warnsystem/api.py:468 warnsystem/api.py:930
 msgid "softban"
-msgstr "softbann"
+msgstr "Soft-Bann"
 
 #: warnsystem/api.py:468
 msgid "softbans"
-msgstr "softbannt"
+msgstr "Soft-Banns"
 
 #: warnsystem/api.py:469 warnsystem/api.py:930 warnsystem/api.py:1013
 msgid "ban"
@@ -154,7 +154,7 @@ msgstr "Warnungen"
 
 #: warnsystem/api.py:491
 msgid "warning"
-msgstr "warnen"
+msgstr "Warnung"
 
 #: warnsystem/api.py:503 warnsystem/api.py:509
 msgid "*[couldn't create an invite]*"
@@ -1198,8 +1198,8 @@ msgid ""
 "\\n        Set a simple warning on a user.\\n\\n        Note: You can either "
 "call `[p]warn 1` or `[p]warn`.\\n        "
 msgstr ""
-"\\n        Stelle eine einfache Verwarnung für einen Nutzer ein.\\n\\n       "
-" Bedenke: Du kannst entweder `[p]warn 1` oder `[p]warn` nutzen.\\n        "
+"\\n        Vergibt eine einfache Verwarnung für einen Nutzer.\\n\\n        "
+"Bedenke: Du kannst entweder `[p]warn 1` oder `[p]warn` nutzen.\\n        "
 
 #: warnsystem/warnsystem.py:1113
 msgid ""
@@ -1235,8 +1235,8 @@ msgid ""
 "by default, but you can edit this with the        `[p]warnset bandays` "
 "command.\\n        "
 msgstr ""
-"\\n        Der Server wird mit einem Softban vom Server gekickt.\\n\\n       "
-" Das bedeutet, dass der Nutzer gebannt wird und sofort wieder entbannt, "
+"\\n        Das Mitglied wird mit einem Softbann vom Server gekickt.\\n\\n    "
+"    Das bedeutet, dass der Nutzer gebannt wird und sofort wieder entbannt, "
 "damit seine Nachrichten gelöscht werden.\\n\\n        Es werden "
 "standardmäßig 7 Tage an Nachrichten gelöscht, du kannst dies mit dem Befehl "
 "`[p]warnset bandays` ändern.\\n        "
