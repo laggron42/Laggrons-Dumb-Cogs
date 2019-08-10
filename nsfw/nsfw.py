@@ -129,7 +129,7 @@ class NSFW(BaseCog):
             embed.set_image(url=post.file_url)
             embeds.append(embed)
         await menus.menu(ctx, embeds, menus.DEFAULT_CONTROLS, timeout=60)
-    
+
     @commands.command()
     @commands.cooldown(1, 2, commands.BucketType.channel)
     @commands.is_nsfw()
