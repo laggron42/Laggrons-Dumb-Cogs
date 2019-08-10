@@ -15,6 +15,7 @@ from . import errors
 from .rule34 import Rule34
 from .e621 import e621
 from .danbooru import Danbooru
+from .paheal import Paheal
 
 log = logging.getLogger("laggron.nsfw")
 log.setLevel(logging.DEBUG)
@@ -48,9 +49,10 @@ class NSFW(BaseCog):
             loop=bot.loop,
         )
         self._init_logger()
-        self.rule34 = Rule34(self.session)
-        self.e621 = e621(self.session)
-        self.danbooru = Danbooru(self.session)
+        self.rule34_api = Rule34(self.session)
+        self.e621_api = e621(self.session)
+        self.danbooru_api = Danbooru(self.session)
+        self.paheal_api = Paheal(self.session)
 
     __version__ = "indev"
     __author__ = ["retke (El Laggron)"]
@@ -89,7 +91,7 @@ class NSFW(BaseCog):
         Search on https://rule34.xxx/
         """
         try:
-            results = await self.rule34.get_images(search.split() if search else None)
+            results = await self.rule34_api.get_images(search.split() if search else None)
         except errors.NotFound:
             await ctx.send("No result.")
             return
@@ -112,7 +114,7 @@ class NSFW(BaseCog):
         Search on https://e621.net/
         """
         try:
-            results = await self.e621.get_images(search.split())
+            results = await self.e621_api.get_images(search.split())
         except errors.NotFound:
             await ctx.send("No result.")
             return
@@ -136,7 +138,7 @@ class NSFW(BaseCog):
         Search on https://danbooru.donmai.us/
         """
         try:
-            results = await self.danbooru.get_images(search.split())
+            results = await self.danbooru_api.get_images(search.split())
         except errors.NotFound:
             await ctx.send("No result.")
             return
@@ -145,8 +147,34 @@ class NSFW(BaseCog):
         for i, post in enumerate(results):
             embed = discord.Embed()
             embed.title = post.source
-            embed.url = post.large_file_url if post.has_large else post.file_url
+            embed.url = post.source
             embed.set_footer(text="Page {page}/{total}".format(page=i + 1, total=total))
             embed.set_image(url=post.large_file_url if post.has_large else post.file_url)
             embeds.append(embed)
         await menus.menu(ctx, embeds, menus.DEFAULT_CONTROLS, timeout=60)
+
+    @commands.command()
+    @commands.cooldown(1, 2, commands.BucketType.channel)
+    @commands.is_nsfw()
+    async def paheal(self, ctx, *, search: str = ""):
+        """
+        Search on https://danbooru.donmai.us/
+        """
+        try:
+            results = await self.paheal_api.get_images(search.split())
+        except errors.NotFound:
+            await ctx.send("No result.")
+            return
+        embeds = []
+        total = len(results)
+        for i, post in enumerate(results):
+            embed = discord.Embed()
+            embed.title = post.source
+            embed.url = post.source
+            embed.set_footer(text="Page {page}/{total}".format(page=i + 1, total=total))
+            embed.set_image(url=post.file_url)
+            embeds.append(embed)
+        await menus.menu(ctx, embeds, menus.DEFAULT_CONTROLS, timeout=60)
+
+    async def cog_unload(self):
+        self.session.close()
