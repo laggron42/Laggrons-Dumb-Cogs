@@ -122,7 +122,7 @@ class WarnSystem(BaseCog):
         self.task = bot.loop.create_task(self.api._loop_task())
         self._init_logger()
 
-    __version__ = "1.1.1"
+    __version__ = "1.1.2"
     __author__ = ["retke (El Laggron)"]
     __info__ = {
         "bot_version": [3, 1, 2],
@@ -332,7 +332,7 @@ class WarnSystem(BaseCog):
         menus.start_adding_reactions(msg, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
         pred = predicates.ReactionPredicate.yes_or_no(msg, ctx.author)
         try:
-            result = await self.bot.wait_for("reaction_add", check=pred, timeout=120)
+            await self.bot.wait_for("reaction_add", check=pred, timeout=120)
         except AsyncTimeoutError:
             if ctx.guild.me.guild_permissions.manage_messages:
                 await msg.clear_reactions()
@@ -340,7 +340,7 @@ class WarnSystem(BaseCog):
                 for reaction in msg.reactions():
                     await msg.remove_reaction(reaction, ctx.guild.me)
             return
-        if not result:
+        if not pred.result:
             await ctx.send(_("Mass warn cancelled."))
             return
         task = self.bot.loop.create_task(update_message())
