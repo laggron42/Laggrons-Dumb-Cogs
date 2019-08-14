@@ -5,7 +5,7 @@ import re
 from dateutil import parser
 from discord.ext.commands.converter import RoleConverter, MemberConverter
 from redbot.core.commands import BadArgument
-from redbot.core.commands.converter import parse_timedelta
+from redbot.core.commands.converter import TimedeltaConverter
 
 from .warnsystem import _
 
@@ -374,7 +374,7 @@ class AdvancedMemberSelect:
         async with ctx.typing():
             args = self.parse_arguments(arguments)
             self.reason = " ".join(args.reason or "")
-            self.time = parse_timedelta(" ".join(args.time or []))
+            self.time = await TimedeltaConverter.convert(" ".join(args.time or []))
             self.take_action = args.take_action
             self.send_dm = args.send_dm
             self.send_modlog = args.send_modlog
