@@ -13,7 +13,7 @@ from pathlib import Path
 from json import loads
 
 from redbot.core import commands, Config, checks
-from redbot.core.commands.converter import parse_timedelta
+from redbot.core.commands.converter import TimedeltaConverter
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils import predicates, menus, mod
@@ -1094,7 +1094,7 @@ class WarnSystem(BaseCog):
         self,
         ctx: commands.Context,
         member: discord.Member,
-        time: Optional[parse_timedelta],
+        time: Optional[TimedeltaConverter],
         *,
         reason: str = None,
     ):
@@ -1138,7 +1138,7 @@ class WarnSystem(BaseCog):
         self,
         ctx: commands.Context,
         member: Union[discord.Member, int],
-        time: Optional[parse_timedelta],
+        time: Optional[TimedeltaConverter],
         *,
         reason: str = None,
     ):
