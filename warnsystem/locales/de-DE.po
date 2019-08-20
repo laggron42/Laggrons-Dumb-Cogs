@@ -1348,7 +1348,7 @@ msgstr "Dir ist es nicht erlaubt, Verwarnungen von anderen Nutzern einzusehen!"
 
 #: warnsystem/warnsystem.py:1394
 msgid "That member was never warned."
-msgstr "Dieses Mitglied wurde biser noch nicht verwarnt."
+msgstr "Dieses Mitglied wurde bisher noch nicht verwarnt."
 
 #: warnsystem/warnsystem.py:1397
 msgid "That case doesn't exist."
