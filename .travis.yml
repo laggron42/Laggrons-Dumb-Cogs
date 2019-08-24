@@ -15,4 +15,3 @@ install:
 script:
  - make compile
  - make stylecheck
- - make deploy GITHUB_TOKEN=$GH_TOKEN BUILD_NUMBER=$TRAVIS_BUILD_NUMBER

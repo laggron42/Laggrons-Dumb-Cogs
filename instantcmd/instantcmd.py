@@ -72,24 +72,6 @@ class InstantCommands(BaseCog):
 
     __author__ = ["retke (El Laggron)"]
     __version__ = "1.0.1"
-    __info__ = {
-        "bot_version": [3, 0, 0],
-        "description": "Command and listener maker from a code snippet through Discord",
-        "hidden": False,
-        "install_msg": (
-            "Thanks for installing instantcmd. Please check the wiki "
-            "for all informations about the cog.\n"
-            "https://laggrons-dumb-cogs.readthedocs.io/\n"
-            "Everything you need to know about setting up the cog is here.\n\n"
-            "Please keep in mind that you must know Python and discord.py for "
-            "that cog. Try to create normal cogs if you don't already know how "
-            "it works."
-        ),
-        "required_cogs": [],
-        "requirements": [],
-        "short": "Instant command maker",
-        "tags": ["command", "listener", "code"],
-    }
 
     def _init_logger(self):
         log_format = logging.Formatter(

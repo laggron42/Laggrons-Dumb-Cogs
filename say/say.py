@@ -40,24 +40,6 @@ class Say(BaseCog):
 
     __author__ = ["retke (El Laggron)"]
     __version__ = "1.4.9"
-    __info__ = {
-        "bot_version": [3, 0, 0],
-        "description": (
-            "Speak as the bot through multiple options.\n"
-            "Allow file upload, rift in DM and specific destinations."
-        ),
-        "hidden": False,
-        "install_msg": (
-            "Thank you for installing the say cog. Please check the wiki "
-            "for all informations about the cog.\n"
-            "https://laggrons-dumb-cogs.readthedocs.io/say.html\n\n"
-            "Type `[p]help Say` for a quick overview of the commands."
-        ),
-        "required_cogs": [],
-        "requirements": [],
-        "short": "Speak as the bot through multiple options.",
-        "tags": ["rift", "upload", "interact"],
-    }
 
     def _init_logger(self):
         log_format = logging.Formatter(

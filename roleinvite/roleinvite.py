@@ -56,27 +56,6 @@ class RoleInvite(BaseCog):
 
     __author__ = ["retke (El Laggron)"]
     __version__ = "2.0.1"
-    __info__ = {
-        "bot_version": [3, 0, 0],
-        "description": (
-            "Autorole based on the invite the user used.\n"
-            "If the user joined using invite x, he will get "
-            "a list of roles linked to invite x."
-        ),
-        "hidden": False,
-        "install_msg": (
-            "Thanks for installing roleinvite. Please check the wiki "
-            "for all informations about the cog.\n"
-            "https://laggrons-dumb-cogs.readthedocs.io/roleinvite.html\n"
-            "Everything you need to know about setting up the cog is here.\n"
-            "For a quick guide, type `[p]help RoleInvite`, just keep in mind "
-            "that the bot needs the `Manage server` and the `Add roles` permissions."
-        ),
-        "required_cogs": [],
-        "requirements": [],
-        "short": "Autorole based on server's invites",
-        "tags": ["autorole", "role", "join", "invite"],
-    }
 
     def _init_logger(self):
         log_format = logging.Formatter(
