@@ -31,16 +31,13 @@ stylecheck:
 
 gettext:
 	@echo "Starting..."
-	@redgettext --command-docstrings --verbose --recursive . --exclude-files "info_deploy.py"
+	@redgettext --command-docstrings --verbose --recursive .
 	@echo "Done!"
 
 compile:
 	@echo "Starting..."
 	@python3 -m compileall .
 	@echo "Done!"
-
-deploy:
-	@python3 info_deploy.py $(GITHUB_TOKEN) $(BUILD_NUMBER)
 
 docs:
 	@python3 -m sphinx -b $(BUILD) $(SOURCE) $(OUTPUT)

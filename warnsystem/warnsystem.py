@@ -124,28 +124,6 @@ class WarnSystem(BaseCog):
 
     __version__ = "1.1.2"
     __author__ = ["retke (El Laggron)"]
-    __info__ = {
-        "bot_version": [3, 1, 2],
-        "description": (
-            "An alternative to the core moderation cog, similar to Dyno.\n"
-            "The cog allows you to take actions against member and keep track with "
-            "a new modlog system. It also sends a DM to the warned members.\n\n"
-            "This is the rewrite of the V2 BetterMod cog. **Note that this cog "
-            "conflicts with Warnings which must be unloaded.**"
-        ),
-        "hidden": False,
-        "install_msg": (
-            "Thank you for installing the warnsystem cog. Please check the wiki "
-            "for all informations about the cog.\n"
-            "https://laggrons-dumb-cogs.readthedocs.io/warnsystem.html\n\n"
-            "Type `[p]help WarnSystem` for a quick overview of the commands\n"
-            "**This cog conflicts with Warnings which must be unloaded.**"
-        ),
-        "required_cogs": [],
-        "requirements": [],
-        "short": "Moderation tools, providing an alternative to core Red.",
-        "tags": ["warn", "warning", "bettermod", "punish", "modlog"],
-    }
 
     def _init_logger(self):
         log_format = logging.Formatter(
