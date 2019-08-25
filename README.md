@@ -14,7 +14,7 @@ If you like these cogs, please consider donating to help me code better quality 
 
 Type the following command (if not responding, make sure you are the bot owner, the bot has access to your channel and the cog `downloader.py` is loaded (`[p]load downloader` if not):
 
-`[p]cog repo add Laggrons-Dumb-Cogs https://github.com/retke/Laggrons-Dumb-Cogs`
+`[p]cog repo add Laggrons-Dumb-Cogs https://github.com/retke/Laggrons-Dumb-Cogs@master`
 
 Then to install a cog type this command:
 
