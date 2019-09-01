@@ -374,7 +374,7 @@ class AdvancedMemberSelect:
         async with ctx.typing():
             args = self.parse_arguments(arguments)
             self.reason = " ".join(args.reason or "")
-            self.time = await TimedeltaConverter.convert(" ".join(args.time or []))
+            self.time = await TimedeltaConverter().convert(ctx, " ".join(args.time or []))
             self.take_action = args.take_action
             self.send_dm = args.send_dm
             self.send_modlog = args.send_modlog
