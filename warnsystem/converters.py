@@ -360,7 +360,7 @@ class AdvancedMemberSelect:
                         "Can't convert `{arg}` from `--{state}` into a valid member object. "
                         "Please provide the exact member's name (in quotes if it has spaces), "
                         "mention him, or provide its ID."
-                    )
+                    ).format(arg=member, state=requires)
                 )
 
         if requires == "select":
