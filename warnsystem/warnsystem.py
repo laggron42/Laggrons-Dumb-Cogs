@@ -19,15 +19,13 @@ from redbot.core.data_manager import cog_data_path
 from redbot.core.utils import predicates, menus, mod
 from redbot.core.utils.chat_formatting import pagify
 
-_ = Translator("WarnSystem", __file__)
-
 from .api import API
 from . import errors
 from .converters import AdvancedMemberSelect
 
 log = logging.getLogger("laggron.warnsystem")
 log.setLevel(logging.DEBUG)
-
+_ = Translator("WarnSystem", __file__)
 BaseCog = getattr(commands, "Cog", object)
 
 # Red 3.0 backwards compatibility, thanks Sinbad

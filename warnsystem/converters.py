@@ -4,10 +4,12 @@ import re
 
 from dateutil import parser
 from discord.ext.commands.converter import RoleConverter, MemberConverter
+
 from redbot.core.commands import BadArgument
 from redbot.core.commands.converter import TimedeltaConverter
+from redbot.core.i18n import Translator
 
-from .warnsystem import _
+_ = Translator("WarnSystem", __file__)
 
 
 # credit to mikeshardmind (Sinbad) for parse_time

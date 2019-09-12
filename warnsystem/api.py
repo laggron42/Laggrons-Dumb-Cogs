@@ -6,17 +6,19 @@ import re
 from copy import deepcopy
 from typing import Union, Optional, Iterable, Callable, Awaitable
 from datetime import datetime, timedelta
+
 from redbot.core.utils.mod import is_allowed_by_hierarchy
+from redbot.core.i18n import Translator
 
 try:
     from redbot.core.modlog import get_modlog_channel as get_red_modlog_channel
 except RuntimeError:
     pass  # running sphinx-build raises an error when importing this module
 
-from .warnsystem import _  # translator
 from . import errors
 
 log = logging.getLogger("laggron.warnsystem")
+_ = Translator("WarnSystem", __file__)
 id_pattern = re.compile(r"([0-9]{15,21})$")
 
 
