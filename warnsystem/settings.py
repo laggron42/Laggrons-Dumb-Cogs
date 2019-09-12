@@ -536,6 +536,13 @@ class SettingsMixin(MixinMeta):
                 )
             )
             return
+        if not 1 <= level <= 5:
+            await ctx.send(
+                _(
+                    "You must provide a level between 1 and 5."
+                )
+            )
+            return
         if len(description) > 800:
             await ctx.send("Your text is too long!")
             return
