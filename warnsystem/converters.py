@@ -362,7 +362,7 @@ class AdvancedMemberSelect:
                         "Can't convert `{arg}` from `--{state}` into a valid member object. "
                         "Please provide the exact member's name (in quotes if it has spaces), "
                         "mention him, or provide its ID."
-                    )
+                    ).format(arg=member, state=requires)
                 )
 
         if requires == "select":
@@ -376,7 +376,18 @@ class AdvancedMemberSelect:
         async with ctx.typing():
             args = self.parse_arguments(arguments)
             self.reason = " ".join(args.reason or "")
-            self.time = await TimedeltaConverter().convert(ctx, " ".join(args.time or []))
+            if args.time:
+                try:
+                    self.time = await TimedeltaConverter().convert(ctx, " ".join(args.time))
+                except BadArgument as e:
+                    raise BadArgument(
+                        _(
+                            "Can't convert `{arg}` from `--time`/`--length` into a valid time object.\n"
+                            "Examples of the format: `20m`, `2h30m`, `7d`, `1d6h30m45s`"
+                        ).format(arg=" ".join(args.time))
+                    ) from e
+            else:
+                self.time = None
             self.take_action = args.take_action
             self.send_dm = args.send_dm
             self.send_modlog = args.send_modlog
