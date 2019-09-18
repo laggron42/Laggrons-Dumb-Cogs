@@ -559,7 +559,7 @@ class SettingsMixin(MixinMeta):
             )
         )
 
-    @warnset.group(name="thumbnail")
+    @warnset.command(name="thumbnail")
     async def warnset_thumbnail(self, ctx: commands.Context, level: int, url: str = None):
         """
         Edit the image displayed on the embeds.
@@ -579,7 +579,7 @@ class SettingsMixin(MixinMeta):
             )
         )
 
-    @warnset.group("color")
+    @warnset.command("color")
     async def warnset_color(self, ctx: commands.Context, level: int, color: discord.Color):
         """
         Edit the color of the embed.
