@@ -125,6 +125,14 @@ class SettingsMixin(MixinMeta):
             embed.add_field(
                 name=_("User embed descriptions"), value=user_descriptions, inline=False
             )
+            embed.add_field(
+                name="\u200b",
+                value=_(
+                    "To see informations about the cog (version, documentation, "
+                    "support server, Patreon), type `{prefix}warnsysteminfo`."
+                ).format(prefix=ctx.prefix),
+                inline=False,
+            )
             embed.set_footer(text=_("Cog made with ❤️ by Laggron"))
             embed.color = self.bot.color
         try:

@@ -860,7 +860,6 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             await message.edit(content=_("The case was not deleted."), embed=None)
 
     @commands.command(hidden=True)
-    @checks.is_owner()
     async def warnsysteminfo(self, ctx):
         """
         Get informations about the cog.
@@ -869,7 +868,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             _(
                 "Laggron's Dumb Cogs V3 - warnsystem\n\n"
                 "Version: {0.__version__}\n"
-                "Author: {0.__author__}\n"
+                "Author: {0.__author__[0]}\n\n"
                 "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
                 "Discord server: https://discord.gg/AVzjfpR\n"
                 "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"
