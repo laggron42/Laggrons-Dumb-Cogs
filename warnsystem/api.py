@@ -34,7 +34,7 @@ class UnavailableMember:
 
     def _check_id(self, member_id):
         if not id_pattern.match(str(member_id)):
-            raise ValueError("You provided an invalid ID.")
+            raise ValueError(f"You provided an invalid ID: {member_id}")
         self.id = member_id
 
     def __str__(self):
@@ -289,12 +289,11 @@ class API:
             if member == "x":
                 continue
             for log in content["x"]:
-                author = guild.get_member(log["author"])
                 time = log["time"]
                 if time:
                     log["time"] = self._get_datetime(time)
-                log["member"] = self.bot.get_user(member)
-                log["author"] = author if author else log["author"]  # can be None or a string
+                log["member"] = self.bot.get_user(member) or UnavailableMember(member)
+                log["author"] = self.bot.get_user(log["author"]) or UnavailableMember(log["author"])
                 all_cases.append(log)
         return sorted(all_cases, key=lambda x: x["time"])  # sorted from oldest to newest
 

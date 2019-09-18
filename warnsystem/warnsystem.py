@@ -41,6 +41,7 @@ if listener is None:
 EMBED_MODLOG = lambda x: _("A member got a level {} warning.").format(x)
 EMBED_USER = lambda x: _("The moderation team set you a level {} warning.").format(x)
 
+
 class CompositeMetaClass(type(commands.Cog), type(ABC)):
     """
     This allows the metaclass used for proper type detection to
@@ -858,6 +859,48 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         else:
             await message.clear_reactions()
             await message.edit(content=_("The case was not deleted."), embed=None)
+
+    @commands.command()
+    @checks.mod()
+    @commands.cooldown(1, 10, commands.BucketType.channel)
+    async def warnlist(self, ctx: commands.Context, short: bool = False):
+        """
+        List the latest warnings issued on the server.
+        """
+        guild = ctx.guild
+        full_text = ""
+        warns = await self.api.get_all_cases(guild)
+        for i, warn in enumerate(warns, start=1):
+            text = _(
+                "--- Case {number} ---\n"
+                "Member:    {member} (ID: {member.id})\n"
+                "Level:     {level}\n"
+                "Reason:    {reason}\n"
+                "Author:    {author} (ID: {author.id})\n"
+                "Date:      {time}\n"
+            ).format(
+                number=i,
+                **warn,
+            )
+            if warn["duration"]:
+                text += _("Duration:  {duration}\nUntil:     {until}\n").format(
+                    duration=warn["duration"], until=warn["until"]
+                )
+            text += "\n\n"
+            full_text = text + full_text
+        pages = [
+            x for x in pagify(full_text, delims=["\n\n", "\n"], priority=True, page_length=1900)
+        ]
+        total_pages = len(pages)
+        total_warns = len(warns)
+        pages = [
+            f"```yml\n{x}```\n"
+            + _("{total} warnings. Page {i}/{pages}").format(
+                total=total_warns, i=i, pages=total_pages
+            )
+            for i, x in enumerate(pages, start=1)
+        ]
+        await menus.menu(ctx=ctx, pages=pages, controls=menus.DEFAULT_CONTROLS, timeout=60)
 
     @commands.command(hidden=True)
     async def warnsysteminfo(self, ctx):
