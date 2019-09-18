@@ -545,11 +545,7 @@ class SettingsMixin(MixinMeta):
             )
             return
         if not 1 <= level <= 5:
-            await ctx.send(
-                _(
-                    "You must provide a level between 1 and 5."
-                )
-            )
+            await ctx.send(_("You must provide a level between 1 and 5."))
             return
         if len(description) > 800:
             await ctx.send("Your text is too long!")
@@ -561,6 +557,47 @@ class SettingsMixin(MixinMeta):
             _("The new description for {destination} (warn {level}) was successfully set!").format(
                 destination=_("modlog") if destination == "modlog" else _("user"), level=level
             )
+        )
+
+    @warnset.group(name="thumbnail")
+    async def warnset_thumbnail(self, ctx: commands.Context, level: int, url: str = None):
+        """
+        Edit the image displayed on the embeds.
+
+        This is common to the modlog embeds and the embeds sent to the members.
+        The URL must be the direct link to the image.
+        You can omit the URL if you want to remove any image on the embed.
+        """
+        guild = ctx.guild
+        if not 1 <= level <= 5:
+            await ctx.send(_("You must provide a level between 1 and 5."))
+            return
+        await self.data.guild(guild).thumbnails.set_raw(str(level), value=url)
+        await ctx.send(
+            _("The new image for level {level} warnings has been set to {image}.").format(
+                level=level, image=url
+            )
+        )
+
+    @warnset.group("color")
+    async def warnset_color(self, ctx: commands.Context, level: int, color: discord.Color):
+        """
+        Edit the color of the embed.
+
+        This changes the color of the left bar if you don't like the default ones.
+
+        You can provide an hexadecimal code like this: `#FFFFFF`
+        You can also provide the color name, like `green` or `dark-blue`.
+        """
+        guild = ctx.guild
+        if not 1 <= level <= 5:
+            await ctx.send(_("You must provide a level between 1 and 5."))
+            return
+        await self.data.guild(guild).colors.set_raw(str(level), value=color.value)
+        await ctx.send(
+            _(
+                "The new color for level {level} warnings has been succesfully set to {color}"
+            ).format(level=level, color=color.value)
         )
 
     @warnset.command(name="convert")
