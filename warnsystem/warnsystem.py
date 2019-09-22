@@ -725,7 +725,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             embeds.append(embed)
 
         controls = {"⬅": menus.prev_page, "❌": menus.close_menu, "➡": menus.next_page}
-        if await mod.is_mod_or_superior(self.bot, ctx.author) and user != ctx.author:
+        if await mod.is_mod_or_superior(self.bot, ctx.author):
             controls.update({"✏": self._edit_case, "🗑": self._delete_case})
 
         await menus.menu(
