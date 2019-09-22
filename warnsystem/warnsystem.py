@@ -187,6 +187,8 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             await ctx.send(e)
         except errors.LostPermissions as e:
             await ctx.send(e)
+        except errors.SuicidePrevention as e:
+            await ctx.send(e)
         except errors.MissingMuteRole:
             await ctx.send(
                 _(

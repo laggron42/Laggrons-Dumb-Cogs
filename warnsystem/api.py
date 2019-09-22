@@ -703,6 +703,7 @@ class API:
             *   :class:`~warnsystem.errors.LostPermissions`
             *   :class:`~warnsystem.errors.MemberTooHigh`
             *   :class:`~warnsystem.errors.MissingPermissions`
+            *   :class:`~warnsystem.errors.SuicidePrevention`
 
         Parameters
         ----------
@@ -812,6 +813,13 @@ class API:
             if level > 2 and member == guild.owner:
                 return errors.MissingPermissions(
                     _("I can't take actions on the owner of the guild.")
+                )
+            if member == guild.me:
+                return errors.SuicidePrevention(
+                    _(
+                        "Why would you warn me? I did nothing wrong :c\n"
+                        "(use a manual kick/ban instead, warning the bot will cause issues)"
+                    )
                 )
             # send the message to the user
             if log_modlog or log_dm:

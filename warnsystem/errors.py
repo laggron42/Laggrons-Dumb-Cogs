@@ -35,6 +35,7 @@ __all__ = [
     "MemberTooHigh",
     "NotAllowedByHierarchy",
     "LostPermissions",
+    "SuicidePrevention",
 ]
 
 
@@ -119,6 +120,16 @@ class LostPermissions(Exception):
 
     This can be the permission to send messages in the modlog channel or use\
     the mute role.
+    """
+
+    pass
+
+
+class SuicidePrevention(Exception):
+    """
+    This is raised when the bot attempts to warn itself.
+
+    Warning Red will cause issues and is not designed for this.
     """
 
     pass
