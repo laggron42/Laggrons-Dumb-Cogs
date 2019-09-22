@@ -26,15 +26,6 @@ If you need to prevent and exception, do it like this:
         print("End of function")
 """
 
-import logging
-
-log = logging.getLogger("laggron.warnsystem")
-if logging.getLogger("red").isEnabledFor(logging.DEBUG):
-    # debug mode enabled
-    log.setLevel(logging.DEBUG)
-else:
-    log.setLevel(logging.WARNING)
-
 __all__ = [
     "InvalidLevel",
     "NotFound",
