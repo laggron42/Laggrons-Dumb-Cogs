@@ -517,6 +517,7 @@ class API:
         format_description = lambda x: x.format(
             invite=invite, member=member, mod=author, duration=duration, time=today
         )
+        link = re.search(r"https?://(.*\.)+.*", reason)
 
         # embed for the modlog
         log_embed = discord.Embed()
@@ -535,6 +536,7 @@ class API:
         log_embed.set_thumbnail(url=await self.data.guild(guild).thumbnails.get_raw(level))
         log_embed.color = await self.data.guild(guild).colors.get_raw(level)
         log_embed.url = await self.data.guild(guild).url()
+        log_embed.set_image(url=link.group())
         if not message_sent:
             log_embed.description += _(
                 "\n\n***The message couldn't be delivered to the member. We may don't "
