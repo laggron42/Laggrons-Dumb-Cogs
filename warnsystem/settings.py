@@ -245,6 +245,44 @@ class SettingsMixin(MixinMeta):
             await self.data.guild(guild).mute_role.set(role.id)
             await ctx.send(_("The new mute role was successfully set!"))
 
+    @warnset.command(name="autoupdate")
+    async def warnset_autoupdate(self, ctx: commands.Context, enable: bool = None):
+        """
+        Defines if the bot should update permissions of new channels for the mute role.
+
+        If enabled, for each new text channel and category created, the Mute role will be\
+        denied the permission to send messages and add reactions here.
+        Keeping this disabled might cause issues with channels created after the WarnSystem setup\
+        where muted members can talk.
+        """
+        guild = ctx.guild
+        current = await self.data.guild(guild).update_mute()
+        if enable is None:
+            await ctx.send(
+                _(
+                    "The bot currently {update} new channels. If you want to change this, "
+                    "type `[p]warnset autoupdate {opposite}`."
+                ).format(
+                    respect=_("updates") if current else _("doesn't update"),
+                    opposite=not current,
+                )
+            )
+        elif enable:
+            await self.data.guild(guild).update_mute.set(True)
+            await ctx.send(
+                _(
+                    "Done. New created channels will be updated to keep the mute role working."
+                )
+            )
+        else:
+            await self.data.guild(guild).update_mute.set(False)
+            await ctx.send(
+                _(
+                    "Done. New created channels won't be updated.\n**Make sure to update "
+                    "manually new channels to keep the mute role working as intended.**"
+                )
+            )
+
     @warnset.command(name="hierarchy")
     async def warnset_hierarchy(self, ctx: commands.Context, enable: bool = None):
         """

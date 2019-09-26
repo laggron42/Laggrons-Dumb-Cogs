@@ -67,6 +67,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         "delete_message": False,  # if the [p]warn commands should delete the context message
         "show_mod": False,  # if the responsible mod should be revealed to the warned user
         "mute_role": None,  # the role used for mute
+        "update_mute": False,  # if the bot should update perms of each new text channel/category
         "respect_hierarchy": False,  # if the bot should check if the mod is allowed by hierarchy
         # TODO use bot settingfor respect_hierarchy ?
         "reinvite": True,  # if the bot should try to send an invite to an unbanned/kicked member
@@ -958,6 +959,37 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             log.info(
                 f"[Guild {guild.id}] The temporary mute of member {after} (ID: {after.id}) "
                 "was ended due to a manual unmute (role removed)."
+            )
+
+    @listener()
+    async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
+        guild = channel.guild
+        if isinstance(channel, discord.VoiceChannel):
+            return
+        if not await self.data.guild(guild).update_mute():
+            return
+        role = guild.get_role(await self.data.guild(guild).mute_role())
+        if not role:
+            return
+        try:
+            channel.set_permissions(
+                role,
+                send_messages=False,
+                add_reactions=False,
+                reason=_(
+                    "Updating channel settings so the mute role will work here. "
+                    "Disable the auto-update with [p]warnset autoupdate"
+                )
+            )
+        except discord.errors.Forbidden:
+            log.warn(
+                f"[Guild {guild.id}] Couldn't update permissions of new channel {channel.name} "
+                f"(ID: {channel.id}) due to a permission error."
+            )
+        except discord.errors.HTTPException as e:
+            log.error(
+                f"[Guild {guild.id}] Couldn't update permissions of new channel {channel.name} "
+                f"(ID: {channel.id}) due to an unknown error.", exc_info=e,
             )
 
     @listener()
