@@ -738,8 +738,8 @@ class SettingsMixin(MixinMeta):
             ).format(number=total, time=round(t2 - t1, 2))
         )
         log.info(
-            f"{ctx.author.name} (ID: {ctx.author.id}) used the BetterMod data converter and "
-            f"converted {total} cases, added on the guild {ctx.guild} (ID: {ctx.guild.id}) with "
+            f"[Guild {guild.id}] {ctx.author.name} (ID: {ctx.author.id}) used the BetterMod data "
+            f"converter and converted {total} cases, added with "
             f"the {'append' if pred.result == 0 else 'overwrite'} strategy.\n"
             f"The file used to convert is located at {path}"
         )

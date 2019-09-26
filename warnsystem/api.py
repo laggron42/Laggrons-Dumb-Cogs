@@ -638,9 +638,8 @@ class API:
                     ).format(channel=channel.mention)
                 )
                 log.warn(
-                    f"Couldn't edit permissions of {channel} (ID: {channel.id}) in guild "
-                    f"{guild.name} (ID: {guild.id}) for setting up the mute role because "
-                    "of an HTTPException.",
+                    f"[Guild {guild.id}] Couldn't edit permissions of {channel} (ID: "
+                    f"{channel.id}) for setting up the mute role because of an HTTPException.",
                     exc_info=e,
                 )
             except Exception as e:
@@ -651,9 +650,8 @@ class API:
                     ).format(channel=channel.mention)
                 )
                 log.error(
-                    f"Couldn't edit permissions of {channel} (ID: {channel.id}) in guild "
-                    f"{guild.name} (ID: {guild.id}) for setting up the mute role because "
-                    "of an unknwon error.",
+                    f"[Guild {guild.id}] Couldn't edit permissions of {channel} (ID: "
+                    f"{channel.id}) for setting up the mute role because of an unknwon error.",
                     exc_info=e,
                 )
         await self.data.guild(guild).mute_role.set(role.id)
@@ -844,8 +842,8 @@ class API:
                         )
                     )[0]
                     log.warn(
-                        f"Couldn't send a message to {member} (ID: {member.id}) "
-                        "because of an HTTPException.",
+                        f"[Guild {guild.id}] Couldn't send a message to {member} "
+                        f"(ID: {member.id}) because of an HTTPException.",
                         exc_info=e,
                     )
             # take actions
@@ -876,7 +874,8 @@ class API:
                         )
                 except discord.errors.HTTPException as e:
                     log.warn(
-                        f"Failed to warn {member} because of an error from Discord.", exc_info=e
+                        f"[Guild {guild.id}] Failed to warn {member} because of "
+                        "an unknown error from Discord.", exc_info=e
                     )
                     return e
             # actions were taken, time to log
@@ -977,8 +976,8 @@ class API:
             except IndexError:
                 # can't find a valid channel
                 log.info(
-                    f"Can't find a channel where I can create an invite in guild {guild} "
-                    f"(ID: {guild.id}) when reinviting {member} after its unban."
+                    f"[Guild {guild.id}] Can't find a text channel where I can create an invite "
+                    f"when reinviting {member} (ID: {member.id}) after its unban."
                 )
                 return
 
@@ -986,7 +985,7 @@ class API:
                 invite = await channel.create_invite(max_uses=1)
             except Exception as e:
                 log.warn(
-                    f"Couldn't create an invite for guild {guild} (ID: {guild.id} to reinvite "
+                    f"[Guild {guild.id}] Couldn't create an invite to reinvite "
                     f"{member} (ID: {member.id}) after its unban.",
                     exc_info=e,
                 )
@@ -1002,8 +1001,8 @@ class API:
                 except discord.errors.Forbidden:
                     # couldn't send message to the user, quite common
                     log.info(
-                        f"Couldn't reinvite member {member} (ID: {member.id}) on guild "
-                        f"{guild} (ID: {guild.id}) after its temporary ban."
+                        f"[Guild {guild.id}] Couldn't reinvite member {member} "
+                        f"(ID: {member.id}) after its temporary ban."
                     )
 
         guilds = await self.data.all_guilds()
@@ -1050,24 +1049,23 @@ class API:
                                 await reinvite(guild, member, case_reason, action["duration"])
                     except discord.errors.Forbidden:
                         log.warn(
-                            f"I lost required permissions for ending the timed {action_str}. "
-                            f"Member {member} (ID: {member.id}) from guild {guild} (ID: "
-                            f"{guild.id}) will stay as it is now."
+                            f"[Guild {guild.id}] I lost required permissions for "
+                            f"ending the timed {action_str}. Member {member} (ID: {member.id}) "
+                            "will stay as it is now."
                         )
                     except discord.errors.HTTPException as e:
                         log.warn(
-                            f"Couldn't end the timed {action_str} of {member} (ID: "
-                            f"{member.id}) from guild {guild} (ID: {guild.id}). He will stay "
-                            "as it is now.",
+                            f"[Guild {guild.id}] Couldn't end the timed {action_str} of {member} "
+                            f"(ID: {member.id}). He will stay as it is now.",
                             exc_info=e,
                         )
                     else:
                         log.debug(
-                            f"Ended timed {'mute' if level == 2 else 'ban'} of {member} (ID: "
+                            f"[Guild {guild.id}] Ended timed {action_str} of {member} (ID: "
                             f"{member.id}) taken on {taken_on} requested by {author} (ID: "
-                            f"{author.id}) that lasted for {action['duration']} on guild "
-                            f'{guild} (ID: {guild.id} for the reason "{case_reason}"\nCurrent time: '
-                            f"{now}\nExpected end time of warn: {until}"
+                            f"{author.id}) that lasted for {action['duration']} for the "
+                            f"reason {case_reason}\nCurrent time: {now}\n"
+                            f"Expected end time of warn: {until}"
                         )
                     to_remove.append(action)
             for item in to_remove:

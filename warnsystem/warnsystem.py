@@ -138,8 +138,8 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
 
     def _init_logger(self):
         log_format = logging.Formatter(
-            f"%(asctime)s %(levelname)s {self.__class__.__name__}: %(message)s",
-            datefmt="[%d/%m/%Y %H:%M]",
+            f"%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            datefmt="[%Y-%m-%d %H:%M]",
         )
         # logging to a log file
         # file is automatically created by the module, if the parent foler exists
@@ -849,8 +849,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
                 logs.remove(logs[page - 1])
             log.debug(
-                f"Removed case #{page} from member {member} (ID: {member.id}) "
-                f"on guild {guild} (ID: {guild.id})."
+                f"[Guild {guild.id}] Removed case #{page} from member {member} (ID: {member.id})."
             )
             await message.clear_reactions()
             content = _("The case was successfully deleted!")
@@ -935,8 +934,8 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
                 temp_warns.remove(removal)
         if to_remove:
             log.info(
-                f"The temporary ban of user {user} (ID: {user.id}) on guild {guild} "
-                f"(ID: {guild.id} was cancelled due to his manual unban."
+                f"[Guild {guild.id}] The temporary ban of user {user} (ID: {user.id}) "
+                "was cancelled due to his manual unban."
             )
 
     @listener()
@@ -957,8 +956,8 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
                 temp_warns.remove(removal)
         if to_remove:
             log.info(
-                f"The temporary mute of member {after} (ID: {after.id}) on guild {guild} "
-                f"(ID: {guild.id}) was ended due to a manual unmute (role removed)."
+                f"[Guild {guild.id}] The temporary mute of member {after} (ID: {after.id}) "
+                "was ended due to a manual unmute (role removed)."
             )
 
     @listener()
