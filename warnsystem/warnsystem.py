@@ -122,7 +122,7 @@ class WarnSystem(BaseCog):
         self.task = bot.loop.create_task(self.api._loop_task())
         self._init_logger()
 
-    __version__ = "1.1.3"
+    __version__ = "1.1.4"
     __author__ = ["retke (El Laggron)"]
 
     def _init_logger(self):
