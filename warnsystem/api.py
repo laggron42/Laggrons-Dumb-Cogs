@@ -125,7 +125,7 @@ class API:
         user = self.bot.get_user(user_id)
         if not user:
             try:
-                user = await self.bot.get_user_info(user_id)
+                user = await self.bot.fetch_user(user_id)
             except discord.errors.NotFound:
                 user = None
             except discord.errors.HTTPException as e:
