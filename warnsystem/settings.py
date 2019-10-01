@@ -355,6 +355,45 @@ class SettingsMixin(MixinMeta):
             await self.data.guild(guild).reinvite.set(False)
             await ctx.send(_("Done. The bot will no longer reinvite unbanned members."))
 
+    @warnset.command("removeroles")
+    async def warnset_removeroles(self, ctx: commands.Context, enable: bool = None):
+        """
+        Defines if the bot should remove all roles on mute
+
+        If enabled, when you set a level 2 warning on a member, he will be assigned the mute role\
+        as usual, but all of his other roles will also be removed.
+        Once the mute ends, the member will get his roles back.
+        This can be useful for role permissions issues.
+        """
+        guild = ctx.guild
+        current = await self.data.guild(guild).remove_roles()
+        if enable is None:
+            await ctx.send(
+                _(
+                    "The bot currently {remove} all roles on mute. If you want to change this, "
+                    "type `[p]warnset removeroles {opposite}`."
+                ).format(
+                    respect=_("removes") if current else _("doesn't remove"),
+                    opposite=not current,
+                )
+            )
+        elif enable:
+            await self.data.guild(guild).remove_roles.set(True)
+            await ctx.send(
+                _(
+                    "Done. All roles will be removed from muted members. They will get their "
+                    "roles back once the mute ends or when someone removes the warning using the "
+                    "`{prefix}warnings` command."
+                ).format(prefix=ctx.prefix)
+            )
+        else:
+            await self.data.guild(guild).remove_roles.set(False)
+            await ctx.send(
+                _(
+                    "Done. Muted members will keep their roles on mute."
+                )
+            )
+
     @warnset.command("bandays")
     async def warnset_bandays(self, ctx: commands.Context, ban_type: str, days: int):
         """

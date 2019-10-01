@@ -141,21 +141,27 @@ class API:
 
     async def _mute(self, member: discord.Member, reason: Optional[str] = None):
         """Mute an user on the guild."""
+        old_roles = None
         guild = member.guild
         role = guild.get_role(await self.data.guild(guild).mute_role())
+        remove_roles = await self.data.guild(guild).remove_roles()
         if not role:
             raise errors.MissingMuteRole("You need to create the mute role before doing this.")
+        if remove_roles:
+            old_roles = member.roles.remove(guild.default_role)
+            await member.remove_roles(*old_roles, reason=reason)
         await member.add_roles(role, reason=reason)
+        return old_roles
 
-    async def _unmute(self, member: discord.Member, reason: str):
+    async def _unmute(self, member: discord.Member, reason: str, old_roles: list = None):
         """Unmute an user on the guild."""
         guild = member.guild
-        role = guild.get_role(await self.data.guild(guild).mute_role())
-        if not role:
+        roles = [guild.get_role(await self.data.guild(guild).mute_role())].extend(old_roles)
+        if not roles:
             raise errors.MissingMuteRole(
                 f"Lost the mute role on guild {guild.name} (ID: {guild.id}"
             )
-        await member.remove_roles(role, reason=reason)
+        await member.remove_roles(*roles, reason=reason)
 
     async def _create_case(
         self,
@@ -166,6 +172,7 @@ class API:
         time: datetime,
         reason: Optional[str] = None,
         duration: Optional[timedelta] = None,
+        roles: Optional[list] = None,
     ) -> dict:
         """Create a new case for a member. Don't call this, call warn instead."""
         data = {
@@ -179,6 +186,7 @@ class API:
             "until": None
             if not duration
             else (datetime.today() + duration).strftime("%a %d %B %Y %H:%M:%S"),
+            "roles": None if not roles else [x.id for x in roles],
         }
         async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
             logs.append(data)
@@ -793,6 +801,7 @@ class API:
 
         async def warn_member(member: discord.Member, audit_reason: str):
             nonlocal i
+            roles = []
             # permissions check
             if level > 1 and guild.me.top_role.position <= member.top_role.position:
                 # check if the member is below the bot in the roles's hierarchy
@@ -851,7 +860,7 @@ class API:
                 audit_reason = audit_reason.format(member=member)
                 try:
                     if level == 2:
-                        await self._mute(member, audit_reason)
+                        roles = await self._mute(member, audit_reason)
                     elif level == 3:
                         await guild.kick(member, reason=audit_reason)
                     elif level == 4:
@@ -887,6 +896,7 @@ class API:
             # start timer if there is a temporary warning
             if time and (level == 2 or level == 5):
                 data["member"] = member.id
+                data["roles"] = [x.id for x in old_roles]
                 await self._start_timer(guild, data)
             i += 1
             if progress_tracker:
@@ -1027,6 +1037,7 @@ class API:
                         to_remove.append(action)
                         continue
                     member = await self._get_user_info(action["member"])
+                roles = [guild.get_role(x) for x in action["roles"]]
 
                 reason = _(
                     "End of timed {action} of {member} requested by {author} that lasted "
@@ -1042,7 +1053,7 @@ class API:
                     # end of warn
                     try:
                         if level == 2:
-                            await self._unmute(member, reason=reason)
+                            await self._unmute(member, reason=reason, old_roles=roles)
                         if level == 5:
                             await guild.unban(member, reason=reason)
                             if await self.data.guild(guild).reinvite():

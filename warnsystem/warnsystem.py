@@ -68,6 +68,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         "show_mod": False,  # if the responsible mod should be revealed to the warned user
         "mute_role": None,  # the role used for mute
         "update_mute": False,  # if the bot should update perms of each new text channel/category
+        "remove_roles": False,  # if the bot should remove all other roles on mute
         "respect_hierarchy": False,  # if the bot should check if the mod is allowed by hierarchy
         # TODO use bot settingfor respect_hierarchy ?
         "reinvite": True,  # if the bot should try to send an invite to an unbanned/kicked member
@@ -824,18 +825,23 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         )
         level = int(re.match(r".*\(([0-9]*)\)", old_embed.fields[0].value).group(1))
         can_unmute = False
+        add_roles = False
         if level == 2:
             mute_role = guild.get_role(await self.data.guild(guild).mute_role())
             member = guild.get_member(member.id)
-            if mute_role and member and mute_role in member.roles:
-                can_unmute = True
+            if member:
+                if mute_role and mute_role in member.roles:
+                    can_unmute = True
+                add_roles = await self.data.guild(guild).remove_roles()
         description = _(
-            "Case #{number} deletion.\n\n**Click on the reaction to confirm your action.**"
+            "Case #{number} deletion.\n**Click on the reaction to confirm your action.**"
         ).format(number=page)
-        if can_unmute:
-            description += _(
-                "\nNote: Deleting the case will also unmute the currently muted member."
-            )
+        if can_unmute or add_roles:
+            description += _("\nNote: Deleting the case will also do the following:")
+            if can_unmute:
+                description += _("\n- unmute the member")
+            if add_roles:
+                description += _("\n- add all roles back to the member")
         embed.description = description
         await message.edit(embed=embed)
         menus.start_adding_reactions(message, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
@@ -848,16 +854,23 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             return
         if pred.result:
             async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
+                roles = logs[page - 1]["roles"]
                 logs.remove(logs[page - 1])
             log.debug(
                 f"[Guild {guild.id}] Removed case #{page} from member {member} (ID: {member.id})."
             )
             await message.clear_reactions()
-            content = _("The case was successfully deleted!")
             if can_unmute:
-                await member.remove_roles(mute_role)
-                content += _("\nThe member was also unmuted.")
-            await message.edit(content=content, embed=None)
+                await member.remove_roles(
+                    mute_role,
+                    reason=_("Warning deleted by {author}").format(
+                        author=f"{str(ctx.author)} (ID: {ctx.author.id})"
+                    ),
+                )
+            if roles:
+                roles = [guild.get_role(x) for x in roles]
+                await member.add_roles(*roles, reason=_("Adding removed roles back after unmute."))
+            await message.edit(content=_("The case was successfully deleted!"), embed=None)
         else:
             await message.clear_reactions()
             await message.edit(content=_("The case was not deleted."), embed=None)
