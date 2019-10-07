@@ -141,14 +141,15 @@ class API:
 
     async def _mute(self, member: discord.Member, reason: Optional[str] = None):
         """Mute an user on the guild."""
-        old_roles = None
+        old_roles = []
         guild = member.guild
         role = guild.get_role(await self.data.guild(guild).mute_role())
         remove_roles = await self.data.guild(guild).remove_roles()
         if not role:
             raise errors.MissingMuteRole("You need to create the mute role before doing this.")
         if remove_roles:
-            old_roles = member.roles.remove(guild.default_role)
+            old_roles = member.roles.copy()
+            old_roles.remove(guild.default_role)
             await member.remove_roles(*old_roles, reason=reason)
         await member.add_roles(role, reason=reason)
         return old_roles
@@ -156,12 +157,13 @@ class API:
     async def _unmute(self, member: discord.Member, reason: str, old_roles: list = None):
         """Unmute an user on the guild."""
         guild = member.guild
-        roles = [guild.get_role(await self.data.guild(guild).mute_role())].extend(old_roles)
-        if not roles:
+        mute_role = guild.get_role(await self.data.guild(guild).mute_role())
+        if not mute_role:
             raise errors.MissingMuteRole(
                 f"Lost the mute role on guild {guild.name} (ID: {guild.id}"
             )
-        await member.remove_roles(*roles, reason=reason)
+        await member.remove_roles(mute_role, reason=reason)
+        await member.add_roles(*old_roles, reason=reason)
 
     async def _create_case(
         self,
@@ -544,7 +546,7 @@ class API:
         log_embed.set_thumbnail(url=await self.data.guild(guild).thumbnails.get_raw(level))
         log_embed.color = await self.data.guild(guild).colors.get_raw(level)
         log_embed.url = await self.data.guild(guild).url()
-        log_embed.set_image(url=link.group())
+        log_embed.set_image(url=link.group() if link else "")
         if not message_sent:
             log_embed.description += _(
                 "\n\n***The message couldn't be delivered to the member. We may don't "
@@ -891,12 +893,11 @@ class API:
             if log_modlog:
                 await mod_channel.send(embed=modlog_e)
             data = await self._create_case(
-                guild, member, author, level, datetime.now(), reason, time
+                guild, member, author, level, datetime.now(), reason, time, roles
             )
             # start timer if there is a temporary warning
             if time and (level == 2 or level == 5):
                 data["member"] = member.id
-                data["roles"] = [x.id for x in old_roles]
                 await self._start_timer(guild, data)
             i += 1
             if progress_tracker:
