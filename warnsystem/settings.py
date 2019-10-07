@@ -263,7 +263,7 @@ class SettingsMixin(MixinMeta):
                     "The bot currently {update} new channels. If you want to change this, "
                     "type `[p]warnset autoupdate {opposite}`."
                 ).format(
-                    respect=_("updates") if current else _("doesn't update"),
+                    update=_("updates") if current else _("doesn't update"),
                     opposite=not current,
                 )
             )
@@ -373,7 +373,7 @@ class SettingsMixin(MixinMeta):
                     "The bot currently {remove} all roles on mute. If you want to change this, "
                     "type `[p]warnset removeroles {opposite}`."
                 ).format(
-                    respect=_("removes") if current else _("doesn't remove"),
+                    remove=_("removes") if current else _("doesn't remove"),
                     opposite=not current,
                 )
             )
