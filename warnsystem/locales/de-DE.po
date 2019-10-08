@@ -94,11 +94,11 @@ msgstr "schaltet stumm"
 
 #: warnsystem/api.py:467 warnsystem/api.py:930
 msgid "kick"
-msgstr "kick"
+msgstr "Kick"
 
 #: warnsystem/api.py:467
 msgid "kicks"
-msgstr "kickt"
+msgstr "Kicks"
 
 #: warnsystem/api.py:468 warnsystem/api.py:930
 msgid "softban"
@@ -110,11 +110,11 @@ msgstr "Soft-Banns"
 
 #: warnsystem/api.py:469 warnsystem/api.py:930 warnsystem/api.py:1013
 msgid "ban"
-msgstr "bannen"
+msgstr "Bann"
 
 #: warnsystem/api.py:469
 msgid "bans"
-msgstr "bannt"
+msgstr "Banns"
 
 #: warnsystem/api.py:470 warnsystem/api.py:931 warnsystem/warnsystem.py:1407
 msgid "unknown"
@@ -130,7 +130,7 @@ msgstr "\\nEditiere dies mit `[p]warnings @{name}`"
 
 #: warnsystem/api.py:485
 msgid "{who} now {verb} {total} {warning} ({total_type} {action})"
-msgstr "{who} hat nun {verb} {total} {warning} ({total_type} {action})"
+msgstr "{who} {verb} nun {total} {warning} ({total_type} {action})"
 
 #: warnsystem/api.py:488
 msgid "The member"
@@ -146,7 +146,7 @@ msgstr "hat"
 
 #: warnsystem/api.py:489
 msgid "have"
-msgstr "haben"
+msgstr "hast"
 
 #: warnsystem/api.py:491
 msgid "warnings"
