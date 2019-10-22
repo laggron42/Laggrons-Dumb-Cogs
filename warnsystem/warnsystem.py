@@ -18,10 +18,10 @@ from redbot.core.commands.converter import TimedeltaConverter
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils import predicates, menus, mod
-from redbot.core.utils.chat_formatting import pagify
+from redbot.core.utils.chat_formatting import pagify, text_to_file
 
 from . import errors
-from .api import API
+from .api import API, UnavailableMember
 from .converters import AdvancedMemberSelect
 from .settings import SettingsMixin
 
@@ -140,8 +140,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
 
     def _init_logger(self):
         log_format = logging.Formatter(
-            f"%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-            datefmt="[%Y-%m-%d %H:%M]",
+            f"%(asctime)s [%(levelname)s] %(name)s: %(message)s", datefmt="[%Y-%m-%d %H:%M]"
         )
         # logging to a log file
         # file is automatically created by the module, if the parent foler exists
@@ -221,6 +220,8 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
                     else ""
                 )
             )
+        except discord.errors.NotFound:
+            await ctx.send(_("Hackban failed: No user found."))
         else:
             if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
                 await ctx.message.add_reaction("✅")
@@ -228,12 +229,22 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
                 await ctx.send(_("Done."))
 
     async def call_masswarn(
-        self, ctx, level, members, log_modlog, log_dm, take_action, reason=None, time=None
+        self,
+        ctx,
+        level,
+        members,
+        unavailable_members,
+        log_modlog,
+        log_dm,
+        take_action,
+        reason=None,
+        time=None,
     ):
         guild = ctx.guild
         message = None
         i = 0
         total_members = len(members)
+        total_unavailable_members = len(unavailable_members)
         tick1 = "✅" if log_modlog else "❌"
         tick2 = "✅" if log_dm else "❌"
         tick3 = f"{'✅' if take_action else '❌'} Take action\n" if level != 1 else ""
@@ -254,11 +265,11 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
                     "{tick1} Log to the modlog\n"
                     "{tick2} Send a DM to all members\n"
                     "{tick3}"
-                    "{tick4} {time}"
+                    "{tick4} {time}\n"
                     "{tick5} Reason: {reason}"
                 ).format(
                     i=i,
-                    total=total_members,
+                    total=total_members + total_unavailable_members,
                     members=_("members") if i != 1 else _("member"),
                     percent=round((i / total_members) * 100, 2),
                     tick1=tick1,
@@ -275,6 +286,9 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
                     message = await ctx.send(content)
                 await asyncio.sleep(5)
 
+        if unavailable_members and level < 5:
+            await ctx.send(_("You can only use `--hackban-select` with a level 5 warn."))
+            return
         reason = await self.api.format_reason(ctx.guild, reason)
         if (log_modlog or log_dm) and reason and len(reason) > 2000:  # embed limits
             await ctx.send(
@@ -287,40 +301,44 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
                 )
             )
             return
-        cache = cog_data_path(self) / "cache"
-        if not cache.exists():
-            cache.mkdir()
-        file = cache / "list of members.txt"
-        try:
-            file.write_text("\n".join([f"{str(x)} ({x.id})" for x in members]))
-        except Exception as e:
-            log.error("Failed to write cache files.", exc_info=e)
-            await ctx.send(_("Failed to write cache files, check your logs for details."))
-            return
+        file = text_to_file("\n".join([f"{str(x)} ({x.id})" for x in members + unavailable_members]))
+        targets = []
+        if members:
+            targets.append(
+                _("{total} {members} ({percent}% of the server)").format(
+                    total=total_members,
+                    members=_("members") if total_members > 1 else _("member"),
+                    percent=round((total_members / len(guild.members) * 100), 2),
+                )
+            )
+        if unavailable_members:
+            targets.append(
+                _("{total} {users} not in the server.").format(
+                    total=total_unavailable_members,
+                    users=_("users") if total_unavailable_members > 1 else _("user"),
+                )
+            )
         msg = await ctx.send(
             _(
-                "You're about to set a level {level} warning "
-                "on {total} {members} ({percent}% of the server).\n\n"
+                "You're about to set a level {level} warning on {target}.\n\n"
                 "{tick1} Log to the modlog\n"
                 "{tick2} Send a DM to all members\n"
                 "{tick3}"
-                "{tick4} {time}"
+                "{tick4} {time}\n"
                 "{tick5} Reason: {reason}\n\n"
                 "Continue?"
             ).format(
                 level=level,
-                total=total_members,
-                members=_("members") if total_members > 1 else _("member"),
-                percent=round((total_members / len(guild.members) * 100), 2),
+                target=_(" and ").join(targets),
                 tick1=tick1,
                 tick2=tick2,
                 tick3=tick3,
                 tick4=tick4,
                 time=time_str,
                 tick5=tick5,
-                reason=reason or "Not set",
+                reason=reason or _("Not set"),
             ),
-            file=discord.File(str(file.absolute())),
+            file=file,
         )
         menus.start_adding_reactions(msg, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
         pred = predicates.ReactionPredicate.yes_or_no(msg, ctx.author)
@@ -340,7 +358,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         try:
             fails = await self.api.warn(
                 guild=guild,
-                members=members,
+                members=members + unavailable_members,
                 author=ctx.author,
                 level=level,
                 reason=reason,
@@ -377,13 +395,13 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
                     _("Done! {failed} {members} out of {total} couldn't be warned.").format(
                         failed=len(fails),
                         members=_("members") if len(fails) > 1 else _("member"),
-                        total=total_members,
+                        total=total_members + total_unavailable_members,
                     )
                 )
             else:
                 await ctx.send(
                     _("Done! {total} {members} successfully warned.").format(
-                        total=total_members,
+                        total=total_members + total_unavailable_members,
                         members=_("members") if total_members > 1 else _("member"),
                     )
                 )
@@ -462,7 +480,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
     async def warn_5(
         self,
         ctx: commands.Context,
-        member: Union[discord.Member, int],
+        member: UnavailableMember,
         time: Optional[TimedeltaConverter],
         *,
         reason: str = None,
@@ -517,6 +535,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             ctx,
             1,
             selection.members,
+            selection.unavailable_members,
             selection.send_modlog,
             selection.send_dm,
             selection.take_action,
@@ -540,6 +559,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             ctx,
             1,
             selection.members,
+            selection.unavailable_members,
             selection.send_modlog,
             selection.send_dm,
             selection.take_action,
@@ -566,6 +586,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             ctx,
             2,
             selection.members,
+            selection.unavailable_members,
             selection.send_modlog,
             selection.send_dm,
             selection.take_action,
@@ -590,6 +611,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             ctx,
             3,
             selection.members,
+            selection.unavailable_members,
             selection.send_modlog,
             selection.send_dm,
             selection.take_action,
@@ -613,6 +635,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             ctx,
             4,
             selection.members,
+            selection.unavailable_members,
             selection.send_modlog,
             selection.send_dm,
             selection.take_action,
@@ -639,6 +662,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             ctx,
             5,
             selection.members,
+            selection.unavailable_members,
             selection.send_modlog,
             selection.send_dm,
             selection.take_action,
@@ -651,7 +675,10 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
     @commands.bot_has_permissions(add_reactions=True, manage_messages=True)
     @commands.cooldown(1, 3, commands.BucketType.member)
     async def warnings(
-        self, ctx: commands.Context, user: Union[discord.User, int] = None, index: int = 0
+        self,
+        ctx: commands.Context,
+        user: Union[discord.User, UnavailableMember] = None,
+        index: int = 0,
     ):
         """
         Shows all warnings of a member.
@@ -662,11 +689,6 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         if not user:
             await ctx.send_help()
             return
-        if isinstance(user, int):
-            user = await self.api._get_user_info(user)
-            if not user:
-                await ctx.send(_("User not found."))
-                return
         if not await mod.is_mod_or_superior(self.bot, ctx.author) and user != ctx.author:
             await ctx.send(_("You are not allowed to see other's warnings!"))
             return
@@ -893,10 +915,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
                 "Reason:    {reason}\n"
                 "Author:    {author} (ID: {author.id})\n"
                 "Date:      {time}\n"
-            ).format(
-                number=i,
-                **warn,
-            )
+            ).format(number=i, **warn)
             if warn["duration"]:
                 text += _("Duration:  {duration}\nUntil:     {until}\n").format(
                     duration=warn["duration"], until=warn["until"]
@@ -992,7 +1011,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
                 reason=_(
                     "Updating channel settings so the mute role will work here. "
                     "Disable the auto-update with [p]warnset autoupdate"
-                )
+                ),
             )
         except discord.errors.Forbidden:
             log.warn(
@@ -1002,7 +1021,8 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         except discord.errors.HTTPException as e:
             log.error(
                 f"[Guild {guild.id}] Couldn't update permissions of new channel {channel.name} "
-                f"(ID: {channel.id}) due to an unknown error.", exc_info=e,
+                f"(ID: {channel.id}) due to an unknown error.",
+                exc_info=e,
             )
 
     @listener()

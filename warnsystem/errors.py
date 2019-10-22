@@ -57,6 +57,14 @@ class NotFound(Exception):
     pass
 
 
+class UserNotFound(Exception):
+    """
+    Cannot find the given user for a hackban.
+    """
+
+    pass
+
+
 class MissingMuteRole(Exception):
     """
     You requested a mute warn but the mute role doesn't exist. Call

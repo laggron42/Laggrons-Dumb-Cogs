@@ -2,6 +2,7 @@ import asyncio
 import discord
 import logging
 import re
+import abc
 
 from copy import deepcopy
 from typing import Union, Optional, Iterable, Callable, Awaitable
@@ -9,6 +10,7 @@ from datetime import datetime, timedelta
 
 from redbot.core.utils.mod import is_allowed_by_hierarchy
 from redbot.core.i18n import Translator
+from redbot.core.commands import BadArgument, Converter, MemberConverter
 
 try:
     from redbot.core.modlog import get_modlog_channel as get_red_modlog_channel
@@ -22,23 +24,98 @@ _ = Translator("WarnSystem", __file__)
 id_pattern = re.compile(r"([0-9]{15,21})$")
 
 
-class UnavailableMember:
+class FakeRole:
+    """
+    We need to fake some attributes of roles for the class UnavailableMember
+    """
+
+    position = 0
+
+
+class UnavailableMember(discord.abc.User, discord.abc.Messageable):
     """
     A class that reproduces the behaviour of a discord.Member instance, except
     the member is not in the guild. This is used to prevent calling bot.get_user_info
     which has a very high cooldown.
     """
 
-    def __init__(self, member_id: int):
-        self._check_id(member_id)
+    def __init__(self, bot, state, user_id: int):
+        self.bot = bot
+        self._state = state
+        self.id = user_id
+        self.top_role = FakeRole()
 
-    def _check_id(self, member_id):
-        if not id_pattern.match(str(member_id)):
+    @classmethod
+    def _check_id(cls, member_id):
+        if not id_pattern.match(member_id):
             raise ValueError(f"You provided an invalid ID: {member_id}")
-        self.id = member_id
+        return int(member_id)
+
+    @classmethod
+    async def convert(cls, ctx, text):
+        try:
+            member = await MemberConverter().convert(ctx, text)
+        except BadArgument:
+            pass
+        else:
+            return member
+        try:
+            member_id = cls._check_id(text)
+        except ValueError:
+            raise BadArgument(
+                _(
+                    "The given member cannot be found.\n"
+                    "If you're trying to hackban, the user ID is not valid."
+                )
+            )
+        return cls(ctx.bot, ctx._state, member_id)
+
+    @property
+    def name(self):
+        return "Unknown"
+
+    @property
+    def display_name(self):
+        return "Unknown"
+    
+    @property
+    def mention(self):
+        return f"<@{self.id}>"
+
+    @property
+    def avatar_url(self):
+        return ""
 
     def __str__(self):
-        return str(self.id)
+        return "Unknown#0000"
+
+    # the 3 following functions were copied from the discord.User class, credit to Rapptz
+    # https://github.com/Rapptz/discord.py/blob/master/discord/user.py#L668
+
+    @property
+    def dm_channel(self):
+        """Optional[:class:`DMChannel`]: Returns the channel associated with this user if it exists.
+        If this returns ``None``, you can create a DM channel by calling the
+        :meth:`create_dm` coroutine function.
+        """
+        return self._state._get_private_channel_by_user(self.id)
+    
+    async def create_dm(self):
+        """Creates a :class:`DMChannel` with this user.
+        This should be rarely called, as this is done transparently for most
+        people.
+        """
+        found = self.dm_channel
+        if found is not None:
+            return found
+
+        state = self._state
+        data = await state.http.start_private_message(self.id)
+        return state.add_dm_channel(data)
+
+    async def _get_channel(self):
+        channel = await self.create_dm()
+        return channel
 
 
 class API:
@@ -303,7 +380,9 @@ class API:
                 if time:
                     log["time"] = self._get_datetime(time)
                 log["member"] = self.bot.get_user(member) or UnavailableMember(member)
-                log["author"] = self.bot.get_user(log["author"]) or UnavailableMember(log["author"])
+                log["author"] = self.bot.get_user(log["author"]) or UnavailableMember(
+                    log["author"]
+                )
                 all_cases.append(log)
         return sorted(all_cases, key=lambda x: x["time"])  # sorted from oldest to newest
 
@@ -483,7 +562,7 @@ class API:
         mod_message = ""
         if not reason:
             reason = _("No reason was provided.")
-            mod_message = _("\nEdit this with `[p]warnings @{name}`").format(name=str(member))
+            mod_message = _("\nEdit this with `[p]warnings {id}`").format(id=member.id)
         logs = await self.data.custom("MODLOGS", guild.id, member.id).x()
 
         # prepare the status field
@@ -796,12 +875,14 @@ class API:
         ~warnsystem.errors.MissingPermissions
             The bot lacks a permissions to do something. Can be adding role, kicking
             or banning members.
+        discord.errors.NotFound
+            When the user ID provided for hackban isn't recognized by Discord.
         discord.errors.HTTPException
             Unknown error from Discord API. It's recommanded to catch this
             potential error too.
         """
 
-        async def warn_member(member: discord.Member, audit_reason: str):
+        async def warn_member(member: Union[discord.Member, UnavailableMember], audit_reason: str):
             nonlocal i
             roles = []
             # permissions check
@@ -840,12 +921,14 @@ class API:
             if log_dm:
                 try:
                     await member.send(embed=user_e)
-                except discord.errors.Forbidden:
+                except (discord.errors.Forbidden, errors.UserNotFound):
                     modlog_e = (
                         await self.get_embeds(
                             guild, member, author, level, reason, time, message_sent=False
                         )
                     )[0]
+                except discord.errors.NotFound:
+                    raise
                 except discord.errors.HTTPException as e:
                     modlog_e = (
                         await self.get_embeds(
@@ -886,7 +969,8 @@ class API:
                 except discord.errors.HTTPException as e:
                     log.warn(
                         f"[Guild {guild.id}] Failed to warn {member} because of "
-                        "an unknown error from Discord.", exc_info=e
+                        "an unknown error from Discord.",
+                        exc_info=e,
                     )
                     return e
             # actions were taken, time to log

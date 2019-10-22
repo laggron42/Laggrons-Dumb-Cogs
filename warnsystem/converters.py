@@ -9,6 +9,8 @@ from redbot.core.commands import BadArgument
 from redbot.core.commands.converter import TimedeltaConverter
 from redbot.core.i18n import Translator
 
+from .api import UnavailableMember
+
 _ = Translator("WarnSystem", __file__)
 
 
@@ -42,6 +44,7 @@ class AdvancedMemberSelect:
     Member search
     -------------
     --select [member, ...]
+    --hackban-select [member, ...]
     --exclude [member, ...]
     --everyone
     --name <regex>
@@ -91,6 +94,7 @@ class AdvancedMemberSelect:
 
         parser.add_argument("--everyone", dest="everyone", action="store_true")
         parser.add_argument("--select", dest="select", nargs="+")
+        parser.add_argument("--hackban-select", dest="hackban_select", nargs="+")
         parser.add_argument("--exclude", dest="exclude", nargs="+")
         parser.add_argument("--name", dest="name")
         parser.add_argument("--nickname", dest="nickname")
@@ -128,6 +132,7 @@ class AdvancedMemberSelect:
     async def process_arguments(self, args: argparse.Namespace):
         guild = self.ctx.guild
         members = []
+        unavailable_members = []
 
         if not args.take_action and not args.send_dm and not args.send_modlog:
             raise BadArgument(
@@ -199,10 +204,14 @@ class AdvancedMemberSelect:
             if members == guild.members:
                 members = []
             members = await self._selection(members, args.select, "select")
+        if args.hackban_select:
+            if members == guild.members:
+                members = []
+            unavailable_members = await self._unavailable_selection(args.hackban_select)
 
-        if not members:
+        if not members and not unavailable_members:
             raise BadArgument(_("The search could't find any member."))
-        return members
+        return members, unavailable_members
 
     def _regex(self, members: list, pattern: str, attribute: str):
         pattern = re.compile(pattern)
@@ -371,6 +380,22 @@ class AdvancedMemberSelect:
         else:
             return list(set(members) - set(selection))
 
+    async def _unavailable_selection(self, _selection):
+        # don't question my function names
+        selection = []
+        for member in _selection:
+            try:
+                selection.append(await UnavailableMember.convert(self.ctx, member))
+            except BadArgument as e:
+                raise BadArgument(
+                    _(
+                        "Can't convert `{arg}` from `--hackban-select` into a valid user "
+                        "object. __You can only provide a user ID.__"
+                    ).format(arg=member)
+                ) from e
+
+        return selection
+
     async def convert(self, ctx, arguments):
         self.ctx = ctx
         async with ctx.typing():
@@ -391,5 +416,5 @@ class AdvancedMemberSelect:
             self.take_action = args.take_action
             self.send_dm = args.send_dm
             self.send_modlog = args.send_modlog
-            self.members = await self.process_arguments(args)
+            self.members, self.unavailable_members = await self.process_arguments(args)
             return self
