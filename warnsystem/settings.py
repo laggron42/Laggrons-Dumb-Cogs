@@ -56,16 +56,13 @@ class SettingsMixin(MixinMeta):
                     "The bot currently {update} new channels. If you want to change this, "
                     "type `[p]warnset autoupdate {opposite}`."
                 ).format(
-                    update=_("updates") if current else _("doesn't update"),
-                    opposite=not current,
+                    update=_("updates") if current else _("doesn't update"), opposite=not current
                 )
             )
         elif enable:
             await self.data.guild(guild).update_mute.set(True)
             await ctx.send(
-                _(
-                    "Done. New created channels will be updated to keep the mute role working."
-                )
+                _("Done. New created channels will be updated to keep the mute role working.")
             )
         else:
             await self.data.guild(guild).update_mute.set(False)
@@ -545,8 +542,7 @@ class SettingsMixin(MixinMeta):
                     "The bot currently {remove} all roles on mute. If you want to change this, "
                     "type `[p]warnset removeroles {opposite}`."
                 ).format(
-                    remove=_("removes") if current else _("doesn't remove"),
-                    opposite=not current,
+                    remove=_("removes") if current else _("doesn't remove"), opposite=not current
                 )
             )
         elif enable:
@@ -560,11 +556,7 @@ class SettingsMixin(MixinMeta):
             )
         else:
             await self.data.guild(guild).remove_roles.set(False)
-            await ctx.send(
-                _(
-                    "Done. Muted members will keep their roles on mute."
-                )
-            )
+            await ctx.send(_("Done. Muted members will keep their roles on mute."))
 
     @warnset.command(name="settings")
     async def warnset_settings(self, ctx: commands.Context):

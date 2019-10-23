@@ -317,7 +317,9 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
                 )
             )
             return
-        file = text_to_file("\n".join([f"{str(x)} ({x.id})" for x in members + unavailable_members]))
+        file = text_to_file(
+            "\n".join([f"{str(x)} ({x.id})" for x in members + unavailable_members])
+        )
         targets = []
         if members:
             targets.append(

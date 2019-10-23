@@ -77,7 +77,7 @@ class UnavailableMember(discord.abc.User, discord.abc.Messageable):
     @property
     def display_name(self):
         return "Unknown"
-    
+
     @property
     def mention(self):
         return f"<@{self.id}>"
@@ -99,7 +99,7 @@ class UnavailableMember(discord.abc.User, discord.abc.Messageable):
         :meth:`create_dm` coroutine function.
         """
         return self._state._get_private_channel_by_user(self.id)
-    
+
     async def create_dm(self):
         """Creates a :class:`DMChannel` with this user.
         This should be rarely called, as this is done transparently for most
