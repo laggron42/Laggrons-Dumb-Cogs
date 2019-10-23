@@ -543,6 +543,10 @@ Now it's time to list all of the flags.
     
     *   ``--send-modlog`` *Defines if the bot should send a message in the
         modlog channel*
+
+    *   ``confirm`` *If passed, the bot won't ask for a confirmation and just
+        directly process the masswarn silently. This can be useful combined
+        with a scheduler.*
     
     *   ``--reason <text>`` *The reason of the masswarn, substitutions works*
     *   ``--time`` ``--length`` *The duration of the warn, for mutes and bans*

@@ -122,7 +122,7 @@ class WarnSystem(BaseCog):
         self.task = bot.loop.create_task(self.api._loop_task())
         self._init_logger()
 
-    __version__ = "1.1.4"
+    __version__ = "1.1.5"
     __author__ = ["retke (El Laggron)"]
 
     def _init_logger(self):
@@ -213,7 +213,16 @@ class WarnSystem(BaseCog):
                 await ctx.send(_("Done."))
 
     async def call_masswarn(
-        self, ctx, level, members, log_modlog, log_dm, take_action, reason=None, time=None
+        self,
+        ctx,
+        level,
+        members,
+        log_modlog,
+        log_dm,
+        take_action,
+        reason=None,
+        time=None,
+        confirm=False,
     ):
         guild = ctx.guild
         message = None
@@ -282,46 +291,47 @@ class WarnSystem(BaseCog):
             log.error("Failed to write cache files.", exc_info=e)
             await ctx.send(_("Failed to write cache files, check your logs for details."))
             return
-        msg = await ctx.send(
-            _(
-                "You're about to set a level {level} warning "
-                "on {total} {members} ({percent}% of the server).\n\n"
-                "{tick1} Log to the modlog\n"
-                "{tick2} Send a DM to all members\n"
-                "{tick3}"
-                "{tick4} {time}"
-                "{tick5} Reason: {reason}\n\n"
-                "Continue?"
-            ).format(
-                level=level,
-                total=total_members,
-                members=_("members") if total_members > 1 else _("member"),
-                percent=round((total_members / len(guild.members) * 100), 2),
-                tick1=tick1,
-                tick2=tick2,
-                tick3=tick3,
-                tick4=tick4,
-                time=time_str,
-                tick5=tick5,
-                reason=reason or "Not set",
-            ),
-            file=discord.File(str(file.absolute())),
-        )
-        menus.start_adding_reactions(msg, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
-        pred = predicates.ReactionPredicate.yes_or_no(msg, ctx.author)
-        try:
-            await self.bot.wait_for("reaction_add", check=pred, timeout=120)
-        except AsyncTimeoutError:
-            if ctx.guild.me.guild_permissions.manage_messages:
-                await msg.clear_reactions()
-            else:
-                for reaction in msg.reactions():
-                    await msg.remove_reaction(reaction, ctx.guild.me)
-            return
-        if not pred.result:
-            await ctx.send(_("Mass warn cancelled."))
-            return
-        task = self.bot.loop.create_task(update_message())
+        if not confirm:
+            msg = await ctx.send(
+                _(
+                    "You're about to set a level {level} warning "
+                    "on {total} {members} ({percent}% of the server).\n\n"
+                    "{tick1} Log to the modlog\n"
+                    "{tick2} Send a DM to all members\n"
+                    "{tick3}"
+                    "{tick4} {time}"
+                    "{tick5} Reason: {reason}\n\n"
+                    "Continue?"
+                ).format(
+                    level=level,
+                    total=total_members,
+                    members=_("members") if total_members > 1 else _("member"),
+                    percent=round((total_members / len(guild.members) * 100), 2),
+                    tick1=tick1,
+                    tick2=tick2,
+                    tick3=tick3,
+                    tick4=tick4,
+                    time=time_str,
+                    tick5=tick5,
+                    reason=reason or "Not set",
+                ),
+                file=discord.File(str(file.absolute())),
+            )
+            menus.start_adding_reactions(msg, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
+            pred = predicates.ReactionPredicate.yes_or_no(msg, ctx.author)
+            try:
+                await self.bot.wait_for("reaction_add", check=pred, timeout=120)
+            except AsyncTimeoutError:
+                if ctx.guild.me.guild_permissions.manage_messages:
+                    await msg.clear_reactions()
+                else:
+                    for reaction in msg.reactions():
+                        await msg.remove_reaction(reaction, ctx.guild.me)
+                return
+            if not pred.result:
+                await ctx.send(_("Mass warn cancelled."))
+                return
+            task = self.bot.loop.create_task(update_message())
         try:
             fails = await self.api.warn(
                 guild=guild,
@@ -333,47 +343,56 @@ class WarnSystem(BaseCog):
                 log_modlog=log_modlog,
                 log_dm=log_dm,
                 take_action=take_action,
-                progress_tracker=update_count,
+                progress_tracker=update_count if not confirm else None,
             )
         except errors.MissingPermissions as e:
             await ctx.send(e)
         except errors.LostPermissions as e:
             await ctx.send(e)
         except errors.MissingMuteRole:
-            await ctx.send(
-                _(
-                    "You need to set up the mute role before doing this.\n"
-                    "Use the `[p]warnset mute` command for this."
+            if not confirm:
+                await ctx.send(
+                    _(
+                        "You need to set up the mute role before doing this.\n"
+                        "Use the `[p]warnset mute` command for this."
+                    )
                 )
-            )
         except errors.NotFound:
-            await ctx.send(
-                _(
-                    "Please set up a modlog channel before warning a member.\n\n"
-                    "**With WarnSystem**\n"
-                    "*Use the `[p]warnset channel` command.*\n\n"
-                    "**With Red Modlog**\n"
-                    "*Load the `modlogs` cog and use the `[p]modlogset modlog` command.*"
+            if not confirm:
+                await ctx.send(
+                    _(
+                        "Please set up a modlog channel before warning a member.\n\n"
+                        "**With WarnSystem**\n"
+                        "*Use the `[p]warnset channel` command.*\n\n"
+                        "**With Red Modlog**\n"
+                        "*Load the `modlogs` cog and use the `[p]modlogset modlog` command.*"
+                    )
                 )
-            )
         else:
-            if fails:
-                await ctx.send(
-                    _("Done! {failed} {members} out of {total} couldn't be warned.").format(
-                        failed=len(fails),
-                        members=_("members") if len(fails) > 1 else _("member"),
-                        total=total_members,
+            if not confirm:
+                if fails:
+                    await ctx.send(
+                        _("Done! {failed} {members} out of {total} couldn't be warned.").format(
+                            failed=len(fails),
+                            members=_("members") if len(fails) > 1 else _("member"),
+                            total=total_members,
+                        )
                     )
-                )
+                else:
+                    await ctx.send(
+                        _("Done! {total} {members} successfully warned.").format(
+                            total=total_members,
+                            members=_("members") if total_members > 1 else _("member"),
+                        )
+                    )
             else:
-                await ctx.send(
-                    _("Done! {total} {members} successfully warned.").format(
-                        total=total_members,
-                        members=_("members") if total_members > 1 else _("member"),
-                    )
-                )
+                try:
+                    await ctx.message.add_reaction("✅")
+                except discord.errors.HTTPException:
+                    pass
         finally:
-            task.cancel()
+            if not confirm:
+                task.cancel()
             if message:
                 await message.delete()
 
@@ -1174,6 +1193,8 @@ class WarnSystem(BaseCog):
             selection.send_dm,
             selection.take_action,
             selection.reason,
+            None,
+            selection.confirm,
         )
 
     @masswarn.command(name="1", aliases=["simple"])
@@ -1197,6 +1218,8 @@ class WarnSystem(BaseCog):
             selection.send_dm,
             selection.take_action,
             selection.reason,
+            None,
+            selection.confirm,
         )
 
     @masswarn.command(name="2", aliases=["mute"])
@@ -1224,6 +1247,7 @@ class WarnSystem(BaseCog):
             selection.take_action,
             selection.reason,
             selection.time,
+            selection.confirm,
         )
 
     @masswarn.command(name="3", aliases=["kick"])
@@ -1247,6 +1271,8 @@ class WarnSystem(BaseCog):
             selection.send_dm,
             selection.take_action,
             selection.reason,
+            None,
+            selection.confirm,
         )
 
     @masswarn.command(name="4", aliases=["softban"])
@@ -1270,6 +1296,8 @@ class WarnSystem(BaseCog):
             selection.send_dm,
             selection.take_action,
             selection.reason,
+            None,
+            selection.confirm,
         )
 
     @masswarn.command(name="5", aliases=["ban"])
@@ -1297,6 +1325,7 @@ class WarnSystem(BaseCog):
             selection.take_action,
             selection.reason,
             selection.time,
+            selection.confirm,
         )
 
     @commands.command()
