@@ -513,12 +513,14 @@ Here are some examples:
 
 **Member input**
 
-The flags ``--include`` and ``--exclude`` requires you to pass multiple
-members, either with their name, their nickname, their name+tag, their ID or
-by mentionning them. Here are some examples:
+The flags ``--select``, ``--hackban-select`` and ``--exclude`` requires you to
+pass multiple members, either with their name, their nickname, their name+tag,
+their ID or by mentionning them (only IDs works for ``--hackban-select``).
+Here are some examples:
 
-*   ``--include "El Laggron#0260" 133801473317404673 Twentysix``
+*   ``--select "El Laggron#0260" 133801473317404673 Twentysix``
 *   ``--exclude aikaterna#1393 "Kowlin, That silver Yuumi main"``
+*   ``--hackban-select 301368585714925568 336966738103107584``
 
 **Regual expressions input (regex)**
 
@@ -551,7 +553,11 @@ Now it's time to list all of the flags.
 
     *   ``--select [member, ...]`` *Select multiple members to include in the
         masswarn, they are not affected by your search*
-
+    
+    *   ``--hackban-select [member, ...]`` *Select multiple users outside of
+        the server for a hackban. You have to provide valid user IDs and the
+        warning level must be 5.
+    
     *   ``--exclude [member, ...]`` *Select multiple members to exclude from
         the search, they won't be warned*
 
