@@ -18,7 +18,7 @@ from redbot.core.commands.converter import TimedeltaConverter
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils import predicates, menus, mod
-from redbot.core.utils.chat_formatting import pagify, text_to_file
+from redbot.core.utils.chat_formatting import pagify
 
 from . import errors
 from .api import API, UnavailableMember
@@ -36,6 +36,22 @@ if listener is None:
 
     def listener(name=None):
         return lambda x: x
+
+
+# Red 3.1 backwards compatibility
+try:
+    from redbot.core.utils.chat_formatting import text_to_file
+except ImportError:
+    from io import BytesIO
+
+    log.warn("Outdated redbot, consider updating.")
+    # I'm the author of this function but it was made for Cog-Creators
+    # Source: https://github.com/Cog-Creators/Red-DiscordBot/blob/V3/develop/redbot/core/utils/chat_formatting.py#L478
+    def text_to_file(
+        text: str, filename: str = "file.txt", *, spoiler: bool = False, encoding: str = "utf-8"
+    ):
+        file = BytesIO(text.encode(encoding))
+        return discord.File(file, filename, spoiler=spoiler)
 
 
 EMBED_MODLOG = lambda x: _("A member got a level {} warning.").format(x)
