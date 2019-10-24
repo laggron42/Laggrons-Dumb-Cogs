@@ -38,6 +38,7 @@ class AdvancedMemberSelect:
     --take-action --take-actions
     --send-dm
     --send-modlog
+    --confirm
     --reason <text>
     --time --length <duration>
 
@@ -89,6 +90,7 @@ class AdvancedMemberSelect:
         )
         parser.add_argument("--send-dm", dest="send_dm", action="store_true")
         parser.add_argument("--send-modlog", dest="send_modlog", action="store_true")
+        parser.add_argument("--confirm", dest="confirm", action="store_true")
         parser.add_argument("--reason", dest="reason", nargs="*")
         parser.add_argument("--length", "--time", dest="time", nargs="*")
 
@@ -211,7 +213,7 @@ class AdvancedMemberSelect:
 
         if not members and not unavailable_members:
             raise BadArgument(_("The search could't find any member."))
-        return members, unavailable_members
+        return members, unavailavle_members, args.confirm
 
     def _regex(self, members: list, pattern: str, attribute: str):
         pattern = re.compile(pattern)
@@ -416,5 +418,7 @@ class AdvancedMemberSelect:
             self.take_action = args.take_action
             self.send_dm = args.send_dm
             self.send_modlog = args.send_modlog
-            self.members, self.unavailable_members = await self.process_arguments(args)
+            self.members, self.unavailable_members, self.confirm = await self.process_arguments(
+                args
+            )
             return self
