@@ -227,7 +227,21 @@ class API:
         if remove_roles:
             old_roles = member.roles.copy()
             old_roles.remove(guild.default_role)
-            await member.remove_roles(*old_roles, reason=reason)
+            old_roles = filter(
+                lambda x: x.position < guild.me.top_role.position and not x.managed, old_roles
+            )
+            fails = []
+            for role in old_roles:
+                try:
+                    await member.remove_roles(role, reason=reason)
+                except discord.errors.HTTPException as e:
+                    fails.append(role)
+            if fails:
+                log.warn(
+                    f"[Guild {guild.id}] Failed to remove roles from {member} (ID: {member.id}) "
+                    f"while muting. Roles: {', '.join([f'{x.name} ({x.id})' for x in fails])}",
+                    exc_info=e,
+                )
         await member.add_roles(role, reason=reason)
         return old_roles
 
