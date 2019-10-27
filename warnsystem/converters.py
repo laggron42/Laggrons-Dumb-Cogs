@@ -213,7 +213,7 @@ class AdvancedMemberSelect:
 
         if not members and not unavailable_members:
             raise BadArgument(_("The search could't find any member."))
-        return members, unavailavle_members, args.confirm
+        return members, unavailable_members
 
     def _regex(self, members: list, pattern: str, attribute: str):
         pattern = re.compile(pattern)
@@ -418,7 +418,8 @@ class AdvancedMemberSelect:
             self.take_action = args.take_action
             self.send_dm = args.send_dm
             self.send_modlog = args.send_modlog
-            self.members, self.unavailable_members, self.confirm = await self.process_arguments(
+            self.confirm = args.confirm
+            self.members, self.unavailable_membersawait = self.process_arguments(
                 args
             )
             return self
