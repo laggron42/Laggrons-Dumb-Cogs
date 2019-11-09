@@ -1136,7 +1136,7 @@ class API:
                         to_remove.append(action)
                         continue
                     member = await self._get_user_info(action["member"])
-                roles = [guild.get_role(x) for x in action["roles"]]
+                roles = [guild.get_role(x) for x in action.get("roles") or []]
 
                 reason = _(
                     "End of timed {action} of {member} requested by {author} that lasted "

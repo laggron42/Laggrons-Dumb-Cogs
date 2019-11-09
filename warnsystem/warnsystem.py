@@ -915,7 +915,10 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             return
         if pred.result:
             async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
-                roles = logs[page - 1]["roles"]
+                try:
+                    roles = logs[page - 1]["roles"]
+                except KeyError:
+                    roles = []
                 logs.remove(logs[page - 1])
             log.debug(
                 f"[Guild {guild.id}] Removed case #{page} from member {member} (ID: {member.id})."
