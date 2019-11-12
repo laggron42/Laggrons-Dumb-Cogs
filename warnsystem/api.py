@@ -377,9 +377,12 @@ class API:
                 time = log["time"]
                 if time:
                     log["time"] = self._get_datetime(time)
-                log["member"] = self.bot.get_user(member) or UnavailableMember(member)
+                # gotta get that state somehow
+                log["member"] = self.bot.get_user(member) or UnavailableMember(
+                    self.bot, self.bot.user._state, log["member"]
+                )
                 log["author"] = self.bot.get_user(log["author"]) or UnavailableMember(
-                    log["author"]
+                    self.bot, self.bot.user._state, log["author"]
                 )
                 all_cases.append(log)
         return sorted(all_cases, key=lambda x: x["time"])  # sorted from oldest to newest
