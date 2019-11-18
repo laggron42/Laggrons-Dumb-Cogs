@@ -35,7 +35,7 @@ class FakeRole:
 class UnavailableMember(discord.abc.User, discord.abc.Messageable):
     """
     A class that reproduces the behaviour of a discord.Member instance, except
-    the member is not in the guild. This is used to prevent calling bot.get_user_info
+    the member is not in the guild. This is used to prevent calling bot.fetch_info
     which has a very high cooldown.
     """
 
@@ -199,22 +199,6 @@ class API:
         async with self.data.guild(guild).temporary_warns() as warns:
             warns.append(case)
         return True
-
-    async def _get_user_info(self, user_id: int):
-        user = self.bot.get_user(user_id)
-        if not user:
-            try:
-                user = await self.bot.fetch_user(user_id)
-            except discord.errors.NotFound:
-                user = None
-            except discord.errors.HTTPException as e:
-                user = None
-                log.error(
-                    "Received HTTPException when trying to get user info. "
-                    "This is probaby a cooldown from Discord.",
-                    exc_info=e,
-                )
-        return user
 
     async def _mute(self, member: discord.Member, reason: Optional[str] = None):
         """Mute an user on the guild."""
@@ -393,9 +377,12 @@ class API:
                 time = log["time"]
                 if time:
                     log["time"] = self._get_datetime(time)
-                log["member"] = self.bot.get_user(member) or UnavailableMember(member)
+                # gotta get that state somehow
+                log["member"] = self.bot.get_user(member) or UnavailableMember(
+                    self.bot, self.bot.user._state, log["member"]
+                )
                 log["author"] = self.bot.get_user(log["author"]) or UnavailableMember(
-                    log["author"]
+                    self.bot, self.bot.user._state, log["author"]
                 )
                 all_cases.append(log)
         return sorted(all_cases, key=lambda x: x["time"])  # sorted from oldest to newest
@@ -869,9 +856,6 @@ class API:
         ~warnsystem.errors.BadArgument
             You need to provide a valid :class:`discord.Member` object, except for a
             hackban where a :class:`discord.User` works.
-        ~warnsystem.errors.NotFound
-            You provided an :py:class:`int` for a hackban, but the bot couldn't find
-            it by calling :func:`discord.Client.get_user_info`.
         ~warnsystem.errors.MissingMuteRole
             You're trying to mute someone but the mute role was not setup yet.
             You can fix this by calling :func:`~warnsystem.api.API.maybe_create_mute_role`.
@@ -1135,8 +1119,8 @@ class API:
                     if level == 2:
                         to_remove.append(action)
                         continue
-                    member = await self._get_user_info(action["member"])
-                roles = [guild.get_role(x) for x in action["roles"]]
+                    member = UnavailableMember(self.bot, guild._state, action["member"])
+                roles = [guild.get_role(x) for x in action.get("roles") or []]
 
                 reason = _(
                     "End of timed {action} of {member} requested by {author} that lasted "

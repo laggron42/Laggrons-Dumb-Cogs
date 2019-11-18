@@ -716,7 +716,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
     async def warnings(
         self,
         ctx: commands.Context,
-        user: Union[discord.User, UnavailableMember] = None,
+        user: UnavailableMember = None,
         index: int = 0,
     ):
         """
@@ -818,8 +818,11 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         await message.clear_reactions()
         old_embed = message.embeds[0]
         embed = discord.Embed()
-        member = await self.api._get_user_info(
-            int(re.match(r"(?:.*#[0-9]{4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1))
+        member_id = int(
+            re.match(r"(?:.*#[0-9]{4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1)
+        )
+        member = self.bot.get_user(member_id) or UnavailableMember(
+            self.bot, guild._state, member_id
         )
         embed.clear_fields()
         embed.description = _(
@@ -881,8 +884,11 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         await message.clear_reactions()
         old_embed = message.embeds[0]
         embed = discord.Embed()
-        member = await self.api._get_user_info(
-            int(re.match(r"(?:.*#[0-9]{4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1))
+        member_id = int(
+            re.match(r"(?:.*#[0-9]{4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1)
+        )
+        member = self.bot.get_user(member_id) or UnavailableMember(
+            self.bot, guild._state, member_id
         )
         level = int(re.match(r".*\(([0-9]*)\)", old_embed.fields[0].value).group(1))
         can_unmute = False
@@ -915,7 +921,10 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             return
         if pred.result:
             async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
-                roles = logs[page - 1]["roles"]
+                try:
+                    roles = logs[page - 1]["roles"]
+                except KeyError:
+                    roles = []
                 logs.remove(logs[page - 1])
             log.debug(
                 f"[Guild {guild.id}] Removed case #{page} from member {member} (ID: {member.id})."
