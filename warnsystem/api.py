@@ -220,16 +220,16 @@ class API:
         """Mute an user on the guild."""
         old_roles = []
         guild = member.guild
-        role = guild.get_role(await self.data.guild(guild).mute_role())
+        mute_role = guild.get_role(await self.data.guild(guild).mute_role())
         remove_roles = await self.data.guild(guild).remove_roles()
-        if not role:
+        if not mute_role:
             raise errors.MissingMuteRole("You need to create the mute role before doing this.")
         if remove_roles:
             old_roles = member.roles.copy()
             old_roles.remove(guild.default_role)
-            old_roles = filter(
-                lambda x: x.position < guild.me.top_role.position and not x.managed, old_roles
-            )
+            old_roles = [
+                x for x in old_roles if x.position < guild.me.top_role.position and not x.managed
+            ]
             fails = []
             for role in old_roles:
                 try:
@@ -242,7 +242,7 @@ class API:
                     f"while muting. Roles: {', '.join([f'{x.name} ({x.id})' for x in fails])}",
                     exc_info=e,
                 )
-        await member.add_roles(role, reason=reason)
+        await member.add_roles(mute_role, reason=reason)
         return old_roles
 
     async def _unmute(self, member: discord.Member, reason: str, old_roles: list = None):
@@ -279,7 +279,7 @@ class API:
             "until": None
             if not duration
             else (datetime.today() + duration).strftime("%a %d %B %Y %H:%M:%S"),
-            "roles": None if not roles else [x.id for x in roles],
+            "roles": [] if not roles else [x.id for x in roles],
         }
         async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
             logs.append(data)
