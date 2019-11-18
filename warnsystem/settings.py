@@ -654,7 +654,7 @@ class SettingsMixin(MixinMeta):
                 inline=False,
             )
             embed.set_footer(text=_("Cog made with ❤️ by Laggron"))
-            embed.color = self.bot.color
+            embed.color = await self.bot.get_embed_color(ctx)
         try:
             await ctx.send(embed=embed)
         except discord.errors.HTTPException as e:
