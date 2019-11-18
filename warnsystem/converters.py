@@ -51,6 +51,7 @@ class AdvancedMemberSelect:
     --name <regex>
     --nickname <regex>
     --display-name <regex>
+    --status --activity <regex>
     --only-humans
     --only-bots
     --joined-before <time>
@@ -101,6 +102,7 @@ class AdvancedMemberSelect:
         parser.add_argument("--name", dest="name")
         parser.add_argument("--nickname", dest="nickname")
         parser.add_argument("--display-name", dest="display_name")
+        parser.add_argument("--status", "--activity", dest="activity")
         parser.add_argument("--only-humans", dest="only_humans", action="store_true")
         parser.add_argument("--only-bots", dest="only_bots", action="store_true")
         parser.add_argument("--joined-before", dest="joined_before", nargs="*")
@@ -150,11 +152,13 @@ class AdvancedMemberSelect:
             return guild.members
         members = guild.members
         if args.name:
-            members = self._regex(members, args.name, "name")
+            members = self._name_regex(members, args.name, "name")
         if args.nickname:
-            members = self._regex(members, args.nickname, "nickname")
+            members = self._name_regex(members, args.nickname, "nickname")
         if args.display_name:
-            members = self._regex(members, args.display_name, "display_name")
+            members = self._name_regex(members, args.display_name, "display_name")
+        if args.activity:
+            members = self._status_regex(members, args.activity)
         if args.only_humans:
             members = list(filter(lambda x: not x.bot, members))
         if args.only_bots:
@@ -215,11 +219,26 @@ class AdvancedMemberSelect:
             raise BadArgument(_("The search could't find any member."))
         return members, unavailable_members
 
-    def _regex(self, members: list, pattern: str, attribute: str):
+    def _name_regex(self, members: list, pattern: str, attribute: str):
         pattern = re.compile(pattern)
 
         def member_filter(member: discord.Member):
-            if pattern.match(getattr(member, attribute)):
+            if pattern.search(getattr(member, attribute)):
+                return True
+            return False
+
+        return list(filter(member_filter, members))
+
+    def _status_regex(self, members: list, pattern: str):
+        pattern = re.compile(pattern)
+
+        def member_filter(member: discord.Member):
+            # credit to mikeshardmind for this part of code
+            # https://github.com/mikeshardmind/SinbadCogs/blob/4d265a9819fd25be44bc7422e6e60c44624624da/statuswarn/statuswarn.py#L27
+            maybe_custom = next(filter(lambda a: a.type == 4, member.activities), None)
+            if not maybe_custom:
+                return False
+            if pattern.search(maybe_custom.state or ""):
                 return True
             return False
 
@@ -419,7 +438,5 @@ class AdvancedMemberSelect:
             self.send_dm = args.send_dm
             self.send_modlog = args.send_modlog
             self.confirm = args.confirm
-            self.members, self.unavailable_membersawait = self.process_arguments(
-                args
-            )
+            self.members, self.unavailable_members = await self.process_arguments(args)
             return self
