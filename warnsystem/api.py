@@ -379,7 +379,7 @@ class API:
                     log["time"] = self._get_datetime(time)
                 # gotta get that state somehow
                 log["member"] = self.bot.get_user(member) or UnavailableMember(
-                    self.bot, self.bot.user._state, log["member"]
+                    self.bot, self.bot.user._state, member
                 )
                 log["author"] = self.bot.get_user(log["author"]) or UnavailableMember(
                     self.bot, self.bot.user._state, log["author"]
