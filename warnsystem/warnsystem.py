@@ -714,10 +714,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
     @commands.bot_has_permissions(add_reactions=True, manage_messages=True)
     @commands.cooldown(1, 3, commands.BucketType.member)
     async def warnings(
-        self,
-        ctx: commands.Context,
-        user: UnavailableMember = None,
-        index: int = 0,
+        self, ctx: commands.Context, user: UnavailableMember = None, index: int = 0
     ):
         """
         Shows all warnings of a member.
