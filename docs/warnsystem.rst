@@ -234,13 +234,13 @@ You can also stack them like this:
 *   .. code-block:: none
 
         [p]warn 2 @El Laggron#0260 Hacked account.
-    
+
     This will mute El Laggron for an undefined duration.
 
 *   .. code-block:: none
 
         [p]warn 2 @El Laggron#0260 2h Spam for exp.
-    
+
     This will mute El Laggron for two hours, then remove his role.
 
 **Arguments**
@@ -270,7 +270,7 @@ Kicks the member from the server.
 *   .. code-block:: none
 
         [p]warn 3 @El Laggron#0260 Selfbot.
-    
+
     This will just kick the member.
 
 **Arguments**
@@ -362,20 +362,20 @@ You can also stack them like this:
 *   .. code-block:: none
 
         [p]warn 5 @El Laggron#0260 Harassing
-    
+
     Bans El Laggron forever from the server.
 
 *   .. code-block:: none
 
         [p]warn 5 @El Laggron#0260 7d Doesn't respect the previous warnings
-    
+
     Bans El Laggron for a week from the server, then unbans him.
 
 *   .. code-block:: none
 
         [p]warn 5 348415857728159745 Advertising for a weird dating website,
         then leaves.
-    
+
     Bans El Laggron forever while he is not on the server.
 
 **Arguments**
@@ -467,7 +467,7 @@ The flags ``--has-perm``, ``--has-any-perm``, ``--has-all-perms`` and
 by the API. Here are the names you have to use:
 
 .. code-block:: yaml
-    
+
     General permissions:
     - administrator
     - view_audit_log
@@ -513,12 +513,14 @@ Here are some examples:
 
 **Member input**
 
-The flags ``--include`` and ``--exclude`` requires you to pass multiple
-members, either with their name, their nickname, their name+tag, their ID or
-by mentionning them. Here are some examples:
+The flags ``--select``, ``--hackban-select`` and ``--exclude`` requires you to
+pass multiple members, either with their name, their nickname, their name+tag,
+their ID or by mentionning them (only IDs works for ``--hackban-select``).
+Here are some examples:
 
-*   ``--include "El Laggron#0260" 133801473317404673 Twentysix``
+*   ``--select "El Laggron#0260" 133801473317404673 Twentysix``
 *   ``--exclude aikaterna#1393 "Kowlin, That silver Yuumi main"``
+*   ``--hackban-select 301368585714925568 336966738103107584``
 
 **Regual expressions input (regex)**
 
@@ -537,10 +539,10 @@ Now it's time to list all of the flags.
 
     *   ``--take-action`` ``take-actions`` *Defines if the bot should take an
         action (add the mute role, kick/ban the member)*
-    
+
     *   ``--send-dm`` *Defines if the bot should send a DM to the warned
         members*
-    
+
     *   ``--send-modlog`` *Defines if the bot should send a message in the
         modlog channel*
 
@@ -556,35 +558,39 @@ Now it's time to list all of the flags.
     *   ``--select [member, ...]`` *Select multiple members to include in the
         masswarn, they are not affected by your search*
     
+    *   ``--hackban-select [member, ...]`` *Select multiple users outside of
+        the server for a hackban. You have to provide valid user IDs and the
+        warning level must be 5.
+    
     *   ``--exclude [member, ...]`` *Select multiple members to exclude from
         the search, they won't be warned*
 
     *   ``--everyone`` *Includes everyone in the server, your search will
         therefore not be committed, the* ``--exclude`` *flag will also not be
         used*
-    
+
     *   ``--name <regex>`` *Only includes the members which names validates to
         the given expression*
-    
+
     *   ``--nickname <regex>`` *Only includes the members which nicknames
         validates to the given expression, this excludes members without
         nicknames*
-    
+
     *   ``--display-name <regex>`` *Only includes the members which nicknames,
         or name if nickname isn't set, validates to the given expression*
-    
+
     *   ``--only-humans`` *Excludes all bots from the search*
     *   ``--only-bots`` *Only includes bots in the search*
 
     *   ``--joined-before <date>`` *Members who joined after the given date
         will be excluded from the masswarn*
-    
+
     *   ``--joined-after <date>`` *Members who joined before the given date
         will be excluded from the masswarn*
-    
+
     *   ``--last-njoins <number>`` *Includes the last x members of the server,
         this is useful in case of a raid*
-    
+
     *   ``--first-njoins <number>`` *Includes the first x members of the
         server, if you want to purge the elders you monster*
 
@@ -592,16 +598,16 @@ Now it's time to list all of the flags.
 
     *   ``--has-perm <permission>`` *Includes the members with the given
         permission, this is based on roles, not channel permissions*
-    
+
     *   ``--has-any-perm [permission, ...]`` *Includes the members who have any
         of the given permissions*
-    
+
     *   ``--has-all-perms [permission, ...]`` *Includes the members who have
         all of the given permissions*
-    
+
     *   ``--has-none-perms [permission, ...]`` *Include the members who have
         none of the given permissions*
-    
+
     *   ``--has-perm-int <number>`` *Includes the members whose permission
         integer matches what you gave, you can calculate your permission
         integer on the* `permissions calculator
@@ -613,27 +619,27 @@ Now it's time to list all of the flags.
 
     *   ``--has-any-role [role, ...]`` *Includes the members who have any of
         the given roles*
-    
+
     *   ``--has-all-roles [role, ...]`` *Includes the members who have all of
         the given roles*
-    
+
     *   ``--has-none-roles [role, ...]`` *Include the members who have none of
         the given roles*
-    
+
     *   ``--has-no-role`` *Excludes the members with any custom role*
 
     *   ``--has-exactly-nroles <number>`` *Includes the members who have the
         number of roles given, this doesn't count the @everyone role*
-    
+
     *   ``--has-more-than-nroles`` *Includes the members who have more roles
         than the number given, this doesn't count the @everyone role*
-    
+
     *   ``--has-less-than-nroles`` *Includes the members who have less roles
         than the number given, this doesn't count the @everyone role*
-    
+
     *   ``--above <role>`` *Includes the members whose top role is above the
         given role*
-    
+
     *   ``--below <role>`` *Includes the members whose top role is below the
         given role*
 
@@ -678,6 +684,54 @@ warnset settings
 
 Lists all settings defined on the current server.
 
+""""""""""""""""""
+warnset autoupdate
+""""""""""""""""""
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]warnset autoupdate [enable]
+
+**Description**
+
+Enables or disables the automatic update of new channels for the mute role. If
+you enable this, every time a new text channel is created, the bot will update
+its permissions to deny to the mute role the ability to send messages and add
+reactions.
+
+This is disabled by default.
+
+**Arguments**
+
+*   ``[enable]``: The new status to set. If omitted, the bot will display the
+    current setting and show how to reverse it.
+
+"""""""""""""""
+warnset bandays
+"""""""""""""""
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]warnset bandays <ban_type> <days>
+
+**Descritpion**
+
+Defines how many days of messages should be deleted when a member is banned or
+softbanned. The number of days can be between 1 and 7. You can set 0 to disable
+message deletion for the bans, not for softbans.
+
+**Arguments**
+
+*   ``<ban_type>``: The type of ban that should be edited. Either ``ban`` or
+    ``softban``.
+
+*   ``<days>``: The number of days of messages that should be deleted. Between
+    1 and 7 only. 0 to disable for bans.
+
 """""""""""""""
 warnset channel
 """""""""""""""
@@ -707,6 +761,128 @@ level.
 
 *   ``[level]``: The warning level associated to the channel. If this is not
     provided, the channel will be set as the default modlog channel.
+
+"""""""""""""
+warnset color
+"""""""""""""
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]warnset color <level> <color>
+
+**Description**
+
+This will edit the color of the embeds' left bar for each warning level. The
+color is the same for the modlog and the member.
+
+.. image:: .ressources/EXAMPLES/embed-left-bar.png
+
+**Arguments**
+
+*   ``<level>``: The level of the warning you want to edit, this must be a
+    number between 1 and 5.
+
+*   ``<color>``: The new color you want to set. It can be an hexadecimal value
+    (#FFFFFF = white) or the english name of a color, such as ``dark-blue``,
+    ``red`` or even ``blurple``. `Full list
+    <https://discordpy.readthedocs.io/en/latest/api.html#discord.Colour>`_
+
+"""""""""""""""
+warnset convert
+"""""""""""""""
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]warnset convert <path>
+
+**Description**
+
+Converts a V2 BetterMod history file to migrate its logs to WarnSystem V3.
+
+The history file is located at the following path:
+``Red-DiscordBot/data/bettermod/history/<server ID>.json``. You can grab your
+server ID with the ``[p]serverinfo`` command.
+
+You can decide to append or overwrite the logs to the current logs through
+the guided configuration. Append will get the logs and add them, while
+overwrite will reset the current logs and replace them with the migrated ones.
+
+**Example**
+
+*   .. code-block:: none
+
+        [p]warnset convert /home/laggron/Desktop/Red-DiscordBot/data/bettermod/history/363008468602454017.json
+
+**Arguments**
+
+*   ``<path>``: The path to your history file.
+
+"""""""""""""""""""
+warnset description
+"""""""""""""""""""
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]warnset description <level> <destination> <description>
+
+**Description**
+
+Edits the description of an embed for the modlog or the warned member. The
+default description for the modlog is "A member got a level (x) warning.", for
+the member, it is "The moderation team set you a level (x) warning.".
+
+You can use the following keys in your custom description:
+
+*   ``{invite}``: Generates an invite for the server and place it.
+
+*   ``{member}``: The warned member. You can use attributes such as
+    ``{member.name}``, ``{member.id}``, ``{member.nick}``...
+
+*   ``{mod}``: The responsible mod of a warn. You can use the same attributes
+    as for ``{member}``.
+
+*   ``{duration}``: The duration of a mute/ban if set.
+
+*   ``{time}``: The current date and time.
+
+**Arguments**
+
+*   ``<level>``: The level of the warn to edit.
+
+*   ``<destination>``: Either ``user`` for the warned member or ``modlog`` for
+    the modlog.
+
+*   ``<description>``: The new description.
+
+"""""""""""""""""
+warnset hierarchy
+"""""""""""""""""
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]warnset hierarchy [enable]
+
+**Description**
+
+Enables or disables the hierarchy respect. If you enable this, the bot will
+make sure the moderator is allowed to warn someone with the Discord hierarchy
+rules (cannot warn someone if the warned member has a role equal or higher than
+the moderator's top role).
+
+This is disabled by default.
+
+**Arguments**
+
+*   ``[enable]``: The new status to set. If omitted, the bot will display the
+    current setting and show how to reverse it.
 
 """"""""""""
 warnset mute
@@ -758,24 +934,43 @@ This is enabled by default.
 *   ``[enable]``: The new status to set. If omitted, the bot will display the
     current setting and show how to reverse it.
 
-"""""""""""""""""
-warnset hierarchy
-"""""""""""""""""
+"""""""""""""""""""
+warnset removeroles
+"""""""""""""""""""
 
 **Syntax**
 
 .. code-block:: none
 
-    [p]warnset hierarchy [enable]
+    [p]warnset removeroles [enable]
 
 **Description**
 
-Enables or disables the hierarchy respect. If you enable this, the bot will
-make sure the moderator is allowed to warn someone with the Discord hierarchy
-rules (cannot warn someone if the warned member has a role equal or higher than
-the moderator's top role).
+Defines if the bot should remove all roles from a member when he gets muted
+(warn 2). This can be useful because, in some cases, some channels can still
+be accessible to a muted member (for example, when he has a role that grants
+him access in a private channel).
 
-This is disabled by default.
+This behaviour is due to Discord's permissions system ; the mute role is denied
+from sending messages and adding reactions in all text channels, but if another
+role forces the permission (green tick), it will overwrite the mute's
+permissions, **even if the role is higher in the hierarchy**.
+
+.. attention:: This method exists to prevent roles from overwriting the mute
+    role's restrictions, **this doesn't apply on member permissions**. If a
+    member has a forced permission set in the channel, it will overwrite the
+    mute and the bot won't try to fix it.
+
+If the mute ends (timed mute) or if you delete the warning, the roles of the
+member will be added back. Make sure to set a timed mute if you want the bot
+to add roles back without removing the warning, since removing the mute role
+manually will not grant the roles back.
+
+.. tip:: To have good permissions on your server, prevent as much as possible
+    forcing a permission in a channel (green tick) and leave it on grey, try to
+    use role permissions instead.
+
+This setting is enabled by default.
 
 **Arguments**
 
@@ -803,30 +998,6 @@ This is disabled by default.
 
 *   ``[enable]``: The new status to set. If omitted, the bot will display the
     current setting and show how to reverse it.
-
-"""""""""""""""
-warnset bandays
-"""""""""""""""
-
-**Syntax**
-
-.. code-block:: none
-
-    [p]warnset bandays <ban_type> <days>
-
-**Descritpion**
-
-Defines how many days of messages should be deleted when a member is banned or
-softbanned. The number of days can be between 1 and 7. You can set 0 to disable
-message deletion for the bans, not for softbans.
-
-**Arguments**
-
-*   ``<ban_type>``: The type of ban that should be edited. Either ``ban`` or
-    ``softban``.
-
-*   ``<days>``: The number of days of messages that should be deleted. Between
-    1 and 7 only. 0 to disable for bans.
 
 """""""""""""""""""""
 warnset substitutions
@@ -861,76 +1032,40 @@ list them.
 | ``[p]warn 3 @El Laggron#0260 Racist insults. [lastwarn]``
 | The reason of this warn will be: Racist insults. This is your last warning!
 
-"""""""""""""""""""
-warnset description
-"""""""""""""""""""
+"""""""""""""""""
+warnset thumbnail
+"""""""""""""""""
 
 **Syntax**
 
 .. code-block:: none
 
-    [p]warnset description <level> <destination> <description>
+    [p]warnset thumbnail <level> [url]
 
 **Description**
 
-Edits the description of an embed for the modlog or the warned member. The
-default description for the modlog is "A member got a level (x) warning.", for
-the member, it is "The moderation team set you a level (x) warning.".
+Edits the small image located at the top right hand corner on the embeds sent
+in the modlog and to the members.
 
-You can use the following keys in your custom description:
+.. image:: .ressources/EXAMPLES/embed-thumbnail.png
 
-*   ``{invite}``: Generates an invite for the server and place it.
+You can also completly remove those images by omitting the URL argument.
 
-*   ``{member}``: The warned member. You can use attributes such as
-    ``{member.name}``, ``{member.id}``, ``{member.nick}``...
+If you want to restore the default images, here are the original URLs:
 
-*   ``{mod}``: The responsible mod of a warn. You can use the same attributes
-    as for ``{member}``.
-
-*   ``{duration}``: The duration of a mute/ban if set.
-
-*   ``{time}``: The current date and time.
+*   `warn 1 <https://i.imgur.com/Bl62rGd.png>`_
+*   `warn 2 <https://i.imgur.com/cVtzp1M.png>`_
+*   `warn 3 <https://i.imgur.com/uhrYzyt.png>`_
+*   `warn 4 <https://i.imgur.com/uhrYzyt.png>`_
+*   `warn 5 <https://i.imgur.com/DfBvmic.png>`_
 
 **Arguments**
 
-*   ``<level>``: The level of the warn to edit.
+*   ``<level>``: The level of the warning you want to edit, this must be a
+    number between 1 and 5.
 
-*   ``<destination>``: Either ``user`` for the warned member or ``modlog`` for
-    the modlog.
-
-*   ``<description>``: The new description.
-
-"""""""""""""""
-warnset convert
-"""""""""""""""
-
-**Syntax**
-
-.. code-block:: none
-
-    [p]warnset convert <path>
-
-**Description**
-
-Converts a V2 BetterMod history file to migrate its logs to WarnSystem V3.
-
-The history file is located at the following path:
-``Red-DiscordBot/data/bettermod/history/<server ID>.json``. You can grab your
-server ID with the ``[p]serverinfo`` command.
-
-You can decide to append or overwrite the logs to the current logs through
-the guided configuration. Append will get the logs and add them, while
-overwrite will reset the current logs and replace them with the migrated ones.
-
-**Example**
-
-*   .. code-block:: none
-
-        [p]warnset convert /home/laggron/Desktop/Red-DiscordBot/data/bettermod/history/363008468602454017.json
-
-**Arguments**
-
-*   ``<path>``: The path to your history file.
+*   ``[url]``: The direct URL to the image you want to use. Omit this argument
+    to remove images.
 
 ^^^^^^^^^^^^^^
 warnsysteminfo

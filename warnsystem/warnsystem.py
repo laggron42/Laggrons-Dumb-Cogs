@@ -11,6 +11,7 @@ from asyncio import TimeoutError as AsyncTimeoutError
 from datetime import datetime
 from pathlib import Path
 from json import loads
+from abc import ABC
 
 from redbot.core import commands, Config, checks
 from redbot.core.commands.converter import TimedeltaConverter
@@ -19,15 +20,14 @@ from redbot.core.data_manager import cog_data_path
 from redbot.core.utils import predicates, menus, mod
 from redbot.core.utils.chat_formatting import pagify
 
-_ = Translator("WarnSystem", __file__)
-
-from .api import API
 from . import errors
+from .api import API, UnavailableMember
 from .converters import AdvancedMemberSelect
+from .settings import SettingsMixin
 
 log = logging.getLogger("laggron.warnsystem")
 log.setLevel(logging.DEBUG)
-
+_ = Translator("WarnSystem", __file__)
 BaseCog = getattr(commands, "Cog", object)
 
 # Red 3.0 backwards compatibility, thanks Sinbad
@@ -38,12 +38,39 @@ if listener is None:
         return lambda x: x
 
 
+# Red 3.1 backwards compatibility
+try:
+    from redbot.core.utils.chat_formatting import text_to_file
+except ImportError:
+    from io import BytesIO
+
+    log.warn("Outdated redbot, consider updating.")
+    # I'm the author of this function but it was made for Cog-Creators
+    # Source: https://github.com/Cog-Creators/Red-DiscordBot/blob/V3/develop/redbot/core/utils/chat_formatting.py#L478
+    def text_to_file(
+        text: str, filename: str = "file.txt", *, spoiler: bool = False, encoding: str = "utf-8"
+    ):
+        file = BytesIO(text.encode(encoding))
+        return discord.File(file, filename, spoiler=spoiler)
+
+
 EMBED_MODLOG = lambda x: _("A member got a level {} warning.").format(x)
 EMBED_USER = lambda x: _("The moderation team set you a level {} warning.").format(x)
 
 
+class CompositeMetaClass(type(commands.Cog), type(ABC)):
+    """
+    This allows the metaclass used for proper type detection to
+    coexist with discord.py's metaclass
+
+    Credit to https://github.com/Cog-Creators/Red-DiscordBot (mod cog) for all mixin stuff.
+    """
+
+    pass
+
+
 @cog_i18n(_)
-class WarnSystem(BaseCog):
+class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
     """
     An alternative to the Red core moderation system, providing a different system of moderation\
     similar to Dyno.
@@ -56,6 +83,8 @@ class WarnSystem(BaseCog):
         "delete_message": False,  # if the [p]warn commands should delete the context message
         "show_mod": False,  # if the responsible mod should be revealed to the warned user
         "mute_role": None,  # the role used for mute
+        "update_mute": False,  # if the bot should update perms of each new text channel/category
+        "remove_roles": False,  # if the bot should remove all other roles on mute
         "respect_hierarchy": False,  # if the bot should check if the mod is allowed by hierarchy
         # TODO use bot settingfor respect_hierarchy ?
         "reinvite": True,  # if the bot should try to send an invite to an unbanned/kicked member
@@ -122,13 +151,12 @@ class WarnSystem(BaseCog):
         self.task = bot.loop.create_task(self.api._loop_task())
         self._init_logger()
 
-    __version__ = "1.1.5"
+    __version__ = "1.2.0"
     __author__ = ["retke (El Laggron)"]
 
     def _init_logger(self):
         log_format = logging.Formatter(
-            f"%(asctime)s %(levelname)s {self.__class__.__name__}: %(message)s",
-            datefmt="[%d/%m/%Y %H:%M]",
+            f"%(asctime)s [%(levelname)s] %(name)s: %(message)s", datefmt="[%Y-%m-%d %H:%M]"
         )
         # logging to a log file
         # file is automatically created by the module, if the parent foler exists
@@ -176,6 +204,8 @@ class WarnSystem(BaseCog):
             await ctx.send(e)
         except errors.LostPermissions as e:
             await ctx.send(e)
+        except errors.SuicidePrevention as e:
+            await ctx.send(e)
         except errors.MissingMuteRole:
             await ctx.send(
                 _(
@@ -206,6 +236,8 @@ class WarnSystem(BaseCog):
                     else ""
                 )
             )
+        except discord.errors.NotFound:
+            await ctx.send(_("Hackban failed: No user found."))
         else:
             if ctx.channel.permissions_for(ctx.guild.me).add_reactions:
                 await ctx.message.add_reaction("✅")
@@ -217,6 +249,7 @@ class WarnSystem(BaseCog):
         ctx,
         level,
         members,
+        unavailable_members,
         log_modlog,
         log_dm,
         take_action,
@@ -228,6 +261,7 @@ class WarnSystem(BaseCog):
         message = None
         i = 0
         total_members = len(members)
+        total_unavailable_members = len(unavailable_members)
         tick1 = "✅" if log_modlog else "❌"
         tick2 = "✅" if log_dm else "❌"
         tick3 = f"{'✅' if take_action else '❌'} Take action\n" if level != 1 else ""
@@ -248,11 +282,11 @@ class WarnSystem(BaseCog):
                     "{tick1} Log to the modlog\n"
                     "{tick2} Send a DM to all members\n"
                     "{tick3}"
-                    "{tick4} {time}"
+                    "{tick4} {time}\n"
                     "{tick5} Reason: {reason}"
                 ).format(
                     i=i,
-                    total=total_members,
+                    total=total_members + total_unavailable_members,
                     members=_("members") if i != 1 else _("member"),
                     percent=round((i / total_members) * 100, 2),
                     tick1=tick1,
@@ -269,6 +303,9 @@ class WarnSystem(BaseCog):
                     message = await ctx.send(content)
                 await asyncio.sleep(5)
 
+        if unavailable_members and level < 5:
+            await ctx.send(_("You can only use `--hackban-select` with a level 5 warn."))
+            return
         reason = await self.api.format_reason(ctx.guild, reason)
         if (log_modlog or log_dm) and reason and len(reason) > 2000:  # embed limits
             await ctx.send(
@@ -281,41 +318,47 @@ class WarnSystem(BaseCog):
                 )
             )
             return
-        cache = cog_data_path(self) / "cache"
-        if not cache.exists():
-            cache.mkdir()
-        file = cache / "list of members.txt"
-        try:
-            file.write_text("\n".join([f"{str(x)} ({x.id})" for x in members]))
-        except Exception as e:
-            log.error("Failed to write cache files.", exc_info=e)
-            await ctx.send(_("Failed to write cache files, check your logs for details."))
-            return
+        file = text_to_file(
+            "\n".join([f"{str(x)} ({x.id})" for x in members + unavailable_members])
+        )
+        targets = []
+        if members:
+            targets.append(
+                _("{total} {members} ({percent}% of the server)").format(
+                    total=total_members,
+                    members=_("members") if total_members > 1 else _("member"),
+                    percent=round((total_members / len(guild.members) * 100), 2),
+                )
+            )
+        if unavailable_members:
+            targets.append(
+                _("{total} {users} not in the server.").format(
+                    total=total_unavailable_members,
+                    users=_("users") if total_unavailable_members > 1 else _("user"),
+                )
+            )
         if not confirm:
             msg = await ctx.send(
                 _(
-                    "You're about to set a level {level} warning "
-                    "on {total} {members} ({percent}% of the server).\n\n"
+                    "You're about to set a level {level} warning on {target}.\n\n"
                     "{tick1} Log to the modlog\n"
                     "{tick2} Send a DM to all members\n"
                     "{tick3}"
-                    "{tick4} {time}"
+                    "{tick4} {time}\n"
                     "{tick5} Reason: {reason}\n\n"
                     "Continue?"
                 ).format(
                     level=level,
-                    total=total_members,
-                    members=_("members") if total_members > 1 else _("member"),
-                    percent=round((total_members / len(guild.members) * 100), 2),
+                    target=_(" and ").join(targets),
                     tick1=tick1,
                     tick2=tick2,
                     tick3=tick3,
                     tick4=tick4,
                     time=time_str,
                     tick5=tick5,
-                    reason=reason or "Not set",
+                    reason=reason or _("Not set"),
                 ),
-                file=discord.File(str(file.absolute())),
+                file=file,
             )
             menus.start_adding_reactions(msg, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
             pred = predicates.ReactionPredicate.yes_or_no(msg, ctx.author)
@@ -335,7 +378,7 @@ class WarnSystem(BaseCog):
         try:
             fails = await self.api.warn(
                 guild=guild,
-                members=members,
+                members=members + unavailable_members,
                 author=ctx.author,
                 level=level,
                 reason=reason,
@@ -395,674 +438,6 @@ class WarnSystem(BaseCog):
                 task.cancel()
             if message:
                 await message.delete()
-
-    # all settings
-    @commands.group()
-    @checks.admin_or_permissions(administrator=True)
-    @commands.guild_only()
-    async def warnset(self, ctx: commands.Context):
-        """
-        Set all WarnSystem settings.
-
-        For more informations about how to configure and use WarnSystem, read the wiki:\
-        https://laggron.red/warnsystem.html
-        """
-        pass
-
-    # goes from most basic to advanced settings
-    @warnset.command(name="settings")
-    async def warnset_settings(self, ctx: commands.Context):
-        """
-        Show the current settings.
-        """
-        guild = ctx.guild
-        if not ctx.channel.permissions_for(guild.me).embed_links:
-            await ctx.send(_("I can't send embed links here!"))
-            return
-        async with ctx.typing():
-
-            # collect data and make strings
-            all_data = await self.data.guild(guild).all()
-            modlog_channels = await self.api.get_modlog_channel(guild, "all")
-            channels = ""
-            for key, channel in dict(modlog_channels).items():
-                if not channel:
-                    if key != "main":
-                        continue
-                    channel = _("Not set. Use `{prefix}warnset channel`").format(prefix=ctx.prefix)
-                else:
-                    channel = guild.get_channel(channel)
-                    channel = channel.mention if channel else _("Not found")
-                if key == "main":
-                    channels += _("Default channel: {channel}\n").format(channel=channel)
-                else:
-                    channels += _("Level {level} warnings channel: {channel}\n").format(
-                        channel=channel, level=key
-                    )
-            mute_role = guild.get_role(all_data["mute_role"])
-            mute_role = _("No mute role set.") if not mute_role else mute_role.name
-            hierarchy = _("Enabled") if all_data["respect_hierarchy"] else _("Disabled")
-            reinvite = _("Enabled") if all_data["reinvite"] else _("Disabled")
-            bandays = _("Softban: {softban}\nBan: {ban}").format(
-                softban=all_data["bandays"]["softban"], ban=all_data["bandays"]["ban"]
-            )
-            len_substitutions = len(all_data["substitutions"])
-            substitutions = (
-                _(
-                    "No substitution set.\nType `{prefix}help warnset "
-                    "substitutions` to get started."
-                ).format(prefix=ctx.prefix)
-                if len_substitutions < 1
-                else _(
-                    "{number} subsitution{plural} set.\n"
-                    "Type `{prefix}warnset substitutions list` to list them."
-                ).format(
-                    number=len_substitutions,
-                    plural=_("s") if len_substitutions > 1 else "",
-                    prefix=ctx.prefix,
-                )
-            )
-            modlog_dict = all_data["embed_description_modlog"]
-            modlog_descriptions = ""
-            for key, description in modlog_dict.items():
-                if key == "main":
-                    key == "Default"
-                modlog_descriptions += f"{key}: {description}\n"
-            if len(modlog_descriptions) > 1024:
-                modlog_descriptions = _("Too long to be shown...")
-            user_dict = all_data["embed_description_user"]
-            user_descriptions = ""
-            for key, description in user_dict.items():
-                if key == "main":
-                    key == "Default"
-                user_descriptions += f"{key}: {description}\n"
-            if len(user_descriptions) > 1024:
-                user_descriptions = _("Too long to be shown...")
-
-            # make embed
-            embed = discord.Embed(title=_("WarnSystem settings."))
-            embed.url = "https://laggron.red/warnsystem.html"
-            embed.description = _(
-                "You can change all of these values with {prefix}warnset"
-            ).format(prefix=ctx.prefix)
-            embed.add_field(name=_("Log channels"), value=channels)
-            embed.add_field(name=_("Mute role"), value=mute_role)
-            embed.add_field(name=_("Respect hierarchy"), value=hierarchy)
-            embed.add_field(name=_("Reinvite unbanned members"), value=reinvite)
-            embed.add_field(name=_("Days of messages to delete"), value=bandays)
-            embed.add_field(name=_("Substitutions"), value=substitutions)
-            embed.add_field(
-                name=_("Modlog embed descriptions"), value=modlog_descriptions, inline=False
-            )
-            embed.add_field(
-                name=_("User embed descriptions"), value=user_descriptions, inline=False
-            )
-            embed.set_footer(text=_("Cog made with ❤️ by Laggron"))
-            embed.color = self.bot.color
-        try:
-            await ctx.send(embed=embed)
-        except discord.errors.HTTPException as e:
-            log.error("Couldn't make embed for displaying settings.", exc_info=e)
-            await ctx.send(
-                _(
-                    "Error when sending the message. Check the warnsystem "
-                    "logs for more informations."
-                )
-            )
-
-    @warnset.command(name="channel")
-    async def warnset_channel(
-        self, ctx: commands.Context, channel: discord.TextChannel, level: int = None
-    ):
-        """
-        Set the channel for the WarnSystem modlog.
-
-        This will use the Red's modlog by default if it was set.
-
-        All warnings will be logged here.
-        I need the `Send Messages` and `Embed Links` permissions.
-
-        If you want to set one channel for a specific level of warning, you can specify a\
-        number after the channel
-        """
-        guild = ctx.guild
-        if not channel.permissions_for(guild.me).send_messages:
-            await ctx.send(_("I don't have the permission to send messages in that channel."))
-        elif not channel.permissions_for(guild.me).embed_links:
-            await ctx.send(_("I don't have the permissions to send embed links in that channel."))
-        else:
-            if not level:
-                await self.data.guild(guild).channels.main.set(channel.id)
-                await ctx.send(
-                    _(
-                        "Done. All events will be send to that channel by default.\n\nIf you want "
-                        "to send a specific warning level in a different channel, you can use the "
-                        "same command with the number after the channel.\nExample: "
-                        "`{prefix}warnset channel #your-channel 3`"
-                    ).format(prefix=ctx.prefix)
-                )
-            elif not 1 <= level <= 5:
-                await ctx.send(
-                    _(
-                        "If you want to specify a level for the channel, provide a number between "
-                        "1 and 5."
-                    )
-                )
-            else:
-                await self.data.guild(guild).channels.set_raw(level, value=channel.id)
-                await ctx.send(
-                    _(
-                        "Done. All level {level} warnings events will be sent to that channel."
-                    ).format(level=str(level))
-                )
-
-    @warnset.command(name="mute")
-    async def warnset_mute(self, ctx: commands.Context, *, role: discord.Role = None):
-        """
-        Create the role used for muting members.
-
-        You can specify a role when invoking the command to specify which role should be used.
-        If you don't specify a role, one will be created for you.
-        """
-        guild = ctx.guild
-        my_position = guild.me.top_role.position
-        if not role:
-            if not guild.me.guild_permissions.manage_roles:
-                await ctx.send(
-                    _("I can't manage roles, please give me this permission to continue.")
-                )
-                return
-            async with ctx.typing():
-                fails = await self.api.maybe_create_mute_role(guild)
-                my_position = guild.me.top_role.position
-                if fails is False:
-                    await ctx.send(
-                        _(
-                            "A mute role was already created! You can change it by specifying "
-                            "a role when typing the command.\n`[p]warnset mute <role name>`"
-                        )
-                    )
-                    return
-                else:
-                    if fails:
-                        errors = _(
-                            "\n\nSome errors occured when editing the channel permissions:\n"
-                        ) + "\n".join(fails)
-                    else:
-                        errors = ""
-                    await ctx.send(
-                        _(
-                            "The role `Muted` was successfully created at position {pos}. Feel "
-                            "free to drag it in the hierarchy and edit its permissions, as long "
-                            "as my top role is above and the members to mute are below."
-                        ).format(pos=my_position - 1)
-                        + errors
-                    )
-        elif role.position >= my_position:
-            await ctx.send(
-                _(
-                    "That role is higher than my top role in the hierarchy. "
-                    'Please move it below "{bot_role}".'
-                ).format(bot_role=guild.me.top_role.name)
-            )
-        else:
-            await self.data.guild(guild).mute_role.set(role.id)
-            await ctx.send(_("The new mute role was successfully set!"))
-
-    @warnset.command(name="hierarchy")
-    async def warnset_hierarchy(self, ctx: commands.Context, enable: bool = None):
-        """
-        Set if the bot should respect roles hierarchy.
-
-        If enabled, a member cannot ban another member above them in the roles hierarchy, like\
-        with manual bans.
-        If disabled, mods can ban everyone the bot can.
-
-        Invoke the command without arguments to get the current status.
-        """
-        guild = ctx.guild
-        current = await self.data.guild(guild).respect_hierarchy()
-        if enable is None:
-            await ctx.send(
-                _(
-                    "The bot currently {respect} role hierarchy. If you want to change this, "
-                    "type `[p]warnset hierarchy {opposite}`."
-                ).format(
-                    respect=_("respects") if current else _("doesn't respect"),
-                    opposite=not current,
-                )
-            )
-        elif enable:
-            await self.data.guild(guild).respect_hierarchy.set(True)
-            await ctx.send(
-                _(
-                    "Done. Moderators will not be able to take actions on the members higher "
-                    "than themselves in the role hierarchy of the server."
-                )
-            )
-        else:
-            await self.data.guild(guild).respect_hierarchy.set(False)
-            await ctx.send(
-                _(
-                    "Done. Moderators will be able to take actions on anyone on the server, as "
-                    "long as the bot is able to do so."
-                )
-            )
-
-    @warnset.command(name="reinvite")
-    async def warnset_reinvite(self, ctx: commands.Context, enable: bool = None):
-        """
-        Set if the bot should send an invite after a temporary ban.
-
-        If enabled, any unbanned member will receive a DM with an invite to join back to the server.
-        The bot needs to share a server with the member to send a DM.
-
-        Invoke the command without arguments to get the current status.
-        """
-        guild = ctx.guild
-        current = await self.data.guild(guild).reinvite()
-        if enable is None:
-            await ctx.send(
-                _(
-                    "The bot {respect} reinvite unbanned members. If you want to "
-                    "change this, type `[p]warnset reinvite {opposite}`."
-                ).format(respect=_("does") if current else _("doesn't"), opposite=not current)
-            )
-        elif enable:
-            await self.data.guild(guild).reinvite.set(True)
-            await ctx.send(
-                _(
-                    "Done. The bot will try to send an invite to unbanned members. Please note "
-                    "that the bot needs to share one server in common with the member to receive "
-                    "the message."
-                )
-            )
-        else:
-            await self.data.guild(guild).reinvite.set(False)
-            await ctx.send(_("Done. The bot will no longer reinvite unbanned members."))
-
-    @warnset.command("bandays")
-    async def warnset_bandays(self, ctx: commands.Context, ban_type: str, days: int):
-        """
-        Set the number of messages to delete when a member is banned.
-
-        You can set a value for a softban or a ban.
-        When invoking the command, you must specify `ban` or `softban` as the first\
-        argument to specify which type of ban you want to edit, then a number between\
-        1 and 7, for the number of days of messages to delete.
-        These values will be always used for level 4/5 warnings.
-
-        __Examples__
-
-        - `[p]warnset bandays softban 2`
-          The number of days of messages to delete will be set to 2 for softbans.
-
-        - `[p]warnset bandays ban 7`
-          The number of days of messages to delete will be set to 7 for bans.
-
-        - `[p]warnset bandays ban 0`
-          The bans will not delete any messages.
-        """
-        guild = ctx.guild
-        if all([ban_type != x for x in ["softban", "ban"]]):
-            await ctx.send(
-                _(
-                    "The first argument must be `ban` or `softban`.\n"
-                    "Type `{prefix}help warnset bandays` for more details."
-                )
-            )
-            return
-        if not 0 <= days <= 7:
-            is_ban = _("You can set 0 to disable messages deletion.") if ban_type == "ban" else ""
-            await ctx.send(
-                _(
-                    "The number of days of messages to delete must be between "
-                    "1 and 7, due to Discord restrictions.\n"
-                )
-                + is_ban
-            )
-            return
-        if days == 0 and ban_type == "softban":
-            await ctx.send(
-                _(
-                    "The goal of a softban is to delete the members' messages. Disabling "
-                    "this would make the softban a simple kick. Enter a value between 1 and 7."
-                )
-            )
-            return
-        if ban_type == "softban":
-            await self.data.guild(guild).bandays.softban.set(days)
-        else:
-            await self.data.guild(guild).bandays.ban.set(days)
-        await ctx.send(_("The new value was successfully set!"))
-
-    @warnset.group(name="substitutions")
-    async def warnset_substitutions(self, ctx: commands.Context):
-        """
-        Manage the reasons' substitutions
-
-        A substitution is text replaced by a key you place in your warn reason.
-
-        For example, if you set a substitution with the keyword `last warn` associated with the\
-        text `This is your last warning!`, this is what will happen with your next warnings:
-
-        `[p]warn 4 @annoying_member Stop spamming. [last warn]`
-        Reason = Stop spamming. This is your last warning!
-        """
-        pass
-
-    @warnset_substitutions.command(name="add")
-    async def warnset_substitutions_add(self, ctx: commands.Context, name: str, *, text: str):
-        """
-        Create a new subsitution.
-
-        `name` should be something short, it will be the keyword that will be replaced by your text
-        `text` is what will be replaced by `[name]`
-
-        Example:
-        - `[p]warnset substitutions add ad Advertising for a Discord server`
-        - `[p]warn 1 @noob [ad] + doesn't respect warnings`
-        The reason will be "Advertising for a Discord server + doesn't respect warnings".
-        """
-        async with self.data.guild(ctx.guild).substitutions() as substitutions:
-            if name in substitutions:
-                await ctx.send(
-                    _(
-                        "The name you're using is already used by another substitution!\n"
-                        "Delete or edit it with `[p]warnset substitutions delete`"
-                    )
-                )
-                return
-            if len(text) > 600:
-                await ctx.send(_("That substitution is too long! Maximum is 600 characters!"))
-                return
-            substitutions[name] = text
-        await ctx.send(
-            _(
-                "Your new subsitutions with the keyword `{keyword}` was successfully "
-                "created! Type `[{substitution}]` in your warning reason to use the text you "
-                "just set.\nManage your substitutions with the `{prefix}warnset "
-                "substitutions` subcommands."
-            ).format(keyword=name, substitution=name, prefix=ctx.prefix)
-        )
-
-    @warnset_substitutions.command(name="delete", aliases=["del"])
-    async def warnset_substitutions_delete(self, ctx: commands.Context, name: str):
-        """
-        Delete a previously set substitution.
-
-        The substitution must exist, see existing substitutions with the `[p]warnset substitutions\
-        list` command.
-        """
-        async with self.data.guild(ctx.guild).substitutions() as substitutions:
-            if name not in substitutions:
-                await ctx.send(
-                    _(
-                        "That substitution doesn't exist!\nSee existing substitutions with the "
-                        "`{prefix}warnset substitutions list` command."
-                    ).format(prefix=ctx.prefix)
-                )
-                return
-            del substitutions[name]
-        await ctx.send(_("The substitutions was successfully deleted."))
-
-    @warnset_substitutions.command(name="list")
-    async def warnset_substitutions_list(self, ctx: commands.Context):
-        """
-        List all existing substitutions on your server
-        """
-        guild = ctx.guild
-        substitutions = await self.data.guild(guild).substitutions()
-        if len(substitutions) < 1:
-            await ctx.send(
-                _(
-                    "You don't have any existing substitution on this server!\n"
-                    "Create one with `{prefix}warnset substitutions add`"
-                ).format(prefix=ctx.prefix)
-            )
-            return
-        text = ""
-        for substitution, content in substitutions.items():
-            text += f"+ {substitution}\n{content}\n\n"
-        messages = [x for x in pagify(text, page_length=1800)]
-        total_pages = len(messages)
-        for i, page in enumerate(messages):
-            await ctx.send(
-                _("Substitutions for {server}:").format(server=guild.name)
-                + f"\n```diff\n{page}\n```"
-                + _("Page {page}/{max}").format(page=i + 1, max=total_pages)
-            )
-
-    @warnset.command(name="showmod")
-    async def warnset_showmod(self, ctx, enable: bool = None):
-        """
-        Defines if the responsible moderator should be revealed to the warned member in DM.
-
-        If enabled, any warned member will be able to see who warned them, else they won't know.
-
-        Invoke the command without arguments to get the current status.
-        """
-        guild = ctx.guild
-        current = await self.data.guild(guild).show_mod()
-        if enable is None:
-            await ctx.send(
-                _(
-                    "The bot {respect} show the responsible moderator to the warned member in DM. "
-                    "If you want to change this, type `[p]warnset showmod {opposite}`."
-                ).format(respect=_("does") if current else _("doesn't"), opposite=not current)
-            )
-        elif enable:
-            await self.data.guild(guild).show_mod.set(True)
-            await ctx.send(
-                _(
-                    "Done. The moderator responsible of a warn will now be shown to the warned "
-                    "member in direct messages."
-                )
-            )
-        else:
-            await self.data.guild(guild).show_mod.set(False)
-            await ctx.send(_("Done. The bot will no longer show the responsible moderator."))
-
-    @warnset.command(name="description")
-    async def warnset_description(
-        self, ctx: commands.Context, level: int, destination: str, *, description: str
-    ):
-        """
-        Set a custom description for the modlog embeds.
-
-        You can set the description for each type of warning, one for the user in DM\
-        and the other for the server modlog.
-
-        __Keys:__
-
-        You can include these keys in your message:
-
-        - `{invite}`: Generate an invite for the server
-        - `{member}`: The warned member (tip: you can use `{member.id}` for the member's ID or\
-        `{member.mention}` for a mention)
-        - `{mod}`: The moderator that warned the member (you can also use keys like\
-        `{moderator.id}`)
-        - `{duration}`: The duration of a timed mute/ban if it exists
-        - `{time}`: The current date and time.
-
-        __Examples:__
-
-        - `[p]warnset description 1 user You were warned by a moderator for your behaviour,\
-        please read the rules.`
-          This set the description for the first warning for the warned member.
-
-        - `[p]warnset description 3 modlog A member was kicked from the server.`
-          This set the description for the 3rd warning (kick) for the modlog.
-
-        - `[p]warnset description 4 user You were banned and unbanned to clear your messages\
-        from the server. You can join the server back with this link: {invite}`
-          This set the description for the 4th warning (softban) for the user, while generating\
-          an invite which will be replace `{invite}`
-        """
-        guild = ctx.guild
-        if not any([destination == x for x in ["modlog", "user"]]):
-            await ctx.send(
-                _(
-                    "You need to specify `modlog` or `user`. Read the help of "
-                    "the command for more details."
-                )
-            )
-            return
-        if len(description) > 800:
-            await ctx.send("Your text is too long!")
-            return
-        await self.data.guild(guild).set_raw(
-            "embed_description_" + destination, str(level), value=description
-        )
-        await ctx.send(
-            _("The new description for {destination} (warn {level}) was successfully set!").format(
-                destination=_("modlog") if destination == "modlog" else _("user"), level=level
-            )
-        )
-
-    @warnset.command(name="convert")
-    async def warnset_convert(self, ctx: commands.Context, *, path: Path):
-        """
-        Convert BetterMod V2 logs to V3.
-
-        You need to point the path to your history file.
-        Get your old Red V2 instance folder, go to `/data/bettermod/history/<server ID>.json` and\
-        copy its path.
-        You can get your server ID with the `[p]serverinfo` command.
-
-        Example:
-        `[p]warnset convert\
-        /home/laggron/Desktop/Red-DiscordBot/data/bettermod/history/363008468602454017.json`
-        """
-
-        async def maybe_clear(message):
-            try:
-                await message.clear_reactions()
-            except Exception:
-                pass
-
-        async def convert(data: dict) -> int:
-            """
-            Convert V2 logs to V3 format.
-            """
-            try:
-                del data["version"]
-            except KeyError:
-                pass
-            total_cases = 0
-            for member, logs in data.items():
-                cases = []
-                for case in [y for x, y in logs.items() if x.startswith("case")]:
-                    level = {"Simple": 1, "Kick": 3, "Softban": 4, "Ban": 5}.get(case["level"], 1)
-                    timestamp = datetime.strptime(case["timestamp"], "%d %b %Y %H:%M").strftime(
-                        "%a %d %B %Y %H:%M:%S"
-                    )
-                    cases.append(
-                        {
-                            "level": level,
-                            "author": "Unknown",
-                            "reason": case["reason"],
-                            "time": timestamp,  # only day of the week missing
-                            "duration": None,
-                        }
-                    )
-                    total_cases += 1
-                async with self.data.custom("MODLOGS", guild.id, int(member)).x() as logs:
-                    logs.extend(cases)
-            return total_cases
-
-        guild = ctx.guild
-        react = guild.me.guild_permissions.add_reactions
-        if not path.is_file():
-            await ctx.send(_("That path doesn't exist."))
-            return
-        if not path.name.endswith(".json"):
-            await ctx.send(_("That's not a valid file."))
-            return
-        if not path.name.startswith(str(guild.id)):
-            yes_no = "(y/n)" if not react else ""
-            message = await ctx.send(
-                _(
-                    "It looks like that file doesn't belong to the current server. Are you sure "
-                    "you want to use this file?"
-                )
-                + yes_no
-            )
-            if react:
-                menus.start_adding_reactions(
-                    message, predicates.ReactionPredicate.YES_OR_NO_EMOJIS
-                )
-                pred = predicates.ReactionPredicate.yes_or_no(message, ctx.author)
-                try:
-                    await ctx.bot.wait_for("reaction_add", check=pred, timeout=30)
-                except AsyncTimeoutError:
-                    await ctx.send(_("Request timed out."))
-                    await maybe_clear(message)
-                    return
-                await maybe_clear(message)
-            else:
-                pred = predicates.MessagePredicate.yes_or_no(ctx)
-                try:
-                    await self.bot.wait_for("message", check=pred, timeout=30)
-                except AsyncTimeoutError:
-                    await ctx.send(_("Request timed out."))
-                    return
-            if not pred.result:
-                await ctx.send(_("Alrght, try again with the good file."))
-                return
-        content = path.open().read()
-        try:
-            content = loads(content)
-        except Exception as e:
-            log.warn(
-                f"Couldn't decode JSON given by {ctx.author} (ID: {ctx.author.id}) at {str(path)}",
-                exc_info=e,
-            )
-            await ctx.send(
-                _(
-                    "Couln't read the file because of an exception. "
-                    "Check your console or logs for details."
-                )
-            )
-            return
-        await ctx.send(
-            _(
-                "Would you like to **append** the logs or **overwrite** them?\n\n"
-                "**Append** will get the logs and add them to the current logs.\n"
-                "**Overwrite** will erase the current logs and replace it with the given logs.\n\n"
-                "*Type* `append` *or* `overwrite` *in the chat.*"
-            )
-        )
-        pred = predicates.MessagePredicate.lower_contained_in(
-            [_("append"), _("overwrite")], ctx=ctx
-        )
-        try:
-            await self.bot.wait_for("message", check=pred, timeout=40)
-        except AsyncTimeoutError:
-            await ctx.send(_("Request timed out."))
-            return
-        t1 = time.time()
-        if pred.result == 0:
-            await ctx.send(_("Starting conversion... This might take a long time."))
-            total = await convert(content)
-        elif pred.result == 1:
-            await ctx.send(_("Deleting server logs... Settings, such as channels, are kept."))
-            await self.data.custom("MODLOGS").set({})
-            await ctx.send(_("Starting conversion... This might take a long time."))
-            total = await convert(content)
-        t2 = time.time()
-        await ctx.send(
-            _(
-                "Done! {number} cases were added to the WarnSystem V3 log.\n"
-                "This took {time} seconds."
-            ).format(number=total, time=round(t2 - t1, 2))
-        )
-        log.info(
-            f"{ctx.author.name} (ID: {ctx.author.id}) used the BetterMod data converter and "
-            f"converted {total} cases, added on the guild {ctx.guild} (ID: {ctx.guild.id}) with "
-            f"the {'append' if pred.result == 0 else 'overwrite'} strategy.\n"
-            f"The file used to convert is located at {path}"
-        )
 
     # all warning commands
     @commands.group(invoke_without_command=True)
@@ -1134,7 +509,7 @@ class WarnSystem(BaseCog):
     async def warn_5(
         self,
         ctx: commands.Context,
-        member: Union[discord.Member, int],
+        member: UnavailableMember,
         time: Optional[TimedeltaConverter],
         *,
         reason: str = None,
@@ -1189,6 +564,7 @@ class WarnSystem(BaseCog):
             ctx,
             1,
             selection.members,
+            selection.unavailable_members,
             selection.send_modlog,
             selection.send_dm,
             selection.take_action,
@@ -1214,6 +590,7 @@ class WarnSystem(BaseCog):
             ctx,
             1,
             selection.members,
+            selection.unavailable_members,
             selection.send_modlog,
             selection.send_dm,
             selection.take_action,
@@ -1242,6 +619,7 @@ class WarnSystem(BaseCog):
             ctx,
             2,
             selection.members,
+            selection.unavailable_members,
             selection.send_modlog,
             selection.send_dm,
             selection.take_action,
@@ -1267,6 +645,7 @@ class WarnSystem(BaseCog):
             ctx,
             3,
             selection.members,
+            selection.unavailable_members,
             selection.send_modlog,
             selection.send_dm,
             selection.take_action,
@@ -1292,6 +671,7 @@ class WarnSystem(BaseCog):
             ctx,
             4,
             selection.members,
+            selection.unavailable_members,
             selection.send_modlog,
             selection.send_dm,
             selection.take_action,
@@ -1320,6 +700,7 @@ class WarnSystem(BaseCog):
             ctx,
             5,
             selection.members,
+            selection.unavailable_members,
             selection.send_modlog,
             selection.send_dm,
             selection.take_action,
@@ -1333,7 +714,7 @@ class WarnSystem(BaseCog):
     @commands.bot_has_permissions(add_reactions=True, manage_messages=True)
     @commands.cooldown(1, 3, commands.BucketType.member)
     async def warnings(
-        self, ctx: commands.Context, user: Union[discord.User, int] = None, index: int = 0
+        self, ctx: commands.Context, user: UnavailableMember = None, index: int = 0
     ):
         """
         Shows all warnings of a member.
@@ -1344,11 +725,6 @@ class WarnSystem(BaseCog):
         if not user:
             await ctx.send_help()
             return
-        if isinstance(user, int):
-            user = await self.api._get_user_info(user)
-            if not user:
-                await ctx.send(_("User not found."))
-                return
         if not await mod.is_mod_or_superior(self.bot, ctx.author) and user != ctx.author:
             await ctx.send(_("You are not allowed to see other's warnings!"))
             return
@@ -1409,7 +785,7 @@ class WarnSystem(BaseCog):
             embeds.append(embed)
 
         controls = {"⬅": menus.prev_page, "❌": menus.close_menu, "➡": menus.next_page}
-        if await mod.is_mod_or_superior(self.bot, ctx.author) and user != ctx.author:
+        if await mod.is_mod_or_superior(self.bot, ctx.author):
             controls.update({"✏": self._edit_case, "🗑": self._delete_case})
 
         await menus.menu(
@@ -1439,8 +815,11 @@ class WarnSystem(BaseCog):
         await message.clear_reactions()
         old_embed = message.embeds[0]
         embed = discord.Embed()
-        member = await self.api._get_user_info(
-            int(re.match(r"(?:.*#[0-9]{4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1))
+        member_id = int(
+            re.match(r"(?:.*#[0-9]{4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1)
+        )
+        member = self.bot.get_user(member_id) or UnavailableMember(
+            self.bot, guild._state, member_id
         )
         embed.clear_fields()
         embed.description = _(
@@ -1502,23 +881,31 @@ class WarnSystem(BaseCog):
         await message.clear_reactions()
         old_embed = message.embeds[0]
         embed = discord.Embed()
-        member = await self.api._get_user_info(
-            int(re.match(r"(?:.*#[0-9]{4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1))
+        member_id = int(
+            re.match(r"(?:.*#[0-9]{4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1)
+        )
+        member = self.bot.get_user(member_id) or UnavailableMember(
+            self.bot, guild._state, member_id
         )
         level = int(re.match(r".*\(([0-9]*)\)", old_embed.fields[0].value).group(1))
         can_unmute = False
+        add_roles = False
         if level == 2:
             mute_role = guild.get_role(await self.data.guild(guild).mute_role())
             member = guild.get_member(member.id)
-            if mute_role and member and mute_role in member.roles:
-                can_unmute = True
+            if member:
+                if mute_role and mute_role in member.roles:
+                    can_unmute = True
+                add_roles = await self.data.guild(guild).remove_roles()
         description = _(
-            "Case #{number} deletion.\n\n**Click on the reaction to confirm your action.**"
+            "Case #{number} deletion.\n**Click on the reaction to confirm your action.**"
         ).format(number=page)
-        if can_unmute:
-            description += _(
-                "\nNote: Deleting the case will also unmute the currently muted member."
-            )
+        if can_unmute or add_roles:
+            description += _("\nNote: Deleting the case will also do the following:")
+            if can_unmute:
+                description += _("\n- unmute the member")
+            if add_roles:
+                description += _("\n- add all roles back to the member")
         embed.description = description
         await message.edit(embed=embed)
         menus.start_adding_reactions(message, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
@@ -1531,23 +918,70 @@ class WarnSystem(BaseCog):
             return
         if pred.result:
             async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
+                try:
+                    roles = logs[page - 1]["roles"]
+                except KeyError:
+                    roles = []
                 logs.remove(logs[page - 1])
             log.debug(
-                f"Removed case #{page} from member {member} (ID: {member.id}) "
-                f"on guild {guild} (ID: {guild.id})."
+                f"[Guild {guild.id}] Removed case #{page} from member {member} (ID: {member.id})."
             )
             await message.clear_reactions()
-            content = _("The case was successfully deleted!")
             if can_unmute:
-                await member.remove_roles(mute_role)
-                content += _("\nThe member was also unmuted.")
-            await message.edit(content=content, embed=None)
+                await member.remove_roles(
+                    mute_role,
+                    reason=_("Warning deleted by {author}").format(
+                        author=f"{str(ctx.author)} (ID: {ctx.author.id})"
+                    ),
+                )
+            if roles:
+                roles = [guild.get_role(x) for x in roles]
+                await member.add_roles(*roles, reason=_("Adding removed roles back after unmute."))
+            await message.edit(content=_("The case was successfully deleted!"), embed=None)
         else:
             await message.clear_reactions()
             await message.edit(content=_("The case was not deleted."), embed=None)
 
+    @commands.command()
+    @checks.mod()
+    @commands.cooldown(1, 10, commands.BucketType.channel)
+    async def warnlist(self, ctx: commands.Context, short: bool = False):
+        """
+        List the latest warnings issued on the server.
+        """
+        guild = ctx.guild
+        full_text = ""
+        warns = await self.api.get_all_cases(guild)
+        for i, warn in enumerate(warns, start=1):
+            text = _(
+                "--- Case {number} ---\n"
+                "Member:    {member} (ID: {member.id})\n"
+                "Level:     {level}\n"
+                "Reason:    {reason}\n"
+                "Author:    {author} (ID: {author.id})\n"
+                "Date:      {time}\n"
+            ).format(number=i, **warn)
+            if warn["duration"]:
+                text += _("Duration:  {duration}\nUntil:     {until}\n").format(
+                    duration=warn["duration"], until=warn["until"]
+                )
+            text += "\n\n"
+            full_text = text + full_text
+        pages = [
+            x for x in pagify(full_text, delims=["\n\n", "\n"], priority=True, page_length=1900)
+        ]
+        total_pages = len(pages)
+        total_warns = len(warns)
+        pages = [
+            f"```yml\n{x}```\n"
+            + _("{total} warnings. Page {i}/{pages}").format(
+                total=total_warns, i=i, pages=total_pages
+            )
+            for i, x in enumerate(pages, start=1)
+        ]
+        await menus.menu(ctx=ctx, pages=pages, controls=menus.DEFAULT_CONTROLS, timeout=60)
+
     @commands.command(hidden=True)
-    @checks.is_owner()
     async def warnsysteminfo(self, ctx):
         """
         Get informations about the cog.
@@ -1556,7 +990,7 @@ class WarnSystem(BaseCog):
             _(
                 "Laggron's Dumb Cogs V3 - warnsystem\n\n"
                 "Version: {0.__version__}\n"
-                "Author: {0.__author__}\n"
+                "Author: {0.__author__[0]}\n\n"
                 "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
                 "Discord server: https://discord.gg/AVzjfpR\n"
                 "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"
@@ -1578,8 +1012,8 @@ class WarnSystem(BaseCog):
                 temp_warns.remove(removal)
         if to_remove:
             log.info(
-                f"The temporary ban of user {user} (ID: {user.id}) on guild {guild} "
-                f"(ID: {guild.id} was cancelled due to his manual unban."
+                f"[Guild {guild.id}] The temporary ban of user {user} (ID: {user.id}) "
+                "was cancelled due to his manual unban."
             )
 
     @listener()
@@ -1600,8 +1034,40 @@ class WarnSystem(BaseCog):
                 temp_warns.remove(removal)
         if to_remove:
             log.info(
-                f"The temporary mute of member {after} (ID: {after.id}) on guild {guild} "
-                f"(ID: {guild.id}) was ended due to a manual unmute (role removed)."
+                f"[Guild {guild.id}] The temporary mute of member {after} (ID: {after.id}) "
+                "was ended due to a manual unmute (role removed)."
+            )
+
+    @listener()
+    async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
+        guild = channel.guild
+        if isinstance(channel, discord.VoiceChannel):
+            return
+        if not await self.data.guild(guild).update_mute():
+            return
+        role = guild.get_role(await self.data.guild(guild).mute_role())
+        if not role:
+            return
+        try:
+            channel.set_permissions(
+                role,
+                send_messages=False,
+                add_reactions=False,
+                reason=_(
+                    "Updating channel settings so the mute role will work here. "
+                    "Disable the auto-update with [p]warnset autoupdate"
+                ),
+            )
+        except discord.errors.Forbidden:
+            log.warn(
+                f"[Guild {guild.id}] Couldn't update permissions of new channel {channel.name} "
+                f"(ID: {channel.id}) due to a permission error."
+            )
+        except discord.errors.HTTPException as e:
+            log.error(
+                f"[Guild {guild.id}] Couldn't update permissions of new channel {channel.name} "
+                f"(ID: {channel.id}) due to an unknown error.",
+                exc_info=e,
             )
 
     @listener()

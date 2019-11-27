@@ -26,15 +26,6 @@ If you need to prevent and exception, do it like this:
         print("End of function")
 """
 
-import logging
-
-log = logging.getLogger("laggron.warnsystem")
-if logging.getLogger("red").isEnabledFor(logging.DEBUG):
-    # debug mode enabled
-    log.setLevel(logging.DEBUG)
-else:
-    log.setLevel(logging.WARNING)
-
 __all__ = [
     "InvalidLevel",
     "NotFound",
@@ -44,6 +35,7 @@ __all__ = [
     "MemberTooHigh",
     "NotAllowedByHierarchy",
     "LostPermissions",
+    "SuicidePrevention",
 ]
 
 
@@ -60,6 +52,14 @@ class NotFound(Exception):
     """
     Something was not found in the WarnSystem data. The meaning of this exception
     depends of what you called, it may be a missing WarnSystem channel.
+    """
+
+    pass
+
+
+class UserNotFound(Exception):
+    """
+    Cannot find the given user for a hackban.
     """
 
     pass
@@ -128,6 +128,16 @@ class LostPermissions(Exception):
 
     This can be the permission to send messages in the modlog channel or use\
     the mute role.
+    """
+
+    pass
+
+
+class SuicidePrevention(Exception):
+    """
+    This is raised when the bot attempts to warn itself.
+
+    Warning Red will cause issues and is not designed for this.
     """
 
     pass

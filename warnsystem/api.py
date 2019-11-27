@@ -2,41 +2,120 @@ import asyncio
 import discord
 import logging
 import re
+import abc
 
 from copy import deepcopy
 from typing import Union, Optional, Iterable, Callable, Awaitable
 from datetime import datetime, timedelta
+
 from redbot.core.utils.mod import is_allowed_by_hierarchy
+from redbot.core.i18n import Translator
+from redbot.core.commands import BadArgument, Converter, MemberConverter
 
 try:
     from redbot.core.modlog import get_modlog_channel as get_red_modlog_channel
 except RuntimeError:
     pass  # running sphinx-build raises an error when importing this module
 
-from .warnsystem import _  # translator
 from . import errors
 
 log = logging.getLogger("laggron.warnsystem")
+_ = Translator("WarnSystem", __file__)
 id_pattern = re.compile(r"([0-9]{15,21})$")
 
 
-class UnavailableMember:
+class FakeRole:
+    """
+    We need to fake some attributes of roles for the class UnavailableMember
+    """
+
+    position = 0
+
+
+class UnavailableMember(discord.abc.User, discord.abc.Messageable):
     """
     A class that reproduces the behaviour of a discord.Member instance, except
-    the member is not in the guild. This is used to prevent calling bot.get_user_info
+    the member is not in the guild. This is used to prevent calling bot.fetch_info
     which has a very high cooldown.
     """
 
-    def __init__(self, member_id: int):
-        self._check_id(member_id)
+    def __init__(self, bot, state, user_id: int):
+        self.bot = bot
+        self._state = state
+        self.id = user_id
+        self.top_role = FakeRole()
 
-    def _check_id(self, member_id):
-        if not id_pattern.match(str(member_id)):
-            raise ValueError("You provided an invalid ID.")
-        self.id = member_id
+    @classmethod
+    def _check_id(cls, member_id):
+        if not id_pattern.match(member_id):
+            raise ValueError(f"You provided an invalid ID: {member_id}")
+        return int(member_id)
+
+    @classmethod
+    async def convert(cls, ctx, text):
+        try:
+            member = await MemberConverter().convert(ctx, text)
+        except BadArgument:
+            pass
+        else:
+            return member
+        try:
+            member_id = cls._check_id(text)
+        except ValueError:
+            raise BadArgument(
+                _(
+                    "The given member cannot be found.\n"
+                    "If you're trying to hackban, the user ID is not valid."
+                )
+            )
+        return cls(ctx.bot, ctx._state, member_id)
+
+    @property
+    def name(self):
+        return "Unknown"
+
+    @property
+    def display_name(self):
+        return "Unknown"
+
+    @property
+    def mention(self):
+        return f"<@{self.id}>"
+
+    @property
+    def avatar_url(self):
+        return ""
 
     def __str__(self):
-        return str(self.id)
+        return "Unknown#0000"
+
+    # the 3 following functions were copied from the discord.User class, credit to Rapptz
+    # https://github.com/Rapptz/discord.py/blob/master/discord/user.py#L668
+
+    @property
+    def dm_channel(self):
+        """Optional[:class:`DMChannel`]: Returns the channel associated with this user if it exists.
+        If this returns ``None``, you can create a DM channel by calling the
+        :meth:`create_dm` coroutine function.
+        """
+        return self._state._get_private_channel_by_user(self.id)
+
+    async def create_dm(self):
+        """Creates a :class:`DMChannel` with this user.
+        This should be rarely called, as this is done transparently for most
+        people.
+        """
+        found = self.dm_channel
+        if found is not None:
+            return found
+
+        state = self._state
+        data = await state.http.start_private_message(self.id)
+        return state.add_dm_channel(data)
+
+    async def _get_channel(self):
+        channel = await self.create_dm()
+        return channel
 
 
 class API:
@@ -121,39 +200,45 @@ class API:
             warns.append(case)
         return True
 
-    async def _get_user_info(self, user_id: int):
-        user = self.bot.get_user(user_id)
-        if not user:
-            try:
-                user = await self.bot.fetch_user(user_id)
-            except discord.errors.NotFound:
-                user = None
-            except discord.errors.HTTPException as e:
-                user = None
-                log.error(
-                    "Received HTTPException when trying to get user info. "
-                    "This is probaby a cooldown from Discord.",
-                    exc_info=e,
-                )
-        return user
-
     async def _mute(self, member: discord.Member, reason: Optional[str] = None):
         """Mute an user on the guild."""
+        old_roles = []
         guild = member.guild
-        role = guild.get_role(await self.data.guild(guild).mute_role())
-        if not role:
+        mute_role = guild.get_role(await self.data.guild(guild).mute_role())
+        remove_roles = await self.data.guild(guild).remove_roles()
+        if not mute_role:
             raise errors.MissingMuteRole("You need to create the mute role before doing this.")
-        await member.add_roles(role, reason=reason)
+        if remove_roles:
+            old_roles = member.roles.copy()
+            old_roles.remove(guild.default_role)
+            old_roles = [
+                x for x in old_roles if x.position < guild.me.top_role.position and not x.managed
+            ]
+            fails = []
+            for role in old_roles:
+                try:
+                    await member.remove_roles(role, reason=reason)
+                except discord.errors.HTTPException as e:
+                    fails.append(role)
+            if fails:
+                log.warn(
+                    f"[Guild {guild.id}] Failed to remove roles from {member} (ID: {member.id}) "
+                    f"while muting. Roles: {', '.join([f'{x.name} ({x.id})' for x in fails])}",
+                    exc_info=e,
+                )
+        await member.add_roles(mute_role, reason=reason)
+        return old_roles
 
-    async def _unmute(self, member: discord.Member, reason: str):
+    async def _unmute(self, member: discord.Member, reason: str, old_roles: list = None):
         """Unmute an user on the guild."""
         guild = member.guild
-        role = guild.get_role(await self.data.guild(guild).mute_role())
-        if not role:
+        mute_role = guild.get_role(await self.data.guild(guild).mute_role())
+        if not mute_role:
             raise errors.MissingMuteRole(
                 f"Lost the mute role on guild {guild.name} (ID: {guild.id}"
             )
-        await member.remove_roles(role, reason=reason)
+        await member.remove_roles(mute_role, reason=reason)
+        await member.add_roles(*old_roles, reason=reason)
 
     async def _create_case(
         self,
@@ -164,6 +249,7 @@ class API:
         time: datetime,
         reason: Optional[str] = None,
         duration: Optional[timedelta] = None,
+        roles: Optional[list] = None,
     ) -> dict:
         """Create a new case for a member. Don't call this, call warn instead."""
         data = {
@@ -177,6 +263,7 @@ class API:
             "until": None
             if not duration
             else (datetime.today() + duration).strftime("%a %d %B %Y %H:%M:%S"),
+            "roles": [] if not roles else [x.id for x in roles],
         }
         async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
             logs.append(data)
@@ -287,12 +374,16 @@ class API:
             if member == "x":
                 continue
             for log in content["x"]:
-                author = guild.get_member(log["author"])
                 time = log["time"]
                 if time:
                     log["time"] = self._get_datetime(time)
-                log["member"] = self.bot.get_user(member)
-                log["author"] = author if author else log["author"]  # can be None or a string
+                # gotta get that state somehow
+                log["member"] = self.bot.get_user(member) or UnavailableMember(
+                    self.bot, self.bot.user._state, log["member"]
+                )
+                log["author"] = self.bot.get_user(log["author"]) or UnavailableMember(
+                    self.bot, self.bot.user._state, log["author"]
+                )
                 all_cases.append(log)
         return sorted(all_cases, key=lambda x: x["time"])  # sorted from oldest to newest
 
@@ -472,7 +563,7 @@ class API:
         mod_message = ""
         if not reason:
             reason = _("No reason was provided.")
-            mod_message = _("\nEdit this with `[p]warnings @{name}`").format(name=str(member))
+            mod_message = _("\nEdit this with `[p]warnings {id}`").format(id=member.id)
         logs = await self.data.custom("MODLOGS", guild.id, member.id).x()
 
         # prepare the status field
@@ -516,6 +607,7 @@ class API:
         format_description = lambda x: x.format(
             invite=invite, member=member, mod=author, duration=duration, time=today
         )
+        link = re.search(r"https?://(.*\.)+.*", reason)
 
         # embed for the modlog
         log_embed = discord.Embed()
@@ -534,6 +626,7 @@ class API:
         log_embed.set_thumbnail(url=await self.data.guild(guild).thumbnails.get_raw(level))
         log_embed.color = await self.data.guild(guild).colors.get_raw(level)
         log_embed.url = await self.data.guild(guild).url()
+        log_embed.set_image(url=link.group() if link else "")
         if not message_sent:
             log_embed.description += _(
                 "\n\n***The message couldn't be delivered to the member. We may don't "
@@ -635,9 +728,8 @@ class API:
                     ).format(channel=channel.mention)
                 )
                 log.warn(
-                    f"Couldn't edit permissions of {channel} (ID: {channel.id}) in guild "
-                    f"{guild.name} (ID: {guild.id}) for setting up the mute role because "
-                    "of an HTTPException.",
+                    f"[Guild {guild.id}] Couldn't edit permissions of {channel} (ID: "
+                    f"{channel.id}) for setting up the mute role because of an HTTPException.",
                     exc_info=e,
                 )
             except Exception as e:
@@ -648,9 +740,8 @@ class API:
                     ).format(channel=channel.mention)
                 )
                 log.error(
-                    f"Couldn't edit permissions of {channel} (ID: {channel.id}) in guild "
-                    f"{guild.name} (ID: {guild.id}) for setting up the mute role because "
-                    "of an unknwon error.",
+                    f"[Guild {guild.id}] Couldn't edit permissions of {channel} (ID: "
+                    f"{channel.id}) for setting up the mute role because of an unknwon error.",
                     exc_info=e,
                 )
         await self.data.guild(guild).mute_role.set(role.id)
@@ -702,6 +793,7 @@ class API:
             *   :class:`~warnsystem.errors.LostPermissions`
             *   :class:`~warnsystem.errors.MemberTooHigh`
             *   :class:`~warnsystem.errors.MissingPermissions`
+            *   :class:`~warnsystem.errors.SuicidePrevention`
 
         Parameters
         ----------
@@ -764,9 +856,6 @@ class API:
         ~warnsystem.errors.BadArgument
             You need to provide a valid :class:`discord.Member` object, except for a
             hackban where a :class:`discord.User` works.
-        ~warnsystem.errors.NotFound
-            You provided an :py:class:`int` for a hackban, but the bot couldn't find
-            it by calling :func:`discord.Client.get_user_info`.
         ~warnsystem.errors.MissingMuteRole
             You're trying to mute someone but the mute role was not setup yet.
             You can fix this by calling :func:`~warnsystem.api.API.maybe_create_mute_role`.
@@ -784,13 +873,16 @@ class API:
         ~warnsystem.errors.MissingPermissions
             The bot lacks a permissions to do something. Can be adding role, kicking
             or banning members.
+        discord.errors.NotFound
+            When the user ID provided for hackban isn't recognized by Discord.
         discord.errors.HTTPException
             Unknown error from Discord API. It's recommanded to catch this
             potential error too.
         """
 
-        async def warn_member(member: discord.Member, audit_reason: str):
+        async def warn_member(member: Union[discord.Member, UnavailableMember], audit_reason: str):
             nonlocal i
+            roles = []
             # permissions check
             if level > 1 and guild.me.top_role.position <= member.top_role.position:
                 # check if the member is below the bot in the roles's hierarchy
@@ -812,6 +904,13 @@ class API:
                 return errors.MissingPermissions(
                     _("I can't take actions on the owner of the guild.")
                 )
+            if member == guild.me:
+                return errors.SuicidePrevention(
+                    _(
+                        "Why would you warn me? I did nothing wrong :c\n"
+                        "(use a manual kick/ban instead, warning the bot will cause issues)"
+                    )
+                )
             # send the message to the user
             if log_modlog or log_dm:
                 modlog_e, user_e = await self.get_embeds(
@@ -820,12 +919,14 @@ class API:
             if log_dm:
                 try:
                     await member.send(embed=user_e)
-                except discord.errors.Forbidden:
+                except (discord.errors.Forbidden, errors.UserNotFound):
                     modlog_e = (
                         await self.get_embeds(
                             guild, member, author, level, reason, time, message_sent=False
                         )
                     )[0]
+                except discord.errors.NotFound:
+                    raise
                 except discord.errors.HTTPException as e:
                     modlog_e = (
                         await self.get_embeds(
@@ -833,8 +934,8 @@ class API:
                         )
                     )[0]
                     log.warn(
-                        f"Couldn't send a message to {member} (ID: {member.id}) "
-                        "because of an HTTPException.",
+                        f"[Guild {guild.id}] Couldn't send a message to {member} "
+                        f"(ID: {member.id}) because of an HTTPException.",
                         exc_info=e,
                     )
             # take actions
@@ -842,7 +943,7 @@ class API:
                 audit_reason = audit_reason.format(member=member)
                 try:
                     if level == 2:
-                        await self._mute(member, audit_reason)
+                        roles = await self._mute(member, audit_reason)
                     elif level == 3:
                         await guild.kick(member, reason=audit_reason)
                     elif level == 4:
@@ -865,14 +966,16 @@ class API:
                         )
                 except discord.errors.HTTPException as e:
                     log.warn(
-                        f"Failed to warn {member} because of an error from Discord.", exc_info=e
+                        f"[Guild {guild.id}] Failed to warn {member} because of "
+                        "an unknown error from Discord.",
+                        exc_info=e,
                     )
                     return e
             # actions were taken, time to log
             if log_modlog:
                 await mod_channel.send(embed=modlog_e)
             data = await self._create_case(
-                guild, member, author, level, datetime.now(), reason, time
+                guild, member, author, level, datetime.now(), reason, time, roles
             )
             # start timer if there is a temporary warning
             if time and (level == 2 or level == 5):
@@ -966,8 +1069,8 @@ class API:
             except IndexError:
                 # can't find a valid channel
                 log.info(
-                    f"Can't find a channel where I can create an invite in guild {guild} "
-                    f"(ID: {guild.id}) when reinviting {member} after its unban."
+                    f"[Guild {guild.id}] Can't find a text channel where I can create an invite "
+                    f"when reinviting {member} (ID: {member.id}) after its unban."
                 )
                 return
 
@@ -975,7 +1078,7 @@ class API:
                 invite = await channel.create_invite(max_uses=1)
             except Exception as e:
                 log.warn(
-                    f"Couldn't create an invite for guild {guild} (ID: {guild.id} to reinvite "
+                    f"[Guild {guild.id}] Couldn't create an invite to reinvite "
                     f"{member} (ID: {member.id}) after its unban.",
                     exc_info=e,
                 )
@@ -991,8 +1094,8 @@ class API:
                 except discord.errors.Forbidden:
                     # couldn't send message to the user, quite common
                     log.info(
-                        f"Couldn't reinvite member {member} (ID: {member.id}) on guild "
-                        f"{guild} (ID: {guild.id}) after its temporary ban."
+                        f"[Guild {guild.id}] Couldn't reinvite member {member} "
+                        f"(ID: {member.id}) after its temporary ban."
                     )
 
         guilds = await self.data.all_guilds()
@@ -1016,7 +1119,8 @@ class API:
                     if level == 2:
                         to_remove.append(action)
                         continue
-                    member = await self._get_user_info(action["member"])
+                    member = UnavailableMember(self.bot, guild._state, action["member"])
+                roles = [guild.get_role(x) for x in action.get("roles") or []]
 
                 reason = _(
                     "End of timed {action} of {member} requested by {author} that lasted "
@@ -1032,31 +1136,30 @@ class API:
                     # end of warn
                     try:
                         if level == 2:
-                            await self._unmute(member, reason=reason)
+                            await self._unmute(member, reason=reason, old_roles=roles)
                         if level == 5:
                             await guild.unban(member, reason=reason)
                             if await self.data.guild(guild).reinvite():
                                 await reinvite(guild, member, case_reason, action["duration"])
                     except discord.errors.Forbidden:
                         log.warn(
-                            f"I lost required permissions for ending the timed {action_str}. "
-                            f"Member {member} (ID: {member.id}) from guild {guild} (ID: "
-                            f"{guild.id}) will stay as it is now."
+                            f"[Guild {guild.id}] I lost required permissions for "
+                            f"ending the timed {action_str}. Member {member} (ID: {member.id}) "
+                            "will stay as it is now."
                         )
                     except discord.errors.HTTPException as e:
                         log.warn(
-                            f"Couldn't end the timed {action_str} of {member} (ID: "
-                            f"{member.id}) from guild {guild} (ID: {guild.id}). He will stay "
-                            "as it is now.",
+                            f"[Guild {guild.id}] Couldn't end the timed {action_str} of {member} "
+                            f"(ID: {member.id}). He will stay as it is now.",
                             exc_info=e,
                         )
                     else:
                         log.debug(
-                            f"Ended timed {'mute' if level == 2 else 'ban'} of {member} (ID: "
+                            f"[Guild {guild.id}] Ended timed {action_str} of {member} (ID: "
                             f"{member.id}) taken on {taken_on} requested by {author} (ID: "
-                            f"{author.id}) that lasted for {action['duration']} on guild "
-                            f'{guild} (ID: {guild.id} for the reason "{case_reason}"\nCurrent time: '
-                            f"{now}\nExpected end time of warn: {until}"
+                            f"{author.id}) that lasted for {action['duration']} for the "
+                            f"reason {case_reason}\nCurrent time: {now}\n"
+                            f"Expected end time of warn: {until}"
                         )
                     to_remove.append(action)
             for item in to_remove:

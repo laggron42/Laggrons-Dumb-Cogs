@@ -92,9 +92,12 @@ You can also support me on Patreon and get exclusive rewards!
 If you're reading this from Github and want to contribute or just understand the source code, I'm gonna stop you right there. Indeed, the cog is a bit complex so let me explain a bit how each file work before source diving.
 
 - `__init__.py` The first file invoked when loading the cog. Nothing really useful here, only the check for the Warnings cog.
+- `abc.py` Just stuff for the inheritance of some classes.
 - `api.py` The most important functions are there, such as warning a member, getting the warns, generating embeds... Those functions don't need a context to be invoked.
+- `converters.py` The argument parser for the `[p]masswarn` command. Informations are just extracted from text and they're given back to the command (works like a discord.py converter).
 - `errors.py` The custom errors raised by `api.py` are in this file. There are only empty classes inherited from `Exception`.
-- `warnsystem.py` The file of the cog. All commands are stored there.
+- `settings.py` The cog file was getting really long, so I made a `SettingsMixin` class with the `[p]warnset` group command. The cog's class inherits from this one.
+- `warnsystem.py` The file of the cog. All commands are stored there, except the `[p]warnset` group command.
 
 If you're looking to edit something for a warn command, you may get lost. The command itself is 10 lines long. It calls `WarnSystem.call_warn` to prevent repeating what has to be done for all 5 warnings, but this function calls another one, `API.warn`, which is located in `api.py`, where most of the stuff is done.
 
