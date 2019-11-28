@@ -6,7 +6,7 @@ If you're used to add commands using the eval command, you might like this cog, 
 
 **This cog is made for those who know Python and are used to make cogs and commands. If you don't know coding, this is not for you.**
 
-There is a detailed documentation, covering all commands in details, please read this if you want to know how commands works in details: https://laggron.red/instantcmd.html
+There is a detailed documentation, covering all commands in details, please read this if you want to know how commands works in details: https://laggron.red/instantcommands.html
 
 ## Installation and quick start
 
