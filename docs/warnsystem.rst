@@ -2,7 +2,7 @@
 WarnSystem
 ==========
 
-.. note:: These docs refers to the version **1.1.0**.
+.. note:: These docs refers to the version **1.2.1**.
     Make sure you're under the good version by typing ``[p]cog update``.
 
 This is the guide for the ``warnsystem`` cog. Everything you need is here.
@@ -88,6 +88,18 @@ for your bot:
     Server. This is your last warning!". Get started with the ``[p]warnset
     substitutions`` group command.
 
+*   **Role removal:** Discord permissions can be a pain in the ass, and mute
+    with role can be a problem. The most common situation is where a member
+    has a role that grants him write access in a channel and the mute role
+    cannot overwrite that. This is why this option exists, enable it with
+    ``[p]warnset removeroles`` and all roles will be removed and reassigned
+    once the mute ends or if the warning is deleted.
+
+*   **Auto channel update:** When you create the mute role, all existing text
+    channels are configured to make it efficient. If you enable this setting
+    with ``[p]warnset autoupdate``, when you create a new text channel, it
+    will automatically be updated for the mute role.
+
 *   **Reinvite:** Enabling this feature will try to send a DM to all unbanned
     members after their temporary ban, including an invite for yout server.
     Note that the bot must share a server in commom with the unbanned member.
@@ -118,11 +130,26 @@ for your bot:
     your own sentence for logs sent to the modlog channel and to the warned
     member, you can do this with the ``[p]warnset description`` command.
 
+*   **Custom embed thumbnail:** Don't like the default images in the top right
+    hand corner of the embed? You can set your own image for each warn level
+    with ``[p]warnset thumbnail``, common to both modlog and DM.
+
+*   **Custom embed color:** Too much customization with embeds. Customize the
+    color of the left vertical bar in the embed for each warn level. Common to
+    both modlog and DM too. Use the ``[p]warnset color`` command.
+
 *   **Convert your old BetterMod logs:** If you're migrating to V3 and you were
     using the BetterMod cog on your V2 bot, you can migrate the logs for V3!
     Get the file of your modlog history (located at
     ``/data/bettermod/history/<your server ID>.json``) and use the ``[p]warnset
     convert`` command.
+
+*   **Masswarn:** Ready to ban your entire server? The masswarn allows you to
+    warn multiple members at once. It searches through the whole member list
+    based on one or more conditions, then perform an action. For example, you
+    can select everyone with x role, without y permission, and who joined after
+    the given date. Look at the docs for that command to know more about it,
+    it can be hard to use it at first.
 
 --------
 Commands
