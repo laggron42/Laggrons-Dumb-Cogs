@@ -5,6 +5,8 @@ import asyncio
 import os
 import logging
 
+from typing import Optional
+
 from redbot.core import checks, commands
 from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import Translator, cog_i18n
@@ -39,7 +41,7 @@ class Say(BaseCog):
         self._init_logger()
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.4.9"
+    __version__ = "1.4.10"
 
     def _init_logger(self):
         log_format = logging.Formatter(
@@ -67,26 +69,9 @@ class Say(BaseCog):
         log.addHandler(stdout_handler)
         self.stdout_handler = stdout_handler
 
-    async def say(self, ctx, text, files):
-
-        if text == "":  # no text, maybe attachment
-            potential_channel = ""
-        else:
-            potential_channel = text.split()[0]  # first word of the text
-
-        if files == [] and text == "":
-            # no text, no attachment, nothing to send
-            await ctx.send_help()
-            return
-
-        # we try to get a channel object
-        try:
-            channel = await commands.TextChannelConverter().convert(ctx, potential_channel)
-        except (commands.BadArgument, IndexError):
-            # no channel was given or text is empty (attachment)
-            channel = ctx.channel
-        else:
-            text = text.replace(potential_channel, "")  # we remove the channel from the text
+    async def say(
+        self, ctx: commands.Context, channel: discord.TextChannel, text: str, files: list
+    ):
 
         # preparing context info in case of an error
         if files != []:
@@ -101,7 +86,7 @@ class Say(BaseCog):
         # sending the message
         try:
             await channel.send(text, files=files)
-        except discord.errors.Forbidden as e:
+        except discord.errors.HTTPException as e:
             if not ctx.guild.me.permissions_in(channel).send_messages:
                 author = ctx.author
                 try:
@@ -133,7 +118,7 @@ class Say(BaseCog):
 
     @commands.command(name="say")
     @checks.guildowner()
-    async def _say(self, ctx, *, text: str = ""):
+    async def _say(self, ctx, channel: Optional[discord.TextChannel], text: str):
         """
         Make the bot say what you want in the desired channel.
 
@@ -146,11 +131,11 @@ class Say(BaseCog):
         """
 
         files = await Tunnel.files_from_attatch(ctx.message)
-        await self.say(ctx, text, files)
+        await self.say(ctx, channel, text, files)
 
     @commands.command(name="sayd", aliases=["sd"])
     @checks.guildowner()
-    async def _saydelete(self, ctx, *, text: str = ""):
+    async def _saydelete(self, ctx, channel: Optional[discord.TextChannel], text: str):
         """
         Same as say command, except it deletes your message.
 
@@ -169,7 +154,7 @@ class Say(BaseCog):
             except discord.errors.Forbidden:
                 await author.send(_("Not enough permissions to delete messages."), delete_after=15)
 
-        await self.say(ctx, text, files)
+        await self.say(ctx, text, channel, files)
 
     @commands.command(name="interact")
     @checks.guildowner()
