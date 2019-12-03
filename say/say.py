@@ -120,7 +120,7 @@ class Say(BaseCog):
 
     @commands.command(name="say")
     @checks.guildowner()
-    async def _say(self, ctx, channel: Optional[discord.TextChannel], text: str):
+    async def _say(self, ctx, channel: Optional[discord.TextChannel], *, text: str):
         """
         Make the bot say what you want in the desired channel.
 
@@ -137,7 +137,7 @@ class Say(BaseCog):
 
     @commands.command(name="sayd", aliases=["sd"])
     @checks.guildowner()
-    async def _saydelete(self, ctx, channel: Optional[discord.TextChannel], text: str):
+    async def _saydelete(self, ctx, channel: Optional[discord.TextChannel], *, text: str):
         """
         Same as say command, except it deletes your message.
 
