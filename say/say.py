@@ -70,8 +70,10 @@ class Say(BaseCog):
         self.stdout_handler = stdout_handler
 
     async def say(
-        self, ctx: commands.Context, channel: discord.TextChannel, text: str, files: list
+        self, ctx: commands.Context, channel: Optional[discord.TextChannel], text: str, files: list
     ):
+        if not channel:
+            channel = ctx.channel
 
         # preparing context info in case of an error
         if files != []:
