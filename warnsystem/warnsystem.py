@@ -4,13 +4,9 @@ import logging
 import asyncio
 import re
 import os
-import time
 
-from typing import Union, Optional
+from typing import Optional
 from asyncio import TimeoutError as AsyncTimeoutError
-from datetime import datetime
-from pathlib import Path
-from json import loads
 from abc import ABC
 
 from redbot.core import commands, Config, checks
