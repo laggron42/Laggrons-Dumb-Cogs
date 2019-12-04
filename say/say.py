@@ -41,7 +41,7 @@ class Say(BaseCog):
         self._init_logger()
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.4.10"
+    __version__ = "1.4.11"
 
     def _init_logger(self):
         log_format = logging.Formatter(
@@ -156,7 +156,7 @@ class Say(BaseCog):
             except discord.errors.Forbidden:
                 await author.send(_("Not enough permissions to delete messages."), delete_after=15)
 
-        await self.say(ctx, text, channel, files)
+        await self.say(ctx, channel, text, files)
 
     @commands.command(name="interact")
     @checks.guildowner()
