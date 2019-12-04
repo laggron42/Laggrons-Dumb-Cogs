@@ -442,9 +442,9 @@ decide what the bot should do, to make it faster or prevent spam.
 *   ``--take-actions`` will perform the action related to the warn (add the
     mute role, kick or ban a member...)
 
-*   ``--log-modlog`` will send a message in the modlog
+*   ``--send-modlog`` will send a message in the modlog
 
-*   ``--log-dm`` will send a DM to the member
+*   ``--send-dm`` will send a DM to the member
 
 .. warning:: You have to put at least one of those flags.
 
