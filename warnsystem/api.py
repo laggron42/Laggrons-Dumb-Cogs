@@ -607,7 +607,7 @@ class API:
         format_description = lambda x: x.format(
             invite=invite, member=member, mod=author, duration=duration, time=today
         )
-        link = re.search(r"https?://(.*\.)+.*", reason)
+        link = re.search(r"(https?://)\S+\.(jpg|jpeg|png|gif|webm)", reason)
 
         # embed for the modlog
         log_embed = discord.Embed()
