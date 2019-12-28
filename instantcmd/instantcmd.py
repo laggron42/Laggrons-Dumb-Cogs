@@ -71,7 +71,7 @@ class InstantCommands(BaseCog):
         self._init_logger()
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.0.1"
+    __version__ = "1.1.0"
 
     def _init_logger(self):
         log_format = logging.Formatter(
