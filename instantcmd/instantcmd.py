@@ -12,7 +12,8 @@ from redbot.core import commands
 from redbot.core import checks
 from redbot.core import Config
 from redbot.core.data_manager import cog_data_path
-from redbot.core.utils.predicates import MessagePredicate
+from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
+from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.chat_formatting import pagify
 
 log = logging.getLogger("laggron.instantcmd")
@@ -132,7 +133,7 @@ class InstantCommands(BaseCog):
         else:
             self.bot.add_listener(function)
             self.listeners[function.__name__] = id(function)
-            log.debug(f"Added listener {function.__name__} (ID of the function: {id(function)})")
+            log.debug(f"Added listener {function.__name__} (ID: {id(function)})")
 
     async def resume_commands(self):
         """
@@ -168,6 +169,23 @@ class InstantCommands(BaseCog):
         # remove `foo`
         return content.strip("` \n")
 
+    async def _ask_for_edit(self, ctx: commands.Context, kind: str) -> bool:
+        msg = await ctx.send(
+            f"That {kind} is already registered with InstantCommands. "
+            "Would you like to replace it?"
+        )
+        pred = ReactionPredicate.yes_or_no(msg, ctx.author)
+        start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS, loop=ctx.bot.loop)
+        try:
+            await self.bot.wait_for("reaction_add", check=pred, timeout=30)
+        except asyncio.TimeoutError:
+            await ctx.send("Cancelled.")
+            return False
+        if not pred.result:
+            await ctx.send("Cancelled.")
+            return False
+        return True
+
     @checks.is_owner()
     @commands.group(aliases=["instacmd", "instantcommand"])
     async def instantcmd(self, ctx):
@@ -190,12 +208,25 @@ class InstantCommands(BaseCog):
         )
         pred = MessagePredicate.same_context(ctx)
         try:
-            response = await self.bot.wait_for("message", timeout=900, check=pred)
+            response: discord.Message = await self.bot.wait_for("message", timeout=900, check=pred)
         except asyncio.TimeoutError:
             await ctx.send("Question timed out.")
             return
 
-        function_string = self.cleanup_code(response.content)
+        if response.content is None and response.attachments:
+            content = await response.attachments[0].read()
+            try:
+                function_string = content.decode()
+            except UnicodeDecodeError as e:
+                log.error(f"Failed to decode file for instant command.", exc_info=e)
+                await ctx.send(
+                    ":warning: Failed to decode the file, all invalid characters will be replaced."
+                )
+                function_string = content.decode(errors="replace")
+            del content
+        else:
+            function_string = self.cleanup_code(response.content)
+
         try:
             function = self.get_function_from_str(function_string)
         except Exception as e:
@@ -211,8 +242,11 @@ class InstantCommands(BaseCog):
         if isinstance(function, commands.Command):
             async with self.data.commands() as _commands:
                 if function.name in _commands:
-                    await ctx.send("Error: That listener is already registered.")
-                    return
+                    response = await self._ask_for_edit(ctx, "command")
+                    if response is False:
+                        return
+                    self.bot.remove_command(function.name)
+                    log.debug(f"Removed command {function.name} due to incoming overwrite (edit).")
             try:
                 self.bot.add_command(function)
             except Exception as e:
@@ -228,12 +262,20 @@ class InstantCommands(BaseCog):
                 async with self.data.commands() as _commands:
                     _commands[function.name] = function_string
                 await ctx.send(f"The command `{function.name}` was successfully added.")
+                log.debug(f"Added command {function.name}")
 
         else:
             async with self.data.commands() as _commands:
                 if function.__name__ in _commands:
-                    await ctx.send("Error: That listener is already registered.")
-                    return
+                    response = await self._ask_for_edit(ctx, "listener")
+                    if response is False:
+                        return
+                    self.bot.remove_listener(
+                        FakeListener(self.listeners[function.__name__]), name=function.__name__
+                    )
+                    log.debug(
+                        f"Removed listener {function.__name__} due to incoming overwrite (edit)."
+                    )
             try:
                 self.bot.add_listener(function)
             except Exception as e:
@@ -250,6 +292,7 @@ class InstantCommands(BaseCog):
                 async with self.data.commands() as _commands:
                     _commands[function.__name__] = function_string
                 await ctx.send(f"The listener `{function.__name__}` was successfully added.")
+                log.debug(f"Added command {function.__name__} (ID: {id(function)})")
 
     @instantcmd.command(aliases=["del", "remove"])
     async def delete(self, ctx, command_or_listener: str):
