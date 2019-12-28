@@ -473,7 +473,7 @@ class SettingsMixin(MixinMeta):
                         ) + "\n".join(fails)
                     else:
                         errors = ""
-                    await ctx.send(
+                    text = (
                         _(
                             "The role `Muted` was successfully created at position {pos}. Feel "
                             "free to drag it in the hierarchy and edit its permissions, as long "
@@ -481,6 +481,8 @@ class SettingsMixin(MixinMeta):
                         ).format(pos=my_position - 1)
                         + errors
                     )
+                    for page in pagify(text):
+                        await ctx.send(page)
         elif role.position >= my_position:
             await ctx.send(
                 _(
