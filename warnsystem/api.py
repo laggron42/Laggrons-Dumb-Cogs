@@ -2,15 +2,13 @@ import asyncio
 import discord
 import logging
 import re
-import abc
 
 from copy import deepcopy
 from typing import Union, Optional, Iterable, Callable, Awaitable
 from datetime import datetime, timedelta
 
-from redbot.core.utils.mod import is_allowed_by_hierarchy
 from redbot.core.i18n import Translator
-from redbot.core.commands import BadArgument, Converter, MemberConverter
+from redbot.core.commands import BadArgument, MemberConverter
 
 try:
     from redbot.core.modlog import get_modlog_channel as get_red_modlog_channel
