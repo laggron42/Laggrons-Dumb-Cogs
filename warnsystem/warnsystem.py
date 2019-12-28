@@ -147,7 +147,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         self.task = bot.loop.create_task(self.api._loop_task())
         self._init_logger()
 
-    __version__ = "1.2.2"
+    __version__ = "1.2.3"
     __author__ = ["retke (El Laggron)"]
 
     def _init_logger(self):
