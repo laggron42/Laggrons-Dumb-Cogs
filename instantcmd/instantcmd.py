@@ -174,7 +174,7 @@ class InstantCommands(BaseCog):
         """Instant Commands cog management"""
         pass
 
-    @instantcmd.command()
+    @instantcmd.command(aliases=["add"])
     async def create(self, ctx):
         """
         Instantly generate a new command from a code snippet.
