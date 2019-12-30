@@ -198,6 +198,8 @@ class InstantCommands(BaseCog):
         Instantly generate a new command from a code snippet.
 
         If you want to make a listener, give its name instead of the command name.
+        You can upload a text file if the command is too long, but you should consider coding a\
+            cog at this point.
         """
         await ctx.send(
             "You're about to create a new command. \n"
@@ -213,7 +215,7 @@ class InstantCommands(BaseCog):
             await ctx.send("Question timed out.")
             return
 
-        if response.content is None and response.attachments:
+        if response.content == "" and response.attachments:
             content = await response.attachments[0].read()
             try:
                 function_string = content.decode()
@@ -223,7 +225,9 @@ class InstantCommands(BaseCog):
                     ":warning: Failed to decode the file, all invalid characters will be replaced."
                 )
                 function_string = content.decode(errors="replace")
-            del content
+            finally:
+                del content
+                function_string = self.cleanup_code(function_string)
         else:
             function_string = self.cleanup_code(response.content)
 
