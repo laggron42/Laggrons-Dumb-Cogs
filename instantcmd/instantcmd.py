@@ -7,6 +7,7 @@ import traceback
 import textwrap
 import logging
 import os
+import sys
 
 from redbot.core import commands
 from redbot.core import checks
@@ -15,6 +16,8 @@ from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.chat_formatting import pagify
+
+from .utils import Listener
 
 log = logging.getLogger("laggron.instantcmd")
 log.setLevel(logging.DEBUG)
@@ -116,7 +119,9 @@ class InstantCommands(BaseCog):
 
         # self.get_config_identifier(name)
         to_compile = "def func():\n%s" % textwrap.indent(command, "  ")
+        sys.path.append(os.path.dirname(__file__))
         exec(to_compile, self.env)
+        sys.path.remove(os.path.dirname(__file__))
         result = self.env["func"]()
         if not result:
             raise RuntimeError("Nothing detected. Make sure to return a command or a listener")
@@ -131,9 +136,17 @@ class InstantCommands(BaseCog):
             self.bot.add_command(function)
             log.debug(f"Added command {function.name}")
         else:
-            self.bot.add_listener(function)
-            self.listeners[function.__name__] = id(function)
-            log.debug(f"Added listener {function.__name__} (ID: {id(function)})")
+            if not isinstance(function, Listener):
+                function = Listener(function, function.__name__)
+            self.bot.add_listener(function.func)
+            self.listeners[function.func.__name__] = (function.id, function.name)
+            if function.name != function.func.__name__:
+                log.debug(
+                    f"Added listener {function.func.__name__} listening for the "
+                    f"event {function.name} (ID: {function.id})"
+                )
+            else:
+                log.debug(f"Added listener {function.name} (ID: {function.id})")
 
     async def resume_commands(self):
         """
@@ -151,7 +164,8 @@ class InstantCommands(BaseCog):
             for command in _commands:
                 if command in self.listeners:
                     # remove a listener
-                    self.bot.remove_listener(FakeListener(self.listeners[command]), name=command)
+                    listener_id, name = self.listeners[command]
+                    self.bot.remove_listener(FakeListener(listener_id), name=name)
                     log.debug(f"Removed listener {command} due to cog unload.")
                 else:
                     # remove a command
@@ -269,19 +283,21 @@ class InstantCommands(BaseCog):
                 log.debug(f"Added command {function.name}")
 
         else:
+            if not isinstance(function, Listener):
+                function = Listener(function, function.__name__)
             async with self.data.commands() as _commands:
-                if function.__name__ in _commands:
+                if function.func.__name__ in _commands:
                     response = await self._ask_for_edit(ctx, "listener")
                     if response is False:
                         return
-                    self.bot.remove_listener(
-                        FakeListener(self.listeners[function.__name__]), name=function.__name__
-                    )
+                    listener_id, listener_name = self.listeners[function.func.__name__]
+                    self.bot.remove_listener(FakeListener(listener_id), name=listener_name)
+                    del listener_id, listener_name
                     log.debug(
-                        f"Removed listener {function.__name__} due to incoming overwrite (edit)."
+                        f"Removed listener {function.name} due to incoming overwrite (edit)."
                     )
             try:
-                self.bot.add_listener(function)
+                self.bot.add_listener(function.func, name=function.name)
             except Exception as e:
                 exception = "".join(traceback.format_exception(type(e), e, e.__traceback__))
                 message = (
@@ -292,11 +308,21 @@ class InstantCommands(BaseCog):
                     await ctx.send(page)
                 return
             else:
-                self.listeners[function.__name__] = id(function)
+                self.listeners[function.func.__name__] = (function.id, function.name)
                 async with self.data.commands() as _commands:
-                    _commands[function.__name__] = function_string
-                await ctx.send(f"The listener `{function.__name__}` was successfully added.")
-                log.debug(f"Added command {function.__name__} (ID: {id(function)})")
+                    _commands[function.func.__name__] = function_string
+                if function.name != function.func.__name__:
+                    await ctx.send(
+                        f"The listener `{function.func.__name__}` listening for the "
+                        f"event `{function.name}` was successfully added."
+                    )
+                    log.debug(
+                        f"Added listener {function.func.__name__} listening for the "
+                        f"event {function.name} (ID: {function.id})"
+                    )
+                else:
+                    await ctx.send(f"The listener {function.name} was successfully added.")
+                    log.debug(f"Added listener {function.name} (ID: {function.id})")
 
     @instantcmd.command(aliases=["del", "remove"])
     async def delete(self, ctx, command_or_listener: str):
@@ -310,7 +336,8 @@ class InstantCommands(BaseCog):
                 return
             if command in self.listeners:
                 text = "listener"
-                self.bot.remove_listener(FakeListener(self.listeners[command]), name=command)
+                function, name = self.listeners[command]
+                self.bot.remove_listener(FakeListener(function), name=name)
             else:
                 text = "command"
                 self.bot.remove_command(command)
