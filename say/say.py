@@ -41,7 +41,7 @@ class Say(BaseCog):
         self._init_logger()
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.4.11"
+    __version__ = "1.4.12"
 
     def _init_logger(self):
         log_format = logging.Formatter(
@@ -74,6 +74,9 @@ class Say(BaseCog):
     ):
         if not channel:
             channel = ctx.channel
+        if not text and not files:
+            await ctx.send_help()
+            return
 
         # preparing context info in case of an error
         if files != []:
@@ -120,7 +123,7 @@ class Say(BaseCog):
 
     @commands.command(name="say")
     @checks.guildowner()
-    async def _say(self, ctx, channel: Optional[discord.TextChannel], *, text: str):
+    async def _say(self, ctx, channel: Optional[discord.TextChannel], *, text: str = ""):
         """
         Make the bot say what you want in the desired channel.
 
@@ -137,7 +140,7 @@ class Say(BaseCog):
 
     @commands.command(name="sayd", aliases=["sd"])
     @checks.guildowner()
-    async def _saydelete(self, ctx, channel: Optional[discord.TextChannel], *, text: str):
+    async def _saydelete(self, ctx, channel: Optional[discord.TextChannel], *, text: str = ""):
         """
         Same as say command, except it deletes your message.
 
