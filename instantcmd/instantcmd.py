@@ -215,22 +215,9 @@ class InstantCommands(BaseCog):
         You can upload a text file if the command is too long, but you should consider coding a\
             cog at this point.
         """
-        await ctx.send(
-            "You're about to create a new command. \n"
-            "Your next message will be the code of the command. \n\n"
-            "If this is the first time you're adding instant commands, "
-            "please read the wiki:\n"
-            "<https://laggrons-dumb-cogs.readthedocs.io/instantcommands.html>"
-        )
-        pred = MessagePredicate.same_context(ctx)
-        try:
-            response: discord.Message = await self.bot.wait_for("message", timeout=900, check=pred)
-        except asyncio.TimeoutError:
-            await ctx.send("Question timed out.")
-            return
 
-        if response.content == "" and response.attachments:
-            content = await response.attachments[0].read()
+        async def read_from_file(msg: discord.Message):
+            content = await msg.attachments[0].read()
             try:
                 function_string = content.decode()
             except UnicodeDecodeError as e:
@@ -240,10 +227,31 @@ class InstantCommands(BaseCog):
                 )
                 function_string = content.decode(errors="replace")
             finally:
-                del content
-                function_string = self.cleanup_code(function_string)
+                return self.cleanup_code(function_string)
+
+        if ctx.message.attachments:
+            function_string = await read_from_file(ctx.message)
         else:
-            function_string = self.cleanup_code(response.content)
+            await ctx.send(
+                "You're about to create a new command. \n"
+                "Your next message will be the code of the command. \n\n"
+                "If this is the first time you're adding instant commands, "
+                "please read the wiki:\n"
+                "<https://laggrons-dumb-cogs.readthedocs.io/instantcommands.html>"
+            )
+            pred = MessagePredicate.same_context(ctx)
+            try:
+                response: discord.Message = await self.bot.wait_for(
+                    "message", timeout=900, check=pred
+                )
+            except asyncio.TimeoutError:
+                await ctx.send("Question timed out.")
+                return
+
+            if response.content == "" and response.attachments:
+                function_string = await read_from_file(response)
+            else:
+                function_string = self.cleanup_code(response.content)
 
         try:
             function = self.get_function_from_str(function_string)
