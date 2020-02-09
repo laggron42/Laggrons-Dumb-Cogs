@@ -10,7 +10,7 @@
     "description": "Command and listener maker from a code snippet through Discord",
     "hidden": false,
     "install_msg": "Thanks for installing instantcmd. Please check the wiki for all informations about the cog.\nhttps://laggrons-dumb-cogs.readthedocs.io/\nEverything you need to know about setting up the cog is here.\n\nPlease keep in mind that you must know Python and discord.py for that cog. Try to create normal cogs if you don't already know how it works.",
-    "required_cogs": [],
+    "required_cogs": {},
     "requirements": [],
     "short": "Instant command maker",
     "tags": [
