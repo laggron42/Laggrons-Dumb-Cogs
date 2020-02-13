@@ -10,7 +10,7 @@
     "description": "Speak as the bot through multiple options.\nAllow file upload, rift in DM and specific destinations.",
     "hidden": false,
     "install_msg": "Thank you for installing the say cog. Please check the wiki for all informations about the cog.\nhttps://laggrons-dumb-cogs.readthedocs.io/say.html\n\nType `[p]help Say` for a quick overview of the commands.",
-    "required_cogs": [],
+    "required_cogs": {},
     "requirements": [],
     "short": "Speak as the bot through multiple options.",
     "tags": [

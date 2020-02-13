@@ -10,7 +10,7 @@
     "description": "An alternative to the core moderation cog, similar to Dyno.\nThe cog allows you to take actions against member and keep track with a new modlog system. It also sends a DM to the warned members.\n\nThis is the rewrite of the V2 BetterMod cog. **Note that this cog conflicts with Warnings which must be unloaded.**",
     "hidden": false,
     "install_msg": "Thank you for installing the warnsystem cog. Please check the wiki for all informations about the cog.\nhttps://laggrons-dumb-cogs.readthedocs.io/warnsystem.html\n\nType `[p]help WarnSystem` for a quick overview of the commands\n**This cog conflicts with Warnings which must be unloaded.**",
-    "required_cogs": [],
+    "required_cogs": {},
     "requirements": [],
     "short": "Moderation tools, providing an alternative to core Red.",
     "tags": [
