@@ -10,7 +10,7 @@
     "description": "Autorole based on the invite the user used.\nIf the user joined using invite x, he will get a list of roles linked to invite x.",
     "hidden": false,
     "install_msg": "Thanks for installing roleinvite. Please check the wiki for all informations about the cog.\nhttps://laggrons-dumb-cogs.readthedocs.io/roleinvite.html\nEverything you need to know about setting up the cog is here.\nFor a quick guide, type `[p]help RoleInvite`, just keep in mind that the bot needs the `Manage server` and the `Add roles` permissions.",
-    "required_cogs": [],
+    "required_cogs": {},
     "requirements": [],
     "short": "Autorole based on server's invites",
     "tags": [
