@@ -2,7 +2,7 @@
 InstantCommands
 ===============
 
-.. note:: These docs refers to the version **1.0.0**. 
+.. note:: These docs refers to the version **1.1.0**. 
     Make sure you're under the good version by typing ``[p]cog update``.
 
 This is the guide for the ``instantcmd`` cog. Everything you need is here.
@@ -67,7 +67,7 @@ instantcommand create
 
 **Syntax**::
 
-    [p]instantcommand create
+    [p]instantcommand [create|add]
 
 **Description**
 
@@ -129,6 +129,30 @@ It can be a command (you will need to add the ``commands`` decorator) or a liste
       
     It isn't recommanded to use the ``Config`` value for now. 
     A future release should give a ready ``Config.Config`` object.
+
+If you try to add a new command/listener that already exists, the bot will ask
+you if you want to replace the command/listener, useful for a quick bug fix
+instead of deleting each time.
+
+You can have multiple listeners for the same event but with a different
+function name by using the :py:`instantcmd.utils.listener` decorator. It
+doesn't work like :py:`discord.ext.commands.Cog.listener`, it only exists so
+you can provide the name of the event you want to listen for.
+
+.. admonition:: Example
+
+    .. code-block:: python
+
+        from instantcmd.utils import listener
+
+        @listener("on_message_without_command")
+        async def my_listener(message: discord.Message):
+            # do your thing
+        
+        return my_listener
+
+    This listener will be registered as ``my_listener`` and be suscribed to the
+    event ``on_message_without_command``.
     
 .. _command-instantcommand-delete:
 
@@ -202,6 +226,9 @@ its name is matching the lowercased `Discord API listeners
 .. warning:: **Do not use** the new ``@commands.Cog.listener`` decorator
     introduced in Red 3.1. The bot uses ``bot.add_listener`` which
     doesn't need a decorator.
+
+    *Added in 1.1:* InstantCommands now has its own listener decorator. It is
+    optional and used for providing the event name.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 My command was added but doesn't respond when invoked.
