@@ -352,48 +352,42 @@ class InstantCommands(BaseCog):
             _commands.pop(command)
         await ctx.send(f"The {text} `{command}` was successfully removed.")
 
-    @instantcmd.command()
-    async def info(self, ctx, command: str = None):
+    @instantcmd.command(name="list")
+    async def _list(self, ctx):
         """
         List all existing commands made using Instant Commands.
 
         If a command name is given and found in the Instant commands list, the code will be shown.
         """
+        message = "List of instant commands:\n" "```Diff\n"
+        _commands = await self.data.commands()
+        for name, command in _commands.items():
+            message += f"+ {name}\n"
+        message += (
+            "```\n"
+            "You can show the command source code by typing "
+            f"`{ctx.prefix}instacmd source <command>`"
+        )
+        if _commands == {}:
+            await ctx.send("No instant command created.")
+            return
+        for page in pagify(message):
+            await ctx.send(message)
 
-        if not command:
-            message = "List of instant commands:\n" "```Diff\n"
-            _commands = await self.data.commands()
-
-            for name, command in _commands.items():
-                message += f"+ {name}\n"
-            message += (
-                "```\n"
-                "*Hint:* You can show the command source code by typing "
-                f"`{ctx.prefix}instacmd info <command>`"
-            )
-
-            if _commands == {}:
-                await ctx.send("No instant command created.")
-                return
-
-            for page in pagify(message):
-                await ctx.send(message)
-
-        else:
-            _commands = await self.data.commands()
-
-            if command not in _commands:
-                await ctx.send("Command not found.")
-                return
-
-            message = (
-                f"Source code for `{ctx.prefix}{command}`:\n"
-                + "```Py\n"
-                + _commands[command]
-                + "```"
-            )
-            for page in pagify(message):
-                await ctx.send(page)
+    @instantcmd.command()
+    async def source(self, ctx: commands.Context, command: str):
+        """
+        Show the code of an instantcmd command or listener.
+        """
+        _commands = await self.data.commands()
+        if command not in _commands:
+            await ctx.send("Command not found.")
+            return
+        message = (
+            f"Source code for `{ctx.prefix}{command}`:\n" + "```Py\n" + _commands[command] + "```"
+        )
+        for page in pagify(message):
+            await ctx.send(page)
 
     @commands.command(hidden=True)
     @checks.is_owner()
