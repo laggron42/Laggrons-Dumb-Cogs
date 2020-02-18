@@ -147,7 +147,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         self.task = bot.loop.create_task(self.api._loop_task())
         self._init_logger()
 
-    __version__ = "1.2.3"
+    __version__ = "1.2.4"
     __author__ = ["retke (El Laggron)"]
 
     def _init_logger(self):
@@ -449,6 +449,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         await self.call_warn(ctx, 1, member, reason)
 
     @warn.command(name="1", aliases=["simple"])
+    @checks.mod_or_permissions(administrator=True)
     async def warn_1(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
         Set a simple warning on a user.
@@ -458,6 +459,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         await self.call_warn(ctx, 1, member, reason)
 
     @warn.command(name="2", aliases=["mute"])
+    @checks.mod_or_permissions(administrator=True)
     async def warn_2(
         self,
         ctx: commands.Context,
@@ -482,6 +484,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         await self.call_warn(ctx, 2, member, reason, time)
 
     @warn.command(name="3", aliases=["kick"])
+    @checks.mod_or_permissions(administrator=True)
     async def warn_3(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
         Kick the member from the server.
@@ -489,6 +492,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         await self.call_warn(ctx, 3, member, reason)
 
     @warn.command(name="4", aliases=["softban"])
+    @checks.mod_or_permissions(administrator=True)
     async def warn_4(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
         Softban the member from the server.
@@ -502,6 +506,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         await self.call_warn(ctx, 4, member, reason)
 
     @warn.command(name="5", aliases=["ban"], usage="<member> [time] <reason>")
+    @checks.mod_or_permissions(administrator=True)
     async def warn_5(
         self,
         ctx: commands.Context,
@@ -570,6 +575,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         )
 
     @masswarn.command(name="1", aliases=["simple"])
+    @checks.mod_or_permissions(administrator=True)
     async def masswarn_1(self, ctx, *selection: str):
         """
         Perform a simple mass warning.
@@ -596,6 +602,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         )
 
     @masswarn.command(name="2", aliases=["mute"])
+    @checks.mod_or_permissions(administrator=True)
     async def masswarn_2(self, ctx, *selection: str):
         """
         Perform a mass mute.
@@ -625,6 +632,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         )
 
     @masswarn.command(name="3", aliases=["kick"])
+    @checks.mod_or_permissions(administrator=True)
     async def masswarn_3(self, ctx, *selection: str):
         """
         Perform a mass kick.
@@ -651,6 +659,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         )
 
     @masswarn.command(name="4", aliases=["softban"])
+    @checks.mod_or_permissions(administrator=True)
     async def masswarn_4(self, ctx, *selection: str):
         """
         Perform a mass softban.
@@ -677,6 +686,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         )
 
     @masswarn.command(name="5", aliases=["ban"])
+    @checks.mod_or_permissions(administrator=True)
     async def masswarn_5(self, ctx, *selection: str):
         """
         Perform a mass ban.
