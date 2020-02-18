@@ -7,13 +7,17 @@ import traceback
 import textwrap
 import logging
 import os
+import sys
 
 from redbot.core import commands
 from redbot.core import checks
 from redbot.core import Config
 from redbot.core.data_manager import cog_data_path
-from redbot.core.utils.predicates import MessagePredicate
+from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
+from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.chat_formatting import pagify
+
+from .utils import Listener
 
 log = logging.getLogger("laggron.instantcmd")
 log.setLevel(logging.DEBUG)
@@ -71,7 +75,7 @@ class InstantCommands(BaseCog):
         self._init_logger()
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.0.1"
+    __version__ = "1.1.0"
 
     def _init_logger(self):
         log_format = logging.Formatter(
@@ -115,7 +119,9 @@ class InstantCommands(BaseCog):
 
         # self.get_config_identifier(name)
         to_compile = "def func():\n%s" % textwrap.indent(command, "  ")
+        sys.path.append(os.path.dirname(__file__))
         exec(to_compile, self.env)
+        sys.path.remove(os.path.dirname(__file__))
         result = self.env["func"]()
         if not result:
             raise RuntimeError("Nothing detected. Make sure to return a command or a listener")
@@ -130,9 +136,17 @@ class InstantCommands(BaseCog):
             self.bot.add_command(function)
             log.debug(f"Added command {function.name}")
         else:
-            self.bot.add_listener(function)
-            self.listeners[function.__name__] = id(function)
-            log.debug(f"Added listener {function.__name__} (ID of the function: {id(function)})")
+            if not isinstance(function, Listener):
+                function = Listener(function, function.__name__)
+            self.bot.add_listener(function.func)
+            self.listeners[function.func.__name__] = (function.id, function.name)
+            if function.name != function.func.__name__:
+                log.debug(
+                    f"Added listener {function.func.__name__} listening for the "
+                    f"event {function.name} (ID: {function.id})"
+                )
+            else:
+                log.debug(f"Added listener {function.name} (ID: {function.id})")
 
     async def resume_commands(self):
         """
@@ -150,7 +164,8 @@ class InstantCommands(BaseCog):
             for command in _commands:
                 if command in self.listeners:
                     # remove a listener
-                    self.bot.remove_listener(FakeListener(self.listeners[command]), name=command)
+                    listener_id, name = self.listeners[command]
+                    self.bot.remove_listener(FakeListener(listener_id), name=name)
                     log.debug(f"Removed listener {command} due to cog unload.")
                 else:
                     # remove a command
@@ -168,34 +183,76 @@ class InstantCommands(BaseCog):
         # remove `foo`
         return content.strip("` \n")
 
+    async def _ask_for_edit(self, ctx: commands.Context, kind: str) -> bool:
+        msg = await ctx.send(
+            f"That {kind} is already registered with InstantCommands. "
+            "Would you like to replace it?"
+        )
+        pred = ReactionPredicate.yes_or_no(msg, ctx.author)
+        start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS, loop=ctx.bot.loop)
+        try:
+            await self.bot.wait_for("reaction_add", check=pred, timeout=30)
+        except asyncio.TimeoutError:
+            await ctx.send("Cancelled.")
+            return False
+        if not pred.result:
+            await ctx.send("Cancelled.")
+            return False
+        return True
+
     @checks.is_owner()
     @commands.group(aliases=["instacmd", "instantcommand"])
     async def instantcmd(self, ctx):
         """Instant Commands cog management"""
         pass
 
-    @instantcmd.command()
+    @instantcmd.command(aliases=["add"])
     async def create(self, ctx):
         """
         Instantly generate a new command from a code snippet.
 
         If you want to make a listener, give its name instead of the command name.
+        You can upload a text file if the command is too long, but you should consider coding a\
+            cog at this point.
         """
-        await ctx.send(
-            "You're about to create a new command. \n"
-            "Your next message will be the code of the command. \n\n"
-            "If this is the first time you're adding instant commands, "
-            "please read the wiki:\n"
-            "<https://laggrons-dumb-cogs.readthedocs.io/instantcommands.html>"
-        )
-        pred = MessagePredicate.same_context(ctx)
-        try:
-            response = await self.bot.wait_for("message", timeout=900, check=pred)
-        except asyncio.TimeoutError:
-            await ctx.send("Question timed out.")
-            return
 
-        function_string = self.cleanup_code(response.content)
+        async def read_from_file(msg: discord.Message):
+            content = await msg.attachments[0].read()
+            try:
+                function_string = content.decode()
+            except UnicodeDecodeError as e:
+                log.error(f"Failed to decode file for instant command.", exc_info=e)
+                await ctx.send(
+                    ":warning: Failed to decode the file, all invalid characters will be replaced."
+                )
+                function_string = content.decode(errors="replace")
+            finally:
+                return self.cleanup_code(function_string)
+
+        if ctx.message.attachments:
+            function_string = await read_from_file(ctx.message)
+        else:
+            await ctx.send(
+                "You're about to create a new command. \n"
+                "Your next message will be the code of the command. \n\n"
+                "If this is the first time you're adding instant commands, "
+                "please read the wiki:\n"
+                "<https://laggrons-dumb-cogs.readthedocs.io/instantcommands.html>"
+            )
+            pred = MessagePredicate.same_context(ctx)
+            try:
+                response: discord.Message = await self.bot.wait_for(
+                    "message", timeout=900, check=pred
+                )
+            except asyncio.TimeoutError:
+                await ctx.send("Question timed out.")
+                return
+
+            if response.content == "" and response.attachments:
+                function_string = await read_from_file(response)
+            else:
+                function_string = self.cleanup_code(response.content)
+
         try:
             function = self.get_function_from_str(function_string)
         except Exception as e:
@@ -211,8 +268,11 @@ class InstantCommands(BaseCog):
         if isinstance(function, commands.Command):
             async with self.data.commands() as _commands:
                 if function.name in _commands:
-                    await ctx.send("Error: That listener is already registered.")
-                    return
+                    response = await self._ask_for_edit(ctx, "command")
+                    if response is False:
+                        return
+                    self.bot.remove_command(function.name)
+                    log.debug(f"Removed command {function.name} due to incoming overwrite (edit).")
             try:
                 self.bot.add_command(function)
             except Exception as e:
@@ -228,14 +288,24 @@ class InstantCommands(BaseCog):
                 async with self.data.commands() as _commands:
                     _commands[function.name] = function_string
                 await ctx.send(f"The command `{function.name}` was successfully added.")
+                log.debug(f"Added command {function.name}")
 
         else:
+            if not isinstance(function, Listener):
+                function = Listener(function, function.__name__)
             async with self.data.commands() as _commands:
-                if function.__name__ in _commands:
-                    await ctx.send("Error: That listener is already registered.")
-                    return
+                if function.func.__name__ in _commands:
+                    response = await self._ask_for_edit(ctx, "listener")
+                    if response is False:
+                        return
+                    listener_id, listener_name = self.listeners[function.func.__name__]
+                    self.bot.remove_listener(FakeListener(listener_id), name=listener_name)
+                    del listener_id, listener_name
+                    log.debug(
+                        f"Removed listener {function.name} due to incoming overwrite (edit)."
+                    )
             try:
-                self.bot.add_listener(function)
+                self.bot.add_listener(function.func, name=function.name)
             except Exception as e:
                 exception = "".join(traceback.format_exception(type(e), e, e.__traceback__))
                 message = (
@@ -246,10 +316,21 @@ class InstantCommands(BaseCog):
                     await ctx.send(page)
                 return
             else:
-                self.listeners[function.__name__] = id(function)
+                self.listeners[function.func.__name__] = (function.id, function.name)
                 async with self.data.commands() as _commands:
-                    _commands[function.__name__] = function_string
-                await ctx.send(f"The listener `{function.__name__}` was successfully added.")
+                    _commands[function.func.__name__] = function_string
+                if function.name != function.func.__name__:
+                    await ctx.send(
+                        f"The listener `{function.func.__name__}` listening for the "
+                        f"event `{function.name}` was successfully added."
+                    )
+                    log.debug(
+                        f"Added listener {function.func.__name__} listening for the "
+                        f"event {function.name} (ID: {function.id})"
+                    )
+                else:
+                    await ctx.send(f"The listener {function.name} was successfully added.")
+                    log.debug(f"Added listener {function.name} (ID: {function.id})")
 
     @instantcmd.command(aliases=["del", "remove"])
     async def delete(self, ctx, command_or_listener: str):
@@ -263,55 +344,50 @@ class InstantCommands(BaseCog):
                 return
             if command in self.listeners:
                 text = "listener"
-                self.bot.remove_listener(FakeListener(self.listeners[command]), name=command)
+                function, name = self.listeners[command]
+                self.bot.remove_listener(FakeListener(function), name=name)
             else:
                 text = "command"
                 self.bot.remove_command(command)
             _commands.pop(command)
         await ctx.send(f"The {text} `{command}` was successfully removed.")
 
-    @instantcmd.command()
-    async def info(self, ctx, command: str = None):
+    @instantcmd.command(name="list")
+    async def _list(self, ctx):
         """
         List all existing commands made using Instant Commands.
 
         If a command name is given and found in the Instant commands list, the code will be shown.
         """
+        message = "List of instant commands:\n" "```Diff\n"
+        _commands = await self.data.commands()
+        for name, command in _commands.items():
+            message += f"+ {name}\n"
+        message += (
+            "```\n"
+            "You can show the command source code by typing "
+            f"`{ctx.prefix}instacmd source <command>`"
+        )
+        if _commands == {}:
+            await ctx.send("No instant command created.")
+            return
+        for page in pagify(message):
+            await ctx.send(message)
 
-        if not command:
-            message = "List of instant commands:\n" "```Diff\n"
-            _commands = await self.data.commands()
-
-            for name, command in _commands.items():
-                message += f"+ {name}\n"
-            message += (
-                "```\n"
-                "*Hint:* You can show the command source code by typing "
-                f"`{ctx.prefix}instacmd info <command>`"
-            )
-
-            if _commands == {}:
-                await ctx.send("No instant command created.")
-                return
-
-            for page in pagify(message):
-                await ctx.send(message)
-
-        else:
-            _commands = await self.data.commands()
-
-            if command not in _commands:
-                await ctx.send("Command not found.")
-                return
-
-            message = (
-                f"Source code for `{ctx.prefix}{command}`:\n"
-                + "```Py\n"
-                + _commands[command]
-                + "```"
-            )
-            for page in pagify(message):
-                await ctx.send(page)
+    @instantcmd.command()
+    async def source(self, ctx: commands.Context, command: str):
+        """
+        Show the code of an instantcmd command or listener.
+        """
+        _commands = await self.data.commands()
+        if command not in _commands:
+            await ctx.send("Command not found.")
+            return
+        message = (
+            f"Source code for `{ctx.prefix}{command}`:\n" + "```Py\n" + _commands[command] + "```"
+        )
+        for page in pagify(message):
+            await ctx.send(page)
 
     @commands.command(hidden=True)
     @checks.is_owner()
