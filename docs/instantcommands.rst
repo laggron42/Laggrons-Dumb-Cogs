@@ -135,8 +135,8 @@ you if you want to replace the command/listener, useful for a quick bug fix
 instead of deleting each time.
 
 You can have multiple listeners for the same event but with a different
-function name by using the :py:`instantcmd.utils.listener` decorator. It
-doesn't work like :py:`discord.ext.commands.Cog.listener`, it only exists so
+function name by using the :func:`instantcmd.utils.listener` decorator. It
+doesn't work like :attr:`discord.ext.commands.Cog.listener`, it only exists so
 you can provide the name of the event you want to listen for.
 
 .. admonition:: Example
