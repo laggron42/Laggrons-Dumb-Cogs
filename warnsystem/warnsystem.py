@@ -991,6 +991,33 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         ]
         await menus.menu(ctx=ctx, pages=pages, controls=menus.DEFAULT_CONTROLS, timeout=60)
 
+    @commands.command()
+    @checks.mod()
+    async def wsunmunte(self, ctx: commands.Context, member: discord.Member, *, reason: str):
+        """
+        Unmute a member muted with WarnSystem.
+
+        If the member's roles were removed, they will be granted back.
+        Reason is optional and will be associated to the latest level 2 warn.
+
+        *wsunmute = WarnSystem unmute. Feel free to add an alias.*
+        """
+        pass
+
+    @commands.command()
+    @checks.mod()
+    async def wsunban(self, ctx: commands.Context, member: UnavailableMember, *, reason: str):
+        """
+        Unban a member banned with WarnSystem.
+
+        If the reinvite setting is enabled, the bot will try to reinvite the member in DM, with\
+        the optional given reason.
+        Reason is optional and will be associated to the latest level 5 warn.
+
+        *wsunban = WarnSystem unban. Feel free to add an alias.*
+        """
+        pass
+
     @commands.command(hidden=True)
     async def warnsysteminfo(self, ctx):
         """
