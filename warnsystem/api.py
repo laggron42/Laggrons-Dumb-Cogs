@@ -376,10 +376,10 @@ class API:
                 if time:
                     log["time"] = self._get_datetime(time)
                 # gotta get that state somehow
-                log["member"] = self.bot.get_user(member) or UnavailableMember(
+                log["member"] = self.bot.get_user(int(member)) or UnavailableMember(
                     self.bot, self.bot.user._state, member
                 )
-                log["author"] = self.bot.get_user(log["author"]) or UnavailableMember(
+                log["author"] = self.bot.get_user(int(log["author"])) or UnavailableMember(
                     self.bot, self.bot.user._state, log["author"]
                 )
                 all_cases.append(log)
