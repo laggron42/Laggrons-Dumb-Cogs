@@ -18,6 +18,7 @@ from redbot.core.utils.chat_formatting import pagify
 
 from . import errors
 from .api import API, UnavailableMember
+from .cache import MemoryCache
 from .converters import AdvancedMemberSelect
 from .settings import SettingsMixin
 
@@ -66,7 +67,7 @@ class CompositeMetaClass(type(commands.Cog), type(ABC)):
 
 
 @cog_i18n(_)
-class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
+class WarnSystem(SettingsMixin, API, MemoryCache, BaseCog, metaclass=CompositeMetaClass):
     """
     An alternative to the Red core moderation system, providing a different system of moderation\
     similar to Dyno.
@@ -75,6 +76,9 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
     Full documentation and FAQ: http://laggron.red/warnsystem.html
     """
 
+    default_global = {
+        "data_version": "0.0"  # will be edited after config update, current version is 1.0
+    }
     default_guild = {
         "delete_message": False,  # if the [p]warn commands should delete the context message
         "show_mod": False,  # if the responsible mod should be revealed to the warned user
@@ -126,7 +130,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             "5": 0xFF4C4C,
         },
         "url": None,  # URL set for the title of all embeds
-        "temporary_warns": [],  # list of temporary warns (need to unmute/unban after some time)
+        "temporary_warns": {},  # list of temporary warns (need to unmute/unban after some time)
     }
     default_custom_member = {"x": []}  # cannot set a list as base group
 
@@ -134,6 +138,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         self.bot = bot
 
         self.data = Config.get_conf(self, 260, force_registration=True)
+        self.data.register_global(**self.default_global)
         self.data.register_guild(**self.default_guild)
         try:
             self.data.init_custom("MODLOGS", 2)
@@ -141,11 +146,11 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             pass
         self.data.register_custom("MODLOGS", **self.default_custom_member)
 
-        self.api = API(bot, self.data)
-        self.errors = errors
+        self.mute_roles = {}
+        self.temp_actions = {}
 
-        self.task = bot.loop.create_task(self.api._loop_task())
         self._init_logger()
+        self.task: asyncio.Task
 
     __version__ = "1.3.0"
     __author__ = ["retke (El Laggron)"]
@@ -178,7 +183,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
     # helpers
     async def call_warn(self, ctx, level, member, reason=None, time=None):
         """No need to repeat, let's do what's common to all 5 warnings."""
-        reason = await self.api.format_reason(ctx.guild, reason)
+        reason = await self.format_reason(ctx.guild, reason)
         if reason and len(reason) > 2000:  # embed limits
             await ctx.send(
                 _(
@@ -191,7 +196,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             )
             return
         try:
-            fail = await self.api.warn(ctx.guild, [member], ctx.author, level, reason, time)
+            fail = await self.warn(ctx.guild, [member], ctx.author, level, reason, time)
             if fail:
                 raise fail[0]
         except errors.MissingPermissions as e:
@@ -267,7 +272,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         tick3 = f"{'✅' if take_action else '❌'} Take action\n" if level != 1 else ""
         tick4 = f"{'✅' if time else '❌'} Time: " if (level == 2 or level == 5) else ""
         tick5 = "✅" if reason else "❌"
-        time_str = (self.api._format_timedelta(time) + "\n") if time else ""
+        time_str = (self._format_timedelta(time) + "\n") if time else ""
 
         async def update_count(count):
             nonlocal i
@@ -306,7 +311,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         if unavailable_members and level < 5:
             await ctx.send(_("You can only use `--hackban-select` with a level 5 warn."))
             return
-        reason = await self.api.format_reason(ctx.guild, reason)
+        reason = await self.format_reason(ctx.guild, reason)
         if (log_modlog or log_dm) and reason and len(reason) > 2000:  # embed limits
             await ctx.send(
                 _(
@@ -376,7 +381,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
                 return
             task = self.bot.loop.create_task(update_message())
         try:
-            fails = await self.api.warn(
+            fails = await self.warn(
                 guild=guild,
                 members=members + unavailable_members,
                 author=ctx.author,
@@ -440,10 +445,10 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
                 await message.delete()
 
     # all warning commands
-    @commands.group(invoke_without_command=True)
+    @commands.group(invoke_without_command=True, name="warn")
     @checks.mod_or_permissions(administrator=True)
     @commands.guild_only()
-    async def warn(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
+    async def _warn(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
         Take actions against a user and log it.
         The warned user will receive a DM.
@@ -452,7 +457,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         """
         await self.call_warn(ctx, 1, member, reason)
 
-    @warn.command(name="1", aliases=["simple"])
+    @_warn.command(name="1", aliases=["simple"])
     @checks.mod_or_permissions(administrator=True)
     async def warn_1(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
@@ -462,7 +467,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         """
         await self.call_warn(ctx, 1, member, reason)
 
-    @warn.command(name="2", aliases=["mute"])
+    @_warn.command(name="2", aliases=["mute"])
     @checks.mod_or_permissions(administrator=True)
     async def warn_2(
         self,
@@ -487,7 +492,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         """
         await self.call_warn(ctx, 2, member, reason, time)
 
-    @warn.command(name="3", aliases=["kick"])
+    @_warn.command(name="3", aliases=["kick"])
     @checks.mod_or_permissions(administrator=True)
     async def warn_3(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
@@ -495,7 +500,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         """
         await self.call_warn(ctx, 3, member, reason)
 
-    @warn.command(name="4", aliases=["softban"])
+    @_warn.command(name="4", aliases=["softban"])
     @checks.mod_or_permissions(administrator=True)
     async def warn_4(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
@@ -509,7 +514,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         """
         await self.call_warn(ctx, 4, member, reason)
 
-    @warn.command(name="5", aliases=["ban"], usage="<member> [time] <reason>")
+    @_warn.command(name="5", aliases=["ban"], usage="<member> [time] <reason>")
     @checks.mod_or_permissions(administrator=True)
     async def warn_5(
         self,
@@ -738,7 +743,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         if not await mod.is_mod_or_superior(self.bot, ctx.author) and user != ctx.author:
             await ctx.send(_("You are not allowed to see other's warnings!"))
             return
-        cases = await self.api.get_all_cases(ctx.guild, user)
+        cases = await self.get_all_cases(ctx.guild, user)
         if not cases:
             await ctx.send(_("That member was never warned."))
             return
@@ -846,7 +851,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             await message.delete()
             return
         case = (await self.data.custom("MODLOGS", guild.id, member.id).x())[page - 1]
-        new_reason = await self.api.format_reason(guild, response.content)
+        new_reason = await self.format_reason(guild, response.content)
         embed.description = _("Case #{number} edition.").format(number=page)
         embed.add_field(name=_("Old reason"), value=case["reason"], inline=False)
         embed.add_field(name=_("New reason"), value=new_reason, inline=False)
@@ -901,7 +906,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         can_unmute = False
         add_roles = False
         if level == 2:
-            mute_role = guild.get_role(await self.data.guild(guild).mute_role())
+            mute_role = guild.get_role(await self.get_mute_role(guild))
             member = guild.get_member(member.id)
             if member:
                 if mute_role and mute_role in member.roles:
@@ -961,7 +966,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         """
         guild = ctx.guild
         full_text = ""
-        warns = await self.api.get_all_cases(guild)
+        warns = await self.get_all_cases(guild)
         for i, warn in enumerate(warns, start=1):
             text = _(
                 "--- Case {number} ---\n"
@@ -1039,15 +1044,14 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
     async def on_member_unban(self, guild: discord.Guild, user: discord.User):
         # if a member gets unbanned, we check if he was temp banned with warnsystem
         # if it was, we remove the case so it won't unban him a second time
-        async with self.data.guild(guild).temporary_warns() as temp_warns:
-            to_remove = []
-            for case in temp_warns:
-                if case["level"] == 2 or case["member"] != user.id:
-                    continue
-                to_remove.append(case)
-            for removal in to_remove:
-                temp_warns.remove(removal)
+        warns = await self.get_temp_action(guild)
+        to_remove = []  # there can be multiple temp bans, let's not question the moderators
+        for member, data in warns.items():
+            if data["level"] == 2 or data["member"] != user.id:
+                continue
+            to_remove.append(member)
         if to_remove:
+            await self.bulk_remove_temp_action(guild, to_remove)
             log.info(
                 f"[Guild {guild.id}] The temporary ban of user {user} (ID: {user.id}) "
                 "was cancelled due to his manual unban."
@@ -1056,20 +1060,19 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
     @listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         guild = after.guild
-        mute_role = guild.get_role(await self.data.guild(guild).mute_role())
+        mute_role = guild.get_role(await self.get_mute_role(guild))
         if not mute_role:
             return
         if not (mute_role in before.roles and mute_role not in after.roles):
             return
-        async with self.data.guild(guild).temporary_warns() as temp_warns:
-            to_remove = []
-            for case in temp_warns:
-                if case["level"] == 5 or case["member"] != after.id:
-                    continue
-                to_remove.append(case)
-            for removal in to_remove:
-                temp_warns.remove(removal)
+        to_remove = []
+        warns = await self.get_temp_action(guild)
+        for member, data in warns.items():
+            if data["level"] == 5 or data["member"] != after.id:
+                continue
+            to_remove.append(member)
         if to_remove:
+            await self.bulk_remove_temp_action(guild, to_remove)
             log.info(
                 f"[Guild {guild.id}] The temporary mute of member {after} (ID: {after.id}) "
                 "was ended due to a manual unmute (role removed)."
@@ -1082,7 +1085,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             return
         if not await self.data.guild(guild).update_mute():
             return
-        role = guild.get_role(await self.data.guild(guild).mute_role())
+        role = guild.get_role(await self.get_mute_role(guild))
         if not role:
             return
         try:

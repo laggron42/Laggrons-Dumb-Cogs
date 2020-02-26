@@ -15,6 +15,8 @@ try:
 except RuntimeError:
     pass  # running sphinx-build raises an error when importing this module
 
+from .abc import MixinMeta
+from .cache import MemoryCache
 from . import errors
 
 log = logging.getLogger("laggron.warnsystem")
@@ -116,7 +118,7 @@ class UnavailableMember(discord.abc.User, discord.abc.Messageable):
         return channel
 
 
-class API:
+class API(MemoryCache, MixinMeta):
     """
     Interact with WarnSystem from your cog.
 
@@ -136,13 +138,6 @@ class API:
 
             version = bot.get_cog('WarnSystem').__version__
     """
-
-    def __init__(self, bot, config):
-        self.bot = bot
-        self.data = config
-
-        # importing this here prevents a RuntimeError when building the documentation
-        # TODO find another solution
 
     def _get_datetime(self, time: str) -> datetime:
         try:
@@ -190,19 +185,18 @@ class API:
             string = strings[0]
         return string
 
-    async def _start_timer(self, guild: discord.Guild, case: dict) -> bool:
+    async def _start_timer(self, guild: discord.Guild, member: discord.Member, case: dict) -> bool:
         """Start the timer for a temporary mute/ban."""
         if not case["until"]:
             raise errors.BadArgument("No duration for this warning!")
-        async with self.data.guild(guild).temporary_warns() as warns:
-            warns.append(case)
+        await self.add_temp_action(guild, member, case)
         return True
 
     async def _mute(self, member: discord.Member, reason: Optional[str] = None):
         """Mute an user on the guild."""
         old_roles = []
         guild = member.guild
-        mute_role = guild.get_role(await self.data.guild(guild).mute_role())
+        mute_role = guild.get_role(await self.get_mute_role(guild))
         remove_roles = await self.data.guild(guild).remove_roles()
         if not mute_role:
             raise errors.MissingMuteRole("You need to create the mute role before doing this.")
@@ -230,7 +224,7 @@ class API:
     async def _unmute(self, member: discord.Member, reason: str, old_roles: list = None):
         """Unmute an user on the guild."""
         guild = member.guild
-        mute_role = guild.get_role(await self.data.guild(guild).mute_role())
+        mute_role = guild.get_role(await self.get_mute_role(guild))
         if not mute_role:
             raise errors.MissingMuteRole(
                 f"Lost the mute role on guild {guild.name} (ID: {guild.id}"
@@ -673,7 +667,7 @@ class API:
         discord.errors.HTTPException
             Creating the role failed.
         """
-        role = await self.data.guild(guild).mute_role()
+        role = await self.get_mute_role(guild)
         role = guild.get_role(role)
         if role:
             return False
@@ -977,8 +971,7 @@ class API:
             )
             # start timer if there is a temporary warning
             if time and (level == 2 or level == 5):
-                data["member"] = member.id
-                await self._start_timer(guild, data)
+                await self._start_timer(guild, member, data)
             i += 1
             if progress_tracker:
                 await progress_tracker(i)
@@ -989,7 +982,7 @@ class API:
         if log_modlog:
             mod_channel = await self.get_modlog_channel(guild, level)
         # check if the mute role exists
-        mute_role = guild.get_role(await self.data.guild(guild).mute_role())
+        mute_role = guild.get_role(await self.get_mute_role(guild))
         if not mute_role and level == 2:
             raise errors.MissingMuteRole("You need to create the mute role before doing this.")
         # we check for all permission problem that can occur before calling the API
@@ -1096,14 +1089,11 @@ class API:
                         f"(ID: {member.id}) after its temporary ban."
                     )
 
-        guilds = await self.data.all_guilds()
         now = datetime.today()
-
-        for guild, data in guilds.items():
-            guild = self.bot.get_guild(guild)
-            if not guild:
+        for guild in self.bot.guilds():
+            data = self.get_temp_action(guild)
+            if not data:
                 continue
-            data = data["temporary_warns"]
             to_remove = []
             for action in data:
                 taken_on = action["time"]
@@ -1114,10 +1104,10 @@ class API:
                 level = action["level"]
                 action_str = _("mute") if level == 2 else _("ban")
                 if not member:
-                    if level == 2:
-                        to_remove.append(action)
-                        continue
                     member = UnavailableMember(self.bot, guild._state, action["member"])
+                    if level == 2:
+                        to_remove.append(member)
+                        continue
                 roles = [guild.get_role(x) for x in action.get("roles") or []]
 
                 reason = _(
@@ -1159,11 +1149,9 @@ class API:
                             f"reason {case_reason}\nCurrent time: {now}\n"
                             f"Expected end time of warn: {until}"
                         )
-                    to_remove.append(action)
-            for item in to_remove:
-                data.remove(item)
+                    to_remove.append(member)
             if to_remove:
-                await self.data.guild(guild).temporary_warns.set(data)
+                await self.bulk_remove_temp_action(guild, to_remove)
 
     async def _loop_task(self):
         """
@@ -1172,6 +1160,7 @@ class API:
 
         The loop runs every 10 seconds.
         """
+        return
         await self.bot.wait_until_ready()
         log.debug(
             "Starting infinite loop for unmutes and unbans. Canel the "

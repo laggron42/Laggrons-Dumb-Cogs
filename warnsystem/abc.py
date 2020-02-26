@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from redbot.core import Config
     from redbot.core.bot import Red
-    from .api import API
 
 
 class MixinMeta(ABC):
@@ -19,4 +18,5 @@ class MixinMeta(ABC):
     def __init__(self, *_args):
         self.bot: Red
         self.data: Config
-        self.api: API
+        self.mute_roles: dict
+        self.temp_actions: dict
