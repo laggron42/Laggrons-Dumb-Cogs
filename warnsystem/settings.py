@@ -456,7 +456,7 @@ class SettingsMixin(MixinMeta):
                 )
                 return
             async with ctx.typing():
-                fails = await self.api.maybe_create_mute_role(guild)
+                fails = await self.maybe_create_mute_role(guild)
                 my_position = guild.me.top_role.position
                 if fails is False:
                     await ctx.send(
@@ -573,7 +573,7 @@ class SettingsMixin(MixinMeta):
 
             # collect data and make strings
             all_data = await self.data.guild(guild).all()
-            modlog_channels = await self.api.get_modlog_channel(guild, "all")
+            modlog_channels = await self.get_modlog_channel(guild, "all")
             channels = ""
             for key, channel in dict(modlog_channels).items():
                 if not channel:
