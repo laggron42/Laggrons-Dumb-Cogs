@@ -445,6 +445,17 @@ class WarnSystem(SettingsMixin, API, MemoryCache, BaseCog, metaclass=CompositeMe
                 await message.delete()
 
     # all warning commands
+    @commands.command()
+    @checks.mod_or_permissions(administrator=True)
+    @commands.guild_only()
+    async def note(self, ctx: commands.Context, member: discord.Member, *, reason: str):
+        """
+        Write a note in a member's modlog.
+
+        This does not count as a warning. The member won't receive a DM.
+        """
+        pass
+
     @commands.group(invoke_without_command=True, name="warn")
     @checks.mod_or_permissions(administrator=True)
     @commands.guild_only()
@@ -888,11 +899,6 @@ class WarnSystem(SettingsMixin, API, MemoryCache, BaseCog, metaclass=CompositeMe
         Remove a case, this is linked to the warning system.
         """
         guild = ctx.guild
-        if page == 0:
-            await message.remove_reaction(emoji, ctx.author)
-            return await menus.menu(
-                ctx, pages, controls, message=message, page=page, timeout=timeout
-            )
         await message.clear_reactions()
         old_embed = message.embeds[0]
         embed = discord.Embed()
@@ -902,26 +908,36 @@ class WarnSystem(SettingsMixin, API, MemoryCache, BaseCog, metaclass=CompositeMe
         member = self.bot.get_user(member_id) or UnavailableMember(
             self.bot, guild._state, member_id
         )
-        level = int(re.match(r".*\(([0-9]*)\)", old_embed.fields[0].value).group(1))
-        can_unmute = False
-        add_roles = False
-        if level == 2:
-            mute_role = guild.get_role(await self.get_mute_role(guild))
-            member = guild.get_member(member.id)
-            if member:
-                if mute_role and mute_role in member.roles:
-                    can_unmute = True
-                add_roles = await self.data.guild(guild).remove_roles()
-        description = _(
-            "Case #{number} deletion.\n**Click on the reaction to confirm your action.**"
-        ).format(number=page)
-        if can_unmute or add_roles:
-            description += _("\nNote: Deleting the case will also do the following:")
-            if can_unmute:
-                description += _("\n- unmute the member")
-            if add_roles:
-                description += _("\n- add all roles back to the member")
-        embed.description = description
+        if page == 0:
+            # no warning specified, mod wants to completly clear the member
+            embed.colour = 0xEE2B2B
+            embed.description = _(
+                "Member {member}'s clearance. By selecting ❌ on the user modlog summary, you can "
+                "remove all warnings given to {member}. __All levels and notes are affected.__\n"
+                "**Click on the reaction to confirm the removal of the entire user's modlog. "
+                "This cannot be undone.**"
+            ).format(member=str(member))
+        else:
+            level = int(re.match(r".*\(([0-9]*)\)", old_embed.fields[0].value).group(1))
+            can_unmute = False
+            add_roles = False
+            if level == 2:
+                mute_role = guild.get_role(await self.get_mute_role(guild))
+                member = guild.get_member(member.id)
+                if member:
+                    if mute_role and mute_role in member.roles:
+                        can_unmute = True
+                    add_roles = await self.data.guild(guild).remove_roles()
+            description = _(
+                "Case #{number} deletion.\n**Click on the reaction to confirm your action.**"
+            ).format(number=page)
+            if can_unmute or add_roles:
+                description += _("\nNote: Deleting the case will also do the following:")
+                if can_unmute:
+                    description += _("\n- unmute the member")
+                if add_roles:
+                    description += _("\n- add all roles back to the member")
+            embed.description = description
         await message.edit(embed=embed)
         menus.start_adding_reactions(message, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
         pred = predicates.ReactionPredicate.yes_or_no(message, ctx.author)
@@ -931,31 +947,40 @@ class WarnSystem(SettingsMixin, API, MemoryCache, BaseCog, metaclass=CompositeMe
             await message.clear_reactions()
             await message.edit(content=_("Question timed out."), embed=None)
             return
-        if pred.result:
-            async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
-                try:
-                    roles = logs[page - 1]["roles"]
-                except KeyError:
-                    roles = []
-                logs.remove(logs[page - 1])
+        if not pred.result:
+            await message.clear_reactions()
+            await message.edit(content=_("Nothing was removed."), embed=None)
+            return
+        if page == 0:
+            # removing entire modlog
+            await self.data.custom("MODLOGS", guild.id, member.id).x.set([])
             log.debug(
-                f"[Guild {guild.id}] Removed case #{page} from member {member} (ID: {member.id})."
+                f"[Guild {guild.id}] Cleared modlog of member {member} (ID: {member.id})."
             )
             await message.clear_reactions()
-            if can_unmute:
-                await member.remove_roles(
-                    mute_role,
-                    reason=_("Warning deleted by {author}").format(
-                        author=f"{str(ctx.author)} (ID: {ctx.author.id})"
-                    ),
-                )
-            if roles:
-                roles = [guild.get_role(x) for x in roles]
-                await member.add_roles(*roles, reason=_("Adding removed roles back after unmute."))
-            await message.edit(content=_("The case was successfully deleted!"), embed=None)
-        else:
-            await message.clear_reactions()
-            await message.edit(content=_("The case was not deleted."), embed=None)
+            await message.edit(content=_("User modlog cleared."), embed=None)
+            return
+        async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
+            try:
+                roles = logs[page - 1]["roles"]
+            except KeyError:
+                roles = []
+            logs.remove(logs[page - 1])
+        log.debug(
+            f"[Guild {guild.id}] Removed case #{page} from member {member} (ID: {member.id})."
+        )
+        await message.clear_reactions()
+        if can_unmute:
+            await member.remove_roles(
+                mute_role,
+                reason=_("Warning deleted by {author}").format(
+                    author=f"{str(ctx.author)} (ID: {ctx.author.id})"
+                ),
+            )
+        if roles:
+            roles = [guild.get_role(x) for x in roles]
+            await member.add_roles(*roles, reason=_("Adding removed roles back after unmute."))
+        await message.edit(content=_("The case was successfully deleted!"), embed=None)
 
     @commands.command()
     @checks.mod()
