@@ -998,7 +998,7 @@ class WarnSystem(SettingsMixin, API, MemoryCache, BaseCog, metaclass=CompositeMe
 
     @commands.command()
     @checks.mod()
-    async def wsunmunte(self, ctx: commands.Context, member: discord.Member, *, reason: str):
+    async def wsunmute(self, ctx: commands.Context, member: discord.Member):
         """
         Unmute a member muted with WarnSystem.
 
@@ -1007,7 +1007,60 @@ class WarnSystem(SettingsMixin, API, MemoryCache, BaseCog, metaclass=CompositeMe
 
         *wsunmute = WarnSystem unmute. Feel free to add an alias.*
         """
-        pass
+        guild = ctx.guild
+        mute_role = guild.get_role(await self.get_mute_role(guild))
+        if not mute_role:
+            await ctx.send(_("The mute role is not set or lost."))
+            return
+        if mute_role not in member.roles:
+            await ctx.send(_("That member isn't muted."))
+            return
+        case = await self.get_temp_action(guild, member)
+        if case and case["level"] == 2:
+            roles = case["roles"]
+            await self.remove_temp_action(guild, member)
+        else:
+            cases = await self.get_all_cases(guild, member)
+            roles = []
+            for data in cases[::-1]:
+                if data["level"] == 2:
+                    try:
+                        roles = data["roles"]
+                    except KeyError:
+                        continue
+                    break
+        await member.remove_roles(
+            mute_role,
+            reason=_("[WarnSystem] Member unmuted by {author} (ID: {author.id})").format(
+                author=ctx.author
+            ),
+        )
+        roles = list(filter(None, [guild.get_role(x) for x in roles]))
+        if not roles:
+            await ctx.send(_("Member unmuted."))
+            return
+        await ctx.send(
+            _("Member unmuted. {len_roles} roles to reassign...").format(len_roles=len(roles))
+        )
+        async with ctx.typing():
+            fails = []
+            for role in roles:
+                try:
+                    await member.add_roles(role)
+                except discord.errors.HTTPException as e:
+                    log.error(
+                        f"Failed to reapply role {role} ({role.id}) on guild {guild} "
+                        f"({guild.id}) after unmute.",
+                        exc_info=e,
+                    )
+                    fails.append(role)
+        text = _("Done.")
+        if fails:
+            text.append(_("\n\nFailed to add {fails}/{len_roles} roles back:\n"))
+            for role in fails:
+                text.append(f"- {role.name}\n")
+        for page in pagify(text):
+            await ctx.send(page)
 
     @commands.command()
     @checks.mod()
