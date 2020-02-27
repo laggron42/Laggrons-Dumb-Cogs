@@ -1064,7 +1064,7 @@ class WarnSystem(SettingsMixin, API, MemoryCache, BaseCog, metaclass=CompositeMe
 
     @commands.command()
     @checks.mod()
-    async def wsunban(self, ctx: commands.Context, member: UnavailableMember, *, reason: str):
+    async def wsunban(self, ctx: commands.Context, member: UnavailableMember):
         """
         Unban a member banned with WarnSystem.
 
@@ -1074,7 +1074,21 @@ class WarnSystem(SettingsMixin, API, MemoryCache, BaseCog, metaclass=CompositeMe
 
         *wsunban = WarnSystem unban. Feel free to add an alias.*
         """
-        pass
+        guild = ctx.guild
+        bans = await guild.bans()
+        if member.id not in [x.user.id for x in bans]:
+            await ctx.send(_("That user is not banned."))
+            return
+        try:
+            await guild.unban(member)
+        except discord.errors.HTTPException as e:
+            await ctx.send(_("Failed to unban the given member. Check your logs for details."))
+            log.error(f"Can't unban user {member.id} from guild {guild} ({guild.id})", exc_info=e)
+            return
+        case = await self.get_temp_action(guild, member)
+        if case and case["level"] == 5:
+            await self.remove_temp_action(guild, member)
+        await ctx.send(_("User unbanned."))
 
     @commands.command(hidden=True)
     async def warnsysteminfo(self, ctx):
