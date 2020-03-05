@@ -831,6 +831,55 @@ class WarnSystem(SettingsMixin, API, MemoryCache, BaseCog, metaclass=CompositeMe
         """
         Edit a case, this is linked to the warnings menu system.
         """
+        
+        async def edit_message(channel_id: int, message_id: int, new_reason: str):
+            channel: discord.TextChannel = guild.get_channel(channel_id)
+            if channel is None:
+                log.warn(
+                    f"[Guild {guild.id}] Failed to edit modlog message. "
+                    f"Channel {channel_id} not found."
+                )
+                return False
+            try:
+                message: discord.Message = await channel.fetch_message(message_id)
+            except discord.errors.NotFound:
+                log.warn(
+                    f"[Guild {guild.id}] Failed to edit modlog message. "
+                    f"Message {message_id} in channel {channel.id} not found."
+                )
+                return False
+            except discord.errors.Forbidden:
+                log.warn(
+                    f"[Guild {guild.id}] Failed to edit modlog message. "
+                    f"No permissions to fetch messages in channel {channel.id}."
+                )
+                return False
+            except discord.errors.HTTPException as e:
+                log.error(
+                    f"[Guild {guild.id}] Failed to edit modlog message. API exception raised.",
+                    exc_info=e,
+                )
+                return False
+            try:
+                embed: discord.Embed = message.embeds[0]
+                embed.set_field_at(len(embed.fields) - 2, name=_("Reason"), value=new_reason, inline=False)
+            except IndexError as e:
+                log.error(
+                    f"[Guild {guild.id}] Failed to edit modlog message. Embed is malformed.",
+                    exc_info=e,
+                )
+                return False
+            try:
+                await message.edit(embed=embed)
+            except discord.errors.HTTPException as e:
+                log.error(
+                    f"[Guild {guild.id}] Failed to edit modlog message. "
+                    "Unknown error when attempting message edition.",
+                    exc_info=e,
+                )
+                return False
+            return True
+
         guild = ctx.guild
         if page == 0:
             # first page, no case to edit
@@ -879,8 +928,17 @@ class WarnSystem(SettingsMixin, API, MemoryCache, BaseCog, metaclass=CompositeMe
         if pred.result:
             async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
                 logs[page - 1]["reason"] = new_reason
+                try:
+                    channel_id, message_id = logs[page - 1]["modlog_message"].values()
+                except KeyError:
+                    result = None
+                else:
+                    result = await edit_message(channel_id, message_id, new_reason)
             await message.clear_reactions()
-            await message.edit(content=_("The reason was successfully edited!"), embed=None)
+            text = _("The reason was successfully edited!\n")
+            if result is False:
+                text += _("*The modlog message couldn't be edited. Check your logs for details.*")
+            await message.edit(content=text, embed=None)
         else:
             await message.clear_reactions()
             await message.edit(content=_("The reason was not edited."), embed=None)
@@ -898,6 +956,46 @@ class WarnSystem(SettingsMixin, API, MemoryCache, BaseCog, metaclass=CompositeMe
         """
         Remove a case, this is linked to the warning system.
         """
+
+        async def delete_message(channel_id: int, message_id: int):
+            channel: discord.TextChannel = guild.get_channel(channel_id)
+            if channel is None:
+                log.warn(
+                    f"[Guild {guild.id}] Failed to delete modlog message. "
+                    f"Channel {channel_id} not found."
+                )
+                return False
+            try:
+                message: discord.Message = await channel.fetch_message(message_id)
+            except discord.errors.NotFound:
+                log.warn(
+                    f"[Guild {guild.id}] Failed to delete modlog message. "
+                    f"Message {message_id} in channel {channel.id} not found."
+                )
+                return False
+            except discord.errors.Forbidden:
+                log.warn(
+                    f"[Guild {guild.id}] Failed to delete modlog message. "
+                    f"No permissions to fetch messages in channel {channel.id}."
+                )
+                return False
+            except discord.errors.HTTPException as e:
+                log.error(
+                    f"[Guild {guild.id}] Failed to delete modlog message. API exception raised.",
+                    exc_info=e,
+                )
+                return False
+            try:
+                await message.delete()
+            except discord.errors.HTTPException as e:
+                log.error(
+                    f"[Guild {guild.id}] Failed to delete modlog message. "
+                    "Unknown error when attempting message deletion.",
+                    exc_info=e,
+                )
+                return False
+            return True
+
         guild = ctx.guild
         await message.clear_reactions()
         old_embed = message.embeds[0]
@@ -965,6 +1063,12 @@ class WarnSystem(SettingsMixin, API, MemoryCache, BaseCog, metaclass=CompositeMe
                 roles = logs[page - 1]["roles"]
             except KeyError:
                 roles = []
+            try:
+                channel_id, message_id = logs[page - 1]["modlog_message"].values()
+            except KeyError:
+                result = None
+            else:
+                result = await delete_message(channel_id, message_id)
             logs.remove(logs[page - 1])
         log.debug(
             f"[Guild {guild.id}] Removed case #{page} from member {member} (ID: {member.id})."
@@ -980,6 +1084,9 @@ class WarnSystem(SettingsMixin, API, MemoryCache, BaseCog, metaclass=CompositeMe
         if roles:
             roles = [guild.get_role(x) for x in roles]
             await member.add_roles(*roles, reason=_("Adding removed roles back after unmute."))
+        text = _("The case was successfully deleted!")
+        if result is False:
+            text += _("*The modlog message couldn't be deleted. Check your logs for details.*")
         await message.edit(content=_("The case was successfully deleted!"), embed=None)
 
     @commands.command()

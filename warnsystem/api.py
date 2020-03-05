@@ -242,6 +242,7 @@ class API(MemoryCache, MixinMeta):
         reason: Optional[str] = None,
         duration: Optional[timedelta] = None,
         roles: Optional[list] = None,
+        modlog_message: Optional[discord.Message] = None,
     ) -> dict:
         """Create a new case for a member. Don't call this, call warn instead."""
         data = {
@@ -257,6 +258,11 @@ class API(MemoryCache, MixinMeta):
             else (datetime.today() + duration).strftime("%a %d %B %Y %H:%M:%S"),
             "roles": [] if not roles else [x.id for x in roles],
         }
+        if modlog_message:
+            data["modlog_message"] = {
+                "channel_id": modlog_message.channel.id,
+                "message_id": modlog_message.id,
+            }
         async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
             logs.append(data)
         return data
@@ -965,9 +971,11 @@ class API(MemoryCache, MixinMeta):
                     return e
             # actions were taken, time to log
             if log_modlog:
-                await mod_channel.send(embed=modlog_e)
+                modlog_message = await mod_channel.send(embed=modlog_e)
+            else:
+                modlog_message = None
             data = await self._create_case(
-                guild, member, author, level, datetime.now(), reason, time, roles
+                guild, member, author, level, datetime.now(), reason, time, roles, modlog_message,
             )
             # start timer if there is a temporary warning
             if time and (level == 2 or level == 5):
