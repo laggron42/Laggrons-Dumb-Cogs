@@ -593,6 +593,9 @@ class SettingsMixin(MixinMeta):
             mute_role = _("No mute role set.") if not mute_role else mute_role.name
             hierarchy = _("Enabled") if all_data["respect_hierarchy"] else _("Disabled")
             reinvite = _("Enabled") if all_data["reinvite"] else _("Disabled")
+            show_mod = _("Enabled") if all_data["show_mod"] else _("Disabled")
+            update_mute = _("Enabled") if all_data["update_mute"] else _("Disabled")
+            remove_roles = _("Enabled") if all_data["remove_roles"] else _("Disabled")
             bandays = _("Softban: {softban}\nBan: {ban}").format(
                 softban=all_data["bandays"]["softban"], ban=all_data["bandays"]["ban"]
             )
@@ -628,40 +631,58 @@ class SettingsMixin(MixinMeta):
                 user_descriptions += f"{key}: {description}\n"
             if len(user_descriptions) > 1024:
                 user_descriptions = _("Too long to be shown...")
+            embed_thumbnails = "\n".join(
+                [f"{level}: {value}" for level, value in all_data["thumbnails"].items()]
+            )
+            embed_colors = "\n".join(
+                [
+                    f"{level}: {hex(value).replace('0x', '#')}"
+                    for level, value in all_data["colors"].items()
+                ]
+            )
 
             # make embed
-            embed = discord.Embed(title=_("WarnSystem settings."))
-            embed.url = "https://laggron.red/warnsystem.html"
-            embed.description = _(
-                "You can change all of these values with {prefix}warnset"
-            ).format(prefix=ctx.prefix)
-            embed.add_field(name=_("Log channels"), value=channels)
-            embed.add_field(name=_("Mute role"), value=mute_role)
-            embed.add_field(name=_("Respect hierarchy"), value=hierarchy)
-            embed.add_field(name=_("Reinvite unbanned members"), value=reinvite)
-            embed.add_field(name=_("Days of messages to delete"), value=bandays)
-            embed.add_field(name=_("Substitutions"), value=substitutions)
-            embed.add_field(
+            embeds = [discord.Embed() for x in range(2)]
+            embeds[0].title = _("WarnSystem settings. Page 1/2")
+            embeds[1].title = _("WarnSystem settings. Page 2/2")
+            try:
+                color = await self.bot.get_embed_color(ctx)
+            except AttributeError:
+                color = self.bot.color
+            for embed in embeds:
+                embed.url = "https://laggron.red/warnsystem.html"
+                embed.description = _(
+                    "You can change all of these values with {prefix}warnset"
+                ).format(prefix=ctx.clean_prefix)
+                embed.set_footer(text=_("Cog made with ❤️ by Laggron"))
+                embed.colour = color
+            embeds[0].add_field(name=_("Log channels"), value=channels)
+            embeds[0].add_field(name=_("Mute role"), value=mute_role)
+            embeds[0].add_field(name=_("Respect hierarchy"), value=hierarchy)
+            embeds[0].add_field(name=_("Reinvite unbanned members"), value=reinvite)
+            embeds[0].add_field(name=_("Show responsible moderator"), value=show_mod)
+            embeds[0].add_field(name=_("Update new channels for mute role"), value=update_mute)
+            embeds[0].add_field(name=_("Remove roles on mute"), value=remove_roles)
+            embeds[0].add_field(name=_("Days of messages to delete"), value=bandays)
+            embeds[0].add_field(name=_("Substitutions"), value=substitutions)
+            embeds[1].add_field(name=_("Embed thumbnails"), value=embed_thumbnails)
+            embeds[1].add_field(name=_("Embed colors"), value=embed_colors)
+            embeds[1].add_field(
                 name=_("Modlog embed descriptions"), value=modlog_descriptions, inline=False
             )
-            embed.add_field(
+            embeds[1].add_field(
                 name=_("User embed descriptions"), value=user_descriptions, inline=False
             )
-            embed.add_field(
+            embeds[1].add_field(
                 name="\u200b",
                 value=_(
                     "To see informations about the cog (version, documentation, "
                     "support server, Patreon), type `{prefix}warnsysteminfo`."
-                ).format(prefix=ctx.prefix),
+                ).format(prefix=ctx.clean_prefix),
                 inline=False,
             )
-            embed.set_footer(text=_("Cog made with ❤️ by Laggron"))
-            try:
-                embed.color = await self.bot.get_embed_color(ctx)
-            except AttributeError:
-                embed.color = self.bot.color
         try:
-            await ctx.send(embed=embed)
+            await menus.menu(ctx=ctx, pages=embeds, controls=menus.DEFAULT_CONTROLS, timeout=90)
         except discord.errors.HTTPException as e:
             log.error("Couldn't make embed for displaying settings.", exc_info=e)
             await ctx.send(
