@@ -7,6 +7,8 @@ from copy import deepcopy
 from typing import Union, Optional, Iterable, Callable, Awaitable
 from datetime import datetime, timedelta
 
+from redbot.core import Config
+from redbot.core.bot import Red
 from redbot.core.i18n import Translator
 from redbot.core.commands import BadArgument, MemberConverter
 
@@ -15,7 +17,6 @@ try:
 except RuntimeError:
     pass  # running sphinx-build raises an error when importing this module
 
-from .abc import MixinMeta
 from .cache import MemoryCache
 from . import errors
 
@@ -118,7 +119,7 @@ class UnavailableMember(discord.abc.User, discord.abc.Messageable):
         return channel
 
 
-class API(MemoryCache, MixinMeta):
+class API:
     """
     Interact with WarnSystem from your cog.
 
@@ -138,6 +139,11 @@ class API(MemoryCache, MixinMeta):
 
             version = bot.get_cog('WarnSystem').__version__
     """
+
+    def __init__(self, bot: Red, config: Config, cache: MemoryCache):
+        self.bot = bot
+        self.data = config
+        self.cache = cache
 
     def _get_datetime(self, time: str) -> datetime:
         try:
@@ -189,14 +195,14 @@ class API(MemoryCache, MixinMeta):
         """Start the timer for a temporary mute/ban."""
         if not case["until"]:
             raise errors.BadArgument("No duration for this warning!")
-        await self.add_temp_action(guild, member, case)
+        await self.cache.add_temp_action(guild, member, case)
         return True
 
     async def _mute(self, member: discord.Member, reason: Optional[str] = None):
         """Mute an user on the guild."""
         old_roles = []
         guild = member.guild
-        mute_role = guild.get_role(await self.get_mute_role(guild))
+        mute_role = guild.get_role(await self.cache.get_mute_role(guild))
         remove_roles = await self.data.guild(guild).remove_roles()
         if not mute_role:
             raise errors.MissingMuteRole("You need to create the mute role before doing this.")
@@ -224,7 +230,7 @@ class API(MemoryCache, MixinMeta):
     async def _unmute(self, member: discord.Member, reason: str, old_roles: list = None):
         """Unmute an user on the guild."""
         guild = member.guild
-        mute_role = guild.get_role(await self.get_mute_role(guild))
+        mute_role = guild.get_role(await self.cache.get_mute_role(guild))
         if not mute_role:
             raise errors.MissingMuteRole(
                 f"Lost the mute role on guild {guild.name} (ID: {guild.id}"
@@ -673,7 +679,7 @@ class API(MemoryCache, MixinMeta):
         discord.errors.HTTPException
             Creating the role failed.
         """
-        role = await self.get_mute_role(guild)
+        role = await self.cache.get_mute_role(guild)
         role = guild.get_role(role)
         if role:
             return False
@@ -990,7 +996,7 @@ class API(MemoryCache, MixinMeta):
         if log_modlog:
             mod_channel = await self.get_modlog_channel(guild, level)
         # check if the mute role exists
-        mute_role = guild.get_role(await self.get_mute_role(guild))
+        mute_role = guild.get_role(await self.cache.get_mute_role(guild))
         if not mute_role and level == 2:
             raise errors.MissingMuteRole("You need to create the mute role before doing this.")
         # we check for all permission problem that can occur before calling the API
@@ -1099,7 +1105,7 @@ class API(MemoryCache, MixinMeta):
 
         now = datetime.today()
         for guild in self.bot.guilds():
-            data = self.get_temp_action(guild)
+            data = self.cache.get_temp_action(guild)
             if not data:
                 continue
             to_remove = []
@@ -1159,7 +1165,7 @@ class API(MemoryCache, MixinMeta):
                         )
                     to_remove.append(member)
             if to_remove:
-                await self.bulk_remove_temp_action(guild, to_remove)
+                await self.cache.bulk_remove_temp_action(guild, to_remove)
 
     async def _loop_task(self):
         """
@@ -1168,7 +1174,6 @@ class API(MemoryCache, MixinMeta):
 
         The loop runs every 10 seconds.
         """
-        return
         await self.bot.wait_until_ready()
         log.debug(
             "Starting infinite loop for unmutes and unbans. Canel the "

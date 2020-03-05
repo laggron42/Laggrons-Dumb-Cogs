@@ -4,17 +4,23 @@ import contextlib
 
 from typing import Mapping, Optional
 from redbot.core import Config
-
-from .abc import MixinMeta
+from redbot.core.bot import Red
 
 log = logging.getLogger("laggron.warnsystem")
 
 
-class MemoryCache(MixinMeta):
+class MemoryCache:
     """
     This class is used to store most used Config values and reduce calls for optimization.
     See Github issue #49
     """
+
+    def __init__(self, bot: Red, config: Config):
+        self.bot = bot
+        self.data = config
+
+        self.mute_roles = {}
+        self.temp_actions = {}
 
     async def _debug_info(self) -> str:
         """
