@@ -189,7 +189,7 @@ class InstantCommands(BaseCog):
             "Would you like to replace it?"
         )
         pred = ReactionPredicate.yes_or_no(msg, ctx.author)
-        start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS, loop=ctx.bot.loop)
+        start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS)
         try:
             await self.bot.wait_for("reaction_add", check=pred, timeout=30)
         except asyncio.TimeoutError:
