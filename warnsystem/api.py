@@ -1104,21 +1104,22 @@ class API:
                     )
 
         now = datetime.today()
-        for guild in self.bot.guilds():
-            data = self.cache.get_temp_action(guild)
+        for guild in self.bot.guilds:
+            data = await self.cache.get_temp_action(guild)
             if not data:
                 continue
             to_remove = []
-            for action in data:
+            for member, action in data.items():
+                member = int(member)
                 taken_on = action["time"]
                 until = self._get_datetime(action["until"])
                 author = guild.get_member(action["author"])
-                member = guild.get_member(action["member"])
+                member = guild.get_member(member)
                 case_reason = action["reason"]
                 level = action["level"]
                 action_str = _("mute") if level == 2 else _("ban")
                 if not member:
-                    member = UnavailableMember(self.bot, guild._state, action["member"])
+                    member = UnavailableMember(self.bot, guild._state, member)
                     if level == 2:
                         to_remove.append(member)
                         continue
@@ -1199,3 +1200,60 @@ class API:
                     "Error in loop for unmutes and unbans. The loop will be resumed.", exc_info=e
                 )
             await asyncio.sleep(10)
+
+    # automod stuff
+    def enable_automod(self):
+        """
+        Enable automod checks and listeners on the bot.
+        """
+        log.info("Enabling automod listeners.")
+        self.bot.add_listener(self.automod_on_message, name="on_message")
+
+    async def automod_on_message(self, message: discord.Message):
+        try:
+            await self.automod_process_message(message)
+        except Exception as e:
+            log.error(
+                f"[Guild {message.guild.id}] Error while processing message for automod.",
+                exc_info=e,
+            )
+
+    async def automod_process_message(self, message: discord.Message):
+        guild = message.guild
+        member = message.author
+        if not guild:
+            return
+        if not self.cache.get_automod_enabled(guild):
+            return
+        if await self.bot.is_automod_immune(message):
+            return
+        all_regex = await self.cache.get_automod_regex(guild)
+        for name, regex in all_regex.items():
+            regex: re.Pattern
+            result = regex.search(message.content)
+            if result:
+                warn_data = await self.data.guild(guild).automod.regex.get_raw(name)
+                time = None
+                if warn_data["time"]:
+                    time = self._get_datetime(warn_data["time"])
+                level = warn_data["level"]
+                reason = warn_data["reason"].format(
+                    guild=guild, channel=message.channel, member=member
+                )
+                fail = await self.warn(
+                    guild, [member], guild.me, level, reason, time,
+                )
+                if fail:
+                    log.warn(
+                        f"[Guild {guild.id}] Regex automod warn on member {member} ({member.id})\n"
+                        f"Level: {level}. Time: {time}. Reason: {reason}\n"
+                        f"Original message: {message.content}\n"
+                        f"Automatic warn failed due to the following exception:",
+                        exc_info=fail[0],
+                    )
+                else:
+                    log.info(
+                        f"[Guild {guild.id}] Regex automod warn on member {member} ({member.id})\n"
+                        f"Level: {level}. Time: {time}. Reason: {reason}\n"
+                        f"Original message: {message.content}"
+                    )

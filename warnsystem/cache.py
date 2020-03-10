@@ -1,10 +1,12 @@
 import discord
 import logging
 import contextlib
+import re
 
-from typing import Mapping, Optional
 from redbot.core import Config
 from redbot.core.bot import Red
+
+from typing import Mapping, Optional
 
 log = logging.getLogger("laggron.warnsystem")
 
@@ -21,6 +23,13 @@ class MemoryCache:
 
         self.mute_roles = {}
         self.temp_actions = {}
+        self.automod_enabled = []
+        self.automod_regex = {}
+
+    async def init_automod_enabled(self):
+        for guild in self.bot.guilds:
+            if await self.data.guild(guild).automod.enabled():
+                self.automod_enabled.append(guild.id)
 
     async def _debug_info(self) -> str:
         """
@@ -30,9 +39,9 @@ class MemoryCache:
         """
         config_data = await self.data.all_guilds()
         mute_roles_cached = len(self.mute_roles)
-        mute_roles = sum((x for x in config_data.values() if x["mute_role"] is not None))
+        mute_roles = len([x for x in config_data.values() if x["mute_role"] is not None])
         guild_temp_actions_cached = len(self.temp_actions)
-        guild_temp_actions = len(config_data["temporary_warns"])
+        guild_temp_actions = len([x for x in config_data.values() if x["temporary_warns"]])
         temp_actions_cached = sum(len(x) for x in self.temp_actions.values())
         temp_actions = sum((len(x["temporary_warns"]) for x in config_data.values()))
         text = (
@@ -49,7 +58,8 @@ class MemoryCache:
         if role_id:
             return role_id
         role_id = await self.data.guild(guild).mute_role()
-        self.mute_roles[guild.id] = role_id
+        if role_id:
+            self.mute_roles[guild.id] = role_id
         return role_id
 
     async def update_mute_role(self, guild: discord.Guild, role: discord.Role):
@@ -60,7 +70,8 @@ class MemoryCache:
         guild_temp_actions = self.temp_actions.get(guild.id)
         if guild_temp_actions is None:
             guild_temp_actions = await self.data.guild(guild).temporary_warns.all()
-            self.temp_actions[guild.id] = guild_temp_actions
+            if guild_temp_actions:
+                self.temp_actions[guild.id] = guild_temp_actions
         if member is None:
             return guild_temp_actions
         return guild_temp_actions.get(member.id)
@@ -82,6 +93,52 @@ class MemoryCache:
     async def bulk_remove_temp_action(self, guild: discord.Guild, members: list):
         members = [x.id for x in members]
         warns = await self.get_temp_action(guild)
-        warns = {x: y for x, y in warns.items() if x not in members}
+        warns = {x: y for x, y in warns.items() if int(x) not in members}
         await self.data.guild(guild).temporary_warns.set(warns)
         self.temp_actions[guild.id] = warns
+
+    def get_automod_enabled(self, guild: discord.Guild):
+        return guild.id in self.automod_enabled
+
+    async def add_automod_enabled(self, guild: discord.Guild):
+        self.automod_enabled.append(guild.id)
+        await self.data.guild(guild).automod.enabled.set(True)
+
+    async def remove_automod_enabled(self, guild: discord.Guild):
+        self.automod_enabled.remove(guild.id)
+        await self.data.guild(guild).automod.enabled.set(False)
+
+    async def get_automod_regex(self, guild: discord.Guild):
+        automod_regex = self.automod_regex.get(guild.id)
+        if not automod_regex:
+            automod_regex = await self.data.guild(guild).automod.regex()
+            for name, regex in automod_regex.items():
+                pattern = re.compile(regex["regex"])
+                automod_regex[name] = pattern
+            if automod_regex:
+                self.automod_regex[guild.id] = automod_regex
+        return automod_regex
+
+    async def add_automod_regex(
+        self,
+        guild: discord.Guild,
+        name: str,
+        regex: re.Pattern,
+        level: int,
+        time: str,
+        reason: str,
+    ):
+        await self.data.guild(guild).automod.regex.set_raw(
+            name, value={"regex": regex.pattern, "level": level, "time": time, "reason": reason}
+        )
+        if guild.id not in self.automod_regex:
+            self.automod_regex[guild.id] = {name: regex}
+        else:
+            self.automod_regex[guild.id][name] = regex
+
+    async def remove_automod_regex(self, guild: discord.Guild, name: str):
+        await self.data.guild(guild).automod.regex.clear_raw(name)
+        try:
+            del self.automod_regex[guild.id][name]
+        except KeyError:
+            pass

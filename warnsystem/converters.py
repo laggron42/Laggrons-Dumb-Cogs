@@ -1,17 +1,19 @@
 import argparse
 import discord
 import re
+import logging
 
 from dateutil import parser
 from discord.ext.commands.converter import RoleConverter, MemberConverter
 
-from redbot.core.commands import BadArgument
+from redbot.core.commands import BadArgument, Converter, Context
 from redbot.core.commands.converter import TimedeltaConverter
 from redbot.core.i18n import Translator
 
 from .api import UnavailableMember
 
 _ = Translator("WarnSystem", __file__)
+log = logging.getLogger("laggron.warnsystem")
 
 
 # credit to mikeshardmind (Sinbad) for parse_time
@@ -440,3 +442,25 @@ class AdvancedMemberSelect:
             self.confirm = args.confirm
             self.members, self.unavailable_members = await self.process_arguments(args)
             return self
+
+
+class ValidRegex(Converter):
+    """
+    This will check to see if the provided regex pattern is valid
+
+    Guidance code on how to do this from:
+    https://github.com/Rapptz/discord.py/blob/rewrite/discord/ext/commands/converter.py#L85
+    https://github.com/Cog-Creators/Red-DiscordBot/blob/V3/develop/redbot/cogs/mod/mod.py#L24
+
+    This function (and a lot of code related to regex) is made by TrustyJAID
+    https://github.com/TrustyJAID/Trusty-cogs/blob/master/retrigger/converters.py#L240
+    """
+
+    async def convert(self, ctx: Context, argument: str) -> str:
+        try:
+            result = re.compile(argument)
+        except Exception as e:
+            log.error("Retrigger conversion error")
+            err_msg = _("`{arg}` is not a valid regex pattern. {e}").format(arg=argument, e=e)
+            raise BadArgument(err_msg)
+        return result

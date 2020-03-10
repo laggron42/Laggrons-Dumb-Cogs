@@ -5,6 +5,7 @@ if TYPE_CHECKING:
     from redbot.core import Config
     from redbot.core.bot import Red
     from .cache import MemoryCache
+    from .api import API
 
 
 class MixinMeta(ABC):
@@ -20,3 +21,4 @@ class MixinMeta(ABC):
         self.bot: Red
         self.data: Config
         self.cache: MemoryCache
+        self.api: API

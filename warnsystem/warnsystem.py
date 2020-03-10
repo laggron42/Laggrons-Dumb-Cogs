@@ -18,7 +18,7 @@ from redbot.core.utils.chat_formatting import pagify
 
 from . import errors
 from .api import API, UnavailableMember
-from .automod import AutoModMixin
+from .automod import AutomodMixin
 from .cache import MemoryCache
 from .converters import AdvancedMemberSelect
 from .settings import SettingsMixin
@@ -68,7 +68,7 @@ class CompositeMetaClass(type(commands.Cog), type(ABC)):
 
 
 @cog_i18n(_)
-class WarnSystem(SettingsMixin, AutoModMixin, BaseCog, metaclass=CompositeMetaClass):
+class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaClass):
     """
     An alternative to the Red core moderation system, providing a different system of moderation\
     similar to Dyno.
@@ -132,6 +132,10 @@ class WarnSystem(SettingsMixin, AutoModMixin, BaseCog, metaclass=CompositeMetaCl
         },
         "url": None,  # URL set for the title of all embeds
         "temporary_warns": {},  # list of temporary warns (need to unmute/unban after some time)
+        "automod": {  # everything related to auto moderation
+            "enabled": False,
+            "regex": {},  # all regex expressions
+        },
     }
     default_custom_member = {"x": []}  # cannot set a list as base group
 

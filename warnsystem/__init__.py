@@ -105,5 +105,8 @@ async def setup(bot):
             "3rd party cog support server, #support_laggrons-dumb-cogs channel)."
         ) from e
     bot.add_cog(n)
-    n.task = bot.loop.create_task(n._loop_task())
+    await n.cache.init_automod_enabled()
+    n.task = bot.loop.create_task(n.api._loop_task())
+    if n.cache.automod_enabled:
+        n.api.enable_automod()
     log.debug("Cog successfully loaded on the instance.")
