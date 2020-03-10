@@ -888,7 +888,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                 )
             embed.add_field(name=_("Reason"), value=case["reason"], inline=False),
             embed.timestamp = self.api._get_datetime(case["time"])
-            embed.color = await self.data.guild(ctx.guild).colors.get_raw(level)
+            embed.colour = await self.data.guild(ctx.guild).colors.get_raw(level)
             embeds.append(embed)
 
         controls = {"⬅": menus.prev_page, "❌": menus.close_menu, "➡": menus.next_page}

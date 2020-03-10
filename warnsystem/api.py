@@ -629,7 +629,7 @@ class API:
         log_embed.add_field(name=_("Status"), value=current_status(True), inline=False)
         log_embed.set_footer(text=today)
         log_embed.set_thumbnail(url=await self.data.guild(guild).thumbnails.get_raw(level))
-        log_embed.color = await self.data.guild(guild).colors.get_raw(level)
+        log_embed.colour = await self.data.guild(guild).colors.get_raw(level)
         log_embed.url = await self.data.guild(guild).url()
         log_embed.set_image(url=link.group() if link else "")
         if not message_sent:
