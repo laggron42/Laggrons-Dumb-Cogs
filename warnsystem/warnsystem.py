@@ -8,6 +8,7 @@ import os
 from typing import Optional
 from asyncio import TimeoutError as AsyncTimeoutError
 from abc import ABC
+from datetime import datetime
 
 from redbot.core import commands, Config, checks
 from redbot.core.commands.converter import TimedeltaConverter
@@ -34,6 +35,62 @@ if listener is None:
 
     def listener(name=None):
         return lambda x: x
+
+
+def pretty_date(time: datetime):
+    """
+    Get a datetime object and return a pretty string like 'an hour ago',
+    'Yesterday', '3 months ago', 'just now', etc
+
+    This is based on this answer, modified for i18n compatibility:
+    https://stackoverflow.com/questions/1551382/user-friendly-time-format-in-python
+    """
+
+    def text(amount: float, unit: tuple):
+        amount = round(amount)
+        if amount > 1:
+            unit = unit[1]
+        else:
+            unit = unit[0]
+        return _("{amount} {unit} ago.").format(amount=amount, unit=unit)
+
+    units_name = {
+        0: (_("year"), _("years")),
+        1: (_("month"), _("months")),
+        2: (_("week"), _("weeks")),
+        3: (_("day"), _("days")),
+        4: (_("hour"), _("hours")),
+        5: (_("minute"), _("minutes")),
+        6: (_("second"), _("seconds")),
+    }
+    now = datetime.now()
+    diff = now - time
+    second_diff = diff.seconds
+    day_diff = diff.days
+    if day_diff < 0:
+        return ""
+    if day_diff == 0:
+        if second_diff < 10:
+            return _("Just now")
+        if second_diff < 60:
+            return text(second_diff, units_name[6])
+        if second_diff < 120:
+            return _("A minute ago")
+        if second_diff < 3600:
+            return text(second_diff / 60, units_name[5])
+        if second_diff < 7200:
+            return _("An hour ago")
+        if second_diff < 86400:
+            return text(second_diff / 3600, units_name[4])
+    if day_diff == 1:
+        return _("Yesterday")
+    if day_diff < 7:
+        return text(day_diff, units_name[3])
+    if day_diff < 31:
+        return text(day_diff / 7, units_name[2])
+    if day_diff < 365:
+        return text(day_diff / 30, units_name[1])
+    return text(day_diff / 365, units_name[0])
 
 
 # Red 3.1 backwards compatibility
@@ -783,10 +840,30 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             if total_warns > 0:
                 msg.append(f"{warning_str(i, total_warns > 1)}: {total_warns}")
         warn_field = "\n".join(msg) if len(msg) > 1 else msg[0]
+        warn_list = []
+        for case in cases[:-10:-1]:
+            level = case["level"]
+            reason = str(case["reason"]).splitlines()
+            if len(reason) > 1:
+                reason = reason[0] + "..."
+            else:
+                reason = reason[0]
+            date = pretty_date(self.api._get_datetime(case["time"]))
+            warn_list.append(f"**{warning_str(level, False)}:** {reason} • *{date}*\n")
+            if len("".join(warn_list)) > 1024:  # embed limits
+                break
         embed = discord.Embed(description=_("User modlog summary."))
         embed.set_author(name=f"{user} | {user.id}", icon_url=user.avatar_url)
-        embed.add_field(name=_("Total number of warnings: ") + str(len(cases)), value=warn_field)
+        embed.add_field(
+            name=_("Total number of warnings: ") + str(len(cases)), value=warn_field, inline=False
+        )
+        embed.add_field(
+            name=_("{len} last warnings").format(len=len(warn_list)),
+            value="".join(warn_list),
+            inline=False,
+        )
         embed.set_footer(text=_("Click on the reactions to scroll through the warnings"))
+        embed.colour = user.top_role.colour
         embeds.append(embed)
 
         for i, case in enumerate(cases):
@@ -810,9 +887,8 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                     ),
                 )
             embed.add_field(name=_("Reason"), value=case["reason"], inline=False),
-            embed.set_footer(text=_("The action was taken on {date}").format(date=case["time"]))
+            embed.timestamp = self.api._get_datetime(case["time"])
             embed.color = await self.data.guild(ctx.guild).colors.get_raw(level)
-
             embeds.append(embed)
 
         controls = {"⬅": menus.prev_page, "❌": menus.close_menu, "➡": menus.next_page}
@@ -836,7 +912,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         """
         Edit a case, this is linked to the warnings menu system.
         """
-        
+
         async def edit_message(channel_id: int, message_id: int, new_reason: str):
             channel: discord.TextChannel = guild.get_channel(channel_id)
             if channel is None:
@@ -867,7 +943,9 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                 return False
             try:
                 embed: discord.Embed = message.embeds[0]
-                embed.set_field_at(len(embed.fields) - 2, name=_("Reason"), value=new_reason, inline=False)
+                embed.set_field_at(
+                    len(embed.fields) - 2, name=_("Reason"), value=new_reason, inline=False
+                )
             except IndexError as e:
                 log.error(
                     f"[Guild {guild.id}] Failed to edit modlog message. Embed is malformed.",
@@ -1057,9 +1135,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         if page == 0:
             # removing entire modlog
             await self.data.custom("MODLOGS", guild.id, member.id).x.set([])
-            log.debug(
-                f"[Guild {guild.id}] Cleared modlog of member {member} (ID: {member.id})."
-            )
+            log.debug(f"[Guild {guild.id}] Cleared modlog of member {member} (ID: {member.id}).")
             await message.clear_reactions()
             await message.edit(content=_("User modlog cleared."), embed=None)
             return
