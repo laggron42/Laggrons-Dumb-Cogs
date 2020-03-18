@@ -1,5 +1,9 @@
 import logging
 import importlib.util
+import re
+
+from redbot.core.i18n import Translator
+from datetime import datetime, timedelta
 
 from .warnsystem import WarnSystem
 
@@ -15,6 +19,7 @@ if not importlib.util.find_spec("dateutil"):
         "`pip3 install python-dateutil` in the terminal to install the library."
     )
 
+_ = Translator("WarnSystem", __file__)
 log = logging.getLogger("laggron.warnsystem")
 
 
@@ -32,23 +37,110 @@ def _save_backup(config):
 
 
 async def _convert_to_v1(bot, config):
+    def get_datetime(time: str) -> datetime:
+        if isinstance(time, int):
+            return datetime.fromtimestamp(time)
+        try:
+            time = datetime.strptime(time, "%a %d %B %Y %H:%M:%S")
+        except ValueError:
+            # seconds were added in an update, this might be a case made before that update
+            time = datetime.strptime(time, "%a %d %B %Y %H:%M")
+        return time
+
+    def get_timedelta(text: str) -> timedelta:
+        # that one is especially hard to convert
+        # time is stored like this: "3 hours, 2 minutes and 30 seconds"
+        # why did I even do this fuck me
+        if isinstance(text, int):
+            return timedelta(seconds=text)
+        time = timedelta()
+        results = re.findall(time_pattern, text)
+        for match in results:
+            amount = int(match[0])
+            unit = match[1]
+            if unit in units_name[0]:
+                time += timedelta(days=amount * 366)
+            elif unit in units_name[1]:
+                time += timedelta(days=amount * 30.5)
+            elif unit in units_name[2]:
+                time += timedelta(weeks=amount)
+            elif unit in units_name[3]:
+                time += timedelta(days=amount)
+            elif unit in units_name[4]:
+                time += timedelta(hours=amount)
+            elif unit in units_name[5]:
+                time += timedelta(minutes=amount)
+            else:
+                time += timedelta(seconds=amount)
+        return time
+
     for guild in bot.guilds:
+        # update temporary warn to a dict instead of a list
         warns = await config.guild(guild).temporary_warns()
-        if warns == {}:
-            continue
-        if warns:
-            new_dict = {}
-            for case in warns:
-                member = case["member"]
-                del case["member"]
-                new_dict[member] = case
-            await config.guild(guild).temporary_warns.set(new_dict)
-        else:
-            # config does not update [] to {}
-            # we fill a dict with random values to force config to set a dict
-            # then we empty that dict
-            await config.guild(guild).temporary_warns.set({None: None})
-            await config.guild(guild).temporary_warns.set({})
+        if warns != {}:
+            if warns:
+                new_dict = {}
+                for case in warns:
+                    member = case["member"]
+                    del case["member"]
+                    new_dict[member] = case
+                await config.guild(guild).temporary_warns.set(new_dict)
+            else:
+                # config does not update [] to {}
+                # we fill a dict with random values to force config to set a dict
+                # then we empty that dict
+                await config.guild(guild).temporary_warns.set({None: None})
+                await config.guild(guild).temporary_warns.set({})
+        # change the way time is stored
+        # instead of a long and heavy text, we use seconds since epoch
+        modlogs = await config.custom("MODLOGS", guild.id).all()
+        units_name = {
+            0: (_("year"), _("years")),
+            1: (_("month"), _("months")),
+            2: (_("week"), _("weeks")),
+            3: (_("day"), _("days")),
+            4: (_("hour"), _("hours")),
+            5: (_("minute"), _("minutes")),
+            6: (_("second"), _("seconds")),
+        }  # yes this can be translated
+        separator = _(" and ")
+        time_pattern = re.compile(
+            (
+                r"(?P<time>\d+)(?: )(?P<unit>{year}|{years}|{month}|"
+                r"{months}|{week}|{weeks}|{day}|{days}|{hour}|{hours}"
+                r"|{minute}|{minutes}|{second}|{seconds})(?:(,)|({separator}))?"
+            ).format(
+                year=units_name[0][0],
+                years=units_name[0][1],
+                month=units_name[1][0],
+                months=units_name[1][1],
+                week=units_name[2][0],
+                weeks=units_name[2][1],
+                day=units_name[3][0],
+                days=units_name[3][1],
+                hour=units_name[4][0],
+                hours=units_name[4][1],
+                minute=units_name[5][0],
+                minutes=units_name[5][1],
+                second=units_name[6][0],
+                seconds=units_name[6][1],
+                separator=separator,
+            )
+        )
+        for member, modlog in modlogs.items():
+            if member == "x":
+                continue
+            for i, log in enumerate(modlog["x"]):
+                time = get_datetime(log["time"])
+                modlogs[member]["x"][i]["time"] = int(time.timestamp())
+                duration = log["duration"]
+                if duration is not None:
+                    modlogs[member]["x"][i]["duration"] = int(
+                        get_timedelta(duration).total_seconds()
+                    )
+                    del modlogs[member]["x"][i]["until"]
+        if modlogs:
+            await config.custom("MODLOGS", guild.id).set(modlogs)
 
 
 async def update_config(bot, config):

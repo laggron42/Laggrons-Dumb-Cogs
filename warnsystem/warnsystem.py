@@ -871,6 +871,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             moderator = ctx.guild.get_member(case["author"])
             moderator = "ID: " + str(case["author"]) if not moderator else moderator.mention
 
+            time = self.api._get_datetime(case["time"])
             embed = discord.Embed(
                 description=_("Case #{number} informations").format(number=i + 1)
             )
@@ -880,14 +881,16 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             )
             embed.add_field(name=_("Moderator"), value=moderator, inline=True)
             if case["duration"]:
+                duration = self.api._get_timedelta(case["duration"])
                 embed.add_field(
                     name=_("Duration"),
                     value=_("{duration}\n(Until {date})").format(
-                        duration=case["duration"], date=case["until"]
+                        duration=self.api._format_timedelta(duration),
+                        date=self.api._format_datetime(time + duration),
                     ),
                 )
             embed.add_field(name=_("Reason"), value=case["reason"], inline=False),
-            embed.timestamp = self.api._get_datetime(case["time"])
+            embed.timestamp = time
             embed.colour = await self.data.guild(ctx.guild).colors.get_raw(level)
             embeds.append(embed)
 
@@ -1190,8 +1193,10 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                 "Date:      {time}\n"
             ).format(number=i, **warn)
             if warn["duration"]:
+                duration = self.api._get_timedelta(warn["duration"])
                 text += _("Duration:  {duration}\nUntil:     {until}\n").format(
-                    duration=warn["duration"], until=warn["until"]
+                    duration=self.api._format_timedelta(duration),
+                    until=self.api._format_datetime(warn["time"] + duration),
                 )
             text += "\n\n"
             full_text = text + full_text

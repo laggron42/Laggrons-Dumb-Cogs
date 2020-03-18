@@ -146,13 +146,14 @@ class API:
         self.data = config
         self.cache = cache
 
-    def _get_datetime(self, time: str) -> datetime:
-        try:
-            time = datetime.strptime(time, "%a %d %B %Y %H:%M:%S")
-        except ValueError:
-            # seconds were added in an update, this might be a case made before that update
-            time = datetime.strptime(time, "%a %d %B %Y %H:%M")
-        return time
+    def _get_datetime(self, time: int) -> datetime:
+        return datetime.fromtimestamp(int(time))
+
+    def _get_timedelta(self, time: int) -> timedelta:
+        return timedelta(seconds=int(time))
+
+    def _format_datetime(self, time: datetime):
+        return time.strftime("%a %d %B %Y %H:%M:%S")
 
     def _format_timedelta(self, time: timedelta):
         """Format a timedelta object into a string"""
@@ -194,7 +195,7 @@ class API:
 
     async def _start_timer(self, guild: discord.Guild, member: discord.Member, case: dict) -> bool:
         """Start the timer for a temporary mute/ban."""
-        if not case["until"]:
+        if not case["duration"]:
             raise errors.BadArgument("No duration for this warning!")
         await self.cache.add_temp_action(guild, member, case)
         return True
@@ -258,11 +259,8 @@ class API:
             if not isinstance(author, (discord.User, discord.Member))
             else author.id,
             "reason": reason,
-            "time": time.strftime("%a %d %B %Y %H:%M:%S"),
-            "duration": None if not duration else self._format_timedelta(duration),
-            "until": None
-            if not duration
-            else (datetime.today() + duration).strftime("%a %d %B %Y %H:%M:%S"),
+            "time": int(time.timestamp()),  # seconds since epoch
+            "duration": None if not duration else duration.total_seconds(),
             "roles": [] if not roles else [x.id for x in roles],
         }
         if modlog_message:
@@ -430,7 +428,7 @@ class API:
             raise errors.BadArgument("The reason must not be above 1024 characters.")
         case = await self.get_case(guild, user, index)
         case["reason"] = new_reason
-        case["time"] = case["time"].strftime("%a %d %B %Y %H:%M")
+        case["time"] = int(case["time"].timestamp())
         async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
             logs[index - 1] = case
         return True
@@ -1112,8 +1110,8 @@ class API:
             to_remove = []
             for member, action in data.items():
                 member = int(member)
-                taken_on = action["time"]
-                until = self._get_datetime(action["until"])
+                taken_on = self._get_datetime(action["time"])
+                duration = self._get_timedelta(action["duration"])
                 author = guild.get_member(action["author"])
                 member = guild.get_member(member)
                 case_reason = action["reason"]
@@ -1133,10 +1131,10 @@ class API:
                     action=action_str,
                     member=member,
                     author=author if author else action["author"],
-                    time=action["duration"],
+                    time=self._format_timedelta(duration),
                     reason=case_reason,
                 )
-                if until < now:
+                if (taken_on + duration) < now:
                     # end of warn
                     try:
                         if level == 2:
@@ -1160,10 +1158,11 @@ class API:
                     else:
                         log.debug(
                             f"[Guild {guild.id}] Ended timed {action_str} of {member} (ID: "
-                            f"{member.id}) taken on {taken_on} requested by {author} (ID: "
-                            f"{author.id}) that lasted for {action['duration']} for the "
-                            f"reason {case_reason}\nCurrent time: {now}\n"
-                            f"Expected end time of warn: {until}"
+                            f"{member.id}) taken on {self._format_datetime(taken_on)} requested "
+                            f"by {author} (ID: {author.id}) that lasted for "
+                            f"{self._format_timedelta(duration)} for the reason {case_reason}"
+                            f"\nCurrent time: {now}\nExpected end time of warn: "
+                            f"{self._format_datetime(taken_on + duration)}"
                         )
                     to_remove.append(member)
             if to_remove:
