@@ -1353,7 +1353,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         to_remove = []
         warns = await self.cache.get_temp_action(guild)
         for member, data in warns.items():
-            if data["level"] == 5 or data["member"] != after.id:
+            if data["level"] == 5 or member != after.id:
                 continue
             to_remove.append(member)
         if to_remove:
