@@ -245,7 +245,7 @@ Can I use Config in my command?
 Yes you can. The :class:`~redbot.core.Config` module is already imported,
 you just need to use it as in a cog.
 
-..tip:: Here's an example
+.. tip:: Here's an example
 
     .. code-block:: python
 
