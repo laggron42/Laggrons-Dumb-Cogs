@@ -587,7 +587,7 @@ Now it's time to list all of the flags.
     
     *   ``--hackban-select [member, ...]`` *Select multiple users outside of
         the server for a hackban. You have to provide valid user IDs and the
-        warning level must be 5.
+        warning level must be 5.*
     
     *   ``--exclude [member, ...]`` *Select multiple members to exclude from
         the search, they won't be warned*
@@ -681,7 +681,7 @@ Enough info, time for explained examples.
     receive a message and this will be logged in the modlog.
 
 *   ``[p]masswarn 5 --take-actions --send-dm --reason "toxic potatoes"
-    --has-role Starbucks`` Just bans everone with the role "Starbucks"
+    --has-role Starbucks`` Just bans everyone with the role "Starbucks"
 
 ^^^^^^^
 warnset
