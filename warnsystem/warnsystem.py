@@ -1183,6 +1183,9 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         guild = ctx.guild
         full_text = ""
         warns = await self.api.get_all_cases(guild)
+        if not warns:
+            await ctx.send(_("No warnings have been issued in this server yet."))
+            return
         for i, warn in enumerate(warns, start=1):
             text = _(
                 "--- Case {number} ---\n"
