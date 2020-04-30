@@ -1,5 +1,5 @@
 -i https://pypi.org/simple
-sphinxcontrib-asyncio
+sphinxcontrib_trio
 sphinx_autodoc_napoleon_typehints
 sphinx_rtd_theme
 Red-DiscordBot
