@@ -55,9 +55,7 @@ class MemoryCache:
 
     async def get_mute_role(self, guild: discord.Guild):
         role_id = self.mute_roles.get(guild.id, False)
-        if role_id is not None:
-            if role_id is False:
-                role_id = None
+        if role_id is not False:
             return role_id
         role_id = await self.data.guild(guild).mute_role()
         if role_id:
@@ -70,7 +68,7 @@ class MemoryCache:
 
     async def get_temp_action(self, guild: discord.Guild, member: Optional[discord.Member] = None):
         guild_temp_actions = self.temp_actions.get(guild.id, {})
-        if guild_temp_actions is not None:
+        if not guild_temp_actions:
             guild_temp_actions = await self.data.guild(guild).temporary_warns.all()
             if guild_temp_actions:
                 self.temp_actions[guild.id] = guild_temp_actions
@@ -112,7 +110,7 @@ class MemoryCache:
 
     async def get_automod_regex(self, guild: discord.Guild):
         automod_regex = self.automod_regex.get(guild.id, {})
-        if automod_regex is not None:
+        if automod_regex:
             return automod_regex
         automod_regex = await self.data.guild(guild).automod.regex()
         for name, regex in automod_regex.items():
