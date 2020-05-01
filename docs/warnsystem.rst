@@ -1111,3 +1111,244 @@ warnsysteminfo
 Shows multiple informations about WarnSystem such as its author, its version,
 the link for the Github repository, the Discord server and the documentation,
 and a link for my Patreon if you want to support my work ;)
+
+--------------------
+Additional resources
+--------------------
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Migrating to WarnSystem 1.3
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The 3rd major update of WarnSystem brought important changes to the way data is
+stored. This allows a gain in performance and the reduction of the file size.
+
+Once you load WarnSystem for the first time after updating, the cog will try
+to run its data conversion tool to convert your data to the new body. This can
+take a while, but servers with really big config files (looking at you
+Fortnite), the conversion tool might not be powerful enough to handle this
+much data.
+
+If you're reading this, then the conversion tool probably failed. If you
+haven't done it yet, **contact me, El Laggron**, and tell me about your issue.
+This is not always related to the size of your file, and might be a simple
+bug.
+
+.. warning:: Before reading below, make sure you contacted me first. I will
+    tell you, based on the error and your data, if doing the steps below is
+    required.
+
+    If you're not experienced with databases, ask me and I will help you with
+    the update.
+
+I'm going to explain in details the changes brought with this update, so you
+can try to convert the data yourself.
+
+Find the code used for the data converter in the ``__init__.py`` file,
+function is ``_convert_to_v1``.
+
+.. caution:: For obvious reasons, backup your data!
+
+Two things are being changed inside the database :
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+Temporary warnings are stored as a dictionnary instead of a list
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+This is a value set within the guild settings (accessed with ``await
+warnsystem.data.guild(ctx.guild).temporary_warns()``) that stores temporary
+mutes and bans. It stores the same data as the modlog history, but saving it
+in its own place allow performance gains, by only iterating through the
+warnings we're looking for when unmuting/unbanning.
+
+This is how the data was stored before 1.3 :
+
+.. code-block:: json
+
+    {
+        "temporary_warns": [
+            {
+                // first case
+                "member": 221333470830526464,
+                "level": 1,
+                "author": 348415857728159745,
+                "reason": "Advertising",
+                "time": "Thu 01 August 2019 23:41:49",
+                "duration": "1 minute and 12 seconds",
+                "until": "Thu 01 August 2019 23:43:01",
+                "roles": []
+            },
+            {
+                // second case...
+            }
+        ]
+    }
+
+As you can see, this is a list of dictionnaries, with all data required. The
+change done here is that ``temporary_warns`` is a dictionnary, with the
+member's ID as the key, and the data associated to it as the value. This is
+what the data above should look like after the update :
+
+.. code-block:: json
+
+    {
+        "temporary_warns": {
+            221333470830526464: {
+                // first case
+                "level": 1,
+                "author": 348415857728159745,
+                "reason": "Advertising",
+                "time": "Thu 01 August 2019 23:41:49",
+                "duration": "1 minute and 12 seconds",
+                "until": "Thu 01 August 2019 23:43:01",
+                "roles": []
+            },
+            649205730248302043: {
+                // second case...
+            }
+        }
+    }
+
+Basically, the ``member`` key is deleted from the data dictionnary, and the ID
+is used as the key.
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+Dates and durations are stored as seconds instead of sentences
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+Looking back at this, I took one of the worst possible decisions when coding
+WarnSystem 1.0. I'm going to show you how a warning was stored before 1.3:
+
+.. code-block:: json
+    [
+        {
+            // first warn
+            "level": 2,
+            "author": 348415857728159745,
+            "reason": "I'm testing",
+            "time": "Thu 01 August 2019 23:42:25",
+            "duration": "1 minute and 12 seconds",
+            "until": "Thu 01 August 2019 23:43:37"
+        },
+        {
+            // second warn...
+        }
+    ]
+
+The changes affects the ``time``, ``duration`` and ``until`` keys. Using a
+sentence for storing dates and durations was useful because I didn't have to
+touch anything when displaying the warn, just reading the dictionnary.
+
+There was two problems with this:
+
+*   Storing text instead of a number is way heavier
+
+*   If I needed the time object, like for comparison, it could cost a lot of
+    resources.
+
+Also, the ``until`` key was useless and could be calculated with the two
+other keys.
+
+The most common way of storing dates and durations when programming, which I
+wasn't aware of at that time, is only using seconds. For dates, computers
+calculate the number of seconds since Epoch (1 january 1970). Sounds like a
+big number, but it is the most efficient way of storing a date. You can compare
+two dates easily (which is needed for automod), and getting the day of the
+month, or the hour and minute, only consists of divisions.
+
+WarnSystem 1.3 converts all of those dates and durations to seconds, this is
+what a warning should look like after the update:
+
+.. code-block:: json
+    {
+        // first warn
+        "level": 2,
+        "author": 348415857728159745,
+        "reason": "I'm testing",
+        "time": 1564695745,
+        "duration": 72,
+    }
+
+Converting the ``time`` key is very easy:
+
+.. code-block:: python
+
+    >>> from datetime import datetime
+    >>> time = datetime.strptime("Thu 01 August 2019 23:42:25", "%a %d %B %Y %H:%M:%S")
+    >>> time.timestamp()
+    1564695745.0
+
+However, converting the ``duration`` is a horrible nightmare, you're allowed to
+blame me as much as you want for this stupid choice. The duration was stored
+with an english sentence like this: ``"3 hours, 15 minutes and 1 second"``. I
+thought it was going to be easier, but hell no, it's really dumb. WarnSystem
+*tries* to convert this insanity to a pure number of seconds with some weird
+code below:
+
+.. code-block:: python
+
+    from datetime import timedelta
+
+    units_name = {
+        0: (_("year"), _("years")),
+        1: (_("month"), _("months")),
+        2: (_("week"), _("weeks")),
+        3: (_("day"), _("days")),
+        4: (_("hour"), _("hours")),
+        5: (_("minute"), _("minutes")),
+        6: (_("second"), _("seconds")),
+    }  # yes this can be translated
+    separator = _(" and ")
+    time_pattern = re.compile(
+        (
+            r"(?P<time>\d+)(?: )(?P<unit>{year}|{years}|{month}|"
+            r"{months}|{week}|{weeks}|{day}|{days}|{hour}|{hours}"
+            r"|{minute}|{minutes}|{second}|{seconds})(?:(,)|({separator}))?"
+        ).format(
+            year=units_name[0][0],
+            years=units_name[0][1],
+            month=units_name[1][0],
+            months=units_name[1][1],
+            week=units_name[2][0],
+            weeks=units_name[2][1],
+            day=units_name[3][0],
+            days=units_name[3][1],
+            hour=units_name[4][0],
+            hours=units_name[4][1],
+            minute=units_name[5][0],
+            minutes=units_name[5][1],
+            second=units_name[6][0],
+            seconds=units_name[6][1],
+            separator=separator,
+        )
+    )
+
+    def get_timedelta(text: str) -> timedelta:
+        # that one is especially hard to convert
+        # time is stored like this: "3 hours, 2 minutes and 30 seconds"
+        # why did I even do this fuck me
+        if isinstance(text, int):
+            return timedelta(seconds=text)
+        time = timedelta()
+        results = re.findall(time_pattern, text)
+        for match in results:
+            amount = int(match[0])
+            unit = match[1]
+            if unit in units_name[0]:
+                time += timedelta(days=amount * 366)
+            elif unit in units_name[1]:
+                time += timedelta(days=amount * 30.5)
+            elif unit in units_name[2]:
+                time += timedelta(weeks=amount)
+            elif unit in units_name[3]:
+                time += timedelta(days=amount)
+            elif unit in units_name[4]:
+                time += timedelta(hours=amount)
+            elif unit in units_name[5]:
+                time += timedelta(minutes=amount)
+            else:
+                time += timedelta(seconds=amount)
+        return time
+
+If this fails and you want to try to do it yourself, good luck! Full code is
+available in the ``__init__.py` file within the warnsystem directory.
