@@ -192,6 +192,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         "automod": {  # everything related to auto moderation
             "enabled": False,
             "regex": {},  # all regex expressions
+            "warnings": [],  # all automatic warns
         },
     }
     default_custom_member = {"x": []}  # cannot set a list as base group
@@ -1353,14 +1354,8 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             return
         if not (mute_role in before.roles and mute_role not in after.roles):
             return
-        to_remove = []
-        warns = await self.cache.get_temp_action(guild)
-        for member, data in warns.items():
-            if data["level"] == 5 or member != after.id:
-                continue
-            to_remove.append(member)
-        if to_remove:
-            await self.cache.bulk_remove_temp_action(guild, to_remove)
+        if after.id in self.cache.temp_actions:
+            await self.cache.remove_temp_action(guild, after)
             log.info(
                 f"[Guild {guild.id}] The temporary mute of member {after} (ID: {after.id}) "
                 "was ended due to a manual unmute (role removed)."

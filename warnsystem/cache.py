@@ -34,7 +34,7 @@ class MemoryCache:
     async def _debug_info(self) -> str:
         """
         Compare the cached data to the Config data. Text is logged (INFO) then returned.
-        
+
         This calls a huge part of the Config database and will not load it into the cache.
         """
         config_data = await self.data.all_guilds()
@@ -54,8 +54,10 @@ class MemoryCache:
         return text
 
     async def get_mute_role(self, guild: discord.Guild):
-        role_id = self.mute_roles.get(guild.id)
-        if role_id:
+        role_id = self.mute_roles.get(guild.id, False)
+        if role_id is not None:
+            if role_id is False:
+                role_id = None
             return role_id
         role_id = await self.data.guild(guild).mute_role()
         if role_id:
@@ -67,8 +69,8 @@ class MemoryCache:
         self.mute_roles[guild.id] = role.id
 
     async def get_temp_action(self, guild: discord.Guild, member: Optional[discord.Member] = None):
-        guild_temp_actions = self.temp_actions.get(guild.id)
-        if guild_temp_actions is None:
+        guild_temp_actions = self.temp_actions.get(guild.id, {})
+        if guild_temp_actions is not None:
             guild_temp_actions = await self.data.guild(guild).temporary_warns.all()
             if guild_temp_actions:
                 self.temp_actions[guild.id] = guild_temp_actions
@@ -109,14 +111,15 @@ class MemoryCache:
         await self.data.guild(guild).automod.enabled.set(False)
 
     async def get_automod_regex(self, guild: discord.Guild):
-        automod_regex = self.automod_regex.get(guild.id)
-        if not automod_regex:
-            automod_regex = await self.data.guild(guild).automod.regex()
-            for name, regex in automod_regex.items():
-                pattern = re.compile(regex["regex"])
-                automod_regex[name] = pattern
-            if automod_regex:
-                self.automod_regex[guild.id] = automod_regex
+        automod_regex = self.automod_regex.get(guild.id, {})
+        if automod_regex is not None:
+            return automod_regex
+        automod_regex = await self.data.guild(guild).automod.regex()
+        for name, regex in automod_regex.items():
+            pattern = re.compile(regex["regex"])
+            automod_regex[name]["regex"] = pattern
+        if automod_regex:
+            self.automod_regex[guild.id] = automod_regex
         return automod_regex
 
     async def add_automod_regex(

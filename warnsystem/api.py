@@ -145,6 +145,7 @@ class API:
         self.bot = bot
         self.data = config
         self.cache = cache
+        self.warned_guilds = []  # see automod_check_for_autowarn
 
     def _get_datetime(self, time: int) -> datetime:
         return datetime.fromtimestamp(int(time))
@@ -218,13 +219,12 @@ class API:
             for role in old_roles:
                 try:
                     await member.remove_roles(role, reason=reason)
-                except discord.errors.HTTPException as e:
+                except discord.errors.HTTPException:
                     fails.append(role)
             if fails:
                 log.warn(
                     f"[Guild {guild.id}] Failed to remove roles from {member} (ID: {member.id}) "
                     f"while muting. Roles: {', '.join([f'{x.name} ({x.id})' for x in fails])}",
-                    exc_info=e,
                 )
         await member.add_roles(mute_role, reason=reason)
         return old_roles
@@ -784,6 +784,7 @@ class API:
         log_modlog: Optional[bool] = True,
         log_dm: Optional[bool] = True,
         take_action: Optional[bool] = True,
+        automod: Optional[bool] = True,
         progress_tracker: Optional[Callable[[int], Awaitable[None]]] = None,
     ) -> bool:
         """
@@ -828,6 +829,9 @@ class API:
             Specify if the bot should take action on the member (mute, kick, softban, ban). If set
             to :py:obj:`False`, the bot will only send a log embed to the member and in the modlog.
             Default to :py:obj:`True`.
+        automod: Optional[bool]
+            Set to :py:obj:`False` to skip automod, preventing multiple warnings at once and
+            saving performances. Automod might trigger on a next warning though.
         progress_tracker: Optional[Callable[[int], Awaitable[None]]]
             an async callable (function or lambda) which takes one argument to follow the progress
             of the warn. The argument is the number of warns committed. Here's an example:
@@ -985,10 +989,16 @@ class API:
             # start timer if there is a temporary warning
             if time and (level == 2 or level == 5):
                 await self._start_timer(guild, member, data)
+            if automod:
+                # This function can be pretty heavy, and the response can be seriously delayed
+                # because of this, so we make it a side process instead
+                self.bot.loop.create_task(self.automod_check_for_autowarn(member, author, level))
             i += 1
             if progress_tracker:
                 await progress_tracker(i)
 
+        # TODO: fucking remove that before I forget
+        log_dm = False
         if not 1 <= level <= 5:
             raise errors.InvalidLevel("The level must be between 1 and 5.")
         # we get the modlog channel now to make sure it exists before doing anything
@@ -1209,6 +1219,13 @@ class API:
         log.info("Enabling automod listeners.")
         self.bot.add_listener(self.automod_on_message, name="on_message")
 
+    def disable_automod(self):
+        """
+        Disable automod checks and listeners on the bot.
+        """
+        log.info("Disabling automod listeners.")
+        self.bot.remove_listener(self.automod_on_message, name="on_message")
+
     async def automod_on_message(self, message: discord.Message):
         try:
             await self.automod_process_message(message)
@@ -1223,6 +1240,8 @@ class API:
         member = message.author
         if not guild:
             return
+        if member.id == self.bot.user.id:
+            return
         if not self.cache.get_automod_enabled(guild):
             return
         if await self.bot.is_automod_immune(message):
@@ -1230,19 +1249,16 @@ class API:
         all_regex = await self.cache.get_automod_regex(guild)
         for name, regex in all_regex.items():
             regex: re.Pattern
-            result = regex.search(message.content)
+            result = regex["regex"].search(message.content)
             if result:
-                warn_data = await self.data.guild(guild).automod.regex.get_raw(name)
                 time = None
-                if warn_data["time"]:
-                    time = self._get_datetime(warn_data["time"])
-                level = warn_data["level"]
-                reason = warn_data["reason"].format(
+                if regex["time"]:
+                    time = self._get_datetime(regex["time"])
+                level = regex["level"]
+                reason = regex["reason"].format(
                     guild=guild, channel=message.channel, member=member
                 )
-                fail = await self.warn(
-                    guild, [member], guild.me, level, reason, time,
-                )
+                fail = await self.warn(guild, [member], guild.me, level, reason, time,)
                 if fail:
                     log.warn(
                         f"[Guild {guild.id}] Regex automod warn on member {member} ({member.id})\n"
@@ -1257,3 +1273,116 @@ class API:
                         f"Level: {level}. Time: {time}. Reason: {reason}\n"
                         f"Original message: {message.content}"
                     )
+
+    async def automod_check_for_autowarn(
+        self, member: discord.Member, author: discord.Member, level: int
+    ):
+        """
+        Iterate through member's modlog, looking for possible automatic warns.
+
+        Level is the last warning's level, which will filter a lot of possible autowarns and,
+        therefore, save performances.
+
+        This can be a heavy call if there are a lot of possible autowarns and a long modlog.
+        """
+        guild = member.guild
+        t = datetime.now()
+        try:
+            await self._automod_check_for_autowarn(member, author, level)
+        except Exception as e:
+            log.error(f"[Guild {guild.id}] A problem occured with automod check.", exc_info=e)
+        time_taken: timedelta = datetime.now() - t
+        if time_taken.total_seconds() > 10 and guild.id not in self.warned_guilds:
+            self.warned_guilds.append(guild.id)
+            log.warning(
+                f"[Guild {guild.id}] Automod check took a long time! Time taken: {time_taken}\n"
+                "Try to reduce the amount of warns/autowarns or blame Laggron for poorly "
+                "written code (second option is preferred).\nThis warning will not show again "
+                "for this guild until reload."
+            )
+
+    async def _automod_check_for_autowarn(
+        self, member: discord.Member, author: discord.Member, level: int
+    ):
+        """
+        Prevents having to put this whole function into a try/except block.
+        """
+        guild = member.guild
+        if not self.cache.get_automod_enabled(guild):
+            return
+        # starting the iteration through warnings can cost performances
+        # so we look for conditions that confirms the member cannot be affected by automod
+        if await self.bot.is_automod_immune(member):
+            return
+        warns = await self.get_all_cases(guild, member)
+        if len(warns) < 2:
+            return  # autowarn can't be triggered with a single warning in the modlog
+        autowarns = await self.data.guild(guild).automod.warnings()
+        # remove all autowarns that are locked to a specific level
+        # where the last warning's level doesn't correspond
+        # also remove autowarns that are automod only if warn author isn't the bot
+
+        def is_autowarn_valid(warn):
+            if author.id != self.bot.user.id and warn["automod_only"]:
+                return False
+            return warn["level"] == 0 or warn["level"] == level
+
+        autowarns = list(filter(is_autowarn_valid, autowarns))
+        if not autowarns:
+            return  # no autowarn to iterate through
+        for i, autowarn in enumerate(autowarns):
+            # prepare for iteration
+            autowarns[i]["count"] = 0
+            # if the condition is met (within the specified time? not an automatic warn?)
+            # we increase this value until reaching the given limit
+            time = autowarn["time"]
+            if time:
+                until = datetime.now() - timedelta(seconds=time)
+                autowarns[i]["until"] = until
+        del time
+        found_warnings = {}  # we fill this list with the valid autowarns, there can be more than 1
+        for warn in warns[::-1]:
+            to_remove = []  # list of autowarns to remove during the iteration (duration expired)
+            taken_on = datetime.fromtimestamp(warn["time"])
+            for i, autowarn in enumerate(autowarns):
+                try:
+                    if autowarn["until"] >= taken_on:
+                        to_remove.append(i)
+                        continue
+                except KeyError:
+                    pass
+                autowarns[i]["count"] += 1
+                if autowarns[i]["count"] == autowarn["number"]:
+                    found_warnings[i] = autowarn["warn"]
+                if autowarns[i]["count"] > autowarn["number"]:
+                    # value exceeded, no need to continue, it's already done for this one warn
+                    to_remove.append(i)
+                    del found_warnings[i]
+            for index in to_remove:
+                autowarns.pop(index)
+            if not autowarns:
+                # we could be out of autowarns to check after a certain time
+                # no need to continue the iteration
+                break
+        del to_remove, taken_on, autowarns
+        for i, warn in found_warnings.items():
+            try:
+                await self.warn(
+                    guild,
+                    members=[member],
+                    author=guild.me,
+                    level=warn["level"],
+                    reason=warn["reason"],
+                    time=self._get_timedelta(warn["duration"]) if warn["duration"] else None,
+                )
+            except Exception as e:
+                log.error(
+                    f"[Guild {guild.id}] Failed to perform automod warn on member {member} "
+                    f"({member.id}). Needed to perform automatic warn {i}",
+                    exc_info=e,
+                )
+            else:
+                log.debug(
+                    f"[Guild {guild.id}] Successfully performed automatic "
+                    f"warn {i} on member {member} ({member.id})."
+                )

@@ -229,16 +229,15 @@ class SettingsMixin(MixinMeta):
                 cases = []
                 for case in [y for x, y in logs.items() if x.startswith("case")]:
                     level = {"Simple": 1, "Kick": 3, "Softban": 4, "Ban": 5}.get(case["level"], 1)
-                    timestamp = datetime.strptime(case["timestamp"], "%d %b %Y %H:%M").strftime(
-                        "%a %d %B %Y %H:%M:%S"
-                    )
+                    timestamp = datetime.strptime(case["timestamp"], "%d %b %Y %H:%M").timestamp()
                     cases.append(
                         {
                             "level": level,
                             "author": "Unknown",
                             "reason": case["reason"],
-                            "time": timestamp,  # only day of the week missing
+                            "time": timestamp,
                             "duration": None,
+                            "roles": [],
                         }
                     )
                     total_cases += 1
@@ -573,7 +572,7 @@ class SettingsMixin(MixinMeta):
 
             # collect data and make strings
             all_data = await self.data.guild(guild).all()
-            modlog_channels = await self.get_modlog_channel(guild, "all")
+            modlog_channels = await self.api.get_modlog_channel(guild, "all")
             channels = ""
             for key, channel in dict(modlog_channels).items():
                 if not channel:
