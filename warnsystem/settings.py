@@ -455,7 +455,7 @@ class SettingsMixin(MixinMeta):
                 )
                 return
             async with ctx.typing():
-                fails = await self.maybe_create_mute_role(guild)
+                fails = await self.api.maybe_create_mute_role(guild)
                 my_position = guild.me.top_role.position
                 if fails is False:
                     await ctx.send(
@@ -492,6 +492,114 @@ class SettingsMixin(MixinMeta):
         else:
             await self.cache.update_mute_role(role)
             await ctx.send(_("The new mute role was successfully set!"))
+
+    @warnset.command(name="refreshmuterole")
+    @commands.cooldown(1, 120, commands.BucketType.guild)
+    async def warnset_refreshmuterole(self, ctx: commands.Context):
+        """
+        Refresh the mute role's permissions in the server.
+
+        This will iterate all of your channels and make sure all permissions are correctly\
+configured for the mute role.
+
+        The muted role will be prevented from sending messages and adding reactions in all text\
+channels, and prevented from talking in all voice channels.
+        """
+        guild = ctx.guild
+        mute_role = await self.cache.get_mute_role(guild)
+        if mute_role is None:
+            await ctx.send(
+                _(
+                    "No mute role configured on this server. "
+                    "Create one with `{prefix}warnset mute`."
+                ).format(prefix=ctx.clean_prefix)
+            )
+            return
+        mute_role = guild.get_role(mute_role)
+        if not mute_role:
+            await ctx.send(
+                _(
+                    "It looks like the configured mute role was deleted. "
+                    "Create a new one with `{prefix}warnset mute`."
+                ).format(prefix=ctx.clean_prefix)
+            )
+            return
+        if not guild.me.guild_permissions.manage_channels:
+            await ctx.send(_("I need the `Manage channels` permission to continue."))
+            return
+        await ctx.send(
+            _("Now checking {len} channels, please wait...").format(len=len(guild.channels))
+        )
+        perms = discord.PermissionOverwrite(send_messages=False, add_reactions=False, speak=False)
+        reason = _("WarnSystem mute role permissions refresh")
+        perms_failed = []  # if it failed because of Forbidden, add to this list
+        other_failed = []  # if it failed because of HTTPException, add to this one
+        count = 0
+        category: discord.CategoryChannel
+        async with ctx.typing():
+            for channel in guild.channels:  # include categories, text and voice channels
+                # we check if the perms are correct, to prevent useless API calls
+                overwrites = channel.overwrites_for(mute_role)
+                if (
+                    isinstance(channel, discord.TextChannel)
+                    and overwrites.send_messages is False
+                    and overwrites.add_reactions is False
+                ):
+                    continue
+                elif isinstance(channel, discord.VoiceChannel) and overwrites.speak is False:
+                    continue
+                elif overwrites == perms:
+                    continue
+                count += 1
+                try:
+                    log.debug(
+                        f"[Guild {guild.id}] Editing channel {channel.name} for "
+                        "mute role permissions refresh."
+                    )
+                    await channel.set_permissions(target=mute_role, overwrite=perms, reason=reason)
+                except discord.errors.Forbidden:
+                    perms_failed.append(channel)
+                except discord.errors.HTTPException as e:
+                    log.error(
+                        f"[Guild {guild.id}] Failed to edit channel {channel.name} "
+                        f"({channel.id}) while refreshing the mute role's permissions.",
+                        exc_info=e,
+                    )
+                    other_failed.append(channel)
+        if not perms_failed and not other_failed:
+            await ctx.send(
+                _("Successfully checked all channels, {len} were edited.").format(len=count)
+            )
+            return
+
+        def format_channels(channels: list):
+            text = ""
+            for channel in sorted(channels, key=lambda x: x.position):
+                if isinstance(channel, discord.TextChannel):
+                    text += f"- Text channel: {channel.mention}"
+                elif isinstance(channel, discord.VoiceChannel):
+                    text += f"- Voice channel: {channel.name}"
+                else:
+                    text += f"- Category: {channel.name}"
+            return text
+
+        text = _("Successfully checked all channels, {len}/{total} were edited.\n\n").format(
+            len=count - len(perms_failed) - len(other_failed),
+            total=count,
+        )
+        if perms_failed:
+            text += _(
+                "The following channels were not updated due to a permission failure, "
+                "probably enforced `Manage channels` permission:\n{channels}\n"
+            ).format(channels=format_channels(perms_failed))
+        if other_failed:
+            text += _(
+                "The following channels were not updated due to an unknown error "
+                "(check your logs or ask the bot administrator):\n{channels}\n"
+            ).format(channels=format_channels(other_failed))
+        text += _("You can fix these issues and run the command once again.")
+        for page in pagify(text):
+            await ctx.send(page)
 
     @warnset.command(name="reinvite")
     async def warnset_reinvite(self, ctx: commands.Context, enable: bool = None):
