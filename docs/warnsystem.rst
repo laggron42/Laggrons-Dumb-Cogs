@@ -1351,4 +1351,4 @@ code below:
         return time
 
 If this fails and you want to try to do it yourself, good luck! Full code is
-available in the ``__init__.py` file within the warnsystem directory.
+available in the ``__init__.py`` file within the warnsystem directory.
