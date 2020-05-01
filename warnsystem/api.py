@@ -657,6 +657,11 @@ class API:
     async def maybe_create_mute_role(self, guild: discord.Guild) -> bool:
         """
         Create the mod role for WarnSystem if it doesn't exist.
+        This will also edit all channels to deny the following permissions to this role:
+
+        *   ``send_messages``
+        *   ``add_reactions``
+        *   ``speak``
 
         Parameters
         ----------
@@ -665,16 +670,15 @@ class API:
 
         Returns
         -------
-        bool
-            *   :py:obj:`True` if the role was successfully created.
+        Union[bool, list]
             *   :py:obj:`False` if the role already exists.
-            *   :py:class:`list` of :py:class:`str` if some channel updates failed, containing
-                the message explaining the error for each message
+            *   :py:class:`list` if the role was created, with a list of errors for each channel.
+                Empty list means completly successful edition.
 
         Raises
         ------
         ~warnsystem.errors.MissingPermissions
-            The bot lacks the :attr:`discord.PermissionOverwrite.create_roles` permission.
+            The bot lacks the :attr:`discord.Permissions.create_roles` permission.
         discord.errors.HTTPException
             Creating the role failed.
         """
@@ -704,13 +708,13 @@ class API:
                 "I can add it to muted members."
             ),
         )
+        perms = discord.PermissionOverwrite(send_messages=False, add_reactions=False, speak=False)
         errors = []
-        for channel in [x for x in guild.channels if isinstance(x, discord.TextChannel)]:
+        for channel in guild.channels:
             try:
                 await channel.set_permissions(
-                    role,
-                    send_messages=False,
-                    add_reactions=False,
+                    target=role,
+                    overwrite=perms,
                     reason=_(
                         "Setting up WarnSystem mute. All muted members will have this role, "
                         "feel free to edit its permissions."
@@ -747,7 +751,7 @@ class API:
                     f"{channel.id}) for setting up the mute role because of an unknwon error.",
                     exc_info=e,
                 )
-        await self.data.guild(guild).mute_role.set(role.id)
+        await self.cache.update_mute_role(guild, role)
         return errors
 
     async def format_reason(self, guild: discord.Guild, reason: str = None) -> str:

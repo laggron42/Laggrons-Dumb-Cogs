@@ -490,7 +490,7 @@ class SettingsMixin(MixinMeta):
                 ).format(bot_role=guild.me.top_role.name)
             )
         else:
-            await self.cache.update_mute_role(role)
+            await self.cache.update_mute_role(guild, role)
             await ctx.send(_("The new mute role was successfully set!"))
 
     @warnset.command(name="refreshmuterole")
