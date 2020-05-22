@@ -297,12 +297,15 @@ class CODMW(commands.Cog):
         if data is None:
             return
         game_data = data["lifetime"]["all"]["properties"]
-        favorite_gamemode = sorted(
-            [(k, v) for k, v in data["lifetime"]["mode"].items()],
-            key=lambda x: x[1]["properties"]["timePlayed"],
-        )[0][
-            0
-        ]  # first result, then we only keep the key, not the value
+        try:
+            favorite_gamemode = sorted(
+                [(k, v) for k, v in data["lifetime"]["mode"].items()],
+                key=lambda x: x[1]["properties"]["timePlayed"],
+            )[0][
+                0
+            ]  # first result, then we only keep the key, not the value
+        except IndexError:
+            favorite_gamemode = None
         embed = discord.Embed()
         embed.set_thumbnail(url="https://i.imgur.com/9xaOL9M.png")
         embed.title = _("{username}'s stats").format(username=data["username"])
@@ -384,7 +387,8 @@ class CODMW(commands.Cog):
         embed.add_field(
             name=_("Best score per minute"), value=f"{round(game_data['bestSPM']):,}", inline=True,
         )
-        embed.set_footer(text=f"Favorite gamemode: {self._get_gamemode(favorite_gamemode)}")
+        if favorite_gamemode:
+            embed.set_footer(text=f"Favorite gamemode: {self._get_gamemode(favorite_gamemode)}")
         await ctx.send(embed=embed)
 
     @cod.command(name="wz")
