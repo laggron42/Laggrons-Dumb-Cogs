@@ -8,6 +8,7 @@ import textwrap
 import logging
 import os
 import sys
+import redbot
 
 from redbot.core import commands
 from redbot.core import checks
@@ -69,7 +70,14 @@ class InstantCommands(BaseCog):
         self.listeners = {}
 
         # these are the availables values when creating an instant cmd
-        self.env = {"bot": self.bot, "discord": discord, "commands": commands, "checks": checks}
+        self.env = {
+            "bot": self.bot,
+            "discord": discord,
+            "commands": commands,
+            "checks": checks,
+            "asyncio": asyncio,
+            "redbot": redbot,
+        }
         # resume all commands and listeners
         bot.loop.create_task(self.resume_commands())
         self._init_logger()
