@@ -75,7 +75,7 @@ class InstantCommands(BaseCog):
         self._init_logger()
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.1.1"
+    __version__ = "1.1.2"
 
     def _init_logger(self):
         log_format = logging.Formatter(
@@ -138,7 +138,7 @@ class InstantCommands(BaseCog):
         else:
             if not isinstance(function, Listener):
                 function = Listener(function, function.__name__)
-            self.bot.add_listener(function.func)
+            self.bot.add_listener(function.func, name=function.name)
             self.listeners[function.func.__name__] = (function.id, function.name)
             if function.name != function.func.__name__:
                 log.debug(
