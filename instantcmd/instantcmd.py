@@ -207,13 +207,13 @@ class InstantCommands(BaseCog):
         pass
 
     @instantcmd.command(aliases=["add"])
-    async def create(self, ctx):
+    async def create(self, ctx, *, command: str = None):
         """
         Instantly generate a new command from a code snippet.
 
         If you want to make a listener, give its name instead of the command name.
         You can upload a text file if the command is too long, but you should consider coding a\
-            cog at this point.
+cog at this point.
         """
 
         async def read_from_file(msg: discord.Message):
@@ -231,6 +231,8 @@ class InstantCommands(BaseCog):
 
         if ctx.message.attachments:
             function_string = await read_from_file(ctx.message)
+        elif command:
+            function_string = self.cleanup_code(command)
         else:
             await ctx.send(
                 "You're about to create a new command. \n"
