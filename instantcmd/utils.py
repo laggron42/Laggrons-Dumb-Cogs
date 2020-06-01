@@ -17,6 +17,9 @@ class Listener:
         self.name = name
         self.id = id(function)
 
+    def __call__(self, *args, **kwargs):
+        self.func(*args, **kwargs)
+
 
 def listener(name: str = None):
     """
