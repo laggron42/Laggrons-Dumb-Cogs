@@ -138,7 +138,7 @@ class InstantCommands(BaseCog):
         else:
             if not isinstance(function, Listener):
                 function = Listener(function, function.__name__)
-            self.bot.add_listener(function.func)
+            self.bot.add_listener(function.func, name=function.name)
             self.listeners[function.func.__name__] = (function.id, function.name)
             if function.name != function.func.__name__:
                 log.debug(
