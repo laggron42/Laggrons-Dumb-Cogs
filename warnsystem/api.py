@@ -629,7 +629,7 @@ class API:
             log_embed.add_field(name=_("Duration"), value=duration, inline=True)
         log_embed.add_field(name=_("Reason"), value=reason + mod_message, inline=False)
         log_embed.add_field(name=_("Status"), value=current_status(True), inline=False)
-        log_embed.set_footer(text=today)
+        log_embed.timestamp = datetime.now()
         log_embed.set_thumbnail(url=await self.data.guild(guild).thumbnails.get_raw(level))
         log_embed.colour = await self.data.guild(guild).colors.get_raw(level)
         log_embed.url = await self.data.guild(guild).url()
