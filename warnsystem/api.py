@@ -528,6 +528,7 @@ class API:
         level: int,
         reason: Optional[str] = None,
         time: Optional[timedelta] = None,
+        date: Optional[datetime] = None,
         message_sent: bool = True,
     ) -> tuple:
         """
@@ -552,6 +553,8 @@ class API:
             The reason of the warning.
         time: Optional[timedelta]
             The time before the action ends. Only for mute and ban.
+        date: Optional[datetime]
+            When the action was taken.
         message_sent: bool
             Set to :py:obj:`False` if the embed couldn't be sent to the warned user.
 
@@ -606,7 +609,7 @@ class API:
                 invite = await guild.create_invite(max_uses=1)
             except Exception:
                 invite = _("*[couldn't create an invite]*")
-        today = datetime.today().strftime("%a %d %B %Y %H:%M")
+        today = date.strftime("%a %d %B %Y %H:%M")
         if time:
             duration = self._format_timedelta(time)
         else:
@@ -629,7 +632,7 @@ class API:
             log_embed.add_field(name=_("Duration"), value=duration, inline=True)
         log_embed.add_field(name=_("Reason"), value=reason + mod_message, inline=False)
         log_embed.add_field(name=_("Status"), value=current_status(True), inline=False)
-        log_embed.timestamp = datetime.now()
+        log_embed.timestamp = date
         log_embed.set_thumbnail(url=await self.data.guild(guild).thumbnails.get_raw(level))
         log_embed.colour = await self.data.guild(guild).colors.get_raw(level)
         log_embed.url = await self.data.guild(guild).url()
@@ -789,6 +792,7 @@ class API:
         level: int,
         reason: Optional[str] = None,
         time: Optional[timedelta] = None,
+        date: Optional[datetime] = None,
         log_modlog: Optional[bool] = True,
         log_dm: Optional[bool] = True,
         take_action: Optional[bool] = True,
@@ -829,6 +833,8 @@ class API:
             The optional reason of the warning. It is strongly recommanded to set one.
         time: Optional[timedelta]
             The time before cancelling the action. This only works for a mute or a ban.
+        date: Optional[datetime]
+            When the action was taken. Only use if you want to overwrite the current date and time.
         log_modlog: Optional[bool]
             Specify if an embed should be posted to the modlog channel. Default to :py:obj:`True`.
         log_dm: Optional[bool]
@@ -929,7 +935,7 @@ class API:
             # send the message to the user
             if log_modlog or log_dm:
                 modlog_e, user_e = await self.get_embeds(
-                    guild, member, author, level, reason, time
+                    guild, member, author, level, reason, time, date
                 )
             if log_dm:
                 try:
@@ -992,7 +998,7 @@ class API:
             else:
                 modlog_message = None
             data = await self._create_case(
-                guild, member, author, level, datetime.now(), reason, time, roles, modlog_message,
+                guild, member, author, level, date, reason, time, roles, modlog_message,
             )
             # start timer if there is a temporary warning
             if time and (level == 2 or level == 5):
@@ -1068,6 +1074,8 @@ class API:
                 audit_reason += _("Reason: {reason}").format(reason=reason)
             else:
                 audit_reason += _("Reason too long to be shown.")
+        if not date:
+            date = datetime.now()
 
         i = 0
         fails = [await warn_member(x, audit_reason) for x in members if x]

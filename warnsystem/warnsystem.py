@@ -8,7 +8,7 @@ import os
 from typing import Optional
 from asyncio import TimeoutError as AsyncTimeoutError
 from abc import ABC
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from redbot.core import commands, Config, checks
 from redbot.core.commands.converter import TimedeltaConverter
@@ -146,6 +146,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         "respect_hierarchy": False,  # if the bot should check if the mod is allowed by hierarchy
         # TODO use bot settingfor respect_hierarchy ?
         "reinvite": True,  # if the bot should try to send an invite to an unbanned/kicked member
+        "log_manual": False,  # if the bot should log manual kicks and bans
         "channels": {  # modlog channels
             "main": None,  # default
             "1": None,
@@ -1403,6 +1404,61 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                 f"(ID: {channel.id}) due to an unknown error.",
                 exc_info=e,
             )
+
+    @listener()
+    async def on_member_ban(self, guild: discord.Guild, member: discord.Member):
+        # most of this code is from Cog-Creators, modlog cog
+        # https://github.com/Cog-Creators/Red-DiscordBot/blob/bc21f779762ec9f460aecae525fdcd634f6c2d85/redbot/core/modlog.py#L68
+        if not guild.me.guild_permissions.view_audit_log:
+            return
+        if not await self.data.guild(guild).log_manual():
+            return
+        # check for that before doing anything else, means WarnSystem isn't setup
+        try:
+            await self.api.get_modlog_channel(guild, 5)
+        except errors.NotFound:
+            return
+        when = datetime.utcnow()
+        before = when + timedelta(minutes=1)
+        after = when - timedelta(minutes=1)
+        await asyncio.sleep(10)  # prevent small delays from causing a 5 minute delay on entry
+        attempts = 0
+        # wait up to an hour to find a matching case
+        while attempts < 12:
+            attempts += 1
+            try:
+                entry = await guild.audit_logs(
+                    action=discord.AuditLogAction.ban, before=before, after=after
+                ).find(lambda e: e.target.id == member.id and after < e.created_at < before)
+            except discord.Forbidden:
+                break
+            except discord.HTTPException:
+                pass
+            else:
+                if entry:
+                    if entry.user.id != guild.me.id:
+                        # Don't create modlog entires for the bot's own bans, cogs do this.
+                        mod, reason, date = entry.user, entry.reason, entry.created_at
+                        try:
+                            await self.api.warn(
+                                guild,
+                                [member],
+                                mod,
+                                5,
+                                reason,
+                                date=date,
+                                log_dm=False,
+                                take_action=False,
+                            )
+                        except Exception as e:
+                            log.error(
+                                f"[Guild {guild.id}] Failed to create a case based on manual ban. "
+                                f"Member: {member} ({member.id}). Author: {mod} ({mod.id}). "
+                                f"Reason: {reason}",
+                                exc_info=e,
+                            )
+                    return
+            await asyncio.sleep(300)
 
     @listener()
     async def on_command_error(self, ctx, error):

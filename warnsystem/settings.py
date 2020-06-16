@@ -398,6 +398,36 @@ class SettingsMixin(MixinMeta):
             )
         )
 
+    @warnset.command(name="detectmanual")
+    async def warnset_detectmanual(self, ctx: commands.Context, enable: bool = None):
+        """
+        Defines if the bot should log manual bans to WarnSystem.
+
+        If enabled, manually banning a member will make the bot log the action in the modlog and\
+save it, as if it was performed with WarnSystem. **However, the member will not receive a DM**.
+        
+        Invoke the command without arguments to get the current status.
+        """
+        guild = ctx.guild
+        current = await self.data.guild(guild).log_manual()
+        if enable is None:
+            await ctx.send(
+                _(
+                    "The bot currently {detect} manual bans. If you want to change this, "
+                    "type `{prefix}warnset detectmanual {opposite}`."
+                ).format(
+                    detect=_("detects") if current else _("doesn't detect"),
+                    opposite=not current,
+                    prefix=ctx.clean_prefix,
+                )
+            )
+        elif enable:
+            await self.data.guild(guild).log_manual.set(True)
+            await ctx.send(_("Done. The bot will now listen for manual bans and log them."))
+        else:
+            await self.data.guild(guild).log_manual.set(False)
+            await ctx.send(_("Done. The bot won't listen for manual bans anymore."))
+
     @warnset.command(name="hierarchy")
     async def warnset_hierarchy(self, ctx: commands.Context, enable: bool = None):
         """
@@ -584,8 +614,7 @@ channels, and prevented from talking in all voice channels.
             return text
 
         text = _("Successfully checked all channels, {len}/{total} were edited.\n\n").format(
-            len=count - len(perms_failed) - len(other_failed),
-            total=count,
+            len=count - len(perms_failed) - len(other_failed), total=count,
         )
         if perms_failed:
             text += _(
@@ -703,6 +732,7 @@ channels, and prevented from talking in all voice channels.
             show_mod = _("Enabled") if all_data["show_mod"] else _("Disabled")
             update_mute = _("Enabled") if all_data["update_mute"] else _("Disabled")
             remove_roles = _("Enabled") if all_data["remove_roles"] else _("Disabled")
+            manual_bans = _("Enabled") if all_data["log_manual"] else _("Disabled")
             bandays = _("Softban: {softban}\nBan: {ban}").format(
                 softban=all_data["bandays"]["softban"], ban=all_data["bandays"]["ban"]
             )
@@ -768,6 +798,7 @@ channels, and prevented from talking in all voice channels.
             embeds[0].add_field(name=_("Respect hierarchy"), value=hierarchy)
             embeds[0].add_field(name=_("Reinvite unbanned members"), value=reinvite)
             embeds[0].add_field(name=_("Show responsible moderator"), value=show_mod)
+            embeds[0].add_field(name=_("Detect manual bans"), value=manual_bans)
             embeds[0].add_field(name=_("Update new channels for mute role"), value=update_mute)
             embeds[0].add_field(name=_("Remove roles on mute"), value=remove_roles)
             embeds[0].add_field(name=_("Days of messages to delete"), value=bandays)
