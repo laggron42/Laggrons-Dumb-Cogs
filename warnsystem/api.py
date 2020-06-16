@@ -636,8 +636,8 @@ class API:
         log_embed.set_image(url=link.group() if link else "")
         if not message_sent:
             log_embed.description += _(
-                "\n\n***The message couldn't be delivered to the member. We may don't "
-                "have a server in common or he blocked me/messages from this guild.***"
+                "\n\n***The message could not be delivered to the user. They may have DMs "
+                "disabled, blocked the bot, or may not have a mutual server.***"
             )
 
         # embed for the member in DM
