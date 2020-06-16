@@ -109,23 +109,17 @@ It can be a command (you will need to add the ``commands`` decorator) or a liste
     
     * ``discord``
     
-      * ``ext.commands``
-    
     * ``asyncio``
     
-    * ``inspect``
+    * ``redbot``
     
-    * ``traceback``
-    
-    * ``random``
-    
-    * ``redbot.core``
-    
-      * ``checks``
+      * ``.core.commands``
       
-      * ``Config``
+      * ``.core.checks``
       
-      * ``utils.chat_formatting.pagify``
+      * ``.core.Config``
+      
+      * ``.core.utils.chat_formatting.pagify``
       
     It isn't recommanded to use the ``Config`` value for now. 
     A future release should give a ready ``Config.Config`` object.

@@ -8,6 +8,7 @@ import textwrap
 import logging
 import os
 import sys
+import redbot
 
 from redbot.core import commands
 from redbot.core import checks
@@ -69,13 +70,20 @@ class InstantCommands(BaseCog):
         self.listeners = {}
 
         # these are the availables values when creating an instant cmd
-        self.env = {"bot": self.bot, "discord": discord, "commands": commands, "checks": checks}
+        self.env = {
+            "bot": self.bot,
+            "discord": discord,
+            "commands": commands,
+            "checks": checks,
+            "asyncio": asyncio,
+            "redbot": redbot,
+        }
         # resume all commands and listeners
         bot.loop.create_task(self.resume_commands())
         self._init_logger()
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.1.2"
+    __version__ = "1.2.0"
 
     def _init_logger(self):
         log_format = logging.Formatter(
@@ -207,13 +215,13 @@ class InstantCommands(BaseCog):
         pass
 
     @instantcmd.command(aliases=["add"])
-    async def create(self, ctx):
+    async def create(self, ctx, *, command: str = None):
         """
         Instantly generate a new command from a code snippet.
 
         If you want to make a listener, give its name instead of the command name.
         You can upload a text file if the command is too long, but you should consider coding a\
-            cog at this point.
+cog at this point.
         """
 
         async def read_from_file(msg: discord.Message):
@@ -231,6 +239,8 @@ class InstantCommands(BaseCog):
 
         if ctx.message.attachments:
             function_string = await read_from_file(ctx.message)
+        elif command:
+            function_string = self.cleanup_code(command)
         else:
             await ctx.send(
                 "You're about to create a new command. \n"
