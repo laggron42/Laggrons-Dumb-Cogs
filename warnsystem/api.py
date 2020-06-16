@@ -4,6 +4,7 @@ import logging
 import re
 
 from copy import deepcopy
+from collections import namedtuple
 from typing import Union, Optional, Iterable, Callable, Awaitable
 from datetime import datetime, timedelta
 
@@ -146,6 +147,9 @@ class API:
         self.data = config
         self.cache = cache
         self.warned_guilds = []  # see automod_check_for_autowarn
+        self.antispam = {}  # see automod_process_antispam
+        self.antispam_warn_queue = {}  # see automod_warn
+        self.automod_warn_task: asyncio.Task
 
     def _get_datetime(self, time: int) -> datetime:
         return datetime.fromtimestamp(int(time))
@@ -1220,36 +1224,51 @@ class API:
         """
         Enable automod checks and listeners on the bot.
         """
-        log.info("Enabling automod listeners.")
+        log.info("Enabling automod listeners and event loops.")
         self.bot.add_listener(self.automod_on_message, name="on_message")
+        self.automod_warn_task = self.bot.loop.create_task(self.automod_warn_loop())
 
     def disable_automod(self):
         """
         Disable automod checks and listeners on the bot.
         """
-        log.info("Disabling automod listeners.")
+        log.info("Disabling automod listeners and event loops.")
         self.bot.remove_listener(self.automod_on_message, name="on_message")
+        if hasattr(self, "automod_warn_task"):
+            self.automod_warn_task.cancel()
 
     async def automod_on_message(self, message: discord.Message):
-        try:
-            await self.automod_process_message(message)
-        except Exception as e:
-            log.error(
-                f"[Guild {message.guild.id}] Error while processing message for automod.",
-                exc_info=e,
-            )
-
-    async def automod_process_message(self, message: discord.Message):
         guild = message.guild
         member = message.author
         if not guild:
             return
-        if member.id == self.bot.user.id:
+        if member.bot:
             return
-        if not self.cache.get_automod_enabled(guild):
+        if not self.cache.is_automod_enabled(guild):
             return
         if await self.bot.is_automod_immune(message):
             return
+        # we run all tasks concurrently
+        # results are returned in the same order (either None or an exception)
+        regex_exception, antispam_exception = await asyncio.gather(
+            self.automod_process_regex(message),
+            self.automod_process_antispam(message),
+            return_exceptions=True,
+        )
+        if regex_exception:
+            log.error(
+                f"[Guild {message.guild.id}] Error while processing message for regex automod.",
+                exc_info=regex_exception,
+            )
+        if antispam_exception:
+            log.error(
+                f"[Guild {message.guild.id}] Error while processing message for antispam system.",
+                exc_info=antispam_exception,
+            )
+
+    async def automod_process_regex(self, message: discord.Message):
+        guild = message.guild
+        member = message.author
         all_regex = await self.cache.get_automod_regex(guild)
         for name, regex in all_regex.items():
             regex: re.Pattern
@@ -1277,6 +1296,105 @@ class API:
                         f"Level: {level}. Time: {time}. Reason: {reason}\n"
                         f"Original message: {message.content}"
                     )
+
+    async def automod_process_antispam(self, message: discord.Message):
+        # we store the data in self.antispam
+        # keys are as follow: GUILD_ID > CHANNEL_ID > MEMBER_ID = tuple
+        # tuple contains list timestamps of recent messages + check if the member was warned
+        # if the antispam is triggered once, we send a message in the chat (refered as text warn)
+        # if it's triggered a second time, an actual warn is given
+        guild = message.guild
+        channel = message.channel
+        member = message.author
+        antispam_data = await self.cache.get_automod_antispam(guild)
+        if antispam_data is False:
+            return
+
+        # we slowly go across each key, if it doesn't exist, data is created then the
+        # function ends since there's no data to check
+        InitialData = namedtuple("InitialData", ["messages", "warned"])
+        data = InitialData(messages=[], warned=False)
+        try:
+            guild_data = self.antispam[guild.id]
+        except KeyError:
+            self.antispam[guild.id] = {channel.id: {member.id: data}}
+            return
+        else:
+            pass
+        try:
+            channel_data = guild_data[channel.id]
+        except KeyError:
+            self.antispam[guild.id][channel.id] = {member.id: data}
+            return
+        else:
+            del guild_data
+        try:
+            data = channel_data[member.id]
+        except KeyError:
+            pass
+        del channel_data
+
+        data.messages.append(message.created_at)
+        # now we've got our list of timestamps, just gotta clean the old ones
+        data = data._replace(
+            messages=self._automod_clean_old_messages(
+                antispam_data["delay"], message.created_at, data.messages
+            )
+        )
+        print(f"{member}: w={data.warned} m={len(data.messages)}")
+        if len(data.messages) <= antispam_data["max_messages"]:
+            # antispam not triggered, we can exit now
+            self.antispam[guild.id][channel.id][member.id] = data
+            return
+        # at this point, user is considered to be spamming
+        # we cleanup his x last messages (max_messages + 1), then either send a text warn
+        # or perform an actual warnsystem warn (I'm confusing ik)
+        if (
+            data.warned is False
+            or (datetime.now() - data.warned).total_seconds()
+            < antispam_data["delay_before_action"]
+        ):
+            bot_message = await channel.send(
+                _("{member} you're sending messages too fast!").format(member=member.mention),
+                delete_after=5,
+            )
+            data = InitialData(messages=[], warned=bot_message.created_at)
+        else:
+            # already warned once within delay_before_action, gotta take actions
+            warn_data = antispam_data["warn"]
+            warn_data["author"] = guild.me
+            try:
+                self.antispam_warn_queue[guild.id][member] = warn_data
+            except KeyError:
+                self.antispam_warn_queue[guild.id] = {member: warn_data}
+            # also reset the data
+            data = InitialData(messages=[], warned=message.created_at)
+        self.antispam[guild.id][channel.id][member.id] = data
+
+    def _automod_clean_old_messages(self, delay: int, current_time: datetime, messages: list):
+        """
+        We don't keep messages older than the delay in the cache
+        """
+        message: datetime
+        delta: timedelta
+        new_list = []
+        for message in messages:
+            delta = current_time - message
+            if delta.total_seconds() <= delay:
+                new_list.append(message)
+        return new_list
+
+    def _automod_clean_cache(
+        self, guild: discord.Guild, channel: discord.TextChannel, member: discord.Member
+    ):
+        """
+        We quickly end up with a dict filled with empty values, we gotta clean that.
+        """
+        del self.automod[guild.id][channel.id][member.id]
+        if not self.automod[guild.id][channel.id]:
+            del self.automod[guild.id][channel.id]
+            if not self.automod[guild.id]:
+                del self.automod[guild.id]
 
     async def automod_check_for_autowarn(
         self, member: discord.Member, author: discord.Member, level: int
@@ -1312,7 +1430,7 @@ class API:
         Prevents having to put this whole function into a try/except block.
         """
         guild = member.guild
-        if not self.cache.get_automod_enabled(guild):
+        if not self.cache.is_automod_enabled(guild):
             return
         # starting the iteration through warnings can cost performances
         # so we look for conditions that confirms the member cannot be affected by automod
@@ -1390,3 +1508,55 @@ class API:
                     f"[Guild {guild.id}] Successfully performed automatic "
                     f"warn {i} on member {member} ({member.id})."
                 )
+
+    async def automod_warn_loop(self):
+        # since this is asyncronous code, sometimes there can be too many warnings performed
+        # especially with message antispam, since it treats multiple messages simultaneously
+        # instead, we have a dict of warnings to perform, and we remove it only once the warn is
+        # done. That way, duplicate warnings won't happen.
+
+        async def warn(member: discord.Member, data: dict):
+            guild = member.guild
+            try:
+                await self.warn(guild, [member], **data)
+            except Exception as e:
+                log.error(
+                    f"Cannot perform autowarn on member {member} ({member.id}). Data: {data}",
+                    exc_info=e,
+                )
+            finally:
+                await asyncio.sleep(1)
+                del self.antispam_warn_queue[guild.id][member]
+                if not self.antispam_warn_queue[guild.id]:
+                    del self.antispam_warn_queue[guild.id]
+
+        async def loop():
+            guild: discord.Guild
+            member: discord.Member
+            coros = []
+            for guild_id, data in self.antispam_warn_queue.items():
+                for member, value in data.items():
+                    coros.append(warn(member, value))
+            coros = asyncio.gather(*coros, return_exceptions=True)
+            await coros
+
+        errors = 0
+        while True:
+            try:
+                await loop()
+            except Exception as e:
+                errors += 1
+                if errors >= 3:
+                    # more than 3 errors in our loop, let's shut down the loop
+                    log.critical(
+                        "The loop for automod warnings encountered a third error. To prevent "
+                        "more damages, the loop will be cancelled. Timed mutes and bans no longer "
+                        "works for now. Reload the cog to start the loop back. If the problem "
+                        "persists, report the error and update the cog.",
+                        exc_info=e,
+                    )
+                    return
+                log.error(
+                    "Error in loop for automod warnings. The loop will be resumed.", exc_info=e
+                )
+            await asyncio.sleep(1)

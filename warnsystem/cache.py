@@ -24,6 +24,7 @@ class MemoryCache:
         self.mute_roles = {}
         self.temp_actions = {}
         self.automod_enabled = []
+        self.automod_antispam = {}
         self.automod_regex = {}
 
     async def init_automod_enabled(self):
@@ -97,7 +98,7 @@ class MemoryCache:
         await self.data.guild(guild).temporary_warns.set(warns)
         self.temp_actions[guild.id] = warns
 
-    def get_automod_enabled(self, guild: discord.Guild):
+    def is_automod_enabled(self, guild: discord.Guild):
         return guild.id in self.automod_enabled
 
     async def add_automod_enabled(self, guild: discord.Guild):
@@ -107,6 +108,25 @@ class MemoryCache:
     async def remove_automod_enabled(self, guild: discord.Guild):
         self.automod_enabled.remove(guild.id)
         await self.data.guild(guild).automod.enabled.set(False)
+
+    async def get_automod_antispam(self, guild: discord.Guild):
+        automod_antispam = self.automod_antispam.get(guild.id, None)
+        if automod_antispam is not None:
+            return automod_antispam
+        automod_antispam = await self.data.guild(guild).automod.antispam.all()
+        if automod_antispam["enabled"] is False:
+            self.automod_antispam[guild.id] = False
+        else:
+            self.automod_antispam[guild.id] = automod_antispam
+        return automod_antispam
+
+    async def update_automod_antispam(self, guild: discord.Guild):
+        data = await self.data.guild(guild).automod.antispam.all()
+        if data["enabled"] is False:
+            # if the antispam is disabled, no need to store the entire dict, too heavy
+            self.automod_antispam[guild.id] = False
+        else:
+            self.automod_antispam[guild.id] = data
 
     async def get_automod_regex(self, guild: discord.Guild):
         automod_regex = self.automod_regex.get(guild.id, {})

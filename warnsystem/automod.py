@@ -502,3 +502,210 @@ set him a level 3 warning with the given reason.
             timedelta(seconds=duration) if duration else None,
         )
         await ctx.send(embed=embed)
+
+    @automod.group(name="antispam")
+    async def automod_antispam(self, ctx: commands.Context):
+        """
+        Configure the antispam system.
+
+        If you installed WarnSystem for the sole purpose of antispam, disable all warnings and\
+you shouldn't need further setup.
+        """
+        pass
+
+    @automod_antispam.command(name="enable")
+    async def automod_antispam_enable(self, ctx: commands.Context, enable: bool = None):
+        """
+        Enable WarnSystem's antispam.
+        """
+        guild = ctx.guild
+        if enable is None:
+            status = await self.cache.get_automod_antispam(guild)
+            if status:
+                status = _("enabled")
+                status_change = _("Disable")
+                setting = _("False")
+            else:
+                status = _("disabled")
+                status_change = _("Enable")
+                setting = _("True")
+            await ctx.send(
+                _(
+                    "WarnSystem's antispam feature will make your text channels cleaner by "
+                    "removing and warning members sending undesired content.\n\n"
+                    "Antispam is currently **{status}**.\n"
+                    "{status_change} it with `{prefix}automod antispam {setting}`."
+                ).format(
+                    prefix=ctx.clean_prefix,
+                    status=status,
+                    status_change=status_change,
+                    setting=setting,
+                )
+            )
+            return
+        await self.data.guild(guild).automod.antispam.enabled.set(enable)
+        await self.cache.update_automod_antispam(guild)
+        text = _("Antispam system is now {status}.").format(
+            status=_("enabled") if enable else _("disabled")
+        )
+        if await self.data.guild(guild).automod.enabled() is False and enable is True:
+            text += _(
+                "\n:warning: Automod isn't enabled on this guild, "
+                "enable it with `{prefix}automod enable True`."
+            ).format(prefix=ctx.clean_prefix)
+        await ctx.send(text)
+
+    @automod_antispam.command(name="threshold")
+    async def automod_antispam_threshold(
+        self, ctx: commands.Context, max_messages: int, delay: int
+    ):
+        """
+        Defines the spam threshold.
+
+        Delay is in seconds.
+        Example: `[p]automod antispam threshold 5 10` = maximum of 5 messages within 10 seconds\
+before triggering the antispam.
+        """
+        guild = ctx.guild
+        await self.data.guild(guild).automod.antispam.max_messages.set(max_messages)
+        await self.data.guild(guild).automod.antispam.delay.set(delay)
+        await self.cache.update_automod_antispam(guild)
+        await ctx.send(
+            _(
+                "Done. A member will be considered as spamming if he sends "
+                "more than {max_messages} within {delay} seconds."
+            ).format(max_messages=max_messages, delay=delay)
+        )
+
+    @automod_antispam.command(name="delay")
+    async def automod_antispam_delay(self, ctx: commands.Context, delay: int):
+        """
+        If antispam is triggered twice within this delay, perform the warn.
+
+        Delay in seconds.
+        If the antispam is triggered once, a simple warning is send in the chat, mentionning the\
+member. If the same member triggers the antispam system a second time within this delay, there\
+will be an actual warning taken, the one you define with `[p]automod antispam warn`.
+
+        This is a way to tell the member he is close to being sanctioned. Of course you can\
+disable this and immediatly take actions by setting a delay of 0. Default is 60 seconds.
+        """
+        guild = ctx.guild
+        await self.data.guild(guild).automod.antispam.delay_before_action.set(delay)
+        await self.cache.update_automod_antispam(guild)
+        if delay:
+            await ctx.send(
+                _(
+                    "Done. If the antispam is triggered twice within {time} seconds, "
+                    "actions will be taken. Use `{prefix}automod antispam warn` to "
+                    "define the warn taken."
+                ).format(time=delay, prefix=ctx.clean_prefix)
+            )
+        else:
+            await ctx.send(
+                _(
+                    "Done. When triggered, the antispam will immediately perform the "
+                    "warn you defined with `{prefix}automod antispam warn`."
+                ).format(prefix=ctx.clean_prefix)
+            )
+
+    @automod_antispam.command(name="warn")
+    async def automod_antispam_warn(
+        self,
+        ctx: commands.Context,
+        level: int,
+        duration: Optional[TimedeltaConverter],
+        *,
+        reason: str,
+    ):
+        """
+        Define the warn taken when the antispam is triggered.
+
+        The arguments for this command works the same way as the warn command.
+        Examples: `[p]automod antispam warn 1 Spamming` `[p]automod antispam warn 2 30m Spamming`
+
+        You can use the `[p]automod warn` command to configure an automatic warning after multiple\
+automod infractions, like a mute after 3 warns.
+        """
+        guild = ctx.guild
+        await self.data.guild(guild).automod.antispam.warn.set(
+            {
+                "level": level,
+                "reason": reason,
+                "time": duration.total_seconds() if duration else None,
+            }
+        )
+        await self.cache.update_automod_antispam(guild)
+        await ctx.send(
+            _(
+                "If the antispam is triggered by a member, he will now receive a level "
+                "{level} warn {duration}for the following reason:\n{reason}"
+            ).format(
+                level=level,
+                reason=reason,
+                duration=_("that will last for {time} ").format(
+                    time=self.api._format_timedelta(duration)
+                )
+                if duration
+                else "",
+            )
+        )
+
+    @automod_antispam.command(name="info")
+    async def automod_antispam_info(self, ctx: commands.Context):
+        """
+        Show infos about the antispam system.
+        """
+        guild = ctx.guild
+        automod_enabled = self.cache.is_automod_enabled(guild)
+        antispam_settings = await self.data.guild(guild).automod.antispam.all()
+        embed = discord.Embed(title=_("Antispam system settings"))
+        description = ""
+        if antispam_settings["enabled"] is True:
+            description += _(":white_check_mark: Antispam system: **Enabled**\n")
+        else:
+            description += _(":x: Antispam system: **Disabled**\n")
+        if automod_enabled:
+            description += _(":white_check_mark: WarnSystem automod: **Enabled**\n")
+        else:
+            description += _(
+                ":x: WarnSystem automod: **Disabled**\n"
+                ":warning: The antispam won't work if the automod is disabled."
+            )
+        embed.description = description
+        embed.add_field(
+            name=_("Settings"),
+            value=_(
+                "Max messages allowed within the threshold: **{max_messages}**\n"
+                "Threshold: **{delay} seconds**\n"
+                "Delay before reset: **{reset_delay} seconds**  "
+                "*(see `{prefix}automod antispam delay` for details about this)*"
+            ).format(
+                max_messages=antispam_settings["max_messages"],
+                delay=antispam_settings["delay"],
+                reset_delay=antispam_settings["delay_before_action"],
+                prefix=ctx.clean_prefix,
+            ),
+            inline=False,
+        )
+        level = antispam_settings["warn"]["level"]
+        reason = antispam_settings["warn"]["reason"]
+        if level == 2 or level == 5:
+            time = _("Time: {time}\n").format(
+                time=self.api._format_timedelta(antispam_settings["warn"]["time"])
+                if antispam_settings["warn"]["time"]
+                else _("Unlimited.")
+            )
+        else:
+            time = ""
+        embed.add_field(
+            name=_("Warning"),
+            value=_(
+                "This is the warning members will get when they break the antispam:\n\n"
+                "Level: {level}\n"
+                "{time}"
+                "Reason: {reason}"
+            ).format(level=level, reason=reason, time=time),
+        )
+        embed.color = await self.bot.get_embed_color(ctx)
+        await ctx.send(embed=embed)

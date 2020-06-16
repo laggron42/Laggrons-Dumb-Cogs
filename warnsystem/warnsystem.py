@@ -191,6 +191,17 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         "temporary_warns": {},  # list of temporary warns (need to unmute/unban after some time)
         "automod": {  # everything related to auto moderation
             "enabled": False,
+            "antispam": {
+                "enabled": False,
+                "max_messages": 5,  # maximum number of messages allowed within the delay
+                "delay": 2,  # in seconds
+                "delay_before_action": 60,  # if triggered twice within this delay, take action
+                "warn": {  # data of the warn
+                    "level": 1,
+                    "reason": "Spamming in {channel.mention}.",
+                    "time": None,
+                },
+            },
             "regex": {},  # all regex expressions
             "warnings": [],  # all automatic warns
         },
@@ -1427,3 +1438,4 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
 
         # stop checking for unmute and unban
         self.task.cancel()
+        self.api.disable_automod()
