@@ -683,6 +683,271 @@ Enough info, time for explained examples.
 *   ``[p]masswarn 5 --take-actions --send-dm --reason "toxic potatoes"
     --has-role Starbucks`` Just bans everyone with the role "Starbucks"
 
+^^^^^^^^
+wsunmute
+^^^^^^^^
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]wsunmute <member>
+
+**Description**
+
+Unmutes a member muted with WarnSystem.
+
+This will remove the mute role, grant
+his roles back if they were removed by the mute (see ``[p]warnset
+removeroles``) and, if the mute was temporary, cancel the timer to prevent
+unwanted roles operations.
+
+This operation is not logged and doesn't take any reason.
+
+.. note:: wsunmute = WarnSystem unmute. Allows the core mod cog to be loaded,
+    feel free to add an alias.
+
+**Arguments**
+
+*   ``<member>``: The member you're trying to unmute.
+
+^^^^^^^
+wsunban
+^^^^^^^
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]wsunban <member>
+
+**Description**
+
+Unbans a member from the server.
+
+If the reinvite setting is enabled (see ``[p]warnset reinvite``), the bot will
+try to send a DM to the member. This will also cancel any timer if this was a
+temporary ban to prevent unwanted unbans.
+
+This operation is not logged and doesn't take any reason.
+
+.. note:: wsunban = WarnSystem unban. Allows the core mod cog to be loaded,
+    feel free to add an alias.
+
+**Arguments**
+
+*   ``<member>``: The member you're trying to unmute.
+
+^^^^^^^
+automod
+^^^^^^^
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]automod
+
+**Description**
+
+WarnSystem's automod configuration. See subcommands.
+
+.. note:: This respects Red's automod immune system. If you want to immune
+    a role or a member from all of WarnSystem's automated actions, use
+    ``[p]autoimmune`` (from Core cog).
+
+""""""""""""""
+automod enable
+""""""""""""""
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]automod enable [confirm]
+
+**Description**
+
+Enable or disable WarnSystem's automod. This is disabled by default.
+
+.. attention:: Disabling this will disable all automod systems, even if they're
+    enabled.
+
+**Arguments**
+
+*   ``[enable]``: The new status to set. If omitted, the bot will display the
+    current setting and show how to reverse it.
+
+""""""""""""
+automod warn
+""""""""""""
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]automod warn
+    [p]automod warn add
+    [p]automod warn delete <index>
+    [p]automod warn list
+    [p]automod warn show <index>
+
+**Description**
+
+Configures the automod based on member's modlog. This allows automatic actions
+based on previous given warnings.
+
+For example, you can make it so if someone receives 3 level 1 warnings within a
+week, he will automatically get a level 3 (kick) warning with the reason you
+defined. A lot of options are possible.
+
+Use ``[p]automod warn add`` to add a new rule. This will open an interactive
+menu that asks for the following informations:
+
+*   The limit of warns (how many warnings should trigger the automod?)
+*   The level of the warning that will be given once the rule is triggered.
+*   The reason of the warning
+*   The optional time limit (if member gets x warnings **within duration**)
+
+*   If warn level is 2 or 5, the optional duration of the warning
+    (temp mute or ban)
+
+*   The level of the warning the bot should count (for example, only count
+    level 1 warnings). Omit to count all possible warnings.
+
+*   If the bot should only count warnings given by the automod. If this is
+    enabled, warnings given by moderators will not be counted.
+
+Your rule will be saved in a list. View this list with ``[p]automod warn list``
+to get its index. With the index, you can view the info with ``[p]automod warn
+show`` or delete it with ``[p]automod warn delete``.
+
+"""""""""""""
+automod regex
+"""""""""""""
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]automod regex
+    [p]automod regex add <name> <regex> <level> [time] <reason>
+    [p]automod regex delete <name>
+    [p]automod regex list
+    [p]automod regex show <name>
+
+**Description**
+
+Create and manage automod rules that will warn people if they send a message
+that matches your Regex expression. This can be used for example to warn people
+automatically if they send a Discord invite, or any link.
+
+.. note:: Regex, short for regular expression, is a way to make advanced rules
+    for checking if a phrase matches what you need, with multiple possible
+    conditions.
+
+    You can use `regex101 <https://regex101.com/>`_ to test your expressions
+    and have detailed explainations. Make sure to use Python mode.
+
+    If you don't know about Regex, I recommand you to check `Trusty's short
+    introduction to Regex for ReTrigger cog
+    <https://github.com/TrustyJAID/Trusty-cogs/tree/master/retrigger#how-to-use-retrigger>`_.
+    For a complete guide, check `Python's documentation for Regex
+    <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_
+    and keep in mind `regex101 <https://regex101.com/>`_ is great for testing.
+
+Use ``[p]automod regex add`` to create a new rule with the following arguments:
+
+*   ``<name>``: The name of your rule.
+
+*   ``<regex>``: Your regular expression. Enclose in quotes if there are spaces
+    inside.
+
+*   ``<level>``: The level of the warning the bot should take.
+
+*   ``[time]``: If level is 2 or 5, optional duration for your mute or ban.
+
+*   ``<reason>``: The reason of the warning. You can use the following keywords
+    inside your reason:
+
+    *   ``{member}``: the warned member in the format "name#0000". Other
+        formats are possible:
+
+        *   ``{member.mention}``
+        *   ``{member.name}``
+        *   ``{member.id}``
+
+    *   ``{channel}``: the channel where the message was send in the format
+        "channel-name". Other possible formats:
+
+        *   ``{channel.mention}``
+        *   ``{channel.category}``
+        *   ``{channel.id}``
+
+    *   ``{guild}``: the current server, if needed, in the format "server
+        name". Other possible formats:
+
+        *   ``{guild.id}``
+
+    Click for the list of all possible formats for :class:`~discord.Member`,
+    :class:`~discord.Channel` and :class:`discord.Guild`.
+
+Example: ``[p]automod regex add discord_invite
+"(?i)(discord\.gg|discordapp\.com\/invite|discord\.me)\/(\S+)"
+1 Discord invite sent in {channel.mention}.``
+
+You can then view the informations of that rule with ``[p]automod regex show``,
+delete it with ``[p]automod regex delete`` and list other rules with
+``[p]automod regex list``.
+
+""""""""""""""""
+automod antispam
+""""""""""""""""
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]automod antispam
+    [p]automod antispam delay <delay>
+    [p]automod antispam enable [enable]
+    [p]automod antispam info
+    [p]automod antispam threshold <max_messages> <delay>
+    [p]automod antispam warn <level> [duration] <reason>
+
+**Description**
+
+Antispam system management. This will warn members if they send messages too
+quickly.
+
+Use ``[p]automod antispam enable`` to enable the antispam system. You can
+enable and disable it without affecting other automod functions. **You still
+need to have automod enabled.**
+
+You will then have the antispam enabled with default settings:
+
+*   Maximum of 5 messages within 5 seconds. Modify with ``[p]automod antispam
+    threshold``.
+
+*   One reminder within a minute before warn. Modify with ``[p]automod antispam
+    delay``.
+
+*   Level 1 warn applied for the reason "Sending messages too fast.". Modify
+    with ``[p]automod antispam warn``.
+
+You can check these info with ``[p]automod antispam info``.
+
+A bit more details for the "reminder": if the antispam is triggered, the bot
+will send a text warning directly in the channel, mentionning the member
+to warn him. If the antispam is triggered a second time within a minute, then
+the bot will take actions, as set with ``[p]automod antispam warn``.
+
+This is a way to make people aware of the antispam, most of the members will
+quickly correct their behaviour and avoid a spam of warnings. Of course you can
+increase or decrease this period with ``[p]automod antispam delay`` (in
+seconds). You can completly disable this and immediatly take actions by
+settings a delay of 0.
+
 ^^^^^^^
 warnset
 ^^^^^^^
@@ -887,6 +1152,30 @@ You can use the following keys in your custom description:
 
 *   ``<description>``: The new description.
 
+""""""""""""""""""""
+warnset detectmanual
+""""""""""""""""""""
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]warnset detectmanual [enable]
+
+**Description**
+
+Defines if you want the bot to automatically log manual bans taken on the
+server. This will send a message in the modlog and create a case assigned to
+the banned member with the reason set via Discord. However, the bot will not be
+able to send a DM.
+
+This is disabled by default.
+
+**Arguments**
+
+*   ``[enable]``: The new status to set. If omitted, the bot will display the
+    current setting and show how to reverse it.
+
 """""""""""""""""
 warnset hierarchy
 """""""""""""""""
@@ -934,10 +1223,44 @@ You can also provide an existing role to set it as the new mute role.
 **Permissions won't be modified in any channel in that case**, so make sure you
 have the right permissions setup for that role.
 
+.. tip:: You can use ``[p]warnset autoupdate`` to automatically update new
+    channels created on your server, to make sure the mute role stays efficient
+    everywhere.
+
+.. tip:: The ``[p]warnset refreshmuterole`` will iterate all channels and make
+    sure the channels have the correct permissions set for the mute role ("send
+    messages", "add reactions" and "speak" permissions denied).
+
 **Arguments**
 
 *   ``[role]``: The exact name of an existing role to set it as the mute role.
     If this is omitted, a new role will be created.
+
+"""""""""""""""""""""""
+warnset refreshmuterole
+"""""""""""""""""""""""
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]warnset refreshmuterole
+
+**Description**
+
+Check if the mute role's permissions match your server channels. If permissions
+are wrong somewhere, they will be adjusted. The bot checks for the following
+permissions:
+
+*   Send messages denied
+*   Add reactions denied
+*   Speak denied
+
+This checks text and voice channels, and categories too. Once the bot finished,
+the number of updated channels will be shown.
+
+This is useful if you lost track of the permissions, or didn't enable the
+autoupdate function (see ``[p]warnset autoupdate``).
 
 """"""""""""""""
 warnset reinvite

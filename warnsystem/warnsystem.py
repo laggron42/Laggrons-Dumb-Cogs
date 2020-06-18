@@ -199,7 +199,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                 "delay_before_action": 60,  # if triggered twice within this delay, take action
                 "warn": {  # data of the warn
                     "level": 1,
-                    "reason": "Spamming in {channel.mention}.",
+                    "reason": "Sending messages too fast!",
                     "time": None,
                 },
             },
@@ -1237,7 +1237,6 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         Unmute a member muted with WarnSystem.
 
         If the member's roles were removed, they will be granted back.
-        Reason is optional and will be associated to the latest level 2 warn.
 
         *wsunmute = WarnSystem unmute. Feel free to add an alias.*
         """
@@ -1304,7 +1303,6 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
 
         If the reinvite setting is enabled, the bot will try to reinvite the member in DM, with\
         the optional given reason.
-        Reason is optional and will be associated to the latest level 5 warn.
 
         *wsunban = WarnSystem unban. Feel free to add an alias.*
         """
