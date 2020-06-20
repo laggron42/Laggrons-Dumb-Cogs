@@ -227,7 +227,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         self._init_logger()
         self.task: asyncio.Task
 
-    __version__ = "1.3.0"
+    __version__ = "1.3.1"
     __author__ = ["retke (El Laggron)"]
 
     def _init_logger(self):
@@ -520,17 +520,6 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                 await message.delete()
 
     # all warning commands
-    @commands.command()
-    @checks.mod_or_permissions(administrator=True)
-    @commands.guild_only()
-    async def note(self, ctx: commands.Context, member: discord.Member, *, reason: str):
-        """
-        Write a note in a member's modlog.
-
-        This does not count as a warning. The member won't receive a DM.
-        """
-        pass
-
     @commands.group(invoke_without_command=True, name="warn")
     @checks.mod_or_permissions(administrator=True)
     @commands.guild_only()
