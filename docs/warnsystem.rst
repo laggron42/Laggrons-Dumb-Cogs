@@ -725,8 +725,7 @@ wsunban
 
 Unbans a member from the server.
 
-If the reinvite setting is enabled (see ``[p]warnset reinvite``), the bot will
-try to send a DM to the member. This will also cancel any timer if this was a
+This will cancel any timer if this was a
 temporary ban to prevent unwanted unbans.
 
 This operation is not logged and doesn't take any reason.

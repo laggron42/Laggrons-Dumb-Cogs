@@ -1301,9 +1301,6 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         """
         Unban a member banned with WarnSystem.
 
-        If the reinvite setting is enabled, the bot will try to reinvite the member in DM, with\
-        the optional given reason.
-
         *wsunban = WarnSystem unban. Feel free to add an alias.*
         """
         guild = ctx.guild
