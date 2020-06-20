@@ -8,6 +8,7 @@ import os
 from typing import Optional
 from asyncio import TimeoutError as AsyncTimeoutError
 from abc import ABC
+from datetime import datetime, timedelta
 
 from redbot.core import commands, Config, checks
 from redbot.core.commands.converter import TimedeltaConverter
@@ -18,6 +19,8 @@ from redbot.core.utils.chat_formatting import pagify
 
 from . import errors
 from .api import API, UnavailableMember
+from .automod import AutomodMixin
+from .cache import MemoryCache
 from .converters import AdvancedMemberSelect
 from .settings import SettingsMixin
 
@@ -32,6 +35,62 @@ if listener is None:
 
     def listener(name=None):
         return lambda x: x
+
+
+def pretty_date(time: datetime):
+    """
+    Get a datetime object and return a pretty string like 'an hour ago',
+    'Yesterday', '3 months ago', 'just now', etc
+
+    This is based on this answer, modified for i18n compatibility:
+    https://stackoverflow.com/questions/1551382/user-friendly-time-format-in-python
+    """
+
+    def text(amount: float, unit: tuple):
+        amount = round(amount)
+        if amount > 1:
+            unit = unit[1]
+        else:
+            unit = unit[0]
+        return _("{amount} {unit} ago.").format(amount=amount, unit=unit)
+
+    units_name = {
+        0: (_("year"), _("years")),
+        1: (_("month"), _("months")),
+        2: (_("week"), _("weeks")),
+        3: (_("day"), _("days")),
+        4: (_("hour"), _("hours")),
+        5: (_("minute"), _("minutes")),
+        6: (_("second"), _("seconds")),
+    }
+    now = datetime.now()
+    diff = now - time
+    second_diff = diff.seconds
+    day_diff = diff.days
+    if day_diff < 0:
+        return ""
+    if day_diff == 0:
+        if second_diff < 10:
+            return _("Just now")
+        if second_diff < 60:
+            return text(second_diff, units_name[6])
+        if second_diff < 120:
+            return _("A minute ago")
+        if second_diff < 3600:
+            return text(second_diff / 60, units_name[5])
+        if second_diff < 7200:
+            return _("An hour ago")
+        if second_diff < 86400:
+            return text(second_diff / 3600, units_name[4])
+    if day_diff == 1:
+        return _("Yesterday")
+    if day_diff < 7:
+        return text(day_diff, units_name[3])
+    if day_diff < 31:
+        return text(day_diff / 7, units_name[2])
+    if day_diff < 365:
+        return text(day_diff / 30, units_name[1])
+    return text(day_diff / 365, units_name[0])
 
 
 # Red 3.1 backwards compatibility
@@ -66,7 +125,7 @@ class CompositeMetaClass(type(commands.Cog), type(ABC)):
 
 
 @cog_i18n(_)
-class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
+class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaClass):
     """
     An alternative to the Red core moderation system, providing a different system of moderation\
     similar to Dyno.
@@ -75,6 +134,9 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
     Full documentation and FAQ: http://laggron.red/warnsystem.html
     """
 
+    default_global = {
+        "data_version": "0.0"  # will be edited after config update, current version is 1.0
+    }
     default_guild = {
         "delete_message": False,  # if the [p]warn commands should delete the context message
         "show_mod": False,  # if the responsible mod should be revealed to the warned user
@@ -84,6 +146,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         "respect_hierarchy": False,  # if the bot should check if the mod is allowed by hierarchy
         # TODO use bot settingfor respect_hierarchy ?
         "reinvite": True,  # if the bot should try to send an invite to an unbanned/kicked member
+        "log_manual": False,  # if the bot should log manual kicks and bans
         "channels": {  # modlog channels
             "main": None,  # default
             "1": None,
@@ -126,7 +189,23 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             "5": 0xFF4C4C,
         },
         "url": None,  # URL set for the title of all embeds
-        "temporary_warns": [],  # list of temporary warns (need to unmute/unban after some time)
+        "temporary_warns": {},  # list of temporary warns (need to unmute/unban after some time)
+        "automod": {  # everything related to auto moderation
+            "enabled": False,
+            "antispam": {
+                "enabled": False,
+                "max_messages": 5,  # maximum number of messages allowed within the delay
+                "delay": 2,  # in seconds
+                "delay_before_action": 60,  # if triggered twice within this delay, take action
+                "warn": {  # data of the warn
+                    "level": 1,
+                    "reason": "Sending messages too fast!",
+                    "time": None,
+                },
+            },
+            "regex": {},  # all regex expressions
+            "warnings": [],  # all automatic warns
+        },
     }
     default_custom_member = {"x": []}  # cannot set a list as base group
 
@@ -134,6 +213,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         self.bot = bot
 
         self.data = Config.get_conf(self, 260, force_registration=True)
+        self.data.register_global(**self.default_global)
         self.data.register_guild(**self.default_guild)
         try:
             self.data.init_custom("MODLOGS", 2)
@@ -141,13 +221,13 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             pass
         self.data.register_custom("MODLOGS", **self.default_custom_member)
 
-        self.api = API(bot, self.data)
-        self.errors = errors
+        self.cache = MemoryCache(self.bot, self.data)
+        self.api = API(self.bot, self.data, self.cache)
 
-        self.task = bot.loop.create_task(self.api._loop_task())
         self._init_logger()
+        self.task: asyncio.Task
 
-    __version__ = "1.2.5"
+    __version__ = "1.3.0"
     __author__ = ["retke (El Laggron)"]
 
     def _init_logger(self):
@@ -440,10 +520,21 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
                 await message.delete()
 
     # all warning commands
-    @commands.group(invoke_without_command=True)
+    @commands.command()
     @checks.mod_or_permissions(administrator=True)
     @commands.guild_only()
-    async def warn(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
+    async def note(self, ctx: commands.Context, member: discord.Member, *, reason: str):
+        """
+        Write a note in a member's modlog.
+
+        This does not count as a warning. The member won't receive a DM.
+        """
+        pass
+
+    @commands.group(invoke_without_command=True, name="warn")
+    @checks.mod_or_permissions(administrator=True)
+    @commands.guild_only()
+    async def _warn(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
         Take actions against a user and log it.
         The warned user will receive a DM.
@@ -452,7 +543,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         """
         await self.call_warn(ctx, 1, member, reason)
 
-    @warn.command(name="1", aliases=["simple"])
+    @_warn.command(name="1", aliases=["simple"])
     @checks.mod_or_permissions(administrator=True)
     async def warn_1(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
@@ -462,7 +553,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         """
         await self.call_warn(ctx, 1, member, reason)
 
-    @warn.command(name="2", aliases=["mute"])
+    @_warn.command(name="2", aliases=["mute"])
     @checks.mod_or_permissions(administrator=True)
     async def warn_2(
         self,
@@ -487,7 +578,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         """
         await self.call_warn(ctx, 2, member, reason, time)
 
-    @warn.command(name="3", aliases=["kick"])
+    @_warn.command(name="3", aliases=["kick"])
     @checks.mod_or_permissions(administrator=True)
     async def warn_3(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
@@ -495,7 +586,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         """
         await self.call_warn(ctx, 3, member, reason)
 
-    @warn.command(name="4", aliases=["softban"])
+    @_warn.command(name="4", aliases=["softban"])
     @checks.mod_or_permissions(administrator=True)
     async def warn_4(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
@@ -509,7 +600,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         """
         await self.call_warn(ctx, 4, member, reason)
 
-    @warn.command(name="5", aliases=["ban"], usage="<member> [time] <reason>")
+    @_warn.command(name="5", aliases=["ban"], usage="<member> [time] <reason>")
     @checks.mod_or_permissions(administrator=True)
     async def warn_5(
         self,
@@ -762,10 +853,30 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             if total_warns > 0:
                 msg.append(f"{warning_str(i, total_warns > 1)}: {total_warns}")
         warn_field = "\n".join(msg) if len(msg) > 1 else msg[0]
+        warn_list = []
+        for case in cases[:-10:-1]:
+            level = case["level"]
+            reason = str(case["reason"]).splitlines()
+            if len(reason) > 1:
+                reason = reason[0] + "..."
+            else:
+                reason = reason[0]
+            date = pretty_date(self.api._get_datetime(case["time"]))
+            warn_list.append(f"**{warning_str(level, False)}:** {reason} • *{date}*\n")
+            if len("".join(warn_list)) > 1024:  # embed limits
+                break
         embed = discord.Embed(description=_("User modlog summary."))
         embed.set_author(name=f"{user} | {user.id}", icon_url=user.avatar_url)
-        embed.add_field(name=_("Total number of warnings: ") + str(len(cases)), value=warn_field)
+        embed.add_field(
+            name=_("Total number of warnings: ") + str(len(cases)), value=warn_field, inline=False
+        )
+        embed.add_field(
+            name=_("{len} last warnings").format(len=len(warn_list)),
+            value="".join(warn_list),
+            inline=False,
+        )
         embed.set_footer(text=_("Click on the reactions to scroll through the warnings"))
+        embed.colour = user.top_role.colour
         embeds.append(embed)
 
         for i, case in enumerate(cases):
@@ -773,6 +884,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             moderator = ctx.guild.get_member(case["author"])
             moderator = "ID: " + str(case["author"]) if not moderator else moderator.mention
 
+            time = self.api._get_datetime(case["time"])
             embed = discord.Embed(
                 description=_("Case #{number} informations").format(number=i + 1)
             )
@@ -782,16 +894,17 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             )
             embed.add_field(name=_("Moderator"), value=moderator, inline=True)
             if case["duration"]:
+                duration = self.api._get_timedelta(case["duration"])
                 embed.add_field(
                     name=_("Duration"),
                     value=_("{duration}\n(Until {date})").format(
-                        duration=case["duration"], date=case["until"]
+                        duration=self.api._format_timedelta(duration),
+                        date=self.api._format_datetime(time + duration),
                     ),
                 )
             embed.add_field(name=_("Reason"), value=case["reason"], inline=False),
-            embed.set_footer(text=_("The action was taken on {date}").format(date=case["time"]))
-            embed.color = await self.data.guild(ctx.guild).colors.get_raw(level)
-
+            embed.timestamp = time
+            embed.colour = await self.data.guild(ctx.guild).colors.get_raw(level)
             embeds.append(embed)
 
         controls = {"⬅": menus.prev_page, "❌": menus.close_menu, "➡": menus.next_page}
@@ -815,6 +928,57 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         """
         Edit a case, this is linked to the warnings menu system.
         """
+
+        async def edit_message(channel_id: int, message_id: int, new_reason: str):
+            channel: discord.TextChannel = guild.get_channel(channel_id)
+            if channel is None:
+                log.warn(
+                    f"[Guild {guild.id}] Failed to edit modlog message. "
+                    f"Channel {channel_id} not found."
+                )
+                return False
+            try:
+                message: discord.Message = await channel.fetch_message(message_id)
+            except discord.errors.NotFound:
+                log.warn(
+                    f"[Guild {guild.id}] Failed to edit modlog message. "
+                    f"Message {message_id} in channel {channel.id} not found."
+                )
+                return False
+            except discord.errors.Forbidden:
+                log.warn(
+                    f"[Guild {guild.id}] Failed to edit modlog message. "
+                    f"No permissions to fetch messages in channel {channel.id}."
+                )
+                return False
+            except discord.errors.HTTPException as e:
+                log.error(
+                    f"[Guild {guild.id}] Failed to edit modlog message. API exception raised.",
+                    exc_info=e,
+                )
+                return False
+            try:
+                embed: discord.Embed = message.embeds[0]
+                embed.set_field_at(
+                    len(embed.fields) - 2, name=_("Reason"), value=new_reason, inline=False
+                )
+            except IndexError as e:
+                log.error(
+                    f"[Guild {guild.id}] Failed to edit modlog message. Embed is malformed.",
+                    exc_info=e,
+                )
+                return False
+            try:
+                await message.edit(embed=embed)
+            except discord.errors.HTTPException as e:
+                log.error(
+                    f"[Guild {guild.id}] Failed to edit modlog message. "
+                    "Unknown error when attempting message edition.",
+                    exc_info=e,
+                )
+                return False
+            return True
+
         guild = ctx.guild
         if page == 0:
             # first page, no case to edit
@@ -863,8 +1027,17 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         if pred.result:
             async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
                 logs[page - 1]["reason"] = new_reason
+                try:
+                    channel_id, message_id = logs[page - 1]["modlog_message"].values()
+                except KeyError:
+                    result = None
+                else:
+                    result = await edit_message(channel_id, message_id, new_reason)
             await message.clear_reactions()
-            await message.edit(content=_("The reason was successfully edited!"), embed=None)
+            text = _("The reason was successfully edited!\n")
+            if result is False:
+                text += _("*The modlog message couldn't be edited. Check your logs for details.*")
+            await message.edit(content=text, embed=None)
         else:
             await message.clear_reactions()
             await message.edit(content=_("The reason was not edited."), embed=None)
@@ -882,12 +1055,47 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         """
         Remove a case, this is linked to the warning system.
         """
+
+        async def delete_message(channel_id: int, message_id: int):
+            channel: discord.TextChannel = guild.get_channel(channel_id)
+            if channel is None:
+                log.warn(
+                    f"[Guild {guild.id}] Failed to delete modlog message. "
+                    f"Channel {channel_id} not found."
+                )
+                return False
+            try:
+                message: discord.Message = await channel.fetch_message(message_id)
+            except discord.errors.NotFound:
+                log.warn(
+                    f"[Guild {guild.id}] Failed to delete modlog message. "
+                    f"Message {message_id} in channel {channel.id} not found."
+                )
+                return False
+            except discord.errors.Forbidden:
+                log.warn(
+                    f"[Guild {guild.id}] Failed to delete modlog message. "
+                    f"No permissions to fetch messages in channel {channel.id}."
+                )
+                return False
+            except discord.errors.HTTPException as e:
+                log.error(
+                    f"[Guild {guild.id}] Failed to delete modlog message. API exception raised.",
+                    exc_info=e,
+                )
+                return False
+            try:
+                await message.delete()
+            except discord.errors.HTTPException as e:
+                log.error(
+                    f"[Guild {guild.id}] Failed to delete modlog message. "
+                    "Unknown error when attempting message deletion.",
+                    exc_info=e,
+                )
+                return False
+            return True
+
         guild = ctx.guild
-        if page == 0:
-            await message.remove_reaction(emoji, ctx.author)
-            return await menus.menu(
-                ctx, pages, controls, message=message, page=page, timeout=timeout
-            )
         await message.clear_reactions()
         old_embed = message.embeds[0]
         embed = discord.Embed()
@@ -897,26 +1105,36 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         member = self.bot.get_user(member_id) or UnavailableMember(
             self.bot, guild._state, member_id
         )
-        level = int(re.match(r".*\(([0-9]*)\)", old_embed.fields[0].value).group(1))
-        can_unmute = False
-        add_roles = False
-        if level == 2:
-            mute_role = guild.get_role(await self.data.guild(guild).mute_role())
-            member = guild.get_member(member.id)
-            if member:
-                if mute_role and mute_role in member.roles:
-                    can_unmute = True
-                add_roles = await self.data.guild(guild).remove_roles()
-        description = _(
-            "Case #{number} deletion.\n**Click on the reaction to confirm your action.**"
-        ).format(number=page)
-        if can_unmute or add_roles:
-            description += _("\nNote: Deleting the case will also do the following:")
-            if can_unmute:
-                description += _("\n- unmute the member")
-            if add_roles:
-                description += _("\n- add all roles back to the member")
-        embed.description = description
+        if page == 0:
+            # no warning specified, mod wants to completly clear the member
+            embed.colour = 0xEE2B2B
+            embed.description = _(
+                "Member {member}'s clearance. By selecting ❌ on the user modlog summary, you can "
+                "remove all warnings given to {member}. __All levels and notes are affected.__\n"
+                "**Click on the reaction to confirm the removal of the entire user's modlog. "
+                "This cannot be undone.**"
+            ).format(member=str(member))
+        else:
+            level = int(re.match(r".*\(([0-9]*)\)", old_embed.fields[0].value).group(1))
+            can_unmute = False
+            add_roles = False
+            if level == 2:
+                mute_role = guild.get_role(await self.cache.get_mute_role(guild))
+                member = guild.get_member(member.id)
+                if member:
+                    if mute_role and mute_role in member.roles:
+                        can_unmute = True
+                    add_roles = await self.data.guild(guild).remove_roles()
+            description = _(
+                "Case #{number} deletion.\n**Click on the reaction to confirm your action.**"
+            ).format(number=page)
+            if can_unmute or add_roles:
+                description += _("\nNote: Deleting the case will also do the following:")
+                if can_unmute:
+                    description += _("\n- unmute the member")
+                if add_roles:
+                    description += _("\n- add all roles back to the member")
+            embed.description = description
         await message.edit(embed=embed)
         menus.start_adding_reactions(message, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
         pred = predicates.ReactionPredicate.yes_or_no(message, ctx.author)
@@ -926,31 +1144,47 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             await message.clear_reactions()
             await message.edit(content=_("Question timed out."), embed=None)
             return
-        if pred.result:
-            async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
-                try:
-                    roles = logs[page - 1]["roles"]
-                except KeyError:
-                    roles = []
-                logs.remove(logs[page - 1])
-            log.debug(
-                f"[Guild {guild.id}] Removed case #{page} from member {member} (ID: {member.id})."
+        if not pred.result:
+            await message.clear_reactions()
+            await message.edit(content=_("Nothing was removed."), embed=None)
+            return
+        if page == 0:
+            # removing entire modlog
+            await self.data.custom("MODLOGS", guild.id, member.id).x.set([])
+            log.debug(f"[Guild {guild.id}] Cleared modlog of member {member} (ID: {member.id}).")
+            await message.clear_reactions()
+            await message.edit(content=_("User modlog cleared."), embed=None)
+            return
+        async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
+            try:
+                roles = logs[page - 1]["roles"]
+            except KeyError:
+                roles = []
+            try:
+                channel_id, message_id = logs[page - 1]["modlog_message"].values()
+            except KeyError:
+                result = None
+            else:
+                result = await delete_message(channel_id, message_id)
+            logs.remove(logs[page - 1])
+        log.debug(
+            f"[Guild {guild.id}] Removed case #{page} from member {member} (ID: {member.id})."
+        )
+        await message.clear_reactions()
+        if can_unmute:
+            await member.remove_roles(
+                mute_role,
+                reason=_("Warning deleted by {author}").format(
+                    author=f"{str(ctx.author)} (ID: {ctx.author.id})"
+                ),
             )
-            await message.clear_reactions()
-            if can_unmute:
-                await member.remove_roles(
-                    mute_role,
-                    reason=_("Warning deleted by {author}").format(
-                        author=f"{str(ctx.author)} (ID: {ctx.author.id})"
-                    ),
-                )
-            if roles:
-                roles = [guild.get_role(x) for x in roles]
-                await member.add_roles(*roles, reason=_("Adding removed roles back after unmute."))
-            await message.edit(content=_("The case was successfully deleted!"), embed=None)
-        else:
-            await message.clear_reactions()
-            await message.edit(content=_("The case was not deleted."), embed=None)
+        if roles:
+            roles = [guild.get_role(x) for x in roles]
+            await member.add_roles(*roles, reason=_("Adding removed roles back after unmute."))
+        text = _("The case was successfully deleted!")
+        if result is False:
+            text += _("*The modlog message couldn't be deleted. Check your logs for details.*")
+        await message.edit(content=_("The case was successfully deleted!"), embed=None)
 
     @commands.command()
     @checks.mod()
@@ -962,6 +1196,9 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
         guild = ctx.guild
         full_text = ""
         warns = await self.api.get_all_cases(guild)
+        if not warns:
+            await ctx.send(_("No warnings have been issued in this server yet."))
+            return
         for i, warn in enumerate(warns, start=1):
             text = _(
                 "--- Case {number} ---\n"
@@ -972,8 +1209,10 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
                 "Date:      {time}\n"
             ).format(number=i, **warn)
             if warn["duration"]:
+                duration = self.api._get_timedelta(warn["duration"])
                 text += _("Duration:  {duration}\nUntil:     {until}\n").format(
-                    duration=warn["duration"], until=warn["until"]
+                    duration=self.api._format_timedelta(duration),
+                    until=self.api._format_datetime(warn["time"] + duration),
                 )
             text += "\n\n"
             full_text = text + full_text
@@ -990,6 +1229,95 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             for i, x in enumerate(pages, start=1)
         ]
         await menus.menu(ctx=ctx, pages=pages, controls=menus.DEFAULT_CONTROLS, timeout=60)
+
+    @commands.command()
+    @checks.mod()
+    async def wsunmute(self, ctx: commands.Context, member: discord.Member):
+        """
+        Unmute a member muted with WarnSystem.
+
+        If the member's roles were removed, they will be granted back.
+
+        *wsunmute = WarnSystem unmute. Feel free to add an alias.*
+        """
+        guild = ctx.guild
+        mute_role = guild.get_role(await self.cache.get_mute_role(guild))
+        if not mute_role:
+            await ctx.send(_("The mute role is not set or lost."))
+            return
+        if mute_role not in member.roles:
+            await ctx.send(_("That member isn't muted."))
+            return
+        case = await self.cache.get_temp_action(guild, member)
+        if case and case["level"] == 2:
+            roles = case["roles"]
+            await self.cache.remove_temp_action(guild, member)
+        else:
+            cases = await self.api.get_all_cases(guild, member)
+            roles = []
+            for data in cases[::-1]:
+                if data["level"] == 2:
+                    try:
+                        roles = data["roles"]
+                    except KeyError:
+                        continue
+                    break
+        await member.remove_roles(
+            mute_role,
+            reason=_("[WarnSystem] Member unmuted by {author} (ID: {author.id})").format(
+                author=ctx.author
+            ),
+        )
+        roles = list(filter(None, [guild.get_role(x) for x in roles]))
+        if not roles:
+            await ctx.send(_("Member unmuted."))
+            return
+        await ctx.send(
+            _("Member unmuted. {len_roles} roles to reassign...").format(len_roles=len(roles))
+        )
+        async with ctx.typing():
+            fails = []
+            for role in roles:
+                try:
+                    await member.add_roles(role)
+                except discord.errors.HTTPException as e:
+                    log.error(
+                        f"Failed to reapply role {role} ({role.id}) on guild {guild} "
+                        f"({guild.id}) after unmute.",
+                        exc_info=e,
+                    )
+                    fails.append(role)
+        text = _("Done.")
+        if fails:
+            text.append(_("\n\nFailed to add {fails}/{len_roles} roles back:\n"))
+            for role in fails:
+                text.append(f"- {role.name}\n")
+        for page in pagify(text):
+            await ctx.send(page)
+
+    @commands.command()
+    @checks.mod()
+    async def wsunban(self, ctx: commands.Context, member: UnavailableMember):
+        """
+        Unban a member banned with WarnSystem.
+
+        *wsunban = WarnSystem unban. Feel free to add an alias.*
+        """
+        guild = ctx.guild
+        bans = await guild.bans()
+        if member.id not in [x.user.id for x in bans]:
+            await ctx.send(_("That user is not banned."))
+            return
+        try:
+            await guild.unban(member)
+        except discord.errors.HTTPException as e:
+            await ctx.send(_("Failed to unban the given member. Check your logs for details."))
+            log.error(f"Can't unban user {member.id} from guild {guild} ({guild.id})", exc_info=e)
+            return
+        case = await self.cache.get_temp_action(guild, member)
+        if case and case["level"] == 5:
+            await self.cache.remove_temp_action(guild, member)
+        await ctx.send(_("User unbanned."))
 
     @commands.command(hidden=True)
     async def warnsysteminfo(self, ctx):
@@ -1012,15 +1340,14 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
     async def on_member_unban(self, guild: discord.Guild, user: discord.User):
         # if a member gets unbanned, we check if he was temp banned with warnsystem
         # if it was, we remove the case so it won't unban him a second time
-        async with self.data.guild(guild).temporary_warns() as temp_warns:
-            to_remove = []
-            for case in temp_warns:
-                if case["level"] == 2 or case["member"] != user.id:
-                    continue
-                to_remove.append(case)
-            for removal in to_remove:
-                temp_warns.remove(removal)
+        warns = await self.cache.get_temp_action(guild)
+        to_remove = []  # there can be multiple temp bans, let's not question the moderators
+        for member, data in warns.items():
+            if data["level"] == 2 or data["member"] != user.id:
+                continue
+            to_remove.append(member)
         if to_remove:
+            await self.cache.bulk_remove_temp_action(guild, to_remove)
             log.info(
                 f"[Guild {guild.id}] The temporary ban of user {user} (ID: {user.id}) "
                 "was cancelled due to his manual unban."
@@ -1029,20 +1356,13 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
     @listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         guild = after.guild
-        mute_role = guild.get_role(await self.data.guild(guild).mute_role())
+        mute_role = guild.get_role(await self.cache.get_mute_role(guild))
         if not mute_role:
             return
         if not (mute_role in before.roles and mute_role not in after.roles):
             return
-        async with self.data.guild(guild).temporary_warns() as temp_warns:
-            to_remove = []
-            for case in temp_warns:
-                if case["level"] == 5 or case["member"] != after.id:
-                    continue
-                to_remove.append(case)
-            for removal in to_remove:
-                temp_warns.remove(removal)
-        if to_remove:
+        if after.id in self.cache.temp_actions:
+            await self.cache.remove_temp_action(guild, after)
             log.info(
                 f"[Guild {guild.id}] The temporary mute of member {after} (ID: {after.id}) "
                 "was ended due to a manual unmute (role removed)."
@@ -1055,7 +1375,7 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
             return
         if not await self.data.guild(guild).update_mute():
             return
-        role = guild.get_role(await self.data.guild(guild).mute_role())
+        role = guild.get_role(await self.cache.get_mute_role(guild))
         if not role:
             return
         try:
@@ -1079,6 +1399,61 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
                 f"(ID: {channel.id}) due to an unknown error.",
                 exc_info=e,
             )
+
+    @listener()
+    async def on_member_ban(self, guild: discord.Guild, member: discord.Member):
+        # most of this code is from Cog-Creators, modlog cog
+        # https://github.com/Cog-Creators/Red-DiscordBot/blob/bc21f779762ec9f460aecae525fdcd634f6c2d85/redbot/core/modlog.py#L68
+        if not guild.me.guild_permissions.view_audit_log:
+            return
+        if not await self.data.guild(guild).log_manual():
+            return
+        # check for that before doing anything else, means WarnSystem isn't setup
+        try:
+            await self.api.get_modlog_channel(guild, 5)
+        except errors.NotFound:
+            return
+        when = datetime.utcnow()
+        before = when + timedelta(minutes=1)
+        after = when - timedelta(minutes=1)
+        await asyncio.sleep(10)  # prevent small delays from causing a 5 minute delay on entry
+        attempts = 0
+        # wait up to an hour to find a matching case
+        while attempts < 12:
+            attempts += 1
+            try:
+                entry = await guild.audit_logs(
+                    action=discord.AuditLogAction.ban, before=before, after=after
+                ).find(lambda e: e.target.id == member.id and after < e.created_at < before)
+            except discord.Forbidden:
+                break
+            except discord.HTTPException:
+                pass
+            else:
+                if entry:
+                    if entry.user.id != guild.me.id:
+                        # Don't create modlog entires for the bot's own bans, cogs do this.
+                        mod, reason, date = entry.user, entry.reason, entry.created_at
+                        try:
+                            await self.api.warn(
+                                guild,
+                                [member],
+                                mod,
+                                5,
+                                reason,
+                                date=date,
+                                log_dm=False,
+                                take_action=False,
+                            )
+                        except Exception as e:
+                            log.error(
+                                f"[Guild {guild.id}] Failed to create a case based on manual ban. "
+                                f"Member: {member} ({member.id}). Author: {mod} ({mod.id}). "
+                                f"Reason: {reason}",
+                                exc_info=e,
+                            )
+                    return
+            await asyncio.sleep(300)
 
     @listener()
     async def on_command_error(self, ctx, error):
@@ -1114,3 +1489,4 @@ class WarnSystem(SettingsMixin, BaseCog, metaclass=CompositeMetaClass):
 
         # stop checking for unmute and unban
         self.task.cancel()
+        self.api.disable_automod()

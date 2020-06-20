@@ -2,8 +2,9 @@ from abc import ABC
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from redbot.core import Config, commands
+    from redbot.core import Config
     from redbot.core.bot import Red
+    from .cache import MemoryCache
     from .api import API
 
 
@@ -16,7 +17,8 @@ class MixinMeta(ABC):
     Credit to https://github.com/Cog-Creators/Red-DiscordBot (mod cog) for all mixin stuff.
     """
 
-    def __init__(self, *_args):
+    def __init__(self):
         self.bot: Red
         self.data: Config
+        self.cache: MemoryCache
         self.api: API

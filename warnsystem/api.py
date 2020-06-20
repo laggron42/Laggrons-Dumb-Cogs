@@ -2,21 +2,23 @@ import asyncio
 import discord
 import logging
 import re
-import abc
 
 from copy import deepcopy
+from collections import namedtuple
 from typing import Union, Optional, Iterable, Callable, Awaitable
 from datetime import datetime, timedelta
 
-from redbot.core.utils.mod import is_allowed_by_hierarchy
+from redbot.core import Config
+from redbot.core.bot import Red
 from redbot.core.i18n import Translator
-from redbot.core.commands import BadArgument, Converter, MemberConverter
+from redbot.core.commands import BadArgument, MemberConverter
 
 try:
     from redbot.core.modlog import get_modlog_channel as get_red_modlog_channel
 except RuntimeError:
     pass  # running sphinx-build raises an error when importing this module
 
+from .cache import MemoryCache
 from . import errors
 
 log = logging.getLogger("laggron.warnsystem")
@@ -30,6 +32,7 @@ class FakeRole:
     """
 
     position = 0
+    colour = discord.Embed.Empty
 
 
 class UnavailableMember(discord.abc.User, discord.abc.Messageable):
@@ -139,20 +142,23 @@ class API:
             version = bot.get_cog('WarnSystem').__version__
     """
 
-    def __init__(self, bot, config):
+    def __init__(self, bot: Red, config: Config, cache: MemoryCache):
         self.bot = bot
         self.data = config
+        self.cache = cache
+        self.warned_guilds = []  # see automod_check_for_autowarn
+        self.antispam = {}  # see automod_process_antispam
+        self.antispam_warn_queue = {}  # see automod_warn
+        self.automod_warn_task: asyncio.Task
 
-        # importing this here prevents a RuntimeError when building the documentation
-        # TODO find another solution
+    def _get_datetime(self, time: int) -> datetime:
+        return datetime.fromtimestamp(int(time))
 
-    def _get_datetime(self, time: str) -> datetime:
-        try:
-            time = datetime.strptime(time, "%a %d %B %Y %H:%M:%S")
-        except ValueError:
-            # seconds were added in an update, this might be a case made before that update
-            time = datetime.strptime(time, "%a %d %B %Y %H:%M")
-        return time
+    def _get_timedelta(self, time: int) -> timedelta:
+        return timedelta(seconds=int(time))
+
+    def _format_datetime(self, time: datetime):
+        return time.strftime("%a %d %B %Y %H:%M:%S")
 
     def _format_timedelta(self, time: timedelta):
         """Format a timedelta object into a string"""
@@ -192,19 +198,18 @@ class API:
             string = strings[0]
         return string
 
-    async def _start_timer(self, guild: discord.Guild, case: dict) -> bool:
+    async def _start_timer(self, guild: discord.Guild, member: discord.Member, case: dict) -> bool:
         """Start the timer for a temporary mute/ban."""
-        if not case["until"]:
+        if not case["duration"]:
             raise errors.BadArgument("No duration for this warning!")
-        async with self.data.guild(guild).temporary_warns() as warns:
-            warns.append(case)
+        await self.cache.add_temp_action(guild, member, case)
         return True
 
     async def _mute(self, member: discord.Member, reason: Optional[str] = None):
         """Mute an user on the guild."""
         old_roles = []
         guild = member.guild
-        mute_role = guild.get_role(await self.data.guild(guild).mute_role())
+        mute_role = guild.get_role(await self.cache.get_mute_role(guild))
         remove_roles = await self.data.guild(guild).remove_roles()
         if not mute_role:
             raise errors.MissingMuteRole("You need to create the mute role before doing this.")
@@ -218,13 +223,12 @@ class API:
             for role in old_roles:
                 try:
                     await member.remove_roles(role, reason=reason)
-                except discord.errors.HTTPException as e:
+                except discord.errors.HTTPException:
                     fails.append(role)
             if fails:
                 log.warn(
                     f"[Guild {guild.id}] Failed to remove roles from {member} (ID: {member.id}) "
                     f"while muting. Roles: {', '.join([f'{x.name} ({x.id})' for x in fails])}",
-                    exc_info=e,
                 )
         await member.add_roles(mute_role, reason=reason)
         return old_roles
@@ -232,7 +236,7 @@ class API:
     async def _unmute(self, member: discord.Member, reason: str, old_roles: list = None):
         """Unmute an user on the guild."""
         guild = member.guild
-        mute_role = guild.get_role(await self.data.guild(guild).mute_role())
+        mute_role = guild.get_role(await self.cache.get_mute_role(guild))
         if not mute_role:
             raise errors.MissingMuteRole(
                 f"Lost the mute role on guild {guild.name} (ID: {guild.id}"
@@ -250,6 +254,7 @@ class API:
         reason: Optional[str] = None,
         duration: Optional[timedelta] = None,
         roles: Optional[list] = None,
+        modlog_message: Optional[discord.Message] = None,
     ) -> dict:
         """Create a new case for a member. Don't call this, call warn instead."""
         data = {
@@ -258,13 +263,15 @@ class API:
             if not isinstance(author, (discord.User, discord.Member))
             else author.id,
             "reason": reason,
-            "time": time.strftime("%a %d %B %Y %H:%M:%S"),
-            "duration": None if not duration else self._format_timedelta(duration),
-            "until": None
-            if not duration
-            else (datetime.today() + duration).strftime("%a %d %B %Y %H:%M:%S"),
+            "time": int(time.timestamp()),  # seconds since epoch
+            "duration": None if not duration else duration.total_seconds(),
             "roles": [] if not roles else [x.id for x in roles],
         }
+        if modlog_message:
+            data["modlog_message"] = {
+                "channel_id": modlog_message.channel.id,
+                "message_id": modlog_message.id,
+            }
         async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
             logs.append(data)
         return data
@@ -378,10 +385,10 @@ class API:
                 if time:
                     log["time"] = self._get_datetime(time)
                 # gotta get that state somehow
-                log["member"] = self.bot.get_user(member) or UnavailableMember(
+                log["member"] = self.bot.get_user(int(member)) or UnavailableMember(
                     self.bot, self.bot.user._state, member
                 )
-                log["author"] = self.bot.get_user(log["author"]) or UnavailableMember(
+                log["author"] = self.bot.get_user(int(log["author"])) or UnavailableMember(
                     self.bot, self.bot.user._state, log["author"]
                 )
                 all_cases.append(log)
@@ -425,7 +432,7 @@ class API:
             raise errors.BadArgument("The reason must not be above 1024 characters.")
         case = await self.get_case(guild, user, index)
         case["reason"] = new_reason
-        case["time"] = case["time"].strftime("%a %d %B %Y %H:%M")
+        case["time"] = int(case["time"].timestamp())
         async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
             logs[index - 1] = case
         return True
@@ -521,6 +528,7 @@ class API:
         level: int,
         reason: Optional[str] = None,
         time: Optional[timedelta] = None,
+        date: Optional[datetime] = None,
         message_sent: bool = True,
     ) -> tuple:
         """
@@ -545,6 +553,8 @@ class API:
             The reason of the warning.
         time: Optional[timedelta]
             The time before the action ends. Only for mute and ban.
+        date: Optional[datetime]
+            When the action was taken.
         message_sent: bool
             Set to :py:obj:`False` if the embed couldn't be sent to the warned user.
 
@@ -599,7 +609,7 @@ class API:
                 invite = await guild.create_invite(max_uses=1)
             except Exception:
                 invite = _("*[couldn't create an invite]*")
-        today = datetime.today().strftime("%a %d %B %Y %H:%M")
+        today = date.strftime("%a %d %B %Y %H:%M")
         if time:
             duration = self._format_timedelta(time)
         else:
@@ -622,15 +632,15 @@ class API:
             log_embed.add_field(name=_("Duration"), value=duration, inline=True)
         log_embed.add_field(name=_("Reason"), value=reason + mod_message, inline=False)
         log_embed.add_field(name=_("Status"), value=current_status(True), inline=False)
-        log_embed.set_footer(text=today)
+        log_embed.timestamp = date
         log_embed.set_thumbnail(url=await self.data.guild(guild).thumbnails.get_raw(level))
-        log_embed.color = await self.data.guild(guild).colors.get_raw(level)
+        log_embed.colour = await self.data.guild(guild).colors.get_raw(level)
         log_embed.url = await self.data.guild(guild).url()
         log_embed.set_image(url=link.group() if link else "")
         if not message_sent:
             log_embed.description += _(
-                "\n\n***The message couldn't be delivered to the member. We may don't "
-                "have a server in common or he blocked me/messages from this guild.***"
+                "\n\n***The message could not be delivered to the user. They may have DMs "
+                "disabled, blocked the bot, or may not have a mutual server.***"
             )
 
         # embed for the member in DM
@@ -654,6 +664,11 @@ class API:
     async def maybe_create_mute_role(self, guild: discord.Guild) -> bool:
         """
         Create the mod role for WarnSystem if it doesn't exist.
+        This will also edit all channels to deny the following permissions to this role:
+
+        *   ``send_messages``
+        *   ``add_reactions``
+        *   ``speak``
 
         Parameters
         ----------
@@ -662,20 +677,19 @@ class API:
 
         Returns
         -------
-        bool
-            *   :py:obj:`True` if the role was successfully created.
+        Union[bool, list]
             *   :py:obj:`False` if the role already exists.
-            *   :py:class:`list` of :py:class:`str` if some channel updates failed, containing
-                the message explaining the error for each message
+            *   :py:class:`list` if the role was created, with a list of errors for each channel.
+                Empty list means completly successful edition.
 
         Raises
         ------
         ~warnsystem.errors.MissingPermissions
-            The bot lacks the :attr:`discord.PermissionOverwrite.create_roles` permission.
+            The bot lacks the :attr:`discord.Permissions.create_roles` permission.
         discord.errors.HTTPException
             Creating the role failed.
         """
-        role = await self.data.guild(guild).mute_role()
+        role = await self.cache.get_mute_role(guild)
         role = guild.get_role(role)
         if role:
             return False
@@ -701,13 +715,13 @@ class API:
                 "I can add it to muted members."
             ),
         )
+        perms = discord.PermissionOverwrite(send_messages=False, add_reactions=False, speak=False)
         errors = []
-        for channel in [x for x in guild.channels if isinstance(x, discord.TextChannel)]:
+        for channel in guild.channels:
             try:
                 await channel.set_permissions(
-                    role,
-                    send_messages=False,
-                    add_reactions=False,
+                    target=role,
+                    overwrite=perms,
                     reason=_(
                         "Setting up WarnSystem mute. All muted members will have this role, "
                         "feel free to edit its permissions."
@@ -744,7 +758,7 @@ class API:
                     f"{channel.id}) for setting up the mute role because of an unknwon error.",
                     exc_info=e,
                 )
-        await self.data.guild(guild).mute_role.set(role.id)
+        await self.cache.update_mute_role(guild, role)
         return errors
 
     async def format_reason(self, guild: discord.Guild, reason: str = None) -> str:
@@ -778,9 +792,11 @@ class API:
         level: int,
         reason: Optional[str] = None,
         time: Optional[timedelta] = None,
+        date: Optional[datetime] = None,
         log_modlog: Optional[bool] = True,
         log_dm: Optional[bool] = True,
         take_action: Optional[bool] = True,
+        automod: Optional[bool] = True,
         progress_tracker: Optional[Callable[[int], Awaitable[None]]] = None,
     ) -> bool:
         """
@@ -817,6 +833,8 @@ class API:
             The optional reason of the warning. It is strongly recommanded to set one.
         time: Optional[timedelta]
             The time before cancelling the action. This only works for a mute or a ban.
+        date: Optional[datetime]
+            When the action was taken. Only use if you want to overwrite the current date and time.
         log_modlog: Optional[bool]
             Specify if an embed should be posted to the modlog channel. Default to :py:obj:`True`.
         log_dm: Optional[bool]
@@ -825,6 +843,9 @@ class API:
             Specify if the bot should take action on the member (mute, kick, softban, ban). If set
             to :py:obj:`False`, the bot will only send a log embed to the member and in the modlog.
             Default to :py:obj:`True`.
+        automod: Optional[bool]
+            Set to :py:obj:`False` to skip automod, preventing multiple warnings at once and
+            saving performances. Automod might trigger on a next warning though.
         progress_tracker: Optional[Callable[[int], Awaitable[None]]]
             an async callable (function or lambda) which takes one argument to follow the progress
             of the warn. The argument is the number of warns committed. Here's an example:
@@ -914,7 +935,7 @@ class API:
             # send the message to the user
             if log_modlog or log_dm:
                 modlog_e, user_e = await self.get_embeds(
-                    guild, member, author, level, reason, time
+                    guild, member, author, level, reason, time, date
                 )
             if log_dm:
                 try:
@@ -973,25 +994,32 @@ class API:
                     return e
             # actions were taken, time to log
             if log_modlog:
-                await mod_channel.send(embed=modlog_e)
+                modlog_message = await mod_channel.send(embed=modlog_e)
+            else:
+                modlog_message = None
             data = await self._create_case(
-                guild, member, author, level, datetime.now(), reason, time, roles
+                guild, member, author, level, date, reason, time, roles, modlog_message,
             )
             # start timer if there is a temporary warning
             if time and (level == 2 or level == 5):
-                data["member"] = member.id
-                await self._start_timer(guild, data)
+                await self._start_timer(guild, member, data)
+            if automod:
+                # This function can be pretty heavy, and the response can be seriously delayed
+                # because of this, so we make it a side process instead
+                self.bot.loop.create_task(self.automod_check_for_autowarn(member, author, level))
             i += 1
             if progress_tracker:
                 await progress_tracker(i)
 
+        # TODO: fucking remove that before I forget
+        log_dm = False
         if not 1 <= level <= 5:
             raise errors.InvalidLevel("The level must be between 1 and 5.")
         # we get the modlog channel now to make sure it exists before doing anything
         if log_modlog:
             mod_channel = await self.get_modlog_channel(guild, level)
         # check if the mute role exists
-        mute_role = guild.get_role(await self.data.guild(guild).mute_role())
+        mute_role = guild.get_role(await self.cache.get_mute_role(guild))
         if not mute_role and level == 2:
             raise errors.MissingMuteRole("You need to create the mute role before doing this.")
         # we check for all permission problem that can occur before calling the API
@@ -1046,6 +1074,8 @@ class API:
                 audit_reason += _("Reason: {reason}").format(reason=reason)
             else:
                 audit_reason += _("Reason too long to be shown.")
+        if not date:
+            date = datetime.now()
 
         i = 0
         fails = [await warn_member(x, audit_reason) for x in members if x]
@@ -1098,28 +1128,26 @@ class API:
                         f"(ID: {member.id}) after its temporary ban."
                     )
 
-        guilds = await self.data.all_guilds()
         now = datetime.today()
-
-        for guild, data in guilds.items():
-            guild = self.bot.get_guild(guild)
-            if not guild:
+        for guild in self.bot.guilds:
+            data = await self.cache.get_temp_action(guild)
+            if not data:
                 continue
-            data = data["temporary_warns"]
             to_remove = []
-            for action in data:
-                taken_on = action["time"]
-                until = self._get_datetime(action["until"])
+            for member, action in data.items():
+                member = int(member)
+                taken_on = self._get_datetime(action["time"])
+                duration = self._get_timedelta(action["duration"])
                 author = guild.get_member(action["author"])
-                member = guild.get_member(action["member"])
+                member = guild.get_member(member)
                 case_reason = action["reason"]
                 level = action["level"]
                 action_str = _("mute") if level == 2 else _("ban")
                 if not member:
+                    member = UnavailableMember(self.bot, guild._state, member)
                     if level == 2:
-                        to_remove.append(action)
+                        to_remove.append(member)
                         continue
-                    member = UnavailableMember(self.bot, guild._state, action["member"])
                 roles = [guild.get_role(x) for x in action.get("roles") or []]
 
                 reason = _(
@@ -1129,10 +1157,10 @@ class API:
                     action=action_str,
                     member=member,
                     author=author if author else action["author"],
-                    time=action["duration"],
+                    time=self._format_timedelta(duration),
                     reason=case_reason,
                 )
-                if until < now:
+                if (taken_on + duration) < now:
                     # end of warn
                     try:
                         if level == 2:
@@ -1156,16 +1184,15 @@ class API:
                     else:
                         log.debug(
                             f"[Guild {guild.id}] Ended timed {action_str} of {member} (ID: "
-                            f"{member.id}) taken on {taken_on} requested by {author} (ID: "
-                            f"{author.id}) that lasted for {action['duration']} for the "
-                            f"reason {case_reason}\nCurrent time: {now}\n"
-                            f"Expected end time of warn: {until}"
+                            f"{member.id}) taken on {self._format_datetime(taken_on)} requested "
+                            f"by {author} (ID: {author.id}) that lasted for "
+                            f"{self._format_timedelta(duration)} for the reason {case_reason}"
+                            f"\nCurrent time: {now}\nExpected end time of warn: "
+                            f"{self._format_datetime(taken_on + duration)}"
                         )
-                    to_remove.append(action)
-            for item in to_remove:
-                data.remove(item)
+                    to_remove.append(member)
             if to_remove:
-                await self.data.guild(guild).temporary_warns.set(data)
+                await self.cache.bulk_remove_temp_action(guild, to_remove)
 
     async def _loop_task(self):
         """
@@ -1199,3 +1226,345 @@ class API:
                     "Error in loop for unmutes and unbans. The loop will be resumed.", exc_info=e
                 )
             await asyncio.sleep(10)
+
+    # automod stuff
+    def enable_automod(self):
+        """
+        Enable automod checks and listeners on the bot.
+        """
+        log.info("Enabling automod listeners and event loops.")
+        self.bot.add_listener(self.automod_on_message, name="on_message")
+        self.automod_warn_task = self.bot.loop.create_task(self.automod_warn_loop())
+
+    def disable_automod(self):
+        """
+        Disable automod checks and listeners on the bot.
+        """
+        log.info("Disabling automod listeners and event loops.")
+        self.bot.remove_listener(self.automod_on_message, name="on_message")
+        if hasattr(self, "automod_warn_task"):
+            self.automod_warn_task.cancel()
+
+    async def automod_on_message(self, message: discord.Message):
+        guild = message.guild
+        member = message.author
+        if not guild:
+            return
+        if member.bot:
+            return
+        if not self.cache.is_automod_enabled(guild):
+            return
+        if await self.bot.is_automod_immune(message):
+            return
+        # we run all tasks concurrently
+        # results are returned in the same order (either None or an exception)
+        regex_exception, antispam_exception = await asyncio.gather(
+            self.automod_process_regex(message),
+            self.automod_process_antispam(message),
+            return_exceptions=True,
+        )
+        if regex_exception:
+            log.error(
+                f"[Guild {message.guild.id}] Error while processing message for regex automod.",
+                exc_info=regex_exception,
+            )
+        if antispam_exception:
+            log.error(
+                f"[Guild {message.guild.id}] Error while processing message for antispam system.",
+                exc_info=antispam_exception,
+            )
+
+    async def automod_process_regex(self, message: discord.Message):
+        guild = message.guild
+        member = message.author
+        all_regex = await self.cache.get_automod_regex(guild)
+        for name, regex in all_regex.items():
+            regex: re.Pattern
+            result = regex["regex"].search(message.content)
+            if result:
+                time = None
+                if regex["time"]:
+                    time = self._get_datetime(regex["time"])
+                level = regex["level"]
+                reason = regex["reason"].format(
+                    guild=guild, channel=message.channel, member=member
+                )
+                fail = await self.warn(guild, [member], guild.me, level, reason, time,)
+                if fail:
+                    log.warn(
+                        f"[Guild {guild.id}] Regex automod warn on member {member} ({member.id})\n"
+                        f"Level: {level}. Time: {time}. Reason: {reason}\n"
+                        f"Original message: {message.content}\n"
+                        f"Automatic warn failed due to the following exception:",
+                        exc_info=fail[0],
+                    )
+                else:
+                    log.info(
+                        f"[Guild {guild.id}] Regex automod warn on member {member} ({member.id})\n"
+                        f"Level: {level}. Time: {time}. Reason: {reason}\n"
+                        f"Original message: {message.content}"
+                    )
+
+    async def automod_process_antispam(self, message: discord.Message):
+        # we store the data in self.antispam
+        # keys are as follow: GUILD_ID > CHANNEL_ID > MEMBER_ID = tuple
+        # tuple contains list timestamps of recent messages + check if the member was warned
+        # if the antispam is triggered once, we send a message in the chat (refered as text warn)
+        # if it's triggered a second time, an actual warn is given
+        guild = message.guild
+        channel = message.channel
+        member = message.author
+        antispam_data = await self.cache.get_automod_antispam(guild)
+        if antispam_data is False:
+            return
+
+        # we slowly go across each key, if it doesn't exist, data is created then the
+        # function ends since there's no data to check
+        InitialData = namedtuple("InitialData", ["messages", "warned"])
+        data = InitialData(messages=[], warned=False)
+        try:
+            guild_data = self.antispam[guild.id]
+        except KeyError:
+            self.antispam[guild.id] = {channel.id: {member.id: data}}
+            return
+        else:
+            pass
+        try:
+            channel_data = guild_data[channel.id]
+        except KeyError:
+            self.antispam[guild.id][channel.id] = {member.id: data}
+            return
+        else:
+            del guild_data
+        try:
+            data = channel_data[member.id]
+        except KeyError:
+            pass
+        del channel_data
+
+        data.messages.append(message.created_at)
+        # now we've got our list of timestamps, just gotta clean the old ones
+        data = data._replace(
+            messages=self._automod_clean_old_messages(
+                antispam_data["delay"], message.created_at, data.messages
+            )
+        )
+        print(f"{member}: w={data.warned} m={len(data.messages)}")
+        if len(data.messages) <= antispam_data["max_messages"]:
+            # antispam not triggered, we can exit now
+            self.antispam[guild.id][channel.id][member.id] = data
+            return
+        # at this point, user is considered to be spamming
+        # we cleanup his x last messages (max_messages + 1), then either send a text warn
+        # or perform an actual warnsystem warn (I'm confusing ik)
+        if (
+            data.warned is False
+            or (datetime.now() - data.warned).total_seconds()
+            < antispam_data["delay_before_action"]
+        ):
+            bot_message = await channel.send(
+                _("{member} you're sending messages too fast!").format(member=member.mention),
+                delete_after=5,
+            )
+            data = InitialData(messages=[], warned=bot_message.created_at)
+        else:
+            # already warned once within delay_before_action, gotta take actions
+            warn_data = antispam_data["warn"]
+            warn_data["author"] = guild.me
+            try:
+                self.antispam_warn_queue[guild.id][member] = warn_data
+            except KeyError:
+                self.antispam_warn_queue[guild.id] = {member: warn_data}
+            # also reset the data
+            data = InitialData(messages=[], warned=message.created_at)
+        self.antispam[guild.id][channel.id][member.id] = data
+
+    def _automod_clean_old_messages(self, delay: int, current_time: datetime, messages: list):
+        """
+        We don't keep messages older than the delay in the cache
+        """
+        message: datetime
+        delta: timedelta
+        new_list = []
+        for message in messages:
+            delta = current_time - message
+            if delta.total_seconds() <= delay:
+                new_list.append(message)
+        return new_list
+
+    def _automod_clean_cache(
+        self, guild: discord.Guild, channel: discord.TextChannel, member: discord.Member
+    ):
+        """
+        We quickly end up with a dict filled with empty values, we gotta clean that.
+        """
+        del self.automod[guild.id][channel.id][member.id]
+        if not self.automod[guild.id][channel.id]:
+            del self.automod[guild.id][channel.id]
+            if not self.automod[guild.id]:
+                del self.automod[guild.id]
+
+    async def automod_check_for_autowarn(
+        self, member: discord.Member, author: discord.Member, level: int
+    ):
+        """
+        Iterate through member's modlog, looking for possible automatic warns.
+
+        Level is the last warning's level, which will filter a lot of possible autowarns and,
+        therefore, save performances.
+
+        This can be a heavy call if there are a lot of possible autowarns and a long modlog.
+        """
+        guild = member.guild
+        t = datetime.now()
+        try:
+            await self._automod_check_for_autowarn(member, author, level)
+        except Exception as e:
+            log.error(f"[Guild {guild.id}] A problem occured with automod check.", exc_info=e)
+        time_taken: timedelta = datetime.now() - t
+        if time_taken.total_seconds() > 10 and guild.id not in self.warned_guilds:
+            self.warned_guilds.append(guild.id)
+            log.warning(
+                f"[Guild {guild.id}] Automod check took a long time! Time taken: {time_taken}\n"
+                "Try to reduce the amount of warns/autowarns or blame Laggron for poorly "
+                "written code (second option is preferred).\nThis warning will not show again "
+                "for this guild until reload."
+            )
+
+    async def _automod_check_for_autowarn(
+        self, member: discord.Member, author: discord.Member, level: int
+    ):
+        """
+        Prevents having to put this whole function into a try/except block.
+        """
+        guild = member.guild
+        if not self.cache.is_automod_enabled(guild):
+            return
+        # starting the iteration through warnings can cost performances
+        # so we look for conditions that confirms the member cannot be affected by automod
+        if await self.bot.is_automod_immune(member):
+            return
+        warns = await self.get_all_cases(guild, member)
+        if len(warns) < 2:
+            return  # autowarn can't be triggered with a single warning in the modlog
+        autowarns = await self.data.guild(guild).automod.warnings()
+        # remove all autowarns that are locked to a specific level
+        # where the last warning's level doesn't correspond
+        # also remove autowarns that are automod only if warn author isn't the bot
+
+        def is_autowarn_valid(warn):
+            if author.id != self.bot.user.id and warn["automod_only"]:
+                return False
+            return warn["level"] == 0 or warn["level"] == level
+
+        autowarns = list(filter(is_autowarn_valid, autowarns))
+        if not autowarns:
+            return  # no autowarn to iterate through
+        for i, autowarn in enumerate(autowarns):
+            # prepare for iteration
+            autowarns[i]["count"] = 0
+            # if the condition is met (within the specified time? not an automatic warn?)
+            # we increase this value until reaching the given limit
+            time = autowarn["time"]
+            if time:
+                until = datetime.now() - timedelta(seconds=time)
+                autowarns[i]["until"] = until
+        del time
+        found_warnings = {}  # we fill this list with the valid autowarns, there can be more than 1
+        for warn in warns[::-1]:
+            to_remove = []  # list of autowarns to remove during the iteration (duration expired)
+            taken_on = datetime.fromtimestamp(warn["time"])
+            for i, autowarn in enumerate(autowarns):
+                try:
+                    if autowarn["until"] >= taken_on:
+                        to_remove.append(i)
+                        continue
+                except KeyError:
+                    pass
+                autowarns[i]["count"] += 1
+                if autowarns[i]["count"] == autowarn["number"]:
+                    found_warnings[i] = autowarn["warn"]
+                if autowarns[i]["count"] > autowarn["number"]:
+                    # value exceeded, no need to continue, it's already done for this one warn
+                    to_remove.append(i)
+                    del found_warnings[i]
+            for index in to_remove:
+                autowarns.pop(index)
+            if not autowarns:
+                # we could be out of autowarns to check after a certain time
+                # no need to continue the iteration
+                break
+        del to_remove, taken_on, autowarns
+        for i, warn in found_warnings.items():
+            try:
+                await self.warn(
+                    guild,
+                    members=[member],
+                    author=guild.me,
+                    level=warn["level"],
+                    reason=warn["reason"],
+                    time=self._get_timedelta(warn["duration"]) if warn["duration"] else None,
+                )
+            except Exception as e:
+                log.error(
+                    f"[Guild {guild.id}] Failed to perform automod warn on member {member} "
+                    f"({member.id}). Needed to perform automatic warn {i}",
+                    exc_info=e,
+                )
+            else:
+                log.debug(
+                    f"[Guild {guild.id}] Successfully performed automatic "
+                    f"warn {i} on member {member} ({member.id})."
+                )
+
+    async def automod_warn_loop(self):
+        # since this is asyncronous code, sometimes there can be too many warnings performed
+        # especially with message antispam, since it treats multiple messages simultaneously
+        # instead, we have a dict of warnings to perform, and we remove it only once the warn is
+        # done. That way, duplicate warnings won't happen.
+
+        async def warn(member: discord.Member, data: dict):
+            guild = member.guild
+            try:
+                await self.warn(guild, [member], **data)
+            except Exception as e:
+                log.error(
+                    f"Cannot perform autowarn on member {member} ({member.id}). Data: {data}",
+                    exc_info=e,
+                )
+            finally:
+                await asyncio.sleep(1)
+                del self.antispam_warn_queue[guild.id][member]
+                if not self.antispam_warn_queue[guild.id]:
+                    del self.antispam_warn_queue[guild.id]
+
+        async def loop():
+            guild: discord.Guild
+            member: discord.Member
+            coros = []
+            for guild_id, data in self.antispam_warn_queue.items():
+                for member, value in data.items():
+                    coros.append(warn(member, value))
+            coros = asyncio.gather(*coros, return_exceptions=True)
+            await coros
+
+        errors = 0
+        while True:
+            try:
+                await loop()
+            except Exception as e:
+                errors += 1
+                if errors >= 3:
+                    # more than 3 errors in our loop, let's shut down the loop
+                    log.critical(
+                        "The loop for automod warnings encountered a third error. To prevent "
+                        "more damages, the loop will be cancelled. Timed mutes and bans no longer "
+                        "works for now. Reload the cog to start the loop back. If the problem "
+                        "persists, report the error and update the cog.",
+                        exc_info=e,
+                    )
+                    return
+                log.error(
+                    "Error in loop for automod warnings. The loop will be resumed.", exc_info=e
+                )
+            await asyncio.sleep(1)

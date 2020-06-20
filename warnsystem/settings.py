@@ -229,16 +229,15 @@ class SettingsMixin(MixinMeta):
                 cases = []
                 for case in [y for x, y in logs.items() if x.startswith("case")]:
                     level = {"Simple": 1, "Kick": 3, "Softban": 4, "Ban": 5}.get(case["level"], 1)
-                    timestamp = datetime.strptime(case["timestamp"], "%d %b %Y %H:%M").strftime(
-                        "%a %d %B %Y %H:%M:%S"
-                    )
+                    timestamp = datetime.strptime(case["timestamp"], "%d %b %Y %H:%M").timestamp()
                     cases.append(
                         {
                             "level": level,
                             "author": "Unknown",
                             "reason": case["reason"],
-                            "time": timestamp,  # only day of the week missing
+                            "time": timestamp,
                             "duration": None,
+                            "roles": [],
                         }
                     )
                     total_cases += 1
@@ -399,6 +398,36 @@ class SettingsMixin(MixinMeta):
             )
         )
 
+    @warnset.command(name="detectmanual")
+    async def warnset_detectmanual(self, ctx: commands.Context, enable: bool = None):
+        """
+        Defines if the bot should log manual bans to WarnSystem.
+
+        If enabled, manually banning a member will make the bot log the action in the modlog and\
+save it, as if it was performed with WarnSystem. **However, the member will not receive a DM**.
+        
+        Invoke the command without arguments to get the current status.
+        """
+        guild = ctx.guild
+        current = await self.data.guild(guild).log_manual()
+        if enable is None:
+            await ctx.send(
+                _(
+                    "The bot currently {detect} manual bans. If you want to change this, "
+                    "type `{prefix}warnset detectmanual {opposite}`."
+                ).format(
+                    detect=_("detects") if current else _("doesn't detect"),
+                    opposite=not current,
+                    prefix=ctx.clean_prefix,
+                )
+            )
+        elif enable:
+            await self.data.guild(guild).log_manual.set(True)
+            await ctx.send(_("Done. The bot will now listen for manual bans and log them."))
+        else:
+            await self.data.guild(guild).log_manual.set(False)
+            await ctx.send(_("Done. The bot won't listen for manual bans anymore."))
+
     @warnset.command(name="hierarchy")
     async def warnset_hierarchy(self, ctx: commands.Context, enable: bool = None):
         """
@@ -491,8 +520,115 @@ class SettingsMixin(MixinMeta):
                 ).format(bot_role=guild.me.top_role.name)
             )
         else:
-            await self.data.guild(guild).mute_role.set(role.id)
+            await self.cache.update_mute_role(guild, role)
             await ctx.send(_("The new mute role was successfully set!"))
+
+    @warnset.command(name="refreshmuterole")
+    @commands.cooldown(1, 120, commands.BucketType.guild)
+    async def warnset_refreshmuterole(self, ctx: commands.Context):
+        """
+        Refresh the mute role's permissions in the server.
+
+        This will iterate all of your channels and make sure all permissions are correctly\
+configured for the mute role.
+
+        The muted role will be prevented from sending messages and adding reactions in all text\
+channels, and prevented from talking in all voice channels.
+        """
+        guild = ctx.guild
+        mute_role = await self.cache.get_mute_role(guild)
+        if mute_role is None:
+            await ctx.send(
+                _(
+                    "No mute role configured on this server. "
+                    "Create one with `{prefix}warnset mute`."
+                ).format(prefix=ctx.clean_prefix)
+            )
+            return
+        mute_role = guild.get_role(mute_role)
+        if not mute_role:
+            await ctx.send(
+                _(
+                    "It looks like the configured mute role was deleted. "
+                    "Create a new one with `{prefix}warnset mute`."
+                ).format(prefix=ctx.clean_prefix)
+            )
+            return
+        if not guild.me.guild_permissions.manage_channels:
+            await ctx.send(_("I need the `Manage channels` permission to continue."))
+            return
+        await ctx.send(
+            _("Now checking {len} channels, please wait...").format(len=len(guild.channels))
+        )
+        perms = discord.PermissionOverwrite(send_messages=False, add_reactions=False, speak=False)
+        reason = _("WarnSystem mute role permissions refresh")
+        perms_failed = []  # if it failed because of Forbidden, add to this list
+        other_failed = []  # if it failed because of HTTPException, add to this one
+        count = 0
+        category: discord.CategoryChannel
+        async with ctx.typing():
+            for channel in guild.channels:  # include categories, text and voice channels
+                # we check if the perms are correct, to prevent useless API calls
+                overwrites = channel.overwrites_for(mute_role)
+                if (
+                    isinstance(channel, discord.TextChannel)
+                    and overwrites.send_messages is False
+                    and overwrites.add_reactions is False
+                ):
+                    continue
+                elif isinstance(channel, discord.VoiceChannel) and overwrites.speak is False:
+                    continue
+                elif overwrites == perms:
+                    continue
+                count += 1
+                try:
+                    log.debug(
+                        f"[Guild {guild.id}] Editing channel {channel.name} for "
+                        "mute role permissions refresh."
+                    )
+                    await channel.set_permissions(target=mute_role, overwrite=perms, reason=reason)
+                except discord.errors.Forbidden:
+                    perms_failed.append(channel)
+                except discord.errors.HTTPException as e:
+                    log.error(
+                        f"[Guild {guild.id}] Failed to edit channel {channel.name} "
+                        f"({channel.id}) while refreshing the mute role's permissions.",
+                        exc_info=e,
+                    )
+                    other_failed.append(channel)
+        if not perms_failed and not other_failed:
+            await ctx.send(
+                _("Successfully checked all channels, {len} were edited.").format(len=count)
+            )
+            return
+
+        def format_channels(channels: list):
+            text = ""
+            for channel in sorted(channels, key=lambda x: x.position):
+                if isinstance(channel, discord.TextChannel):
+                    text += f"- Text channel: {channel.mention}"
+                elif isinstance(channel, discord.VoiceChannel):
+                    text += f"- Voice channel: {channel.name}"
+                else:
+                    text += f"- Category: {channel.name}"
+            return text
+
+        text = _("Successfully checked all channels, {len}/{total} were edited.\n\n").format(
+            len=count - len(perms_failed) - len(other_failed), total=count,
+        )
+        if perms_failed:
+            text += _(
+                "The following channels were not updated due to a permission failure, "
+                "probably enforced `Manage channels` permission:\n{channels}\n"
+            ).format(channels=format_channels(perms_failed))
+        if other_failed:
+            text += _(
+                "The following channels were not updated due to an unknown error "
+                "(check your logs or ask the bot administrator):\n{channels}\n"
+            ).format(channels=format_channels(other_failed))
+        text += _("You can fix these issues and run the command once again.")
+        for page in pagify(text):
+            await ctx.send(page)
 
     @warnset.command(name="reinvite")
     async def warnset_reinvite(self, ctx: commands.Context, enable: bool = None):
@@ -593,6 +729,10 @@ class SettingsMixin(MixinMeta):
             mute_role = _("No mute role set.") if not mute_role else mute_role.name
             hierarchy = _("Enabled") if all_data["respect_hierarchy"] else _("Disabled")
             reinvite = _("Enabled") if all_data["reinvite"] else _("Disabled")
+            show_mod = _("Enabled") if all_data["show_mod"] else _("Disabled")
+            update_mute = _("Enabled") if all_data["update_mute"] else _("Disabled")
+            remove_roles = _("Enabled") if all_data["remove_roles"] else _("Disabled")
+            manual_bans = _("Enabled") if all_data["log_manual"] else _("Disabled")
             bandays = _("Softban: {softban}\nBan: {ban}").format(
                 softban=all_data["bandays"]["softban"], ban=all_data["bandays"]["ban"]
             )
@@ -628,40 +768,59 @@ class SettingsMixin(MixinMeta):
                 user_descriptions += f"{key}: {description}\n"
             if len(user_descriptions) > 1024:
                 user_descriptions = _("Too long to be shown...")
+            embed_thumbnails = "\n".join(
+                [f"{level}: {value}" for level, value in all_data["thumbnails"].items()]
+            )
+            embed_colors = "\n".join(
+                [
+                    f"{level}: {hex(value).replace('0x', '#')}"
+                    for level, value in all_data["colors"].items()
+                ]
+            )
 
             # make embed
-            embed = discord.Embed(title=_("WarnSystem settings."))
-            embed.url = "https://laggron.red/warnsystem.html"
-            embed.description = _(
-                "You can change all of these values with {prefix}warnset"
-            ).format(prefix=ctx.prefix)
-            embed.add_field(name=_("Log channels"), value=channels)
-            embed.add_field(name=_("Mute role"), value=mute_role)
-            embed.add_field(name=_("Respect hierarchy"), value=hierarchy)
-            embed.add_field(name=_("Reinvite unbanned members"), value=reinvite)
-            embed.add_field(name=_("Days of messages to delete"), value=bandays)
-            embed.add_field(name=_("Substitutions"), value=substitutions)
-            embed.add_field(
+            embeds = [discord.Embed() for x in range(2)]
+            embeds[0].title = _("WarnSystem settings. Page 1/2")
+            embeds[1].title = _("WarnSystem settings. Page 2/2")
+            try:
+                color = await self.bot.get_embed_color(ctx)
+            except AttributeError:
+                color = self.bot.color
+            for embed in embeds:
+                embed.url = "https://laggron.red/warnsystem.html"
+                embed.description = _(
+                    "You can change all of these values with {prefix}warnset"
+                ).format(prefix=ctx.clean_prefix)
+                embed.set_footer(text=_("Cog made with ❤️ by Laggron"))
+                embed.colour = color
+            embeds[0].add_field(name=_("Log channels"), value=channels)
+            embeds[0].add_field(name=_("Mute role"), value=mute_role)
+            embeds[0].add_field(name=_("Respect hierarchy"), value=hierarchy)
+            embeds[0].add_field(name=_("Reinvite unbanned members"), value=reinvite)
+            embeds[0].add_field(name=_("Show responsible moderator"), value=show_mod)
+            embeds[0].add_field(name=_("Detect manual bans"), value=manual_bans)
+            embeds[0].add_field(name=_("Update new channels for mute role"), value=update_mute)
+            embeds[0].add_field(name=_("Remove roles on mute"), value=remove_roles)
+            embeds[0].add_field(name=_("Days of messages to delete"), value=bandays)
+            embeds[0].add_field(name=_("Substitutions"), value=substitutions)
+            embeds[1].add_field(name=_("Embed thumbnails"), value=embed_thumbnails)
+            embeds[1].add_field(name=_("Embed colors"), value=embed_colors)
+            embeds[1].add_field(
                 name=_("Modlog embed descriptions"), value=modlog_descriptions, inline=False
             )
-            embed.add_field(
+            embeds[1].add_field(
                 name=_("User embed descriptions"), value=user_descriptions, inline=False
             )
-            embed.add_field(
+            embeds[1].add_field(
                 name="\u200b",
                 value=_(
                     "To see informations about the cog (version, documentation, "
                     "support server, Patreon), type `{prefix}warnsysteminfo`."
-                ).format(prefix=ctx.prefix),
+                ).format(prefix=ctx.clean_prefix),
                 inline=False,
             )
-            embed.set_footer(text=_("Cog made with ❤️ by Laggron"))
-            try:
-                embed.color = await self.bot.get_embed_color(ctx)
-            except AttributeError:
-                embed.color = self.bot.color
         try:
-            await ctx.send(embed=embed)
+            await menus.menu(ctx=ctx, pages=embeds, controls=menus.DEFAULT_CONTROLS, timeout=90)
         except discord.errors.HTTPException as e:
             log.error("Couldn't make embed for displaying settings.", exc_info=e)
             await ctx.send(
