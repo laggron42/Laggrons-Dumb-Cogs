@@ -1347,7 +1347,6 @@ class API:
                 antispam_data["delay"], message.created_at, data.messages
             )
         )
-        print(f"{member}: w={data.warned} m={len(data.messages)}")
         if len(data.messages) <= antispam_data["max_messages"]:
             # antispam not triggered, we can exit now
             self.antispam[guild.id][channel.id][member.id] = data
