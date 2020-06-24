@@ -1,71 +1,51 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR ORGANIZATION
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2019-03-24 01:26+0100\n"
+"POT-Creation-Date: 2020-06-24 23:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: redgettext 2.2\n"
+"Generated-By: redgettext 3.1\n"
 
-
-#: instantcmd/instantcmd.py:185
+#: instantcmd\instantcmd.py:214
 #, docstring
 msgid "Instant Commands cog management"
 msgstr ""
 
-#: instantcmd/instantcmd.py:190
+#: instantcmd\instantcmd.py:219
 #, docstring
 msgid ""
-"\n"
-"        Instantly generate a new command from a code snippet.\n"
-"\n"
-"        If you want to make a listener, give its name instead of the command name.\n"
-"        "
+"\\n        Instantly generate a new command from a code snippet.\\n\\n"
+"        If you want to make a listener, give its name instead of the command"
+" name.\\n        You can upload a text file if the command is too long, but "
+"you should consider coding acog at this point.\\n        "
 msgstr ""
 
-#: instantcmd/instantcmd.py:267
+#: instantcmd\instantcmd.py:347
 #, docstring
 msgid ""
-"\n"
-"        Remove a command or a listener from the registered instant commands.\n"
-"        "
+"\\n        Remove a command or a listener from the registered instant "
+"commands.\\n        "
 msgstr ""
 
-#: instantcmd/instantcmd.py:286
+#: instantcmd\instantcmd.py:367
 #, docstring
 msgid ""
-"\n"
-"        List all existing commands made using Instant Commands.\n"
-"\n"
-"        If a command name is given and found in the Instant commands list, the code will be shown.\n"
-"        "
+"\\n        List all existing commands made using Instant Commands.\\n\\n"
+"        If a command name is given and found in the Instant commands list, "
+"the code will be shown.\\n        "
 msgstr ""
 
-#: instantcmd/instantcmd.py:330
+#: instantcmd\instantcmd.py:389
 #, docstring
-msgid ""
-"\n"
-"        Get informations about the cog.\n"
-"        "
+msgid "\\n        Show the code of an instantcmd command or listener.\\n        "
 msgstr ""
 
-#: instantcmd/instantcmd.py:334
-msgid ""
-"Laggron's Dumb Cogs V3 - instantcmd\n"
-"\n"
-"Version: {0.__version__}\n"
-"Author: {0.__author__}\n"
-"Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
-"Discord server: https://discord.gg/AVzjfpR\n"
-"Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n"
-"\n"
-"Support my work on Patreon: https://www.patreon.com/retke"
+#: instantcmd\instantcmd.py:405
+#, docstring
+msgid "\\n        Get informations about the cog.\\n        "
 msgstr ""
-

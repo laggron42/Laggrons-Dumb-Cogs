@@ -1,115 +1,96 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR ORGANIZATION
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2019-03-24 01:26+0100\n"
+"POT-Creation-Date: 2020-06-24 23:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: redgettext 2.2\n"
+"Generated-By: redgettext 3.1\n"
 
-
-#: say/say.py:22
+#: say\say.py:31
 #, docstring
 msgid ""
-"\n"
-"    Speak as if you were the bot\n"
-"\n"
-"    Report a bug or ask a question: https://discord.gg/AVzjfpR\n"
-"    Full documentation and FAQ: http://laggrons-dumb-cogs.readthedocs.io/say.html\n"
-"    "
+"\\n    Speak as if you were the bot\\n\\n    Report a bug or ask a question:"
+" https://discord.gg/AVzjfpR\\n    Full documentation and FAQ: "
+"http://laggrons-dumb-cogs.readthedocs.io/say.html\\n    "
 msgstr ""
 
-#: say/say.py:120 say/say.py:125
+#: say\say.py:99 say\say.py:104
 msgid "I am not allowed to send messages in "
 msgstr ""
 
-#: say/say.py:132 say/say.py:136
+#: say\say.py:111 say\say.py:115
 msgid "I am not allowed to upload files in "
 msgstr ""
 
-#: say/say.py:148
+#: say\say.py:127
 #, docstring
 msgid ""
-"\n"
-"        Make the bot say what you want in the desired channel.\n"
-"\n"
-"        If no channel is specified, the message will be send in the current channel.\n"
-"        You can attach some files to upload them to Discord.\n"
-"\n"
-"        Example usage :\n"
-"        - `!say #general hello there`\n"
-"        - `!say owo I have a file` (a file is attached to the command message)\n"
-"        "
+"\\n        Make the bot say what you want in the desired channel.\\n\\n"
+"        If no channel is specified, the message will be send in the current "
+"channel.\\n        You can attach some files to upload them to "
+"Discord.\\n\\n        Example usage :\\n        - `!say #general hello "
+"there`\\n        - `!say owo I have a file` (a file is attached to the "
+"command message)\\n        "
 msgstr ""
 
-#: say/say.py:165
+#: say\say.py:144
 #, docstring
 msgid ""
-"\n"
-"        Same as say command, except it deletes your message.\n"
-"\n"
-"        If the message wasn't removed, then I don't have enough permissions.\n"
-"        "
+"\\n        Same as say command, except it deletes your message.\\n\\n"
+"        If the message wasn't removed, then I don't have enough "
+"permissions.\\n        "
 msgstr ""
 
-#: say/say.py:179 say/say.py:181
+#: say\say.py:158 say\say.py:160
 msgid "Not enough permissions to delete messages."
 msgstr ""
 
-#: say/say.py:188
+#: say\say.py:167
 #, docstring
 msgid "Start receiving and sending messages as the bot through DM"
 msgstr ""
 
-#: say/say.py:194
-msgid "You need to give a channel to enable this in DM. You can give the channel ID too."
+#: say\say.py:173
+msgid ""
+"You need to give a channel to enable this in DM. You can give the channel ID"
+" too."
 msgstr ""
 
-#: say/say.py:204
+#: say\say.py:183
 msgid "A session is already running."
 msgstr ""
 
-#: say/say.py:208
+#: say\say.py:187
 msgid ""
-"I will start sending you messages from {0}.\n"
-"Just send me any message and I will send it in that channel.\n"
-"React with ❌ on this message to end the session.\n"
-"If no message was send or received in the last 5 minutes, the request will time out and stop."
+"I will start sending you messages from {0}.\\nJust send me any message and I"
+" will send it in that channel.\\nReact with ❌ on this message to end the "
+"session.\\nIf no message was send or received in the last 5 minutes, the "
+"request will time out and stop."
 msgstr ""
 
-#: say/say.py:227
+#: say\say.py:206
 msgid "Request timed out. Session closed"
 msgstr ""
 
-#: say/say.py:259
+#: say\say.py:238
 #, docstring
-msgid ""
-"\n"
-"        Get informations about the cog.\n"
-"        "
+msgid "\\n        Get informations about the cog.\\n        "
 msgstr ""
 
-#: say/say.py:263
+#: say\say.py:242
 msgid ""
-"Laggron's Dumb Cogs V3 - say\n"
-"\n"
-"Version: {0.__version__}\n"
-"Author: {0.__author__}\n"
-"Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
-"Discord server: https://discord.gg/AVzjfpR\n"
-"Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n"
-"\n"
-"Support my work on Patreon: https://www.patreon.com/retke"
+"Laggron's Dumb Cogs V3 - say\\n\\nVersion: {0.__version__}\\nAuthor: "
+"{0.__author__}\\nGithub repository: https://github.com/retke/Laggrons-Dumb-"
+"Cogs/tree/v3\\nDiscord server: https://discord.gg/AVzjfpR\\nDocumentation: "
+"http://laggrons-dumb-cogs.readthedocs.io/\\n\\nSupport my work on Patreon: "
+"https://www.patreon.com/retke"
 msgstr ""
 
-#: say/say.py:294
+#: say\say.py:275
 msgid "Session closed"
 msgstr ""
-
