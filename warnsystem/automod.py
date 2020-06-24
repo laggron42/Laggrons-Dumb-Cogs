@@ -692,7 +692,9 @@ automod infractions, like a mute after 3 warns.
         reason = antispam_settings["warn"]["reason"]
         if level == 2 or level == 5:
             time = _("Time: {time}\n").format(
-                time=self.api._format_timedelta(antispam_settings["warn"]["time"])
+                time=self.api._format_timedelta(
+                    timedelta(seconds=antispam_settings["warn"]["time"])
+                )
                 if antispam_settings["warn"]["time"]
                 else _("Unlimited.")
             )
