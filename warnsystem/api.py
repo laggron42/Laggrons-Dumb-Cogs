@@ -1011,8 +1011,6 @@ class API:
             if progress_tracker:
                 await progress_tracker(i)
 
-        # TODO: fucking remove that before I forget
-        log_dm = False
         if not 1 <= level <= 5:
             raise errors.InvalidLevel("The level must be between 1 and 5.")
         # we get the modlog channel now to make sure it exists before doing anything
