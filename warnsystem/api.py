@@ -1250,9 +1250,13 @@ class API:
             return
         if member.bot:
             return
+        if guild.owner.id == member.id:
+            return
         if not self.cache.is_automod_enabled(guild):
             return
         if await self.bot.is_automod_immune(message):
+            return
+        if await self.bot.is_mod(member):
             return
         # we run all tasks concurrently
         # results are returned in the same order (either None or an exception)
@@ -1277,12 +1281,11 @@ class API:
         member = message.author
         all_regex = await self.cache.get_automod_regex(guild)
         for name, regex in all_regex.items():
-            regex: re.Pattern
             result = regex["regex"].search(message.content)
             if result:
                 time = None
                 if regex["time"]:
-                    time = self._get_datetime(regex["time"])
+                    time = self._get_timedelta(regex["time"])
                 level = regex["level"]
                 reason = regex["reason"].format(
                     guild=guild, channel=message.channel, member=member
@@ -1368,6 +1371,8 @@ class API:
             # already warned once within delay_before_action, gotta take actions
             warn_data = antispam_data["warn"]
             warn_data["author"] = guild.me
+            if warn_data["time"]:
+                warn_data["time"] = self._get_timedelta(warn_data["time"])
             try:
                 self.antispam_warn_queue[guild.id][member] = warn_data
             except KeyError:

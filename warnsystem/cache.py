@@ -146,16 +146,16 @@ class MemoryCache:
         name: str,
         regex: re.Pattern,
         level: int,
-        time: str,
+        time: int,
         reason: str,
     ):
-        await self.data.guild(guild).automod.regex.set_raw(
-            name, value={"regex": regex.pattern, "level": level, "time": time, "reason": reason}
-        )
+        data = {"regex": regex.pattern, "level": level, "time": time, "reason": reason}
+        await self.data.guild(guild).automod.regex.set_raw(name, value=data)
+        data["regex"] = regex
         if guild.id not in self.automod_regex:
-            self.automod_regex[guild.id] = {name: regex}
+            self.automod_regex[guild.id] = {name: data}
         else:
-            self.automod_regex[guild.id][name] = regex
+            self.automod_regex[guild.id][name] = data
 
     async def remove_automod_regex(self, guild: discord.Guild, name: str):
         await self.data.guild(guild).automod.regex.clear_raw(name)

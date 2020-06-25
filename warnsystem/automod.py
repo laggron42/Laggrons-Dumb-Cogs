@@ -177,7 +177,7 @@ class AutomodMixin(MixinMeta):
             return
         if time:
             if level == 2 or level == 5:
-                time = self.api._format_timedelta(time)
+                time = time.total_seconds()
             else:
                 time = None
         await self.cache.add_automod_regex(guild, name, regex, level, time, reason)
