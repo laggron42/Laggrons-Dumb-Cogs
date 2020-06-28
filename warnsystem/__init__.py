@@ -23,14 +23,20 @@ _ = Translator("WarnSystem", __file__)
 log = logging.getLogger("laggron.warnsystem")
 
 
-def _save_backup(config):
+async def _save_backup(config):
     import json
     from datetime import datetime
     from redbot.core.data_manager import cog_data_path
 
     date = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
     path = cog_data_path(raw_name="WarnSystem") / f"settings-backup-{date}.json"
-    data = json.dumps(config.driver.data)
+    full_data = {
+        "260": {
+            "GUILDS": await config.all_guilds(),
+            "MODLOGS": await config.custom("MODLOGS").all(),
+        }
+    }
+    data = json.dumps(full_data)
     with open(path.absolute(), "w") as file:
         file.write(data)
     log.info(f"Backup file saved at '{path.absolute()}', now starting conversion...")
@@ -159,7 +165,7 @@ async def update_config(bot, config):
             "that file safe and ask support on how to recover the data."
         )
         # perform a backup, any exception MUST be raised
-        await bot.loop.run_in_executor(None, _save_backup, config)
+        await _save_backup(config)
         # we consider we have a safe backup at this point
         await _convert_to_v1(bot, config)
         await config.data_version.set("1.0")
