@@ -1,0 +1,207 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: laggrons-dumb-cogs\n"
+"POT-Creation-Date: 2020-06-24 23:04+0200\n"
+"PO-Revision-Date: 2020-06-30 13:44\n"
+"Last-Translator: \n"
+"Language-Team: Russian\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: redgettext 3.1\n"
+"Plural-Forms: nplurals=4; plural=((n%10==1 && n%100!=11) ? 0 : ((n%10 >= 2 && n%10 <=4 && (n%100 < 12 || n%100 > 14)) ? 1 : ((n%10 == 0 || (n%10 >= 5 && n%10 <=9)) || (n%100 >= 11 && n%100 <= 14)) ? 2 : 3));\n"
+"X-Crowdin-Project: laggrons-dumb-cogs\n"
+"X-Crowdin-Project-ID: 409698\n"
+"X-Crowdin-Language: ru\n"
+"X-Crowdin-File: /v3/roleinvite/locales/messages.pot\n"
+"X-Crowdin-File-ID: 30\n"
+"Language: ru_RU\n"
+
+#: roleinvite\roleinvite.py:35
+#, docstring
+msgid "\\n    Server autorole following the invite the user used to join the server\\n\\n    Report a bug or ask a question: https://discord.gg/AVzjfpR\\n    Full documentation and FAQ: https://laggrons-dumb-cogs.readthedocs.io/roleinvite.html\\n    "
+msgstr ""
+
+#: roleinvite\roleinvite.py:94
+msgid "Request timed out."
+msgstr ""
+
+#: roleinvite\roleinvite.py:101
+#, docstring
+msgid "\\n        Roleinvite cog management\\n\\n        For a clear explaination of how the cog works, read the documentation.\\n        https://laggrons-dumb-cogs.readthedocs.io/\\n        "
+msgstr ""
+
+#: roleinvite\roleinvite.py:111
+#, docstring
+msgid "\\n        Link a role to an invite for the autorole system.\\n\\n        Example: `[p]roleinviteset add https://discord.gg/laggron Member`\\n        If this message still shows after using the command, you probably gave a wrong role name.\\n        If you want to link roles to the main autorole system (user joined with an unknown invite),        give `main` instead of a discord invite.\\n        If you want to link roles to the default autorole system (roles given regardless of the        invite used), give `default` instead of a discord invite.\\n        "
+msgstr ""
+
+#: roleinvite\roleinvite.py:136
+msgid "That role is already linked to the invite."
+msgstr ""
+
+#: roleinvite\roleinvite.py:147
+msgid "**Warning**: This invite is already registered and currently linked to the role(s) `{}`.\\nIf you continue, this invite will give all roles given to the new member. \\nIf you want to edit it, first delete the link using `{}roleinviteset remove`.\\n\\nDo you want to link this invite to {} roles? (yes/no)"
+msgstr ""
+
+#: roleinvite\roleinvite.py:162
+msgid "That role is higher than mine. I can't add it to new users."
+msgstr ""
+
+#: roleinvite\roleinvite.py:165
+msgid "That role is higher than your top role, you can't do that!"
+msgstr ""
+
+#: roleinvite\roleinvite.py:168
+msgid "I need the `Manage server` permission!"
+msgstr ""
+
+#: roleinvite\roleinvite.py:171
+msgid "I need the `Manage roles` permission!"
+msgstr ""
+
+#: roleinvite\roleinvite.py:179 roleinvite\roleinvite.py:225
+#: roleinvite\roleinvite.py:242
+msgid "That invite cannot be found"
+msgstr ""
+
+#: roleinvite\roleinvite.py:183
+msgid "That invite doesn't belong to this server!"
+msgstr ""
+
+#: roleinvite\roleinvite.py:186
+msgid "There are no invites generated on this server."
+msgstr ""
+
+#: roleinvite\roleinvite.py:195
+msgid "The role `{}` is now linked to the main autorole system. (new members will get it if they join with an invite not registered)"
+msgstr ""
+
+#: roleinvite\roleinvite.py:206
+msgid "The role `{}` is now linked to the default autorole system. (new members will always get this role, whatever invite he used.)"
+msgstr ""
+
+#: roleinvite\roleinvite.py:219
+msgid "The role `{}` is now linked to the invite `{}`"
+msgstr ""
+
+#: roleinvite\roleinvite.py:229
+#, docstring
+msgid "\\n        Remove a link in this server\\n\\n        Specify a `role` to only remove one role from the invite link list.\\n        Don't specify anything if you want to remove the invite itself.\\n        If you want to edit the main/default autorole system's roles, give         `main`/`default` instead of a discord invite.\\n        "
+msgstr ""
+
+#: roleinvite\roleinvite.py:251
+msgid "That invite lost all of its linked roles and was deleted."
+msgstr ""
+
+#: roleinvite\roleinvite.py:255
+msgid "You're about to remove all roles linked to the main autorole.\\n"
+msgstr ""
+
+#: roleinvite\roleinvite.py:257
+msgid "You're about to remove all roles linked to the default autorole.\\n"
+msgstr ""
+
+#: roleinvite\roleinvite.py:259
+msgid "You're about to remove all roles linked to this invite.\\n"
+msgstr ""
+
+#: roleinvite\roleinvite.py:261
+msgid "List of roles:\\n{}\\nProceed? (yes/no)\\n\\n"
+msgstr ""
+
+#: roleinvite\roleinvite.py:266
+msgid "Remember that you can remove a single role from this list by typing `{}roleinviteset remove {} [role name]`"
+msgstr ""
+
+#: roleinvite\roleinvite.py:273
+msgid "Alright, invite is kept."
+msgstr ""
+
+#: roleinvite\roleinvite.py:278
+msgid "The invite `{}` has been removed from the list."
+msgstr ""
+
+#: roleinvite\roleinvite.py:286
+msgid "main autorole."
+msgstr ""
+
+#: roleinvite\roleinvite.py:288
+msgid "default autorole."
+msgstr ""
+
+#: roleinvite\roleinvite.py:290
+msgid "invite `{}`."
+msgstr ""
+
+#: roleinvite\roleinvite.py:292
+msgid "You're about to unlink the `{}` role from the {}\\nProceed? (yes/no)"
+msgstr ""
+
+#: roleinvite\roleinvite.py:298
+msgid "Alright, role is kept."
+msgstr ""
+
+#: roleinvite\roleinvite.py:303
+msgid "The role `{}` is now unlinked from the {}"
+msgstr ""
+
+#: roleinvite\roleinvite.py:308
+#, docstring
+msgid "\\n        List all links on this server\\n        "
+msgstr ""
+
+#: roleinvite\roleinvite.py:353
+msgid "There is nothing set on RoleInvite. Type `{}help roleinviteset` for more informations."
+msgstr ""
+
+#: roleinvite\roleinvite.py:360
+msgid "**Info:** RoleInvite is currently disabled and won't give roles on member join.\\nType `{}roleinviteset enable` to enable it."
+msgstr ""
+
+#: roleinvite\roleinvite.py:366
+msgid "List of invites linked to an autorole on this server:"
+msgstr ""
+
+#: roleinvite\roleinvite.py:374
+#, docstring
+msgid "\\n        Enable or disabe the autorole system.\\n\\n        If it was disabled within your action, that means that the bot somehow lost the        `Manage roles` or the `Manage server` permission.\\n        "
+msgstr ""
+
+#: roleinvite\roleinvite.py:382
+msgid "I need the `Manage roles` permission."
+msgstr ""
+
+#: roleinvite\roleinvite.py:385
+msgid "I need the `Manage server` permission."
+msgstr ""
+
+#: roleinvite\roleinvite.py:392
+msgid "The autorole system is now enabled on this server.\\nType `{0.prefix}roleinviteset list` to see what's the current role list.\\nIf the bot lose the `Manage roles` or the `Manage server` permissions "
+msgstr ""
+
+#: roleinvite\roleinvite.py:402
+#, docstring
+msgid "\\n        Get informations about the cog.\\n        "
+msgstr ""
+
+#: roleinvite\roleinvite.py:406
+msgid "Laggron's Dumb Cogs V3 - roleinvite\\n\\nVersion: {0.__version__}\\nAuthor: {0.__author__}\\nGithub repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\\nDiscord server: https://discord.gg/AVzjfpR\\nDocumentation: http://laggrons-dumb-cogs.readthedocs.io/\\n\\nSupport my work on Patreon: https://www.patreon.com/retke"
+msgstr ""
+
+#: roleinvite\roleinvite.py:422
+msgid "Joined with an unknown invite, main roles given."
+msgstr ""
+
+#: roleinvite\roleinvite.py:424
+msgid "Default roles given."
+msgstr ""
+
+#: roleinvite\roleinvite.py:426
+msgid "Joined with {}"
+msgstr ""
+
+#: roleinvite\roleinvite.py:486
+msgid "Roleinvite autorole. "
+msgstr ""
+
