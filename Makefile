@@ -31,7 +31,17 @@ stylecheck:
 
 gettext:
 	@echo "Starting..."
-	@redgettext --command-docstrings --verbose --recursive .
+	@redgettext --command-docstrings --verbose --recursive --exclude "docs/*" .
+	@echo "Done!"
+
+upload_translations:
+	@echo "Starting..."
+	crowdin upload sources
+	@echo "Done!"
+
+download_translations:
+	@echo "Starting..."
+	crowdin download	
 	@echo "Done!"
 
 compile:
