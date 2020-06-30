@@ -609,7 +609,10 @@ class API:
                 invite = await guild.create_invite(max_uses=1)
             except Exception:
                 invite = _("*[couldn't create an invite]*")
-        today = date.strftime("%a %d %B %Y %H:%M")
+        if date:
+            today = date.strftime("%a %d %B %Y %H:%M")
+        else:
+            today = datetime.utcnow()
         if time:
             duration = self._format_timedelta(time)
         else:
@@ -943,7 +946,7 @@ class API:
                 except (discord.errors.Forbidden, errors.UserNotFound):
                     modlog_e = (
                         await self.get_embeds(
-                            guild, member, author, level, reason, time, message_sent=False
+                            guild, member, author, level, reason, time, date, message_sent=False
                         )
                     )[0]
                 except discord.errors.NotFound:
@@ -951,7 +954,7 @@ class API:
                 except discord.errors.HTTPException as e:
                     modlog_e = (
                         await self.get_embeds(
-                            guild, member, author, level, reason, time, message_sent=False
+                            guild, member, author, level, reason, time, date, message_sent=False
                         )
                     )[0]
                     log.warn(
