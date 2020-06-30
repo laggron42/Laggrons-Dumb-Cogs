@@ -6,6 +6,7 @@
 [![Black coding style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 [![Build status](https://api.travis-ci.org/retke/Laggrons-Dumb-Cogs.svg?branch=v3)](https://travis-ci.org/retke/Laggrons-Dumb-Cogs)
 [![Docs status](https://readthedocs.org/projects/laggrons-dumb-cogs/badge)](http://laggrons-dumb-cogs.readthedocs.io)
+[![Crowdin](https://badges.crowdin.net/laggrons-dumb-cogs/localized.svg)](https://crowdin.com/project/laggrons-dumb-cogs)
 [![Patreon](https://img.shields.io/badge/Patreon-donate-orange.svg)](https://patreon.com/retke)
 
 ![Artwork](https://github.com/retke/Laggrons-Dumb-Cogs/blob/master/.github/RESSOURCES/BANNERS/Base_banner.png)
@@ -29,6 +30,8 @@ If you want to know in details how to use my cogs, please go check the [Laggron'
 ## Contributing
 
 If you want to contribute to my work, I suggest you to read the [contribution guide](https://github.com/retke/Laggrons-Dumb-Cogs/blob/master/.github/CONTRIBUTING.md) to get started, know the rules, what to do and not to do. Coding skills are not necessarly required, so feel free to check!
+
+You can also translate the cogs in your language with Crowdin! Create an account and check [the Laggron's Dumb cogs project here](https://crowdin.com/project/laggrons-dumb-cogs/)!
 
 ## Supporting
 

@@ -18,11 +18,9 @@ If you meet any of these problems, just [create an issue](https://github.com/ret
 
 ### I want to translate your cogs in my language
 
-Red V3 supports multiple languages, and translation for the cogs is welcome! The cogs comes with a `messages.pot` file which contains all messages and can be used to create a .po file with a software like [PoEdit](https://poedit.net/) to translate all messages of the cogs.
+Laggron's Dumb Cogs is now using Crowdin for translations! You don't need to install anything, just create an account and start translating strings with a fancy online editor: **https://crowdin.com/project/laggrons-dumb-cogs/**
 
-If you want to help with this, download the `messages.pot` file (in the `locales` folder of a package), open this with a software like [PoEdit](https://poedit.net/) and start translating in your language. You can then place the created `.po` file back in the `locales` folder.
-
-If you want to submit your translations, you can make a pull request if you have enough git knowledge, else you can also send me the file by mail or on Discord (see README).
+You can also translate locally by downloading [PoEdit](https://poedit.net) and creating translation files from the `messages.pot` file you can find in the `locales` folder of every cog., you can then upload the files to Crowdin.
 
 ### I want to contribute and I know coding
 
