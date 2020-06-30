@@ -47,7 +47,9 @@ class AutomodMixin(MixinMeta):
                 time = await TimedeltaConverter().convert(ctx, user_msg.content)
             except commands.BadArgument:
                 await ctx.send(_("Invalid time format."))
-                return await self._ask_for_value(ctx, bot_msg, embed, description, need, optional)
+                return await self._ask_for_value(
+                    ctx, bot_msg, embed, description, need, optional
+                )
             else:
                 return time
         if need == "same_context":
@@ -66,7 +68,9 @@ class AutomodMixin(MixinMeta):
         duration: timedelta,
     ) -> discord.Embed:
         time_str = _("Not set.") if not time else self.api._format_timedelta(time)
-        duration_str = _("Not set.") if not duration else self.api._format_timedelta(duration)
+        duration_str = (
+            _("Not set.") if not duration else self.api._format_timedelta(duration)
+        )
         embed.description = _("Number of warnings until action: {num}\n").format(
             num=number_of_warns
         )
@@ -88,11 +92,15 @@ class AutomodMixin(MixinMeta):
                 "bot will set a level {level} warning on him{duration} for the reason: {reason}"
             ).format(
                 number=number_of_warns,
-                level_lock=_(" level {level}").format(level=lock_level) if lock_level else "",
+                level_lock=_(" level {level}").format(level=lock_level)
+                if lock_level
+                else "",
                 from_bot=_(" from the automod") if only_automod else "",
                 within_time=_(" within {time}").format(time=time_str) if time else "",
                 level=warn_level,
-                duration=_(" during {time}").format(time=duration_str) if duration else "",
+                duration=_(" during {time}").format(time=duration_str)
+                if duration
+                else "",
                 reason=warn_reason,
             ),
             inline=False,
@@ -207,14 +215,15 @@ class AutomodMixin(MixinMeta):
             await ctx.send(_("Nothing registered."))
             return
         for name, value in automod_regex.items():
-            text += (
-                f"+ {name}\nLevel {value['level']} warning. Reason: {value['reason'][:40]}...\n\n"
-            )
+            text += f"+ {name}\nLevel {value['level']} warning. Reason: {value['reason'][:40]}...\n\n"
         messages = []
-        pages = list(pagify(text, delims=["\n\n", "\n"], priority=True, page_length=1900))
+        pages = list(
+            pagify(text, delims=["\n\n", "\n"], priority=True, page_length=1900)
+        )
         for i, page in enumerate(pages):
             messages.append(
-                _("Page {i}/{total}").format(i=i + 1, total=len(pages)) + box(page, "diff")
+                _("Page {i}/{total}").format(i=i + 1, total=len(pages))
+                + box(page, "diff")
             )
         await menus.menu(ctx, pages=messages, controls=menus.DEFAULT_CONTROLS)
 
@@ -232,11 +241,15 @@ class AutomodMixin(MixinMeta):
         embed = discord.Embed(title=_("Regex trigger: {name}").format(name=name))
         embed.description = _("Regex trigger details.")
         embed.add_field(
-            name=_("Regular expression"), value=box(automod_regex["regex"].pattern), inline=False
+            name=_("Regular expression"),
+            value=box(automod_regex["regex"].pattern),
+            inline=False,
         )
         embed.add_field(
             name=_("Warning"),
-            value=_("**Level:** {level}\n**Reason:** {reason}\n**Duration:** {time}").format(
+            value=_(
+                "**Level:** {level}\n**Reason:** {reason}\n**Duration:** {time}"
+            ).format(
                 level=automod_regex["level"],
                 reason=automod_regex["reason"],
                 time=self.api._format_timedelta(automod_regex["time"])
@@ -296,7 +309,11 @@ set him a level 3 warning with the given reason.
                 else:
                     await ctx.send(_("Level must be between 1 and 5."))
             warn_reason = await self._ask_for_value(
-                ctx, msg, embed, _("What's the reason of the automod's warning?"), optional=True,
+                ctx,
+                msg,
+                embed,
+                _("What's the reason of the automod's warning?"),
+                optional=True,
             )
             time: timedelta = await self._ask_for_value(
                 ctx,
@@ -427,7 +444,7 @@ set him a level 3 warning with the given reason.
                 autowarn["warn"]["reason"],
                 autowarn["level"],
                 autowarn["automod_only"],
-                timedelta(seconds=autowarn["time"]),
+                timedelta(seconds=autowarn["time"]) if autowarn["time"] else None,
                 timedelta(seconds=duration) if duration else None,
             )
             embed.set_footer(text=_("Confirm with the reactions below."))
@@ -457,9 +474,9 @@ set him a level 3 warning with the given reason.
             return
         text = ""
         for index, data in enumerate(autowarns):
-            text += _("{index}. level {level} warn (need {number} warns to trigger)\n").format(
-                index=index, level=data["warn"]["level"], number=data["number"],
-            )
+            text += _(
+                "{index}. level {level} warn (need {number} warns to trigger)\n"
+            ).format(index=index, level=data["warn"]["level"], number=data["number"],)
         text = list(pagify(text, page_length=1900))
         pages = []
         for i, page in enumerate(text):
@@ -489,7 +506,9 @@ set him a level 3 warning with the given reason.
             except IndexError:
                 await ctx.send(_("There isn't such automated warn."))
                 return
-        embed = discord.Embed(title=_("Settings of auto warn {index}").format(index=index))
+        embed = discord.Embed(
+            title=_("Settings of auto warn {index}").format(index=index)
+        )
         duration = autowarn["warn"]["duration"]
         embed = self._format_embed_for_autowarn(
             embed,
