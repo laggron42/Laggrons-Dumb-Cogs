@@ -191,9 +191,7 @@ class CODMW(commands.Cog):
                 ).format(prefix=ctx.clean_prefix)
             )
             return False
-        self.cod_client = Client(
-            "v1", "mw", tokens["username"], tokens["password"],
-        )
+        self.cod_client = Client("v1", "mw", tokens["username"], tokens["password"],)
 
     def _format_timedelta(self, time: timedelta):
         """Format a timedelta object into a string"""
@@ -495,9 +493,7 @@ class CODMW(commands.Cog):
             title = _("**{result}** a game of **{gamemode}** on **{map}** {time}").format(
                 result=result, gamemode=gamemode, map=map, time=time,
             )
-            duration = self._format_timedelta(
-                timedelta(seconds=match["duration"] / 1000)
-            )
+            duration = self._format_timedelta(timedelta(seconds=match["duration"] / 1000))
             player_stats = match["playerStats"]
             value = _(
                 "⏳ Match lasted {duration}\n"
