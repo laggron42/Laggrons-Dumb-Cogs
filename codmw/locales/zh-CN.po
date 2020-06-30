@@ -1,0 +1,260 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: laggrons-dumb-cogs\n"
+"POT-Creation-Date: 2020-06-24 23:04+0200\n"
+"PO-Revision-Date: 2020-06-30 13:43\n"
+"Last-Translator: \n"
+"Language-Team: Chinese Simplified\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: redgettext 3.1\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Crowdin-Project: laggrons-dumb-cogs\n"
+"X-Crowdin-Project-ID: 409698\n"
+"X-Crowdin-Language: zh-CN\n"
+"X-Crowdin-File: /v3/codmw/locales/messages.pot\n"
+"X-Crowdin-File-ID: 26\n"
+"Language: zh_CN\n"
+
+#: codmw\codmw.py:46
+msgid "{amount} {unit} ago."
+msgstr ""
+
+#: codmw\codmw.py:49 codmw\codmw.py:217
+msgid "year"
+msgstr ""
+
+#: codmw\codmw.py:49 codmw\codmw.py:217
+msgid "years"
+msgstr ""
+
+#: codmw\codmw.py:50 codmw\codmw.py:218
+msgid "month"
+msgstr ""
+
+#: codmw\codmw.py:50 codmw\codmw.py:218
+msgid "months"
+msgstr ""
+
+#: codmw\codmw.py:51 codmw\codmw.py:219
+msgid "week"
+msgstr ""
+
+#: codmw\codmw.py:51 codmw\codmw.py:219
+msgid "weeks"
+msgstr ""
+
+#: codmw\codmw.py:52 codmw\codmw.py:220
+msgid "day"
+msgstr ""
+
+#: codmw\codmw.py:52 codmw\codmw.py:220
+msgid "days"
+msgstr ""
+
+#: codmw\codmw.py:53 codmw\codmw.py:221
+msgid "hour"
+msgstr ""
+
+#: codmw\codmw.py:53 codmw\codmw.py:221
+msgid "hours"
+msgstr ""
+
+#: codmw\codmw.py:54 codmw\codmw.py:222
+msgid "minute"
+msgstr ""
+
+#: codmw\codmw.py:54 codmw\codmw.py:222
+msgid "minutes"
+msgstr ""
+
+#: codmw\codmw.py:55 codmw\codmw.py:223
+msgid "second"
+msgstr ""
+
+#: codmw\codmw.py:55 codmw\codmw.py:223
+msgid "seconds"
+msgstr ""
+
+#: codmw\codmw.py:65
+msgid "just now"
+msgstr ""
+
+#: codmw\codmw.py:69
+msgid "a minute ago"
+msgstr ""
+
+#: codmw\codmw.py:73
+msgid "an hour ago"
+msgstr ""
+
+#: codmw\codmw.py:77
+msgid "yesterday"
+msgstr ""
+
+#: codmw\codmw.py:89
+#, docstring
+msgid "\\n    Shows infos and stats about Call of Duty: Modern Warfare.\\n    "
+msgstr ""
+
+#: codmw\codmw.py:165
+msgid "The bot encountered issues logging in to <https://callofduty.com>.\\nPlease try again later."
+msgstr ""
+
+#: codmw\codmw.py:172
+msgid "This user cannot be found. Check the username and platform."
+msgstr ""
+
+#: codmw\codmw.py:176
+msgid "The bot encountered an unexpected error."
+msgstr ""
+
+#: codmw\codmw.py:187
+msgid "Credentials are not set. You have to use your email and password with the following command: `{prefix}set api cod username,your_username password,your_password`"
+msgstr ""
+
+#: codmw\codmw.py:232
+msgid " and "
+msgstr ""
+
+#: codmw\codmw.py:275
+#, docstring
+msgid "\\n        Show stats of your Call of Duty account.\\n        "
+msgstr ""
+
+#: codmw\codmw.py:282
+#, docstring
+msgid "\\n        Show global stats of your Call of Duty account.\\n\\n        `platform` is the platform you play on. Use the following values:\\n        `psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` = Battle.net\\n        `steam` = Steam\\n\\n        `username` is your username on the said platform (tag included if it exists)\\n        "
+msgstr ""
+
+#: codmw\codmw.py:311 codmw\codmw.py:417
+msgid "{username}'s stats"
+msgstr ""
+
+#: codmw\codmw.py:315
+msgid "Level"
+msgstr ""
+
+#: codmw\codmw.py:316
+msgid "**{level}** {bar} {next_level}"
+msgstr ""
+
+#: codmw\codmw.py:328 codmw\codmw.py:421
+msgid "Time played"
+msgstr ""
+
+#: codmw\codmw.py:332 codmw\codmw.py:427
+msgid "Games played"
+msgstr ""
+
+#: codmw\codmw.py:337
+msgid "Wins/Losses"
+msgstr ""
+
+#: codmw\codmw.py:340 codmw\codmw.py:434
+msgid "Winrate"
+msgstr ""
+
+#: codmw\codmw.py:343
+msgid "Win streak"
+msgstr ""
+
+#: codmw\codmw.py:344
+msgid "Current: {current}\\nBest: {best}"
+msgstr ""
+
+#: codmw\codmw.py:351
+msgid "Kills/Deaths/Assists"
+msgstr ""
+
+#: codmw\codmw.py:352
+msgid "{kills}/{deaths}/{assists}\\nBest number of kills: {best_kills}\\nBest number of assists: {best_assists}\\n"
+msgstr ""
+
+#: codmw\codmw.py:366 codmw\codmw.py:442
+msgid "K/D Ratio"
+msgstr ""
+
+#: codmw\codmw.py:367
+msgid "Average: {avg}\\nBest: {best}"
+msgstr ""
+
+#: codmw\codmw.py:374
+msgid "Kill streak"
+msgstr ""
+
+#: codmw\codmw.py:375
+msgid "Current: {current}\\nBest: {best}"
+msgstr ""
+
+#: codmw\codmw.py:382
+msgid "Accuracy"
+msgstr ""
+
+#: codmw\codmw.py:385
+msgid "Score per game"
+msgstr ""
+
+#: codmw\codmw.py:388
+msgid "Best score per minute"
+msgstr ""
+
+#: codmw\codmw.py:397
+#, docstring
+msgid "\\n        Show Warzone stats on your Call of Duty account.\\n\\n        `platform` is the platform you play on. Use the following values:\\n        `psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` = Battle.net\\n        `steam` = Steam\\n\\n        `username` is your username on the said platform (tag included if it exists)\\n        "
+msgstr ""
+
+#: codmw\codmw.py:431
+msgid "Wins"
+msgstr ""
+
+#: codmw\codmw.py:437
+msgid "Kills/Deaths"
+msgstr ""
+
+#: codmw\codmw.py:445
+msgid "Contracts"
+msgstr ""
+
+#: codmw\codmw.py:448
+msgid "Revives"
+msgstr ""
+
+#: codmw\codmw.py:451
+msgid "Downs"
+msgstr ""
+
+#: codmw\codmw.py:454
+msgid "Number of tops"
+msgstr ""
+
+#: codmw\codmw.py:455
+msgid "Top 25: {top_25}\\nTop 10: {top_10}\\nTop 5: {top_5}"
+msgstr ""
+
+#: codmw\codmw.py:467
+#, docstring
+msgid "\\n        Show your 5 last Call of Duty matches.\\n\\n        `platform` is the platform you play on. Use the following values:\\n        `psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` = Battle.net\\n        `steam` = Steam\\n\\n        `username` is your username on the said platform (tag included if it exists)\\n        "
+msgstr ""
+
+#: codmw\codmw.py:486
+msgid "5 most recent matches."
+msgstr ""
+
+#: codmw\codmw.py:491
+msgid "Won"
+msgstr ""
+
+#: codmw\codmw.py:491
+msgid "Lost"
+msgstr ""
+
+#: codmw\codmw.py:495
+msgid "**{result}** a game of **{gamemode}** on **{map}** {time}"
+msgstr ""
+
+#: codmw\codmw.py:502
+msgid "⏳ Match lasted {duration}\\nScore: `{score}` | XP: `{xp}`\\nKills: `{kills}` | Deaths: `{deaths}` | KDR: {kdr}%"
+msgstr ""
+
