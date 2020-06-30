@@ -412,7 +412,7 @@ set him a level 3 warning with the given reason.
         if index < 0:
             await ctx.send(_("Invalid index, must be positive."))
             return
-        async with await self.data.guild(guild).automod.warnings() as warnings:
+        async with self.data.guild(guild).automod.warnings() as warnings:
             try:
                 autowarn = warnings[index]
             except IndexError:
