@@ -851,16 +851,20 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             else:
                 reason = reason[0]
             date = pretty_date(self.api._get_datetime(case["time"]))
-            warn_list.append(f"**{warning_str(level, False)}:** {reason} • *{date}*\n")
-            if len("".join(warn_list)) > 1024:  # embed limits
+            text = f"**{warning_str(level, False)}:** {reason} • *{date}*\n"
+            if len("".join(warn_list + [text])) > 1024:  # embed limits
                 break
+            else:
+                warn_list.append(text)
         embed = discord.Embed(description=_("User modlog summary."))
         embed.set_author(name=f"{user} | {user.id}", icon_url=user.avatar_url)
         embed.add_field(
             name=_("Total number of warnings: ") + str(len(cases)), value=warn_field, inline=False
         )
         embed.add_field(
-            name=_("{len} last warnings").format(len=len(warn_list)),
+            name=_("{len} last warnings").format(len=len(warn_list))
+            if len(warn_list) > 1
+            else _("Last warning"),
             value="".join(warn_list),
             inline=False,
         )
