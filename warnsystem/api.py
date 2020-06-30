@@ -1073,7 +1073,7 @@ class API:
             else:
                 audit_reason += _("Reason too long to be shown.")
         if not date:
-            date = datetime.now()
+            date = datetime.utcnow()
 
         i = 0
         fails = [await warn_member(x, audit_reason) for x in members if x]
