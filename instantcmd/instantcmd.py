@@ -57,8 +57,7 @@ class InstantCommands(BaseCog):
     """
     Generate a new command from a code snippet, without making a new cog.
 
-    Report a bug or ask a question: https://discord.gg/AVzjfpR
-    Full documentation and FAQ: https://laggrons-dumb-cogs.readthedocs.io/instantcommands.html
+    Documentation https://laggron.red/instantcommands.html
     """
 
     def __init__(self, bot):
@@ -247,7 +246,7 @@ cog at this point.
                 "Your next message will be the code of the command. \n\n"
                 "If this is the first time you're adding instant commands, "
                 "please read the wiki:\n"
-                "<https://laggrons-dumb-cogs.readthedocs.io/instantcommands.html>"
+                "https://laggron.red/instantcommands.html#usage"
             )
             pred = MessagePredicate.same_context(ctx)
             try:

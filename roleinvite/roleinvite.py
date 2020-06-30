@@ -35,8 +35,7 @@ class RoleInvite(BaseCog):
     """
     Server autorole following the invite the user used to join the server
 
-    Report a bug or ask a question: https://discord.gg/AVzjfpR
-    Full documentation and FAQ: https://laggrons-dumb-cogs.readthedocs.io/roleinvite.html
+    Documentation: https://laggron.red/roleinvite.html
     """
 
     def_guild = {"invites": {}, "enabled": False}

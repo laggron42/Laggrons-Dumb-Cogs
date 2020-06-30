@@ -31,8 +31,7 @@ class Say(BaseCog):
     """
     Speak as if you were the bot
 
-    Report a bug or ask a question: https://discord.gg/AVzjfpR
-    Full documentation and FAQ: http://laggrons-dumb-cogs.readthedocs.io/say.html
+    Documentation: http://laggron.red/say.html
     """
 
     def __init__(self, bot):
