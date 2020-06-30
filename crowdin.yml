@@ -1,0 +1,5 @@
+files:
+  - source: '**/locales/messages.pot'
+    ignore:
+      - docs
+    translation: /%original_path%/%locale%.po
