@@ -1,15 +1,19 @@
-#
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2020-07-01 00:05+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Project-Id-Version: laggrons-dumb-cogs\n"
+"POT-Creation-Date: 2020-06-30 20:12+0000\n"
+"Last-Translator: \n"
+"Language-Team: Chinese Simplified\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: redgettext 3.1\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Crowdin-Project: laggrons-dumb-cogs\n"
+"X-Crowdin-Project-ID: 409698\n"
+"X-Crowdin-Language: zh-CN\n"
+"X-Crowdin-File-ID: 26\n"
+"Language: zh_CN\n"
 
 #: codmw/codmw.py:46
 msgid "{amount} {unit} ago."
@@ -93,9 +97,7 @@ msgid "\\n    Shows infos and stats about Call of Duty: Modern Warfare.\\n    "
 msgstr ""
 
 #: codmw/codmw.py:165
-msgid ""
-"The bot encountered issues logging in to <https://callofduty.com>.\\nPlease "
-"try again later."
+msgid "The bot encountered issues logging in to <https://callofduty.com>.\\nPlease try again later."
 msgstr ""
 
 #: codmw/codmw.py:172
@@ -107,10 +109,7 @@ msgid "The bot encountered an unexpected error."
 msgstr ""
 
 #: codmw/codmw.py:187
-msgid ""
-"Credentials are not set. You have to use your email and password with the "
-"following command: `{prefix}set api cod username,your_username "
-"password,your_password`"
+msgid "Credentials are not set. You have to use your email and password with the following command: `{prefix}set api cod username,your_username password,your_password`"
 msgstr ""
 
 #: codmw/codmw.py:230
@@ -124,12 +123,7 @@ msgstr ""
 
 #: codmw/codmw.py:280
 #, docstring
-msgid ""
-"\\n        Show global stats of your Call of Duty account.\\n\\n        "
-"`platform` is the platform you play on. Use the following values:\\n        "
-"`psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` ="
-" Battle.net\\n        `steam` = Steam\\n\\n        `username` is your "
-"username on the said platform (tag included if it exists)\\n        "
+msgid "\\n        Show global stats of your Call of Duty account.\\n\\n        `platform` is the platform you play on. Use the following values:\\n        `psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` = Battle.net\\n        `steam` = Steam\\n\\n        `username` is your username on the said platform (tag included if it exists)\\n        "
 msgstr ""
 
 #: codmw/codmw.py:309 codmw/codmw.py:415
@@ -173,9 +167,7 @@ msgid "Kills/Deaths/Assists"
 msgstr ""
 
 #: codmw/codmw.py:350
-msgid ""
-"{kills}/{deaths}/{assists}\\nBest number of kills: {best_kills}\\nBest "
-"number of assists: {best_assists}\\n"
+msgid "{kills}/{deaths}/{assists}\\nBest number of kills: {best_kills}\\nBest number of assists: {best_assists}\\n"
 msgstr ""
 
 #: codmw/codmw.py:364 codmw/codmw.py:440
@@ -208,12 +200,7 @@ msgstr ""
 
 #: codmw/codmw.py:395
 #, docstring
-msgid ""
-"\\n        Show Warzone stats on your Call of Duty account.\\n\\n        "
-"`platform` is the platform you play on. Use the following values:\\n        "
-"`psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` ="
-" Battle.net\\n        `steam` = Steam\\n\\n        `username` is your "
-"username on the said platform (tag included if it exists)\\n        "
+msgid "\\n        Show Warzone stats on your Call of Duty account.\\n\\n        `platform` is the platform you play on. Use the following values:\\n        `psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` = Battle.net\\n        `steam` = Steam\\n\\n        `username` is your username on the said platform (tag included if it exists)\\n        "
 msgstr ""
 
 #: codmw/codmw.py:429
@@ -246,12 +233,7 @@ msgstr ""
 
 #: codmw/codmw.py:465
 #, docstring
-msgid ""
-"\\n        Show your 5 last Call of Duty matches.\\n\\n        `platform` is"
-" the platform you play on. Use the following values:\\n        `psn` = "
-"Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` = "
-"Battle.net\\n        `steam` = Steam\\n\\n        `username` is your "
-"username on the said platform (tag included if it exists)\\n        "
+msgid "\\n        Show your 5 last Call of Duty matches.\\n\\n        `platform` is the platform you play on. Use the following values:\\n        `psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` = Battle.net\\n        `steam` = Steam\\n\\n        `username` is your username on the said platform (tag included if it exists)\\n        "
 msgstr ""
 
 #: codmw/codmw.py:484
@@ -271,7 +253,6 @@ msgid "**{result}** a game of **{gamemode}** on **{map}** {time}"
 msgstr ""
 
 #: codmw/codmw.py:498
-msgid ""
-"⏳ Match lasted {duration}\\nScore: `{score}` | XP: `{xp}`\\nKills: `{kills}`"
-" | Deaths: `{deaths}` | KDR: {kdr}%"
+msgid "⏳ Match lasted {duration}\\nScore: `{score}` | XP: `{xp}`\\nKills: `{kills}` | Deaths: `{deaths}` | KDR: {kdr}%"
 msgstr ""
+

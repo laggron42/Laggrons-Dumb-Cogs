@@ -3,17 +3,17 @@ msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
 "POT-Creation-Date: 2020-07-01 00:05+0000\n"
 "Last-Translator: \n"
-"Language-Team: French\n"
+"Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: redgettext 3.1\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Crowdin-Project: laggrons-dumb-cogs\n"
 "X-Crowdin-Project-ID: 409698\n"
-"X-Crowdin-Language: fr\n"
+"X-Crowdin-Language: tr\n"
 "X-Crowdin-File-ID: 32\n"
-"Language: fr_FR\n"
+"Language: tr_TR\n"
 
 #: say/say.py:31
 #, docstring
@@ -22,51 +22,51 @@ msgstr ""
 
 #: say/say.py:98 say/say.py:103
 msgid "I am not allowed to send messages in "
-msgstr "Je ne suis pas autorisé à envoyer des messages dans le channel "
+msgstr "Buraya mesaj yollamaya iznim yok "
 
 #: say/say.py:110 say/say.py:114
 msgid "I am not allowed to upload files in "
-msgstr "Je ne suis pas autorisé à envoyer des fichiers dans le channel "
+msgstr "Buraya dosya yükleme iznim yok "
 
 #: say/say.py:126
 #, docstring
 msgid "\\n        Make the bot say what you want in the desired channel.\\n\\n        If no channel is specified, the message will be send in the current channel.\\n        You can attach some files to upload them to Discord.\\n\\n        Example usage :\\n        - `!say #general hello there`\\n        - `!say owo I have a file` (a file is attached to the command message)\\n        "
-msgstr ""
+msgstr "\\n        Bota istediğiniz kanalda istediğinizi söyletin.\\n\\n        Eğer mesaj için bir kanal ayarlanmazsa şu anki odaya atacaktı.\\n        İstediğiniz dosyaları Discord'a yüklemek içinde kullanabilirsiniz.\\n\\n       Örneğin :\\n        - `!say #general Merhaba`\\n        - `!say owo benim bir dosyam var ` (komut satırına bir dosya ekleyin)\\n        "
 
 #: say/say.py:143
 #, docstring
 msgid "\\n        Same as say command, except it deletes your message.\\n\\n        If the message wasn't removed, then I don't have enough permissions.\\n        "
-msgstr ""
+msgstr "\\n        Aynı komut ve işlev fakat siz yazdıktan sonra mesajınız silinir.\\n\\n        Eğer mesaj silinmezse bu yetkimin yetmediği anlamına gelir.\\n        "
 
 #: say/say.py:157 say/say.py:159
 msgid "Not enough permissions to delete messages."
-msgstr "Pas assez de permissions pour supprimer le message."
+msgstr "Mesajları silmeye yeterli yetkim yok."
 
 #: say/say.py:166
 #, docstring
 msgid "Start receiving and sending messages as the bot through DM"
-msgstr "Envoyez et recevez des messages en tant que votre bot à travers les MP"
+msgstr "DM aracılığıyla bot olarak mesaj almaya ve göndermeye başlayın"
 
 #: say/say.py:172
 msgid "You need to give a channel to enable this in DM. You can give the channel ID too."
-msgstr "Vous devez donner un channel pour activer ceci en MP. Vous pouvez également donner l’ID du channel."
+msgstr "DM olarak kullanmak için bir kanal ayarlamanız gerekir. İster kanal ister ID olarak ekleyebilirsiniz."
 
 #: say/say.py:182
 msgid "A session is already running."
-msgstr "Une session est déjà en cours."
+msgstr "Bir işlem zaten devam ediyor."
 
 #: say/say.py:186
 msgid "I will start sending you messages from {0}.\\nJust send me any message and I will send it in that channel.\\nReact with ❌ on this message to end the session.\\nIf no message was send or received in the last 5 minutes, the request will time out and stop."
-msgstr ""
+msgstr "Size buradan mesaj göndermeye başlayacağım {0}.\\nBana bir mesaj gönderin ve ben de o kanala gönderebileyim.\\nDurdurmak için ❌ ifadesine basın.\\nEğer bir mesaj gönderilmezse ya da işlem devam etmezse 5 dakika içerisinde duracaktır."
 
 #: say/say.py:205
 msgid "Request timed out. Session closed"
-msgstr "Requête expirée. Session fermée"
+msgstr "İşlem zaman aşımına uğradı. Bu oturum kapandı"
 
 #: say/say.py:237
 #, docstring
 msgid "\\n        Get informations about the cog.\\n        "
-msgstr ""
+msgstr "\\n        Cog hakkında bilgi alın.\\n        "
 
 #: say/say.py:241
 msgid "Laggron's Dumb Cogs V3 - say\\n\\nVersion: {0.__version__}\\nAuthor: {0.__author__}\\nGithub repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\\nDiscord server: https://discord.gg/AVzjfpR\\nDocumentation: http://laggrons-dumb-cogs.readthedocs.io/\\nHelp translating the cog: https://crowdin.com/project/laggrons-dumb-cogs/\\n\\nSupport my work on Patreon: https://www.patreon.com/retke"
@@ -74,5 +74,5 @@ msgstr ""
 
 #: say/say.py:275
 msgid "Session closed"
-msgstr "Requête expirée. Session fermée"
+msgstr "Oturum kapatıldı"
 

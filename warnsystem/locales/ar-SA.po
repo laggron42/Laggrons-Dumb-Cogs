@@ -1,15 +1,19 @@
-#
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: laggrons-dumb-cogs\n"
 "POT-Creation-Date: 2020-07-01 00:05+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Last-Translator: \n"
+"Language-Team: Arabic\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: redgettext 3.1\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5);\n"
+"X-Crowdin-Project: laggrons-dumb-cogs\n"
+"X-Crowdin-Project-ID: 409698\n"
+"X-Crowdin-Language: ar\n"
+"X-Crowdin-File-ID: 34\n"
+"Language: ar_SA\n"
 
 #: warnsystem/__init__.py:104 warnsystem/api.py:181
 #: warnsystem/warnsystem.py:58
@@ -87,9 +91,7 @@ msgid " and "
 msgstr ""
 
 #: warnsystem/api.py:69
-msgid ""
-"The given member cannot be found.\\nIf you're trying to hackban, the user ID"
-" is not valid."
+msgid "The given member cannot be found.\\nIf you're trying to hackban, the user ID is not valid."
 msgstr ""
 
 #: warnsystem/api.py:567 warnsystem/api.py:1063
@@ -206,9 +208,7 @@ msgid "Status"
 msgstr ""
 
 #: warnsystem/api.py:644
-msgid ""
-"\\n\\n***The message could not be delivered to the user. They may have DMs "
-"disabled, blocked the bot, or may not have a mutual server.***"
+msgid "\\n\\n***The message could not be delivered to the user. They may have DMs disabled, blocked the bot, or may not have a mutual server.***"
 msgstr ""
 
 #: warnsystem/api.py:702 warnsystem/api.py:1041 warnsystem/settings.py:484
@@ -216,40 +216,27 @@ msgid "I can't manage roles, please give me this permission to continue."
 msgstr ""
 
 #: warnsystem/api.py:708
-msgid ""
-"WarnSystem mute role. This role will be assigned to the muted members, feel "
-"free to move it or modify its channel permissions."
+msgid "WarnSystem mute role. This role will be assigned to the muted members, feel free to move it or modify its channel permissions."
 msgstr ""
 
 #: warnsystem/api.py:716
-msgid ""
-"Modifying role's position, keep it under my top role so I can add it to "
-"muted members."
+msgid "Modifying role's position, keep it under my top role so I can add it to muted members."
 msgstr ""
 
 #: warnsystem/api.py:728
-msgid ""
-"Setting up WarnSystem mute. All muted members will have this role, feel free"
-" to edit its permissions."
+msgid "Setting up WarnSystem mute. All muted members will have this role, feel free to edit its permissions."
 msgstr ""
 
 #: warnsystem/api.py:735
-msgid ""
-"Cannot edit permissions of the channel {channel} because of a permission "
-"error (probably enforced permission for `Manage channel`)."
+msgid "Cannot edit permissions of the channel {channel} because of a permission error (probably enforced permission for `Manage channel`)."
 msgstr ""
 
 #: warnsystem/api.py:742 warnsystem/api.py:754
-msgid ""
-"Cannot edit permissions of the channel {channel} because of an unknown "
-"error."
+msgid "Cannot edit permissions of the channel {channel} because of an unknown error."
 msgstr ""
 
 #: warnsystem/api.py:914
-msgid ""
-"Cannot take actions on this member, he is above than me in the roles "
-"hierarchy. Modify the hierarchy so my top role ({bot_role}) is above "
-"{member_role}."
+msgid "Cannot take actions on this member, he is above than me in the roles hierarchy. Modify the hierarchy so my top role ({bot_role}) is above {member_role}."
 msgstr ""
 
 #: warnsystem/api.py:929
@@ -257,9 +244,7 @@ msgid "I can't take actions on the owner of the guild."
 msgstr ""
 
 #: warnsystem/api.py:933
-msgid ""
-"Why would you warn me? I did nothing wrong :c\\n(use a manual kick/ban "
-"instead, warning the bot will cause issues)"
+msgid "Why would you warn me? I did nothing wrong :c\\n(use a manual kick/ban instead, warning the bot will cause issues)"
 msgstr ""
 
 #: warnsystem/api.py:981
@@ -267,15 +252,11 @@ msgid "Unbanning the softbanned member after cleaning up the messages."
 msgstr ""
 
 #: warnsystem/api.py:1032
-msgid ""
-"I need the `Send messages` and `Embed links` permissions in {channel} to do "
-"this."
+msgid "I need the `Send messages` and `Embed links` permissions in {channel} to do this."
 msgstr ""
 
 #: warnsystem/api.py:1045
-msgid ""
-"The mute role `{mute_role}` was moved above my top role `{my_role}`. Please "
-"move the roles so my top role is above the mute role."
+msgid "The mute role `{mute_role}` was moved above my top role `{my_role}`. Please move the roles so my top role is above the mute role."
 msgstr ""
 
 #: warnsystem/api.py:1054
@@ -287,9 +268,7 @@ msgid "I can't ban members, please give me this permission to continue."
 msgstr ""
 
 #: warnsystem/api.py:1066
-msgid ""
-"[WarnSystem] {action} requested by {author} (ID: {author.id}) against "
-"{member}. "
+msgid "[WarnSystem] {action} requested by {author} (ID: {author.id}) against {member}. "
 msgstr ""
 
 #: warnsystem/api.py:1072
@@ -305,15 +284,11 @@ msgid "Reason too long to be shown."
 msgstr ""
 
 #: warnsystem/api.py:1119
-msgid ""
-"You were unbanned from {guild}, your temporary ban (reason: {reason}) just "
-"ended after {duration}.\\nYou can join back using this invite: {invite}"
+msgid "You were unbanned from {guild}, your temporary ban (reason: {reason}) just ended after {duration}.\\nYou can join back using this invite: {invite}"
 msgstr ""
 
 #: warnsystem/api.py:1154
-msgid ""
-"End of timed {action} of {member} requested by {author} that lasted for "
-"{time}. Reason of the {action}: {reason}"
+msgid "End of timed {action} of {member} requested by {author} that lasted for {time}. Reason of the {action}: {reason}"
 msgstr ""
 
 #: warnsystem/api.py:1369
@@ -378,10 +353,7 @@ msgid "What will happen:"
 msgstr ""
 
 #: warnsystem/automod.py:90
-msgid ""
-"If a member receives {number}{level_lock} warnings{from_bot}{within_time}, "
-"the bot will set a level {level} warning on him{duration} for the reason: "
-"{reason}"
+msgid "If a member receives {number}{level_lock} warnings{from_bot}{within_time}, the bot will set a level {level} warning on him{duration} for the reason: {reason}"
 msgstr ""
 
 #: warnsystem/automod.py:95
@@ -419,9 +391,7 @@ msgid "Automod is now disabled."
 msgstr ""
 
 #: warnsystem/automod.py:138
-msgid ""
-"Automod is currently {state}.\\nType `{prefix}automod enable {arg}` to "
-"{action} it."
+msgid "Automod is currently {state}.\\nType `{prefix}automod enable {arg}` to {action} it."
 msgstr ""
 
 #: warnsystem/automod.py:142 warnsystem/automod.py:544
@@ -439,20 +409,12 @@ msgstr ""
 
 #: warnsystem/automod.py:151
 #, docstring
-msgid ""
-"\\n        Trigger warnings when a regular expression matches a message like"
-" ReTrigger.\\n        "
+msgid "\\n        Trigger warnings when a regular expression matches a message like ReTrigger.\\n        "
 msgstr ""
 
 #: warnsystem/automod.py:167
 #, docstring
-msgid ""
-"\\n        Create a new Regex trigger for a warning.\\n\\n        Use "
-"https://regex101.com/ to test your expression.\\n\\n        Possible "
-"keywords:\\n        - `{member}`\\n        - `{channel}`\\n        - "
-"`{guild}`\\n\\n        Example: `[p]automod regex add discord_invite "
-"\\\"(?i)(discord\\\\.gg|discordapp\\\\.com\\\\/invite|discord\\\\.me)\\\\/(\\\\S+)\\\""
-" 1 Discord invite sent in {channel.mention}.`\\n        "
+msgid "\\n        Create a new Regex trigger for a warning.\\n\\n        Use https://regex101.com/ to test your expression.\\n\\n        Possible keywords:\\n        - `{member}`\\n        - `{channel}`\\n        - `{guild}`\\n\\n        Example: `[p]automod regex add discord_invite \\\"(?i)(discord\\\\.gg|discordapp\\\\.com\\\\/invite|discord\\\\.me)\\\\/(\\\\S+)\\\" 1 Discord invite sent in {channel.mention}.`\\n        "
 msgstr ""
 
 #: warnsystem/automod.py:184
@@ -517,20 +479,12 @@ msgstr ""
 
 #: warnsystem/automod.py:265
 #, docstring
-msgid ""
-"\\n        Trigger actions when a member get x warnings within the specified"
-" time.\\n\\n        For example, if a member gets 3 warnings within a day, "
-"you can make the bot automatically\\nset him a level 3 warning with the "
-"given reason.\\n        It is also possible to only include warnings given "
-"by the bot when counting.\\n        "
+msgid "\\n        Trigger actions when a member get x warnings within the specified time.\\n\\n        For example, if a member gets 3 warnings within a day, you can make the bot automatically\\nset him a level 3 warning with the given reason.\\n        It is also possible to only include warnings given by the bot when counting.\\n        "
 msgstr ""
 
 #: warnsystem/automod.py:276
 #, docstring
-msgid ""
-"\\n        Create a new automated warn based on member's modlog.\\n\\n"
-"        Multiple parameters are needed, you will open an interactive "
-"menu.\\n        "
+msgid "\\n        Create a new automated warn based on member's modlog.\\n\\n        Multiple parameters are needed, you will open an interactive menu.\\n        "
 msgstr ""
 
 #: warnsystem/automod.py:282
@@ -562,25 +516,15 @@ msgid "What's the reason of the automod's warning?"
 msgstr ""
 
 #: warnsystem/automod.py:322
-msgid ""
-"For how long should this automod be active?\\n\\nFor example, you can make "
-"it trigger if a member got 3 warnings __within a day__\\nOmitting this value"
-" will make the automod look across the entire member's modlog without time "
-"limit.\\n\\nFormat is the same as temp mutes/bans: `30m` = 30 minutes, `2h` "
-"= 2 hours, `4d` = 4 days..."
+msgid "For how long should this automod be active?\\n\\nFor example, you can make it trigger if a member got 3 warnings __within a day__\\nOmitting this value will make the automod look across the entire member's modlog without time limit.\\n\\nFormat is the same as temp mutes/bans: `30m` = 30 minutes, `2h` = 2 hours, `4d` = 4 days..."
 msgstr ""
 
 #: warnsystem/automod.py:339
-msgid ""
-"Level 2 and 5 warnings can be temporary (unmute or unban after some time). "
-"For how long should the the member stay punished?\\nSkip this value to make "
-"the mute/ban unlimited.\\nTime format is the same as the previous question."
+msgid "Level 2 and 5 warnings can be temporary (unmute or unban after some time). For how long should the the member stay punished?\\nSkip this value to make the mute/ban unlimited.\\nTime format is the same as the previous question."
 msgstr ""
 
 #: warnsystem/automod.py:353
-msgid ""
-"Should the automod be triggered only by specific level? (e.g. only 3 level 1"
-" warnings should trigger)\\nSend the level or `0` to disable."
+msgid "Should the automod be triggered only by specific level? (e.g. only 3 level 1 warnings should trigger)\\nSend the level or `0` to disable."
 msgstr ""
 
 #: warnsystem/automod.py:363
@@ -588,10 +532,7 @@ msgid "Level must be between 0 and 5."
 msgstr ""
 
 #: warnsystem/automod.py:369
-msgid ""
-"Should the automod be triggered only by other automod warnings?\\nIf "
-"enabled, warnings issued by a normal moderator will not be added to the "
-"count.\\n\\nType `yes` or `no`."
+msgid "Should the automod be triggered only by other automod warnings?\\nIf enabled, warnings issued by a normal moderator will not be added to the count.\\n\\nType `yes` or `no`."
 msgstr ""
 
 #: warnsystem/automod.py:379 warnsystem/automod.py:400
@@ -617,9 +558,7 @@ msgstr ""
 
 #: warnsystem/automod.py:423
 #, docstring
-msgid ""
-"\\n        Delete an automated warning.\\n\\n        You can find the index "
-"with the `[p]automod warn list` command.\\n        "
+msgid "\\n        Delete an automated warning.\\n\\n        You can find the index with the `[p]automod warn list` command.\\n        "
 msgstr ""
 
 #: warnsystem/automod.py:430 warnsystem/automod.py:501
@@ -669,9 +608,7 @@ msgstr ""
 
 #: warnsystem/automod.py:494
 #, docstring
-msgid ""
-"\\n        Shows the contents of an automatic warn.\\n\\n        Index is "
-"shown by the `[p]automod warn list` command.\\n        "
+msgid "\\n        Shows the contents of an automatic warn.\\n\\n        Index is shown by the `[p]automod warn list` command.\\n        "
 msgstr ""
 
 #: warnsystem/automod.py:510
@@ -680,10 +617,7 @@ msgstr ""
 
 #: warnsystem/automod.py:527
 #, docstring
-msgid ""
-"\\n        Configure the antispam system.\\n\\n        If you installed "
-"WarnSystem for the sole purpose of antispam, disable all warnings andyou "
-"shouldn't need further setup.\\n        "
+msgid "\\n        Configure the antispam system.\\n\\n        If you installed WarnSystem for the sole purpose of antispam, disable all warnings andyou shouldn't need further setup.\\n        "
 msgstr ""
 
 #: warnsystem/automod.py:537
@@ -708,11 +642,7 @@ msgid "True"
 msgstr ""
 
 #: warnsystem/automod.py:552
-msgid ""
-"WarnSystem's antispam feature will make your text channels cleaner by "
-"removing and warning members sending undesired content.\\n\\nAntispam is "
-"currently **{status}**.\\n{status_change} it with `{prefix}automod antispam "
-"{setting}`."
+msgid "WarnSystem's antispam feature will make your text channels cleaner by removing and warning members sending undesired content.\\n\\nAntispam is currently **{status}**.\\n{status_change} it with `{prefix}automod antispam {setting}`."
 msgstr ""
 
 #: warnsystem/automod.py:567
@@ -720,65 +650,38 @@ msgid "Antispam system is now {status}."
 msgstr ""
 
 #: warnsystem/automod.py:571
-msgid ""
-"\\n:warning: Automod isn't enabled on this guild, enable it with "
-"`{prefix}automod enable True`."
+msgid "\\n:warning: Automod isn't enabled on this guild, enable it with `{prefix}automod enable True`."
 msgstr ""
 
 #: warnsystem/automod.py:581
 #, docstring
-msgid ""
-"\\n        Defines the spam threshold.\\n\\n        Delay is in seconds.\\n"
-"        Example: `[p]automod antispam threshold 5 10` = maximum of 5 "
-"messages within 10 secondsbefore triggering the antispam.\\n        "
+msgid "\\n        Defines the spam threshold.\\n\\n        Delay is in seconds.\\n        Example: `[p]automod antispam threshold 5 10` = maximum of 5 messages within 10 secondsbefore triggering the antispam.\\n        "
 msgstr ""
 
 #: warnsystem/automod.py:593
-msgid ""
-"Done. A member will be considered as spamming if he sends more than "
-"{max_messages} within {delay} seconds."
+msgid "Done. A member will be considered as spamming if he sends more than {max_messages} within {delay} seconds."
 msgstr ""
 
 #: warnsystem/automod.py:601
 #, docstring
-msgid ""
-"\\n        If antispam is triggered twice within this delay, perform the "
-"warn.\\n\\n        Delay in seconds.\\n        If the antispam is triggered "
-"once, a simple warning is send in the chat, mentionning themember. If the "
-"same member triggers the antispam system a second time within this delay, "
-"therewill be an actual warning taken, the one you define with `[p]automod "
-"antispam warn`.\\n\\n        This is a way to tell the member he is close to"
-" being sanctioned. Of course you candisable this and immediatly take actions"
-" by setting a delay of 0. Default is 60 seconds.\\n        "
+msgid "\\n        If antispam is triggered twice within this delay, perform the warn.\\n\\n        Delay in seconds.\\n        If the antispam is triggered once, a simple warning is send in the chat, mentionning themember. If the same member triggers the antispam system a second time within this delay, therewill be an actual warning taken, the one you define with `[p]automod antispam warn`.\\n\\n        This is a way to tell the member he is close to being sanctioned. Of course you candisable this and immediatly take actions by setting a delay of 0. Default is 60 seconds.\\n        "
 msgstr ""
 
 #: warnsystem/automod.py:617
-msgid ""
-"Done. If the antispam is triggered twice within {time} seconds, actions will"
-" be taken. Use `{prefix}automod antispam warn` to define the warn taken."
+msgid "Done. If the antispam is triggered twice within {time} seconds, actions will be taken. Use `{prefix}automod antispam warn` to define the warn taken."
 msgstr ""
 
 #: warnsystem/automod.py:625
-msgid ""
-"Done. When triggered, the antispam will immediately perform the warn you "
-"defined with `{prefix}automod antispam warn`."
+msgid "Done. When triggered, the antispam will immediately perform the warn you defined with `{prefix}automod antispam warn`."
 msgstr ""
 
 #: warnsystem/automod.py:640
 #, docstring
-msgid ""
-"\\n        Define the warn taken when the antispam is triggered.\\n\\n"
-"        The arguments for this command works the same way as the warn "
-"command.\\n        Examples: `[p]automod antispam warn 1 Spamming` "
-"`[p]automod antispam warn 2 30m Spamming`\\n\\n        You can use the "
-"`[p]automod warn` command to configure an automatic warning after "
-"multipleautomod infractions, like a mute after 3 warns.\\n        "
+msgid "\\n        Define the warn taken when the antispam is triggered.\\n\\n        The arguments for this command works the same way as the warn command.\\n        Examples: `[p]automod antispam warn 1 Spamming` `[p]automod antispam warn 2 30m Spamming`\\n\\n        You can use the `[p]automod warn` command to configure an automatic warning after multipleautomod infractions, like a mute after 3 warns.\\n        "
 msgstr ""
 
 #: warnsystem/automod.py:659
-msgid ""
-"If the antispam is triggered by a member, he will now receive a level "
-"{level} warn {duration}for the following reason:\\n{reason}"
+msgid "If the antispam is triggered by a member, he will now receive a level {level} warn {duration}for the following reason:\\n{reason}"
 msgstr ""
 
 #: warnsystem/automod.py:665
@@ -807,9 +710,7 @@ msgid ":white_check_mark: WarnSystem automod: **Enabled**\\n"
 msgstr ""
 
 #: warnsystem/automod.py:690
-msgid ""
-":x: WarnSystem automod: **Disabled**\\n:warning: The antispam won't work if "
-"the automod is disabled."
+msgid ":x: WarnSystem automod: **Disabled**\\n:warning: The antispam won't work if the automod is disabled."
 msgstr ""
 
 #: warnsystem/automod.py:696
@@ -817,10 +718,7 @@ msgid "Settings"
 msgstr ""
 
 #: warnsystem/automod.py:697
-msgid ""
-"Max messages allowed within the threshold: **{max_messages}**\\nThreshold: "
-"**{delay} seconds**\\nDelay before reset: **{reset_delay} seconds**  *(see "
-"`{prefix}automod antispam delay` for details about this)*"
+msgid "Max messages allowed within the threshold: **{max_messages}**\\nThreshold: **{delay} seconds**\\nDelay before reset: **{reset_delay} seconds**  *(see `{prefix}automod antispam delay` for details about this)*"
 msgstr ""
 
 #: warnsystem/automod.py:713
@@ -832,15 +730,11 @@ msgid "Unlimited."
 msgstr ""
 
 #: warnsystem/automod.py:724
-msgid ""
-"This is the warning members will get when they break the "
-"antispam:\\n\\nLevel: {level}\\n{time}Reason: {reason}"
+msgid "This is the warning members will get when they break the antispam:\\n\\nLevel: {level}\\n{time}Reason: {reason}"
 msgstr ""
 
 #: warnsystem/converters.py:145
-msgid ""
-"I'm not doing anything! Please provide at least one of these arguments: "
-"`--take-action`, `--send-dm`, `--send-modlog`."
+msgid "I'm not doing anything! Please provide at least one of these arguments: `--take-action`, `--send-dm`, `--send-modlog`."
 msgstr ""
 
 #: warnsystem/converters.py:151
@@ -852,41 +746,27 @@ msgid "The search could't find any member."
 msgstr ""
 
 #: warnsystem/converters.py:254
-msgid ""
-"Can't convert `{arg}` from `--joined-{state}` into a valid date object. Here"
-" are some examples of the date format you must follow:\\n- `February 14 at "
-"6pm`\\n- `28 May 2018`\\n- `jan 4 16:09`"
+msgid "Can't convert `{arg}` from `--joined-{state}` into a valid date object. Here are some examples of the date format you must follow:\\n- `February 14 at 6pm`\\n- `28 May 2018`\\n- `jan 4 16:09`"
 msgstr ""
 
 #: warnsystem/converters.py:305
-msgid ""
-"Can't convert `{arg}` from `--has-{state}` into a valid permission object. "
-"Please provide something like this: `send_messages`"
+msgid "Can't convert `{arg}` from `--has-{state}` into a valid permission object. Please provide something like this: `send_messages`"
 msgstr ""
 
 #: warnsystem/converters.py:346
-msgid ""
-"Can't convert `{arg}` from `--{state}` into a valid role object. Please "
-"provide the exact role name (in quotes if it has spaces) or an ID."
+msgid "Can't convert `{arg}` from `--{state}` into a valid role object. Please provide the exact role name (in quotes if it has spaces) or an ID."
 msgstr ""
 
 #: warnsystem/converters.py:393
-msgid ""
-"Can't convert `{arg}` from `--{state}` into a valid member object. Please "
-"provide the exact member's name (in quotes if it has spaces), mention him, "
-"or provide its ID."
+msgid "Can't convert `{arg}` from `--{state}` into a valid member object. Please provide the exact member's name (in quotes if it has spaces), mention him, or provide its ID."
 msgstr ""
 
 #: warnsystem/converters.py:414
-msgid ""
-"Can't convert `{arg}` from `--hackban-select` into a valid user object. "
-"__You can only provide a user ID.__"
+msgid "Can't convert `{arg}` from `--hackban-select` into a valid user object. __You can only provide a user ID.__"
 msgstr ""
 
 #: warnsystem/converters.py:432
-msgid ""
-"Can't convert `{arg}` from `--time`/`--length` into a valid time "
-"object.\\nExamples of the format: `20m`, `2h30m`, `7d`, `1d6h30m45s`"
+msgid "Can't convert `{arg}` from `--time`/`--length` into a valid time object.\\nExamples of the format: `20m`, `2h30m`, `7d`, `1d6h30m45s`"
 msgstr ""
 
 #: warnsystem/converters.py:464
@@ -895,27 +775,16 @@ msgstr ""
 
 #: warnsystem/settings.py:32
 #, docstring
-msgid ""
-"\\n        Set all WarnSystem settings.\\n\\n        For more informations "
-"about how to configure and use WarnSystem, read the wiki:        "
-"https://laggron.red/warnsystem.html\\n        "
+msgid "\\n        Set all WarnSystem settings.\\n\\n        For more informations about how to configure and use WarnSystem, read the wiki:        https://laggron.red/warnsystem.html\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:43
 #, docstring
-msgid ""
-"\\n        Defines if the bot should update permissions of new channels for "
-"the mute role.\\n\\n        If enabled, for each new text channel and "
-"category created, the Mute role will be        denied the permission to send"
-" messages and add reactions here.\\n        Keeping this disabled might "
-"cause issues with channels created after the WarnSystem setup        where "
-"muted members can talk.\\n        "
+msgid "\\n        Defines if the bot should update permissions of new channels for the mute role.\\n\\n        If enabled, for each new text channel and category created, the Mute role will be        denied the permission to send messages and add reactions here.\\n        Keeping this disabled might cause issues with channels created after the WarnSystem setup        where muted members can talk.\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:55
-msgid ""
-"The bot currently {update} new channels. If you want to change this, type "
-"`[p]warnset autoupdate {opposite}`."
+msgid "The bot currently {update} new channels. If you want to change this, type `[p]warnset autoupdate {opposite}`."
 msgstr ""
 
 #: warnsystem/settings.py:59
@@ -927,37 +796,20 @@ msgid "doesn't update"
 msgstr ""
 
 #: warnsystem/settings.py:65
-msgid ""
-"Done. New created channels will be updated to keep the mute role working."
+msgid "Done. New created channels will be updated to keep the mute role working."
 msgstr ""
 
 #: warnsystem/settings.py:70
-msgid ""
-"Done. New created channels won't be updated.\\n**Make sure to update "
-"manually new channels to keep the mute role working as intended.**"
+msgid "Done. New created channels won't be updated.\\n**Make sure to update manually new channels to keep the mute role working as intended.**"
 msgstr ""
 
 #: warnsystem/settings.py:78
 #, docstring
-msgid ""
-"\\n        Set the number of messages to delete when a member is "
-"banned.\\n\\n        You can set a value for a softban or a ban.\\n        "
-"When invoking the command, you must specify `ban` or `softban` as the first"
-"        argument to specify which type of ban you want to edit, then a "
-"number between        1 and 7, for the number of days of messages to "
-"delete.\\n        These values will be always used for level 4/5 "
-"warnings.\\n\\n        __Examples__\\n\\n        - `[p]warnset bandays "
-"softban 2`\\n          The number of days of messages to delete will be set "
-"to 2 for softbans.\\n\\n        - `[p]warnset bandays ban 7`\\n          The"
-" number of days of messages to delete will be set to 7 for bans.\\n\\n"
-"        - `[p]warnset bandays ban 0`\\n          The bans will not delete "
-"any messages.\\n        "
+msgid "\\n        Set the number of messages to delete when a member is banned.\\n\\n        You can set a value for a softban or a ban.\\n        When invoking the command, you must specify `ban` or `softban` as the first        argument to specify which type of ban you want to edit, then a number between        1 and 7, for the number of days of messages to delete.\\n        These values will be always used for level 4/5 warnings.\\n\\n        __Examples__\\n\\n        - `[p]warnset bandays softban 2`\\n          The number of days of messages to delete will be set to 2 for softbans.\\n\\n        - `[p]warnset bandays ban 7`\\n          The number of days of messages to delete will be set to 7 for bans.\\n\\n        - `[p]warnset bandays ban 0`\\n          The bans will not delete any messages.\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:101
-msgid ""
-"The first argument must be `ban` or `softban`.\\nType `{prefix}help warnset "
-"bandays` for more details."
+msgid "The first argument must be `ban` or `softban`.\\nType `{prefix}help warnset bandays` for more details."
 msgstr ""
 
 #: warnsystem/settings.py:108
@@ -965,15 +817,11 @@ msgid "You can set 0 to disable messages deletion."
 msgstr ""
 
 #: warnsystem/settings.py:110
-msgid ""
-"The number of days of messages to delete must be between 1 and 7, due to "
-"Discord restrictions.\\n"
+msgid "The number of days of messages to delete must be between 1 and 7, due to Discord restrictions.\\n"
 msgstr ""
 
 #: warnsystem/settings.py:119
-msgid ""
-"The goal of a softban is to delete the members' messages. Disabling this "
-"would make the softban a simple kick. Enter a value between 1 and 7."
+msgid "The goal of a softban is to delete the members' messages. Disabling this would make the softban a simple kick. Enter a value between 1 and 7."
 msgstr ""
 
 #: warnsystem/settings.py:129
@@ -982,13 +830,7 @@ msgstr ""
 
 #: warnsystem/settings.py:135
 #, docstring
-msgid ""
-"\\n        Set the channel for the WarnSystem modlog.\\n\\n        This will"
-" use the Red's modlog by default if it was set.\\n\\n        All warnings "
-"will be logged here.\\n        I need the `Send Messages` and `Embed Links` "
-"permissions.\\n\\n        If you want to set one channel for a specific "
-"level of warning, you can specify a        number after the channel\\n"
-"        "
+msgid "\\n        Set the channel for the WarnSystem modlog.\\n\\n        This will use the Red's modlog by default if it was set.\\n\\n        All warnings will be logged here.\\n        I need the `Send Messages` and `Embed Links` permissions.\\n\\n        If you want to set one channel for a specific level of warning, you can specify a        number after the channel\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:148
@@ -1000,17 +842,11 @@ msgid "I don't have the permissions to send embed links in that channel."
 msgstr ""
 
 #: warnsystem/settings.py:155
-msgid ""
-"Done. All events will be send to that channel by default.\\n\\nIf you want "
-"to send a specific warning level in a different channel, you can use the "
-"same command with the number after the channel.\\nExample: `{prefix}warnset "
-"channel #your-channel 3`"
+msgid "Done. All events will be send to that channel by default.\\n\\nIf you want to send a specific warning level in a different channel, you can use the same command with the number after the channel.\\nExample: `{prefix}warnset channel #your-channel 3`"
 msgstr ""
 
 #: warnsystem/settings.py:164
-msgid ""
-"If you want to specify a level for the channel, provide a number between 1 "
-"and 5."
+msgid "If you want to specify a level for the channel, provide a number between 1 and 5."
 msgstr ""
 
 #: warnsystem/settings.py:172
@@ -1019,11 +855,7 @@ msgstr ""
 
 #: warnsystem/settings.py:179
 #, docstring
-msgid ""
-"\\n        Edit the color of the embed.\\n\\n        This changes the color "
-"of the left bar if you don't like the default ones.\\n\\n        You can "
-"provide an hexadecimal code like this: `#FFFFFF`\\n        You can also "
-"provide the color name, like `green` or `dark-blue`.\\n        "
+msgid "\\n        Edit the color of the embed.\\n\\n        This changes the color of the left bar if you don't like the default ones.\\n\\n        You can provide an hexadecimal code like this: `#FFFFFF`\\n        You can also provide the color name, like `green` or `dark-blue`.\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:189 warnsystem/settings.py:387
@@ -1032,20 +864,12 @@ msgid "You must provide a level between 1 and 5."
 msgstr ""
 
 #: warnsystem/settings.py:193
-msgid ""
-"The new color for level {level} warnings has been succesfully set to {color}"
+msgid "The new color for level {level} warnings has been succesfully set to {color}"
 msgstr ""
 
 #: warnsystem/settings.py:200
 #, docstring
-msgid ""
-"\\n        Convert BetterMod V2 logs to V3.\\n\\n        You need to point "
-"the path to your history file.\\n        Get your old Red V2 instance "
-"folder, go to `/data/bettermod/history/<server ID>.json` and        copy its"
-" path.\\n        You can get your server ID with the `[p]serverinfo` "
-"command.\\n\\n        Example:\\n        `[p]warnset convert        "
-"/home/laggron/Desktop/Red-"
-"DiscordBot/data/bettermod/history/363008468602454017.json`\\n        "
+msgid "\\n        Convert BetterMod V2 logs to V3.\\n\\n        You need to point the path to your history file.\\n        Get your old Red V2 instance folder, go to `/data/bettermod/history/<server ID>.json` and        copy its path.\\n        You can get your server ID with the `[p]serverinfo` command.\\n\\n        Example:\\n        `[p]warnset convert        /home/laggron/Desktop/Red-DiscordBot/data/bettermod/history/363008468602454017.json`\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:251
@@ -1057,9 +881,7 @@ msgid "That's not a valid file."
 msgstr ""
 
 #: warnsystem/settings.py:259
-msgid ""
-"It looks like that file doesn't belong to the current server. Are you sure "
-"you want to use this file?"
+msgid "It looks like that file doesn't belong to the current server. Are you sure you want to use this file?"
 msgstr ""
 
 #: warnsystem/settings.py:273 warnsystem/settings.py:282
@@ -1072,17 +894,11 @@ msgid "Alrght, try again with the good file."
 msgstr ""
 
 #: warnsystem/settings.py:296
-msgid ""
-"Couln't read the file because of an exception. Check your console or logs "
-"for details."
+msgid "Couln't read the file because of an exception. Check your console or logs for details."
 msgstr ""
 
 #: warnsystem/settings.py:303
-msgid ""
-"Would you like to **append** the logs or **overwrite** them?\\n\\n**Append**"
-" will get the logs and add them to the current logs.\\n**Overwrite** will "
-"erase the current logs and replace it with the given logs.\\n\\n*Type* "
-"`append` *or* `overwrite` *in the chat.*"
+msgid "Would you like to **append** the logs or **overwrite** them?\\n\\n**Append** will get the logs and add them to the current logs.\\n**Overwrite** will erase the current logs and replace it with the given logs.\\n\\n*Type* `append` *or* `overwrite` *in the chat.*"
 msgstr ""
 
 #: warnsystem/settings.py:311
@@ -1102,45 +918,20 @@ msgid "Deleting server logs... Settings, such as channels, are kept."
 msgstr ""
 
 #: warnsystem/settings.py:329
-msgid ""
-"Done! {number} cases were added to the WarnSystem V3 log.\\nThis took {time}"
-" seconds."
+msgid "Done! {number} cases were added to the WarnSystem V3 log.\\nThis took {time} seconds."
 msgstr ""
 
 #: warnsystem/settings.py:345
 #, docstring
-msgid ""
-"\\n        Set a custom description for the modlog embeds.\\n\\n        You "
-"can set the description for each type of warning, one for the user in DM"
-"        and the other for the server modlog.\\n\\n        __Keys:__\\n\\n"
-"        You can include these keys in your message:\\n\\n        - "
-"`{invite}`: Generate an invite for the server\\n        - `{member}`: The "
-"warned member (tip: you can use `{member.id}` for the member's ID or        "
-"`{member.mention}` for a mention)\\n        - `{mod}`: The moderator that "
-"warned the member (you can also use keys like        `{moderator.id}`)\\n"
-"        - `{duration}`: The duration of a timed mute/ban if it exists\\n"
-"        - `{time}`: The current date and time.\\n\\n        "
-"__Examples:__\\n\\n        - `[p]warnset description 1 user You were warned "
-"by a moderator for your behaviour,        please read the rules.`\\n"
-"          This set the description for the first warning for the warned "
-"member.\\n\\n        - `[p]warnset description 3 modlog A member was kicked "
-"from the server.`\\n          This set the description for the 3rd warning "
-"(kick) for the modlog.\\n\\n        - `[p]warnset description 4 user You "
-"were banned and unbanned to clear your messages        from the server. You "
-"can join the server back with this link: {invite}`\\n          This set the "
-"description for the 4th warning (softban) for the user, while generating"
-"          an invite which will be replace `{invite}`\\n        "
+msgid "\\n        Set a custom description for the modlog embeds.\\n\\n        You can set the description for each type of warning, one for the user in DM        and the other for the server modlog.\\n\\n        __Keys:__\\n\\n        You can include these keys in your message:\\n\\n        - `{invite}`: Generate an invite for the server\\n        - `{member}`: The warned member (tip: you can use `{member.id}` for the member's ID or        `{member.mention}` for a mention)\\n        - `{mod}`: The moderator that warned the member (you can also use keys like        `{moderator.id}`)\\n        - `{duration}`: The duration of a timed mute/ban if it exists\\n        - `{time}`: The current date and time.\\n\\n        __Examples:__\\n\\n        - `[p]warnset description 1 user You were warned by a moderator for your behaviour,        please read the rules.`\\n          This set the description for the first warning for the warned member.\\n\\n        - `[p]warnset description 3 modlog A member was kicked from the server.`\\n          This set the description for the 3rd warning (kick) for the modlog.\\n\\n        - `[p]warnset description 4 user You were banned and unbanned to clear your messages        from the server. You can join the server back with this link: {invite}`\\n          This set the description for the 4th warning (softban) for the user, while generating          an invite which will be replace `{invite}`\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:380
-msgid ""
-"You need to specify `modlog` or `user`. Read the help of the command for "
-"more details."
+msgid "You need to specify `modlog` or `user`. Read the help of the command for more details."
 msgstr ""
 
 #: warnsystem/settings.py:396
-msgid ""
-"The new description for {destination} (warn {level}) was successfully set!"
+msgid "The new description for {destination} (warn {level}) was successfully set!"
 msgstr ""
 
 #: warnsystem/settings.py:397 warnsystem/warnsystem.py:417
@@ -1153,18 +944,11 @@ msgstr ""
 
 #: warnsystem/settings.py:403
 #, docstring
-msgid ""
-"\\n        Defines if the bot should log manual bans to WarnSystem.\\n\\n"
-"        If enabled, manually banning a member will make the bot log the "
-"action in the modlog andsave it, as if it was performed with WarnSystem. "
-"**However, the member will not receive a DM**.\\n        \\n        Invoke "
-"the command without arguments to get the current status.\\n        "
+msgid "\\n        Defines if the bot should log manual bans to WarnSystem.\\n\\n        If enabled, manually banning a member will make the bot log the action in the modlog andsave it, as if it was performed with WarnSystem. **However, the member will not receive a DM**.\\n        \\n        Invoke the command without arguments to get the current status.\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:415
-msgid ""
-"The bot currently {detect} manual bans. If you want to change this, type "
-"`{prefix}warnset detectmanual {opposite}`."
+msgid "The bot currently {detect} manual bans. If you want to change this, type `{prefix}warnset detectmanual {opposite}`."
 msgstr ""
 
 #: warnsystem/settings.py:419
@@ -1185,18 +969,11 @@ msgstr ""
 
 #: warnsystem/settings.py:433
 #, docstring
-msgid ""
-"\\n        Set if the bot should respect roles hierarchy.\\n\\n        If "
-"enabled, a member cannot ban another member above them in the roles "
-"hierarchy, like        with manual bans.\\n        If disabled, mods can ban"
-" everyone the bot can.\\n\\n        Invoke the command without arguments to "
-"get the current status.\\n        "
+msgid "\\n        Set if the bot should respect roles hierarchy.\\n\\n        If enabled, a member cannot ban another member above them in the roles hierarchy, like        with manual bans.\\n        If disabled, mods can ban everyone the bot can.\\n\\n        Invoke the command without arguments to get the current status.\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:446
-msgid ""
-"The bot currently {respect} role hierarchy. If you want to change this, type"
-" `[p]warnset hierarchy {opposite}`."
+msgid "The bot currently {respect} role hierarchy. If you want to change this, type `[p]warnset hierarchy {opposite}`."
 msgstr ""
 
 #: warnsystem/settings.py:450
@@ -1208,30 +985,20 @@ msgid "doesn't respect"
 msgstr ""
 
 #: warnsystem/settings.py:457
-msgid ""
-"Done. Moderators will not be able to take actions on the members higher than"
-" themselves in the role hierarchy of the server."
+msgid "Done. Moderators will not be able to take actions on the members higher than themselves in the role hierarchy of the server."
 msgstr ""
 
 #: warnsystem/settings.py:465
-msgid ""
-"Done. Moderators will be able to take actions on anyone on the server, as "
-"long as the bot is able to do so."
+msgid "Done. Moderators will be able to take actions on anyone on the server, as long as the bot is able to do so."
 msgstr ""
 
 #: warnsystem/settings.py:473
 #, docstring
-msgid ""
-"\\n        Create the role used for muting members.\\n\\n        You can "
-"specify a role when invoking the command to specify which role should be "
-"used.\\n        If you don't specify a role, one will be created for you.\\n"
-"        "
+msgid "\\n        Create the role used for muting members.\\n\\n        You can specify a role when invoking the command to specify which role should be used.\\n        If you don't specify a role, one will be created for you.\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:492
-msgid ""
-"A mute role was already created! You can change it by specifying a role when"
-" typing the command.\\n`[p]warnset mute <role name>`"
+msgid "A mute role was already created! You can change it by specifying a role when typing the command.\\n`[p]warnset mute <role name>`"
 msgstr ""
 
 #: warnsystem/settings.py:500
@@ -1239,16 +1006,11 @@ msgid "\\n\\nSome errors occured when editing the channel permissions:\\n"
 msgstr ""
 
 #: warnsystem/settings.py:506
-msgid ""
-"The role `Muted` was successfully created at position {pos}. Feel free to "
-"drag it in the hierarchy and edit its permissions, as long as my top role is"
-" above and the members to mute are below."
+msgid "The role `Muted` was successfully created at position {pos}. Feel free to drag it in the hierarchy and edit its permissions, as long as my top role is above and the members to mute are below."
 msgstr ""
 
 #: warnsystem/settings.py:517
-msgid ""
-"That role is higher than my top role in the hierarchy. Please move it below "
-"\\\"{bot_role}\\\"."
+msgid "That role is higher than my top role in the hierarchy. Please move it below \\\"{bot_role}\\\"."
 msgstr ""
 
 #: warnsystem/settings.py:524
@@ -1257,24 +1019,15 @@ msgstr ""
 
 #: warnsystem/settings.py:529
 #, docstring
-msgid ""
-"\\n        Refresh the mute role's permissions in the server.\\n\\n        "
-"This will iterate all of your channels and make sure all permissions are "
-"correctlyconfigured for the mute role.\\n\\n        The muted role will be "
-"prevented from sending messages and adding reactions in all textchannels, "
-"and prevented from talking in all voice channels.\\n        "
+msgid "\\n        Refresh the mute role's permissions in the server.\\n\\n        This will iterate all of your channels and make sure all permissions are correctlyconfigured for the mute role.\\n\\n        The muted role will be prevented from sending messages and adding reactions in all textchannels, and prevented from talking in all voice channels.\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:542
-msgid ""
-"No mute role configured on this server. Create one with `{prefix}warnset "
-"mute`."
+msgid "No mute role configured on this server. Create one with `{prefix}warnset mute`."
 msgstr ""
 
 #: warnsystem/settings.py:551
-msgid ""
-"It looks like the configured mute role was deleted. Create a new one with "
-"`{prefix}warnset mute`."
+msgid "It looks like the configured mute role was deleted. Create a new one with `{prefix}warnset mute`."
 msgstr ""
 
 #: warnsystem/settings.py:558
@@ -1298,15 +1051,11 @@ msgid "Successfully checked all channels, {len}/{total} were edited.\\n\\n"
 msgstr ""
 
 #: warnsystem/settings.py:620
-msgid ""
-"The following channels were not updated due to a permission failure, "
-"probably enforced `Manage channels` permission:\\n{channels}\\n"
+msgid "The following channels were not updated due to a permission failure, probably enforced `Manage channels` permission:\\n{channels}\\n"
 msgstr ""
 
 #: warnsystem/settings.py:625
-msgid ""
-"The following channels were not updated due to an unknown error (check your "
-"logs or ask the bot administrator):\\n{channels}\\n"
+msgid "The following channels were not updated due to an unknown error (check your logs or ask the bot administrator):\\n{channels}\\n"
 msgstr ""
 
 #: warnsystem/settings.py:629
@@ -1315,18 +1064,11 @@ msgstr ""
 
 #: warnsystem/settings.py:635
 #, docstring
-msgid ""
-"\\n        Set if the bot should send an invite after a temporary ban.\\n\\n"
-"        If enabled, any unbanned member will receive a DM with an invite to "
-"join back to the server.\\n        The bot needs to share a server with the "
-"member to send a DM.\\n\\n        Invoke the command without arguments to "
-"get the current status.\\n        "
+msgid "\\n        Set if the bot should send an invite after a temporary ban.\\n\\n        If enabled, any unbanned member will receive a DM with an invite to join back to the server.\\n        The bot needs to share a server with the member to send a DM.\\n\\n        Invoke the command without arguments to get the current status.\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:647
-msgid ""
-"The bot {respect} reinvite unbanned members. If you want to change this, "
-"type `[p]warnset reinvite {opposite}`."
+msgid "The bot {respect} reinvite unbanned members. If you want to change this, type `[p]warnset reinvite {opposite}`."
 msgstr ""
 
 #: warnsystem/settings.py:650 warnsystem/settings.py:849
@@ -1338,10 +1080,7 @@ msgid "doesn't"
 msgstr ""
 
 #: warnsystem/settings.py:655
-msgid ""
-"Done. The bot will try to send an invite to unbanned members. Please note "
-"that the bot needs to share one server in common with the member to receive "
-"the message."
+msgid "Done. The bot will try to send an invite to unbanned members. Please note that the bot needs to share one server in common with the member to receive the message."
 msgstr ""
 
 #: warnsystem/settings.py:663
@@ -1350,18 +1089,11 @@ msgstr ""
 
 #: warnsystem/settings.py:667
 #, docstring
-msgid ""
-"\\n        Defines if the bot should remove all roles on mute\\n\\n        "
-"If enabled, when you set a level 2 warning on a member, he will be assigned "
-"the mute role        as usual, but all of his other roles will also be "
-"removed.\\n        Once the mute ends, the member will get his roles "
-"back.\\n        This can be useful for role permissions issues.\\n        "
+msgid "\\n        Defines if the bot should remove all roles on mute\\n\\n        If enabled, when you set a level 2 warning on a member, he will be assigned the mute role        as usual, but all of his other roles will also be removed.\\n        Once the mute ends, the member will get his roles back.\\n        This can be useful for role permissions issues.\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:679
-msgid ""
-"The bot currently {remove} all roles on mute. If you want to change this, "
-"type `[p]warnset removeroles {opposite}`."
+msgid "The bot currently {remove} all roles on mute. If you want to change this, type `[p]warnset removeroles {opposite}`."
 msgstr ""
 
 #: warnsystem/settings.py:683
@@ -1373,10 +1105,7 @@ msgid "doesn't remove"
 msgstr ""
 
 #: warnsystem/settings.py:689
-msgid ""
-"Done. All roles will be removed from muted members. They will get their "
-"roles back once the mute ends or when someone removes the warning using the "
-"`{prefix}warnings` command."
+msgid "Done. All roles will be removed from muted members. They will get their roles back once the mute ends or when someone removes the warning using the `{prefix}warnings` command."
 msgstr ""
 
 #: warnsystem/settings.py:697
@@ -1429,15 +1158,11 @@ msgid "Softban: {softban}\\nBan: {ban}"
 msgstr ""
 
 #: warnsystem/settings.py:741
-msgid ""
-"No substitution set.\\nType `{prefix}help warnset substitutions` to get "
-"started."
+msgid "No substitution set.\\nType `{prefix}help warnset substitutions` to get started."
 msgstr ""
 
 #: warnsystem/settings.py:746
-msgid ""
-"{number} subsitution{plural} set.\\nType `{prefix}warnset substitutions "
-"list` to list them."
+msgid "{number} subsitution{plural} set.\\nType `{prefix}warnset substitutions list` to list them."
 msgstr ""
 
 #: warnsystem/settings.py:751
@@ -1521,36 +1246,24 @@ msgid "User embed descriptions"
 msgstr ""
 
 #: warnsystem/settings.py:816
-msgid ""
-"To see informations about the cog (version, documentation, support server, "
-"Patreon), type `{prefix}warnsysteminfo`."
+msgid "To see informations about the cog (version, documentation, support server, Patreon), type `{prefix}warnsysteminfo`."
 msgstr ""
 
 #: warnsystem/settings.py:827
-msgid ""
-"Error when sending the message. Check the warnsystem logs for more "
-"informations."
+msgid "Error when sending the message. Check the warnsystem logs for more informations."
 msgstr ""
 
 #: warnsystem/settings.py:835
 #, docstring
-msgid ""
-"\\n        Defines if the responsible moderator should be revealed to the "
-"warned member in DM.\\n\\n        If enabled, any warned member will be able"
-" to see who warned them, else they won't know.\\n\\n        Invoke the "
-"command without arguments to get the current status.\\n        "
+msgid "\\n        Defines if the responsible moderator should be revealed to the warned member in DM.\\n\\n        If enabled, any warned member will be able to see who warned them, else they won't know.\\n\\n        Invoke the command without arguments to get the current status.\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:846
-msgid ""
-"The bot {respect} show the responsible moderator to the warned member in DM."
-" If you want to change this, type `[p]warnset showmod {opposite}`."
+msgid "The bot {respect} show the responsible moderator to the warned member in DM. If you want to change this, type `[p]warnset showmod {opposite}`."
 msgstr ""
 
 #: warnsystem/settings.py:854
-msgid ""
-"Done. The moderator responsible of a warn will now be shown to the warned "
-"member in direct messages."
+msgid "Done. The moderator responsible of a warn will now be shown to the warned member in direct messages."
 msgstr ""
 
 #: warnsystem/settings.py:861
@@ -1559,32 +1272,16 @@ msgstr ""
 
 #: warnsystem/settings.py:865
 #, docstring
-msgid ""
-"\\n        Manage the reasons' substitutions\\n\\n        A substitution is "
-"text replaced by a key you place in your warn reason.\\n\\n        For "
-"example, if you set a substitution with the keyword `last warn` associated "
-"with the        text `This is your last warning!`, this is what will happen "
-"with your next warnings:\\n\\n        `[p]warn 4 @annoying_member Stop "
-"spamming. [last warn]`\\n        Reason = Stop spamming. This is your last "
-"warning!\\n        "
+msgid "\\n        Manage the reasons' substitutions\\n\\n        A substitution is text replaced by a key you place in your warn reason.\\n\\n        For example, if you set a substitution with the keyword `last warn` associated with the        text `This is your last warning!`, this is what will happen with your next warnings:\\n\\n        `[p]warn 4 @annoying_member Stop spamming. [last warn]`\\n        Reason = Stop spamming. This is your last warning!\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:880
 #, docstring
-msgid ""
-"\\n        Create a new subsitution.\\n\\n        `name` should be something"
-" short, it will be the keyword that will be replaced by your text\\n        "
-"`text` is what will be replaced by `[name]`\\n\\n        Example:\\n        "
-"- `[p]warnset substitutions add ad Advertising for a Discord server`\\n"
-"        - `[p]warn 1 @noob [ad] + doesn't respect warnings`\\n        The "
-"reason will be \\\"Advertising for a Discord server + doesn't respect "
-"warnings\\\".\\n        "
+msgid "\\n        Create a new subsitution.\\n\\n        `name` should be something short, it will be the keyword that will be replaced by your text\\n        `text` is what will be replaced by `[name]`\\n\\n        Example:\\n        - `[p]warnset substitutions add ad Advertising for a Discord server`\\n        - `[p]warn 1 @noob [ad] + doesn't respect warnings`\\n        The reason will be \\\"Advertising for a Discord server + doesn't respect warnings\\\".\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:894
-msgid ""
-"The name you're using is already used by another substitution!\\nDelete or "
-"edit it with `[p]warnset substitutions delete`"
+msgid "The name you're using is already used by another substitution!\\nDelete or edit it with `[p]warnset substitutions delete`"
 msgstr ""
 
 #: warnsystem/settings.py:901
@@ -1592,25 +1289,16 @@ msgid "That substitution is too long! Maximum is 600 characters!"
 msgstr ""
 
 #: warnsystem/settings.py:905
-msgid ""
-"Your new subsitutions with the keyword `{keyword}` was successfully created!"
-" Type `[{substitution}]` in your warning reason to use the text you just "
-"set.\\nManage your substitutions with the `{prefix}warnset substitutions` "
-"subcommands."
+msgid "Your new subsitutions with the keyword `{keyword}` was successfully created! Type `[{substitution}]` in your warning reason to use the text you just set.\\nManage your substitutions with the `{prefix}warnset substitutions` subcommands."
 msgstr ""
 
 #: warnsystem/settings.py:915
 #, docstring
-msgid ""
-"\\n        Delete a previously set substitution.\\n\\n        The "
-"substitution must exist, see existing substitutions with the `[p]warnset "
-"substitutions        list` command.\\n        "
+msgid "\\n        Delete a previously set substitution.\\n\\n        The substitution must exist, see existing substitutions with the `[p]warnset substitutions        list` command.\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:924
-msgid ""
-"That substitution doesn't exist!\\nSee existing substitutions with the "
-"`{prefix}warnset substitutions list` command."
+msgid "That substitution doesn't exist!\\nSee existing substitutions with the `{prefix}warnset substitutions list` command."
 msgstr ""
 
 #: warnsystem/settings.py:931
@@ -1623,9 +1311,7 @@ msgid "\\n        List all existing substitutions on your server\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:942
-msgid ""
-"You don't have any existing substitution on this server!\\nCreate one with "
-"`{prefix}warnset substitutions add`"
+msgid "You don't have any existing substitution on this server!\\nCreate one with `{prefix}warnset substitutions add`"
 msgstr ""
 
 #: warnsystem/settings.py:955
@@ -1638,11 +1324,7 @@ msgstr ""
 
 #: warnsystem/settings.py:962
 #, docstring
-msgid ""
-"\\n        Edit the image displayed on the embeds.\\n\\n        This is "
-"common to the modlog embeds and the embeds sent to the members.\\n        "
-"The URL must be the direct link to the image.\\n        You can omit the URL"
-" if you want to remove any image on the embed.\\n        "
+msgid "\\n        Edit the image displayed on the embeds.\\n\\n        This is common to the modlog embeds and the embeds sent to the members.\\n        The URL must be the direct link to the image.\\n        You can omit the URL if you want to remove any image on the embed.\\n        "
 msgstr ""
 
 #: warnsystem/settings.py:975
@@ -1679,45 +1361,27 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:129
 #, docstring
-msgid ""
-"\\n    An alternative to the Red core moderation system, providing a "
-"different system of moderation    similar to Dyno.\\n\\n    Report a bug or "
-"ask a question: https://discord.gg/AVzjfpR\\n    Full documentation and FAQ:"
-" http://laggron.red/warnsystem.html\\n    "
+msgid "\\n    An alternative to the Red core moderation system, providing a different system of moderation    similar to Dyno.\\n\\n    Report a bug or ask a question: https://discord.gg/AVzjfpR\\n    Full documentation and FAQ: http://laggron.red/warnsystem.html\\n    "
 msgstr ""
 
 #: warnsystem/warnsystem.py:264
-msgid ""
-"The reason is too long for an embed.\\n\\n*Tip: You can use Github Gist to "
-"write a long text formatted in Markdown, create a new file with the "
-"extension `.md` at the end and write as if you were on "
-"Discord.\\n<https://gist.github.com/>*"
+msgid "The reason is too long for an embed.\\n\\n*Tip: You can use Github Gist to write a long text formatted in Markdown, create a new file with the extension `.md` at the end and write as if you were on Discord.\\n<https://gist.github.com/>*"
 msgstr ""
 
 #: warnsystem/warnsystem.py:287
-msgid ""
-"You need to set up the mute role before doing this.\\nUse the `[p]warnset "
-"mute` command for this."
+msgid "You need to set up the mute role before doing this.\\nUse the `[p]warnset mute` command for this."
 msgstr ""
 
 #: warnsystem/warnsystem.py:294
-msgid ""
-"Please set up a modlog channel before warning a member.\\n\\n**With "
-"WarnSystem**\\n*Use the `[p]warnset channel` command.*\\n\\n**With Red "
-"Modlog**\\n*Load the `modlogs` cog and use the `[p]modlogset modlog` "
-"command.*"
+msgid "Please set up a modlog channel before warning a member.\\n\\n**With WarnSystem**\\n*Use the `[p]warnset channel` command.*\\n\\n**With Red Modlog**\\n*Load the `modlogs` cog and use the `[p]modlogset modlog` command.*"
 msgstr ""
 
 #: warnsystem/warnsystem.py:305
-msgid ""
-"You are not allowed to do this, {member} is higher than you in the role "
-"hierarchy. You can only warn members which top role is lower than "
-"yours.\\n\\n"
+msgid "You are not allowed to do this, {member} is higher than you in the role hierarchy. You can only warn members which top role is lower than yours.\\n\\n"
 msgstr ""
 
 #: warnsystem/warnsystem.py:310
-msgid ""
-"You can disable this check by using the `[p]warnset hierarchy` command."
+msgid "You can disable this check by using the `[p]warnset hierarchy` command."
 msgstr ""
 
 #: warnsystem/warnsystem.py:316
@@ -1729,10 +1393,7 @@ msgid "Done."
 msgstr ""
 
 #: warnsystem/warnsystem.py:359
-msgid ""
-"Processing mass warning...\\n{i}/{total} {members} warned "
-"({percent}%)\\n\\n{tick1} Log to the modlog\\n{tick2} Send a DM to all "
-"members\\n{tick3}{tick4} {time}\\n{tick5} Reason: {reason}"
+msgid "Processing mass warning...\\n{i}/{total} {members} warned ({percent}%)\\n\\n{tick1} Log to the modlog\\n{tick2} Send a DM to all members\\n{tick3}{tick4} {time}\\n{tick5} Reason: {reason}"
 msgstr ""
 
 #: warnsystem/warnsystem.py:370 warnsystem/warnsystem.py:409
@@ -1750,11 +1411,7 @@ msgid "You can only use `--hackban-select` with a level 5 warn."
 msgstr ""
 
 #: warnsystem/warnsystem.py:392
-msgid ""
-"The reason is too long for an embed.\\n\\n*Tip: You can use Github Gist to "
-"write a long text formatted in Markdown, create a new file with the "
-"extension `.md` at the end and write as if you were on "
-"Discord.\\n<https://gist.github.com/>*"
+msgid "The reason is too long for an embed.\\n\\n*Tip: You can use Github Gist to write a long text formatted in Markdown, create a new file with the extension `.md` at the end and write as if you were on Discord.\\n<https://gist.github.com/>*"
 msgstr ""
 
 #: warnsystem/warnsystem.py:407
@@ -1770,10 +1427,7 @@ msgid "users"
 msgstr ""
 
 #: warnsystem/warnsystem.py:422
-msgid ""
-"You're about to set a level {level} warning on {target}.\\n\\n{tick1} Log to"
-" the modlog\\n{tick2} Send a DM to all members\\n{tick3}{tick4} "
-"{time}\\n{tick5} Reason: {reason}\\n\\nContinue?"
+msgid "You're about to set a level {level} warning on {target}.\\n\\n{tick1} Log to the modlog\\n{tick2} Send a DM to all members\\n{tick3}{tick4} {time}\\n{tick5} Reason: {reason}\\n\\nContinue?"
 msgstr ""
 
 #: warnsystem/warnsystem.py:439
@@ -1785,17 +1439,11 @@ msgid "Mass warn cancelled."
 msgstr ""
 
 #: warnsystem/warnsystem.py:478
-msgid ""
-"You need to set up the mute role before doing this.\\nUse the `[p]warnset "
-"mute` command for this."
+msgid "You need to set up the mute role before doing this.\\nUse the `[p]warnset mute` command for this."
 msgstr ""
 
 #: warnsystem/warnsystem.py:486
-msgid ""
-"Please set up a modlog channel before warning a member.\\n\\n**With "
-"WarnSystem**\\n*Use the `[p]warnset channel` command.*\\n\\n**With Red "
-"Modlog**\\n*Load the `modlogs` cog and use the `[p]modlogset modlog` "
-"command.*"
+msgid "Please set up a modlog channel before warning a member.\\n\\n**With WarnSystem**\\n*Use the `[p]warnset channel` command.*\\n\\n**With Red Modlog**\\n*Load the `modlogs` cog and use the `[p]modlogset modlog` command.*"
 msgstr ""
 
 #: warnsystem/warnsystem.py:498
@@ -1808,30 +1456,17 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:527
 #, docstring
-msgid ""
-"\\n        Take actions against a user and log it.\\n        The warned user"
-" will receive a DM.\\n\\n        If not given, the warn level will be 1.\\n"
-"        "
+msgid "\\n        Take actions against a user and log it.\\n        The warned user will receive a DM.\\n\\n        If not given, the warn level will be 1.\\n        "
 msgstr ""
 
 #: warnsystem/warnsystem.py:538
 #, docstring
-msgid ""
-"\\n        Set a simple warning on a user.\\n\\n        Note: You can either"
-" call `[p]warn 1` or `[p]warn`.\\n        "
+msgid "\\n        Set a simple warning on a user.\\n\\n        Note: You can either call `[p]warn 1` or `[p]warn`.\\n        "
 msgstr ""
 
 #: warnsystem/warnsystem.py:555
 #, docstring
-msgid ""
-"\\n        Mute the user in all channels, including voice channels.\\n\\n"
-"        This mute will use a role that will automatically be created, if it "
-"was not already done.\\n        Feel free to edit the role's permissions and"
-" move it in the roles hierarchy.\\n\\n        You can set a timed mute by "
-"providing a valid time before the reason.\\n\\n        Examples:\\n        -"
-" `[p]warn 2 @user 30m`: 30 minutes mute\\n        - `[p]warn 2 @user 5h "
-"Spam`: 5 hours mute for the reason \\\"Spam\\\"\\n        - `[p]warn 2 @user"
-" Advertising`: Infinite mute for the reason \\\"Advertising\\\"\\n        "
+msgid "\\n        Mute the user in all channels, including voice channels.\\n\\n        This mute will use a role that will automatically be created, if it was not already done.\\n        Feel free to edit the role's permissions and move it in the roles hierarchy.\\n\\n        You can set a timed mute by providing a valid time before the reason.\\n\\n        Examples:\\n        - `[p]warn 2 @user 30m`: 30 minutes mute\\n        - `[p]warn 2 @user 5h Spam`: 5 hours mute for the reason \\\"Spam\\\"\\n        - `[p]warn 2 @user Advertising`: Infinite mute for the reason \\\"Advertising\\\"\\n        "
 msgstr ""
 
 #: warnsystem/warnsystem.py:573
@@ -1841,43 +1476,17 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:581
 #, docstring
-msgid ""
-"\\n        Softban the member from the server.\\n\\n        This means that "
-"the user will be banned and immediately unbanned, so it will purge their"
-"        messages in all channels.\\n\\n        It will delete 7 days of "
-"messages by default, but you can edit this with the        `[p]warnset "
-"bandays` command.\\n        "
+msgid "\\n        Softban the member from the server.\\n\\n        This means that the user will be banned and immediately unbanned, so it will purge their        messages in all channels.\\n\\n        It will delete 7 days of messages by default, but you can edit this with the        `[p]warnset bandays` command.\\n        "
 msgstr ""
 
 #: warnsystem/warnsystem.py:602
 #, docstring
-msgid ""
-"\\n        Ban the member from the server.\\n\\n        This ban can be a "
-"normal ban, a temporary ban or a hack ban (bans a user not in the        "
-"server).\\n        It won't delete messages by default, but you can edit "
-"this with the `[p]warnset bandays`        command.\\n\\n        If you want "
-"to perform a temporary ban, provide the time before the reason. A hack ban"
-"        needs a user ID, you can get it with the Developer mode (enable it "
-"in the Appearance tab        of the user settings, then right click on the "
-"user and select \\\"Copy ID\\\").\\n\\n        Examples:\\n        - "
-"`[p]warn 5 @user`: Ban for no reason :c\\n        - `[p]warn 5 @user 7d "
-"Insults`: 7 days ban for the reason \\\"Insults\\\"\\n        - `[p]warn 5 "
-"012345678987654321 Advertising and leave`: Ban the user with the ID provided"
-"        while they're not in the server for the reason \\\"Advertising and "
-"leave\\\" (if the user shares        another server with the bot, a DM will "
-"be sent).\\n        "
+msgid "\\n        Ban the member from the server.\\n\\n        This ban can be a normal ban, a temporary ban or a hack ban (bans a user not in the        server).\\n        It won't delete messages by default, but you can edit this with the `[p]warnset bandays`        command.\\n\\n        If you want to perform a temporary ban, provide the time before the reason. A hack ban        needs a user ID, you can get it with the Developer mode (enable it in the Appearance tab        of the user settings, then right click on the user and select \\\"Copy ID\\\").\\n\\n        Examples:\\n        - `[p]warn 5 @user`: Ban for no reason :c\\n        - `[p]warn 5 @user 7d Insults`: 7 days ban for the reason \\\"Insults\\\"\\n        - `[p]warn 5 012345678987654321 Advertising and leave`: Ban the user with the ID provided        while they're not in the server for the reason \\\"Advertising and leave\\\" (if the user shares        another server with the bot, a DM will be sent).\\n        "
 msgstr ""
 
 #: warnsystem/warnsystem.py:628
 #, docstring
-msgid ""
-"\\n        Perform a warn on multiple members at once.\\n\\n        To "
-"select members, you have to use UNIX-like flags to add conditions        "
-"which will be checked for each member.\\n\\n        Example: `[p]masswarn 3 "
-"--take-action --send-dm --has-role \\\"Danger\\\"        --joined-after "
-"\\\"May 2019\\\" --reason \\\"Cleaning dangerous members\\\"`\\n\\n        "
-"To get the full list of flags and how to use them, please read the        "
-"wiki: https://laggrons-dumb-cogs.readthedocs.io/\\n        "
+msgid "\\n        Perform a warn on multiple members at once.\\n\\n        To select members, you have to use UNIX-like flags to add conditions        which will be checked for each member.\\n\\n        Example: `[p]masswarn 3 --take-action --send-dm --has-role \\\"Danger\\\"        --joined-after \\\"May 2019\\\" --reason \\\"Cleaning dangerous members\\\"`\\n\\n        To get the full list of flags and how to use them, please read the        wiki: https://laggrons-dumb-cogs.readthedocs.io/\\n        "
 msgstr ""
 
 #: warnsystem/warnsystem.py:664
@@ -1887,10 +1496,7 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:691
 #, docstring
-msgid ""
-"\\n        Perform a mass mute.\\n\\n        You can provide a duration with"
-" the `--time` flag, the format is the same as the simple        level 2 "
-"warning.\\n        "
+msgid "\\n        Perform a mass mute.\\n\\n        You can provide a duration with the `--time` flag, the format is the same as the simple        level 2 warning.\\n        "
 msgstr ""
 
 #: warnsystem/warnsystem.py:721
@@ -1905,19 +1511,12 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:775
 #, docstring
-msgid ""
-"\\n        Perform a mass ban.\\n\\n        You can provide a duration with "
-"the `--time` flag, the format is the same as the simple        level 5 "
-"warning.\\n        "
+msgid "\\n        Perform a mass ban.\\n\\n        You can provide a duration with the `--time` flag, the format is the same as the simple        level 5 warning.\\n        "
 msgstr ""
 
 #: warnsystem/warnsystem.py:809
 #, docstring
-msgid ""
-"\\n        Shows all warnings of a member.\\n\\n        This command can be "
-"used by everyone, but only moderators can see other's warnings.\\n        "
-"Moderators can also edit or delete warnings by using the reactions.\\n"
-"        "
+msgid "\\n        Shows all warnings of a member.\\n\\n        This command can be used by everyone, but only moderators can see other's warnings.\\n        Moderators can also edit or delete warnings by using the reactions.\\n        "
 msgstr ""
 
 #: warnsystem/warnsystem.py:819
@@ -2041,16 +1640,11 @@ msgid "The reason was not edited."
 msgstr ""
 
 #: warnsystem/warnsystem.py:1104
-msgid ""
-"Member {member}'s clearance. By selecting ❌ on the user modlog summary, you "
-"can remove all warnings given to {member}. __All levels and notes are "
-"affected.__\\n**Click on the reaction to confirm the removal of the entire "
-"user's modlog. This cannot be undone.**"
+msgid "Member {member}'s clearance. By selecting ❌ on the user modlog summary, you can remove all warnings given to {member}. __All levels and notes are affected.__\\n**Click on the reaction to confirm the removal of the entire user's modlog. This cannot be undone.**"
 msgstr ""
 
 #: warnsystem/warnsystem.py:1121
-msgid ""
-"Case #{number} deletion.\\n**Click on the reaction to confirm your action.**"
+msgid "Case #{number} deletion.\\n**Click on the reaction to confirm your action.**"
 msgstr ""
 
 #: warnsystem/warnsystem.py:1125
@@ -2099,10 +1693,7 @@ msgid "No warnings have been issued in this server yet."
 msgstr ""
 
 #: warnsystem/warnsystem.py:1196
-msgid ""
-"--- Case {number} ---\\nMember:    {member} (ID: {member.id})\\nLevel:     "
-"{level}\\nReason:    {reason}\\nAuthor:    {author} (ID: "
-"{author.id})\\nDate:      {time}\\n"
+msgid "--- Case {number} ---\\nMember:    {member} (ID: {member.id})\\nLevel:     {level}\\nReason:    {reason}\\nAuthor:    {author} (ID: {author.id})\\nDate:      {time}\\n"
 msgstr ""
 
 #: warnsystem/warnsystem.py:1206
@@ -2115,10 +1706,7 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:1229
 #, docstring
-msgid ""
-"\\n        Unmute a member muted with WarnSystem.\\n\\n        If the "
-"member's roles were removed, they will be granted back.\\n\\n        "
-"*wsunmute = WarnSystem unmute. Feel free to add an alias.*\\n        "
+msgid "\\n        Unmute a member muted with WarnSystem.\\n\\n        If the member's roles were removed, they will be granted back.\\n\\n        *wsunmute = WarnSystem unmute. Feel free to add an alias.*\\n        "
 msgstr ""
 
 #: warnsystem/warnsystem.py:1239
@@ -2147,9 +1735,7 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:1294
 #, docstring
-msgid ""
-"\\n        Unban a member banned with WarnSystem.\\n\\n        *wsunban = "
-"WarnSystem unban. Feel free to add an alias.*\\n        "
+msgid "\\n        Unban a member banned with WarnSystem.\\n\\n        *wsunban = WarnSystem unban. Feel free to add an alias.*\\n        "
 msgstr ""
 
 #: warnsystem/warnsystem.py:1302
@@ -2170,24 +1756,14 @@ msgid "\\n        Get informations about the cog.\\n        "
 msgstr ""
 
 #: warnsystem/warnsystem.py:1321
-msgid ""
-"Laggron's Dumb Cogs V3 - warnsystem\\n\\nVersion: {0.__version__}\\nAuthor: "
-"{0.__author__[0]}\\n\\nGithub repository: https://github.com/retke/Laggrons-"
-"Dumb-Cogs/tree/v3\\nDiscord server: "
-"https://discord.gg/AVzjfpR\\nDocumentation: http://laggrons-dumb-"
-"cogs.readthedocs.io/\\nHelp translating the cog: "
-"https://crowdin.com/project/laggrons-dumb-cogs/\\n\\nSupport my work on "
-"Patreon: https://www.patreon.com/retke"
+msgid "Laggron's Dumb Cogs V3 - warnsystem\\n\\nVersion: {0.__version__}\\nAuthor: {0.__author__[0]}\\n\\nGithub repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\\nDiscord server: https://discord.gg/AVzjfpR\\nDocumentation: http://laggrons-dumb-cogs.readthedocs.io/\\nHelp translating the cog: https://crowdin.com/project/laggrons-dumb-cogs/\\n\\nSupport my work on Patreon: https://www.patreon.com/retke"
 msgstr ""
 
 #: warnsystem/warnsystem.py:1380
-msgid ""
-"Updating channel settings so the mute role will work here. Disable the auto-"
-"update with [p]warnset autoupdate"
+msgid "Updating channel settings so the mute role will work here. Disable the auto-update with [p]warnset autoupdate"
 msgstr ""
 
 #: warnsystem/warnsystem.py:1461
-msgid ""
-"I need the `Add reactions` and `Manage messages` in the current channel if "
-"you want to use this command."
+msgid "I need the `Add reactions` and `Manage messages` in the current channel if you want to use this command."
 msgstr ""
+
