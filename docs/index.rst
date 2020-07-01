@@ -33,8 +33,8 @@ Welcome to Laggron's Dumb Cogs's official documentation!
     :target: https://github.com/Rapptz/discord.py
     :alt: discord.py
 
-.. image:: https://api.travis-ci.org/retke/Laggrons-Dumb-Cogs.svg?branch=v3
-    :target: https://travis-ci.org/retke/Laggrons-Dumb-Cogs
+.. image:: https://github.com/retke/Laggrons-Dumb-Cogs/workflows/Tests/badge.svg
+    :target: https://github.com/retke/Laggrons-Dumb-Cogs/actions
     :alt: Travis CI build
 
 .. image:: https://readthedocs.org/projects/laggrons-dumb-cogs/badge/

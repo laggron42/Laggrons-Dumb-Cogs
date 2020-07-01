@@ -4,7 +4,7 @@
 [![Red cogs](https://img.shields.io/badge/Red--DiscordBot-cogs-red.svg)](https://github.com/Cog-Creators/Red-DiscordBot/tree/V3/develop)
 [![discord.py](https://img.shields.io/badge/discord-py-blue.svg)](https://github.com/Rapptz/discord.py)
 [![Black coding style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
-[![Build status](https://api.travis-ci.org/retke/Laggrons-Dumb-Cogs.svg?branch=v3)](https://travis-ci.org/retke/Laggrons-Dumb-Cogs)
+[![Test and build](https://github.com/retke/Laggrons-Dumb-Cogs/workflows/Tests/badge.svg)](https://github.com/retke/Laggrons-Dumb-Cogs/actions)
 [![Docs status](https://readthedocs.org/projects/laggrons-dumb-cogs/badge)](http://laggrons-dumb-cogs.readthedocs.io)
 [![Crowdin](https://badges.crowdin.net/laggrons-dumb-cogs/localized.svg)](https://crowdin.com/project/laggrons-dumb-cogs)
 [![Patreon](https://img.shields.io/badge/Patreon-donate-orange.svg)](https://patreon.com/retke)
