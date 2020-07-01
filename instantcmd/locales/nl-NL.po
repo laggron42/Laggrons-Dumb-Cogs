@@ -1,0 +1,47 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: laggrons-dumb-cogs\n"
+"POT-Creation-Date: 2020-07-01 00:05+0000\n"
+"Last-Translator: \n"
+"Language-Team: Dutch\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: redgettext 3.1\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Crowdin-Project: laggrons-dumb-cogs\n"
+"X-Crowdin-Project-ID: 409698\n"
+"X-Crowdin-Language: nl\n"
+"X-Crowdin-File-ID: 28\n"
+"Language: nl_NL\n"
+
+#: instantcmd/instantcmd.py:213
+#, docstring
+msgid "Instant Commands cog management"
+msgstr ""
+
+#: instantcmd/instantcmd.py:218
+#, docstring
+msgid "\\n        Instantly generate a new command from a code snippet.\\n\\n        If you want to make a listener, give its name instead of the command name.\\n        You can upload a text file if the command is too long, but you should consider coding acog at this point.\\n        "
+msgstr ""
+
+#: instantcmd/instantcmd.py:346
+#, docstring
+msgid "\\n        Remove a command or a listener from the registered instant commands.\\n        "
+msgstr ""
+
+#: instantcmd/instantcmd.py:366
+#, docstring
+msgid "\\n        List all existing commands made using Instant Commands.\\n\\n        If a command name is given and found in the Instant commands list, the code will be shown.\\n        "
+msgstr ""
+
+#: instantcmd/instantcmd.py:388
+#, docstring
+msgid "\\n        Show the code of an instantcmd command or listener.\\n        "
+msgstr ""
+
+#: instantcmd/instantcmd.py:404
+#, docstring
+msgid "\\n        Get informations about the cog.\\n        "
+msgstr ""
+

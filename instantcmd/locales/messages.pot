@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2020-06-24 23:04+0200\n"
+"POT-Creation-Date: 2020-07-01 00:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,12 +11,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: redgettext 3.1\n"
 
-#: instantcmd\instantcmd.py:214
+#: instantcmd/instantcmd.py:213
 #, docstring
 msgid "Instant Commands cog management"
 msgstr ""
 
-#: instantcmd\instantcmd.py:219
+#: instantcmd/instantcmd.py:218
 #, docstring
 msgid ""
 "\\n        Instantly generate a new command from a code snippet.\\n\\n"
@@ -25,14 +25,14 @@ msgid ""
 "you should consider coding acog at this point.\\n        "
 msgstr ""
 
-#: instantcmd\instantcmd.py:347
+#: instantcmd/instantcmd.py:346
 #, docstring
 msgid ""
 "\\n        Remove a command or a listener from the registered instant "
 "commands.\\n        "
 msgstr ""
 
-#: instantcmd\instantcmd.py:367
+#: instantcmd/instantcmd.py:366
 #, docstring
 msgid ""
 "\\n        List all existing commands made using Instant Commands.\\n\\n"
@@ -40,12 +40,12 @@ msgid ""
 "the code will be shown.\\n        "
 msgstr ""
 
-#: instantcmd\instantcmd.py:389
+#: instantcmd/instantcmd.py:388
 #, docstring
 msgid "\\n        Show the code of an instantcmd command or listener.\\n        "
 msgstr ""
 
-#: instantcmd\instantcmd.py:405
+#: instantcmd/instantcmd.py:404
 #, docstring
 msgid "\\n        Get informations about the cog.\\n        "
 msgstr ""
