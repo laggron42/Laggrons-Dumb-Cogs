@@ -183,7 +183,7 @@ class API:
             A : py:class:`list` of roles ID to remove from the roles list. If it's empty, it will
             remove the invite from the autorole system.
         invite: :py:class`str`
-            The invite to remove roles from. Give `main` or `default` to edit the main/default
+            The invite to remove roles from. Give ``main`` or ``default`` to edit the main/default
             autorole system.
 
         Returns

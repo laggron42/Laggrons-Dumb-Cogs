@@ -101,11 +101,6 @@ html_theme = "sphinx_rtd_theme"
 #
 # html_theme_options = {}
 
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = [".static"]
-
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
 #
@@ -183,9 +178,9 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3.6", None),
+    "python": ("https://docs.python.org/3.8", None),
     "discord": ("https://discordpy.readthedocs.io/en/latest/", None),
-    "redbot": ("https://red-discordbot.readthedocs.io/en/v3-develop/", None),
+    "redbot": ("https://docs.discord.red/en/latest/", None),
 }
 
 # Napoleon setting

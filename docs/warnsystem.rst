@@ -1490,7 +1490,6 @@ This is how the data was stored before 1.3 :
     {
         "temporary_warns": [
             {
-                // first case
                 "member": 221333470830526464,
                 "level": 1,
                 "author": 348415857728159745,
@@ -1499,9 +1498,6 @@ This is how the data was stored before 1.3 :
                 "duration": "1 minute and 12 seconds",
                 "until": "Thu 01 August 2019 23:43:01",
                 "roles": []
-            },
-            {
-                // second case...
             }
         ]
     }
@@ -1515,8 +1511,7 @@ what the data above should look like after the update :
 
     {
         "temporary_warns": {
-            221333470830526464: {
-                // first case
+            "221333470830526464": {
                 "level": 1,
                 "author": 348415857728159745,
                 "reason": "Advertising",
@@ -1524,9 +1519,6 @@ what the data above should look like after the update :
                 "duration": "1 minute and 12 seconds",
                 "until": "Thu 01 August 2019 23:43:01",
                 "roles": []
-            },
-            649205730248302043: {
-                // second case...
             }
         }
     }
@@ -1542,18 +1534,15 @@ Looking back at this, I took one of the worst possible decisions when coding
 WarnSystem 1.0. I'm going to show you how a warning was stored before 1.3:
 
 .. code-block:: json
+
     [
         {
-            // first warn
             "level": 2,
             "author": 348415857728159745,
             "reason": "I'm testing",
             "time": "Thu 01 August 2019 23:42:25",
             "duration": "1 minute and 12 seconds",
             "until": "Thu 01 August 2019 23:43:37"
-        },
-        {
-            // second warn...
         }
     ]
 
@@ -1582,8 +1571,8 @@ WarnSystem 1.3 converts all of those dates and durations to seconds, this is
 what a warning should look like after the update:
 
 .. code-block:: json
+
     {
-        // first warn
         "level": 2,
         "author": 348415857728159745,
         "reason": "I'm testing",
