@@ -51,3 +51,6 @@ compile:
 
 docs:
 	@python3 -m sphinx -b $(BUILD) $(SOURCE) $(OUTPUT)
+
+test_docs:
+	sphinx-build -b html -W --keep-going docs docs/.build/html
