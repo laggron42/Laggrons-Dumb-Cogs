@@ -980,7 +980,10 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                 ctx, pages, controls, message=message, page=page, timeout=timeout
             )
         await message.clear_reactions()
-        old_embed = message.embeds[0]
+        try:
+            old_embed = message.embeds[0]
+        except IndexError:
+            return
         embed = discord.Embed()
         member_id = int(
             re.match(r"(?:.*#[0-9]{4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1)
@@ -1090,7 +1093,10 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
 
         guild = ctx.guild
         await message.clear_reactions()
-        old_embed = message.embeds[0]
+        try:
+            old_embed = message.embeds[0]
+        except IndexError:
+            return
         embed = discord.Embed()
         member_id = int(
             re.match(r"(?:.*#[0-9]{4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1)
