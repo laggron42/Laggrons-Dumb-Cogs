@@ -96,7 +96,7 @@ class CODMW(commands.Cog):
         self.cod_client: Client = None
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.0.0"
+    __version__ = "1.0.1"
 
     def _init_logger(self):
         log_format = logging.Formatter(
@@ -228,14 +228,19 @@ class CODMW(commands.Cog):
         string = ", ".join(strings[:-1])
         if len(strings) > 1:
             string += _(" and ") + strings[-1]
-        else:
+        elif len(strings) == 1:
             string = strings[0]
+        else:
+            string = _("None.")
         return string
 
     def _get_progress_bar(self, progress, limit):
         # https://github.com/Cog-Creators/Red-DiscordBot/blob/V3/develop/redbot/cogs/audio/audio.py#L3920
         sections = 20
-        progress = round((progress / limit) * sections)
+        try:
+            progress = round((progress / limit) * sections)
+        except ZeroDivisionError:
+            return "==>"
         bar = "="
         seek = ">"
         empty = " "
