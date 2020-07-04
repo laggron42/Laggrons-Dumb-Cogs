@@ -24,6 +24,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install Red-DiscordBot
+          python -m pip install git+https://github.com/retke/laggron-utils
           python -m pip install python-dateutil==2.8.1
       - name: Compile all
         run: |
@@ -47,6 +48,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install Red-DiscordBot
+          python -m pip install git+https://github.com/retke/laggron-utils
           python -m pip install python-dateutil==2.8.1
           python -m pip install black==19.10b0
       - name: Checking style
