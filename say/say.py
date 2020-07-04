@@ -2,19 +2,17 @@
 
 import discord
 import asyncio
-import os
 import logging
 
 from typing import Optional
+from laggron_utils.logging import init_logger, close_logger, DisabledConsoleOutput
 
 from redbot.core import checks, commands
-from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils.tunnel import Tunnel
 
-log = logging.getLogger("laggron.say")
-log.setLevel(logging.DEBUG)
-
+log = logging.getLogger("red.laggron.say")
+init_logger(log, "Say")
 _ = Translator("Say", __file__)
 BaseCog = getattr(commands, "Cog", object)
 
@@ -37,36 +35,9 @@ class Say(BaseCog):
     def __init__(self, bot):
         self.bot = bot
         self.interaction = []
-        self._init_logger()
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.4.12"
-
-    def _init_logger(self):
-        log_format = logging.Formatter(
-            f"%(asctime)s %(levelname)s {self.__class__.__name__}: %(message)s",
-            datefmt="[%d/%m/%Y %H:%M]",
-        )
-        # logging to a log file
-        # file is automatically created by the module, if the parent foler exists
-        cog_path = cog_data_path(self)
-        if cog_path.exists():
-            log_path = cog_path / f"{os.path.basename(__file__)[:-3]}.log"
-            file_handler = logging.FileHandler(log_path)
-            file_handler.setLevel(logging.DEBUG)
-            file_handler.setFormatter(log_format)
-            log.addHandler(file_handler)
-
-        # stdout stuff
-        stdout_handler = logging.StreamHandler()
-        stdout_handler.setFormatter(log_format)
-        # if --debug flag is passed, we also set our debugger on debug mode
-        if logging.getLogger("red").isEnabledFor(logging.DEBUG):
-            stdout_handler.setLevel(logging.DEBUG)
-        else:
-            stdout_handler.setLevel(logging.INFO)
-        log.addHandler(stdout_handler)
-        self.stdout_handler = stdout_handler
+    __version__ = "1.4.13"
 
     async def say(
         self, ctx: commands.Context, channel: Optional[discord.TextChannel], text: str, files: list
@@ -264,11 +235,11 @@ class Say(BaseCog):
         if not ctx.command.cog_name == self.__class__.__name__:
             # That error doesn't belong to the cog
             return
-        log.removeHandler(self.stdout_handler)  # remove console output since red also handle this
-        log.error(
-            f"Exception in command '{ctx.command.qualified_name}'.\n\n", exc_info=error.original
-        )
-        log.addHandler(self.stdout_handler)  # re-enable console output for warnings
+        with DisabledConsoleOutput(log):
+            log.error(
+                f"Exception in command '{ctx.command.qualified_name}'.\n\n",
+                exc_info=error.original,
+            )
 
     async def stop_interaction(self, user):
         self.interaction.remove(user)
@@ -281,4 +252,4 @@ class Say(BaseCog):
         log.debug("Unloading cog...")
         for user in self.interaction:
             self.bot.loop.create_task(self.stop_interaction(user))
-        log.handlers = []
+        close_logger(log)

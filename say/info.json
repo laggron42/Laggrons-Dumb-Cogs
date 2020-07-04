@@ -11,7 +11,9 @@
     "hidden": false,
     "install_msg": "Thank you for installing the say cog. Please check the wiki for all informations about the cog.\nhttps://laggrons-dumb-cogs.readthedocs.io/say.html\n\nType `[p]help Say` for a quick overview of the commands.",
     "required_cogs": {},
-    "requirements": [],
+    "requirements": [
+        "laggron_utils"
+    ],
     "short": "Speak as the bot through multiple options.",
     "tags": [
         "rift",
