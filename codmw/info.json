@@ -12,7 +12,7 @@
     "install_msg": "Thank you for installing the codmw cog.\nType `[p]help cod` for a quick overview of the commands.",
     "required_cogs": {},
     "requirements": [
-        "laggron_utils"
+        "git+https://github.com/retke/laggron-utils"
     ],
     "short": "Call of Duty MW stats.",
     "tags": [
