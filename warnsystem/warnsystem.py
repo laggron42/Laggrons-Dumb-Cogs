@@ -8,7 +8,7 @@ from typing import Optional
 from asyncio import TimeoutError as AsyncTimeoutError
 from abc import ABC
 from datetime import datetime, timedelta
-from laggron_utils.logging import init_logger, close_logger, DisabledConsoleOutput
+from laggron_utils.logging import close_logger, DisabledConsoleOutput
 
 from redbot.core import commands, Config, checks
 from redbot.core.commands.converter import TimedeltaConverter
@@ -24,7 +24,6 @@ from .converters import AdvancedMemberSelect
 from .settings import SettingsMixin
 
 log = logging.getLogger("red.laggron.warnsystem")
-init_logger(log, "WarnSystem")
 _ = Translator("WarnSystem", __file__)
 BaseCog = getattr(commands, "Cog", object)
 

@@ -5,14 +5,13 @@ import asyncio
 import logging
 
 from typing import Optional
-from laggron_utils.logging import init_logger, close_logger, DisabledConsoleOutput
+from laggron_utils.logging import close_logger, DisabledConsoleOutput
 
 from redbot.core import checks, commands
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils.tunnel import Tunnel
 
 log = logging.getLogger("red.laggron.say")
-init_logger(log, "Say")
 _ = Translator("Say", __file__)
 BaseCog = getattr(commands, "Cog", object)
 

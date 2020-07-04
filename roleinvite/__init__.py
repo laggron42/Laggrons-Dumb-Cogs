@@ -3,6 +3,7 @@ import importlib.util
 from .roleinvite import RoleInvite
 
 from redbot.core.errors import CogLoadError
+from laggron_utils import init_logger
 
 if not importlib.util.find_spec("laggron_utils"):
     raise CogLoadError(
@@ -16,6 +17,7 @@ log = logging.getLogger("red.laggron.roleinvite")
 
 
 async def setup(bot):
+    init_logger(log, RoleInvite.__class__.__name__)
     n = RoleInvite(bot)
     bot.add_cog(n)
     log.debug("Cog successfully loaded on the instance.")

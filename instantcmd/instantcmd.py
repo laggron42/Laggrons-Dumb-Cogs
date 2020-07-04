@@ -10,7 +10,7 @@ import os
 import sys
 import redbot
 
-from laggron_utils.logging import init_logger, close_logger, DisabledConsoleOutput
+from laggron_utils.logging import close_logger, DisabledConsoleOutput
 
 from redbot.core import commands
 from redbot.core import checks
@@ -22,7 +22,6 @@ from redbot.core.utils.chat_formatting import pagify
 from .utils import Listener
 
 log = logging.getLogger("red.laggron.instantcmd")
-init_logger(log, "InstantCommands", "instantcmd")
 BaseCog = getattr(commands, "Cog", object)
 
 # Red 3.0 backwards compatibility, thanks Sinbad

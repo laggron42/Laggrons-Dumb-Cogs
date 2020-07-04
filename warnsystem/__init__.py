@@ -4,6 +4,7 @@ import re
 
 from redbot.core.i18n import Translator
 from datetime import datetime, timedelta
+from laggron_utils import init_logger, close_logger
 
 from .warnsystem import WarnSystem
 
@@ -184,10 +185,11 @@ async def update_config(bot, config):
 
 
 async def setup(bot):
+    init_logger(log, WarnSystem.__class__.__name__)
     n = WarnSystem(bot)
     # the cog conflicts with the core Warnings cog, we must check that
     if "Warnings" in bot.cogs:
-        log.handlers = []  # still need some cleaning up
+        close_logger(log)  # still need some cleaning up
         raise CogLoadError(
             "You need to unload the Warnings cog to load "
             "this cog. Type `[p]unload warnings` and try again."
@@ -200,7 +202,7 @@ async def setup(bot):
             "Contact support for further instructions.",
             exc_info=e,
         )
-        log.handlers = []  # still need some cleaning up
+        close_logger(log)  # still need some cleaning up
         raise CogLoadError(
             "After an update, the cog tried to perform changes to the saved data but an error "
             "occured. Read your console output or warnsystem.log (located over "

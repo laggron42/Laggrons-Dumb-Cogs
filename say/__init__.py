@@ -3,6 +3,7 @@ import importlib.util
 from .say import Say
 
 from redbot.core.errors import CogLoadError
+from laggron_utils import init_logger
 
 if not importlib.util.find_spec("laggron_utils"):
     raise CogLoadError(
@@ -16,6 +17,7 @@ log = logging.getLogger("red.laggron.say")
 
 
 async def setup(bot):
+    init_logger(log, Say.__class__.__name__)
     n = Say(bot)
     bot.add_cog(n)
     log.debug("Cog successfully loaded on the instance.")

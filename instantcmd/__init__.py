@@ -4,6 +4,7 @@ from .instantcmd import InstantCommands
 
 from redbot.core.data_manager import cog_data_path
 from redbot.core.errors import CogLoadError
+from laggron_utils import init_logger
 
 if not importlib.util.find_spec("laggron_utils"):
     raise CogLoadError(
@@ -56,6 +57,7 @@ async def ask_reset(bot, commands):
 
 
 async def setup(bot):
+    init_logger(log, InstantCommands.__class__.__name__, "instantcmd")
     n = InstantCommands(bot)
     if not await n.data.updated_body():
         commands = await n.data.commands()

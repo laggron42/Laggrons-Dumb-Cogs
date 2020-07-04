@@ -3,7 +3,7 @@ import asyncio
 import logging
 import discord
 
-from laggron_utils.logging import init_logger, close_logger, DisabledConsoleOutput
+from laggron_utils.logging import close_logger, DisabledConsoleOutput
 
 from redbot.core import commands
 from redbot.core import Config
@@ -16,7 +16,6 @@ from .api import API
 from . import errors
 
 log = logging.getLogger("red.laggron.roleinvite")
-init_logger(log, "RoleInvite")
 BaseCog = getattr(commands, "Cog", object)
 _ = Translator("RoleInvite", __file__)
 

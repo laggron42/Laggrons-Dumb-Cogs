@@ -3,6 +3,7 @@ import importlib.util
 from .codmw import CODMW
 
 from redbot.core.errors import CogLoadError
+from laggron_utils import init_logger
 
 if not importlib.util.find_spec("laggron_utils"):
     raise CogLoadError(
@@ -16,6 +17,7 @@ log = logging.getLogger("red.laggron.codmw")
 
 
 def setup(bot):
+    init_logger(log, CODMW.__class__.__name__)
     n = CODMW(bot)
     bot.add_cog(n)
     log.debug("Cog successfully loaded on the instance.")
