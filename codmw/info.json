@@ -1,4 +1,3 @@
-
 {
     "author": [
         "retke (El Laggron)"
@@ -12,7 +11,9 @@
     "hidden": false,
     "install_msg": "Thank you for installing the codmw cog.\nType `[p]help cod` for a quick overview of the commands.",
     "required_cogs": {},
-    "requirements": [],
+    "requirements": [
+        "laggron_utils"
+    ],
     "short": "Call of Duty MW stats.",
     "tags": [
         "modernwarfare",

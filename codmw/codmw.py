@@ -3,6 +3,7 @@ import logging
 import os
 
 from datetime import datetime, timedelta
+from laggron_utils.logging import init_logger, close_logger, DisabledConsoleOutput
 
 from redbot.core import commands
 from redbot.core.bot import Red
@@ -11,7 +12,8 @@ from redbot.core.data_manager import cog_data_path
 
 from .api_wrapper import Client, Forbidden, NotFound
 
-log = logging.getLogger("laggron.codmw")
+log = logging.getLogger("red.laggron.codmw")
+init_logger(log, "CODMW")
 _ = Translator("CODMW", __file__)
 
 GAMEMODES_MAPPING = {
@@ -92,37 +94,10 @@ class CODMW(commands.Cog):
 
     def __init__(self, bot: Red):
         self.bot = bot
-        self._init_logger()
         self.cod_client: Client = None
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.0.1"
-
-    def _init_logger(self):
-        log_format = logging.Formatter(
-            f"%(asctime)s %(levelname)s {self.__class__.__name__}: %(message)s",
-            datefmt="[%d/%m/%Y %H:%M]",
-        )
-        # logging to a log file
-        # file is automatically created by the module, if the parent foler exists
-        cog_path = cog_data_path(self)
-        if cog_path.exists():
-            log_path = cog_path / f"{os.path.basename(__file__)[:-3]}.log"
-            file_handler = logging.FileHandler(log_path)
-            file_handler.setLevel(logging.DEBUG)
-            file_handler.setFormatter(log_format)
-            log.addHandler(file_handler)
-
-        # stdout stuff
-        stdout_handler = logging.StreamHandler()
-        stdout_handler.setFormatter(log_format)
-        # if --debug flag is passed, we also set our debugger on debug mode
-        if logging.getLogger("red").isEnabledFor(logging.DEBUG):
-            stdout_handler.setLevel(logging.DEBUG)
-        else:
-            stdout_handler.setLevel(logging.INFO)
-        log.addHandler(stdout_handler)
-        self.stdout_handler = stdout_handler
+    __version__ = "1.0.2"
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -145,9 +120,9 @@ class CODMW(commands.Cog):
 
     def cog_unload(self):
         log.debug("Unloading cog...")
-        log.handlers = []
         if self.cod_client is not None:
             self.bot.loop.create_task(self._clear_client())
+        close_logger(log)
 
     async def call_api(self, ctx: commands.Context, coro, *args, **kwargs):
         retried = False
