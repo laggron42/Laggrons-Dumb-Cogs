@@ -8,7 +8,7 @@ from redbot.core.bot import Red
 
 from typing import Mapping, Optional
 
-log = logging.getLogger("laggron.warnsystem")
+log = logging.getLogger("red.laggron.warnsystem")
 
 
 class MemoryCache:
