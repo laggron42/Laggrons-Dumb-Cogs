@@ -13,7 +13,6 @@ from redbot.core.data_manager import cog_data_path
 from .api_wrapper import Client, Forbidden, NotFound
 
 log = logging.getLogger("red.laggron.codmw")
-init_logger(log, "CODMW")
 _ = Translator("CODMW", __file__)
 
 GAMEMODES_MAPPING = {
