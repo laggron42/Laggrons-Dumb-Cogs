@@ -11,7 +11,10 @@
     "hidden": false,
     "install_msg": "Thank you for installing the warnsystem cog. Please check the wiki for all informations about the cog.\nhttps://laggrons-dumb-cogs.readthedocs.io/warnsystem.html\n\nType `[p]help WarnSystem` for a quick overview of the commands\n**This cog conflicts with Warnings which must be unloaded.**",
     "required_cogs": {},
-    "requirements": [],
+    "requirements": [
+        "python-dateutil",
+        "git+https://github.com/retke/Laggron-utils.git"
+    ],
     "short": "Moderation tools, providing an alternative to core Red.",
     "tags": [
         "warn",

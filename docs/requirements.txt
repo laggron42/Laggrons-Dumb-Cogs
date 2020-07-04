@@ -4,3 +4,4 @@ sphinx_autodoc_napoleon_typehints==2.1.6
 sphinx_rtd_theme==0.4.3
 Red-DiscordBot
 python-dateutil==2.8.1
+git+https://github.com/retke/laggron-utils

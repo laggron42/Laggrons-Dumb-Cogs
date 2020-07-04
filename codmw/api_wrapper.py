@@ -5,7 +5,7 @@ from urllib.parse import quote
 from datetime import datetime
 from typing import Optional
 
-log = logging.getLogger("laggron.codmw")
+log = logging.getLogger("red.laggron.codmw")
 BASE_URL = "https://my.callofduty.com/api/papi-client/"
 
 

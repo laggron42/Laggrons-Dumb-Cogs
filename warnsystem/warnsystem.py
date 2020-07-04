@@ -3,17 +3,16 @@ import discord
 import logging
 import asyncio
 import re
-import os
 
 from typing import Optional
 from asyncio import TimeoutError as AsyncTimeoutError
 from abc import ABC
 from datetime import datetime, timedelta
+from laggron_utils.logging import close_logger, DisabledConsoleOutput
 
 from redbot.core import commands, Config, checks
 from redbot.core.commands.converter import TimedeltaConverter
 from redbot.core.i18n import Translator, cog_i18n
-from redbot.core.data_manager import cog_data_path
 from redbot.core.utils import predicates, menus, mod
 from redbot.core.utils.chat_formatting import pagify
 
@@ -24,8 +23,7 @@ from .cache import MemoryCache
 from .converters import AdvancedMemberSelect
 from .settings import SettingsMixin
 
-log = logging.getLogger("laggron.warnsystem")
-log.setLevel(logging.DEBUG)
+log = logging.getLogger("red.laggron.warnsystem")
 _ = Translator("WarnSystem", __file__)
 BaseCog = getattr(commands, "Cog", object)
 
@@ -224,36 +222,10 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         self.cache = MemoryCache(self.bot, self.data)
         self.api = API(self.bot, self.data, self.cache)
 
-        self._init_logger()
         self.task: asyncio.Task
 
-    __version__ = "1.3.5"
+    __version__ = "1.3.6"
     __author__ = ["retke (El Laggron)"]
-
-    def _init_logger(self):
-        log_format = logging.Formatter(
-            f"%(asctime)s [%(levelname)s] %(name)s: %(message)s", datefmt="[%Y-%m-%d %H:%M]"
-        )
-        # logging to a log file
-        # file is automatically created by the module, if the parent foler exists
-        cog_path = cog_data_path(self)
-        if cog_path.exists():
-            log_path = cog_path / f"{os.path.basename(__file__)[:-3]}.log"
-            file_handler = logging.FileHandler(log_path)
-            file_handler.setLevel(logging.DEBUG)
-            file_handler.setFormatter(log_format)
-            log.addHandler(file_handler)
-
-        # stdout stuff
-        stdout_handler = logging.StreamHandler()
-        stdout_handler.setFormatter(log_format)
-        # if --debug flag is passed, we also set our debugger on debug mode
-        if logging.getLogger("red").isEnabledFor(logging.DEBUG):
-            stdout_handler.setLevel(logging.DEBUG)
-        else:
-            stdout_handler.setLevel(logging.INFO)
-        log.addHandler(stdout_handler)
-        self.stdout_handler = stdout_handler
 
     # helpers
     async def call_warn(self, ctx, level, member, reason=None, time=None):
@@ -1470,11 +1442,11 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                 )
             )
             return
-        log.removeHandler(self.stdout_handler)  # remove console output since red also handle this
-        log.error(
-            f"Exception in command '{ctx.command.qualified_name}'.\n\n", exc_info=error.original
-        )
-        log.addHandler(self.stdout_handler)  # re-enable console output for warnings
+        with DisabledConsoleOutput(log):
+            log.error(
+                f"Exception in command '{ctx.command.qualified_name}'.\n\n",
+                exc_info=error.original,
+            )
 
     # correctly unload the cog
     def __unload(self):
@@ -1485,7 +1457,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
 
         # remove all handlers from the logger, this prevents adding
         # multiple times the same handler if the cog gets reloaded
-        log.handlers = []
+        close_logger(log)
 
         # stop checking for unmute and unban
         self.task.cancel()

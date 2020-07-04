@@ -1,10 +1,12 @@
 import discord
 import logging
 
-from .roleinvite import _  # translator
+from redbot.core.i18n import Translator
+
 from . import errors
 
-log = logging.getLogger("laggron.roleinvite")
+log = logging.getLogger("red.laggron.roleinvite")
+_ = Translator("RoleInvite", __file__)
 
 
 class API:

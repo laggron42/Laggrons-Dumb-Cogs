@@ -1,8 +1,20 @@
 import logging
-from redbot.core.data_manager import cog_data_path
+import importlib.util
 from .instantcmd import InstantCommands
 
-log = logging.getLogger("laggron.instantcmd")
+from redbot.core.data_manager import cog_data_path
+from redbot.core.errors import CogLoadError
+from laggron_utils import init_logger
+
+if not importlib.util.find_spec("laggron_utils"):
+    raise CogLoadError(
+        "You need the `laggron_utils` package for any cog from Laggron's Dumb Cogs. "
+        "Use the command `[p]pipinstall git+https://github.com/retke/Laggron-utils.git` "
+        "or type `pip3 install -U git+https://github.com/retke/Laggron-utils.git` in the "
+        "terminal to install the library."
+    )
+
+log = logging.getLogger("red.laggron.instantcmd")
 
 
 async def ask_reset(bot, commands):
@@ -45,6 +57,7 @@ async def ask_reset(bot, commands):
 
 
 async def setup(bot):
+    init_logger(log, InstantCommands.__class__.__name__, "instantcmd")
     n = InstantCommands(bot)
     if not await n.data.updated_body():
         commands = await n.data.commands()

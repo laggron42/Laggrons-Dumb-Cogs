@@ -14,7 +14,7 @@ from redbot.core.utils.chat_formatting import pagify
 
 from .abc import MixinMeta
 
-log = logging.getLogger("laggron.warnsystem")
+log = logging.getLogger("red.laggron.warnsystem")
 _ = Translator("WarnSystem", __file__)
 
 

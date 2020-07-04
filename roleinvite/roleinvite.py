@@ -2,25 +2,22 @@
 import asyncio
 import logging
 import discord
-import os
+
+from laggron_utils.logging import close_logger, DisabledConsoleOutput
 
 from redbot.core import commands
 from redbot.core import Config
 from redbot.core import checks
-from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import cog_i18n, Translator
 from redbot.core.utils.predicates import MessagePredicate
 from redbot.core.utils.chat_formatting import pagify
 
-_ = Translator("RoleInvite", __file__)
-
 from .api import API
 from . import errors
 
-log = logging.getLogger("laggron.roleinvite")
-log.setLevel(logging.DEBUG)
-
+log = logging.getLogger("red.laggron.roleinvite")
 BaseCog = getattr(commands, "Cog", object)
+_ = Translator("RoleInvite", __file__)
 
 # Red 3.0 backwards compatibility, thanks Sinbad
 listener = getattr(commands.Cog, "listener", None)
@@ -51,36 +48,9 @@ class RoleInvite(BaseCog):
         self.translator = _
 
         bot.loop.create_task(self.api.update_invites())
-        self._init_logger()
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "2.0.1"
-
-    def _init_logger(self):
-        log_format = logging.Formatter(
-            f"%(asctime)s %(levelname)s {self.__class__.__name__}: %(message)s",
-            datefmt="[%d/%m/%Y %H:%M]",
-        )
-        # logging to a log file
-        # file is automatically created by the module, if the parent foler exists
-        cog_path = cog_data_path(self)
-        if cog_path.exists():
-            log_path = cog_path / f"{os.path.basename(__file__)[:-3]}.log"
-            file_handler = logging.FileHandler(log_path)
-            file_handler.setLevel(logging.DEBUG)
-            file_handler.setFormatter(log_format)
-            log.addHandler(file_handler)
-
-        # stdout stuff
-        stdout_handler = logging.StreamHandler()
-        stdout_handler.setFormatter(log_format)
-        # if --debug flag is passed, we also set our debugger on debug mode
-        if logging.getLogger("red").isEnabledFor(logging.DEBUG):
-            stdout_handler.setLevel(logging.DEBUG)
-        else:
-            stdout_handler.setLevel(logging.INFO)
-        log.addHandler(stdout_handler)
-        self.stdout_handler = stdout_handler
+    __version__ = "2.0.2"
 
     async def _check(self, ctx: commands.Context):
         """
@@ -545,11 +515,11 @@ class RoleInvite(BaseCog):
         if not ctx.command.cog_name == self.__class__.__name__:
             # That error doesn't belong to the cog
             return
-        log.removeHandler(self.stdout_handler)  # remove console output since red also handle this
-        log.error(
-            f"Exception in command '{ctx.command.qualified_name}'.\n\n", exc_info=error.original
-        )
-        log.addHandler(self.stdout_handler)  # re-enable console output for warnings
+        with DisabledConsoleOutput(log):
+            log.error(
+                f"Exception in command '{ctx.command.qualified_name}'.\n\n",
+                exc_info=error.original,
+            )
 
     def __unload(self):
         # breaking change __unload -> cog_unload
@@ -560,4 +530,4 @@ class RoleInvite(BaseCog):
 
         # remove all handlers from the logger, this prevents adding
         # multiple times the same handler if the cog gets reloaded
-        log.handlers = []
+        close_logger(log)

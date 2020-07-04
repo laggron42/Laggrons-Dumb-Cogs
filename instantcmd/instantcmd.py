@@ -10,19 +10,18 @@ import os
 import sys
 import redbot
 
+from laggron_utils.logging import close_logger, DisabledConsoleOutput
+
 from redbot.core import commands
 from redbot.core import checks
 from redbot.core import Config
-from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.chat_formatting import pagify
 
 from .utils import Listener
 
-log = logging.getLogger("laggron.instantcmd")
-log.setLevel(logging.DEBUG)
-
+log = logging.getLogger("red.laggron.instantcmd")
 BaseCog = getattr(commands, "Cog", object)
 
 # Red 3.0 backwards compatibility, thanks Sinbad
@@ -79,36 +78,9 @@ class InstantCommands(BaseCog):
         }
         # resume all commands and listeners
         bot.loop.create_task(self.resume_commands())
-        self._init_logger()
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.2.0"
-
-    def _init_logger(self):
-        log_format = logging.Formatter(
-            f"%(asctime)s %(levelname)s {self.__class__.__name__}: %(message)s",
-            datefmt="[%d/%m/%Y %H:%M]",
-        )
-        # logging to a log file
-        # file is automatically created by the module, if the parent foler exists
-        cog_path = cog_data_path(self)
-        if cog_path.exists():
-            log_path = cog_path / f"{os.path.basename(__file__)[:-3]}.log"
-            file_handler = logging.FileHandler(log_path)
-            file_handler.setLevel(logging.DEBUG)
-            file_handler.setFormatter(log_format)
-            log.addHandler(file_handler)
-
-        # stdout stuff
-        stdout_handler = logging.StreamHandler()
-        stdout_handler.setFormatter(log_format)
-        # if --debug flag is passed, we also set our debugger on debug mode
-        if logging.getLogger("red").isEnabledFor(logging.DEBUG):
-            stdout_handler.setLevel(logging.DEBUG)
-        else:
-            stdout_handler.setLevel(logging.INFO)
-        log.addHandler(stdout_handler)
-        self.stdout_handler = stdout_handler
+    __version__ = "1.2.1"
 
     # def get_config_identifier(self, name):
     # """
@@ -430,11 +402,11 @@ cog at this point.
                 "I need the `Add reactions` and `Manage messages` in the "
                 "current channel if you want to use this command."
             )
-        log.removeHandler(self.stdout_handler)  # remove console output since red also handle this
-        log.error(
-            f"Exception in command '{ctx.command.qualified_name}'.\n\n", exc_info=error.original
-        )
-        log.addHandler(self.stdout_handler)  # re-enable console output for warnings
+        with DisabledConsoleOutput(log):
+            log.error(
+                f"Exception in command '{ctx.command.qualified_name}'.\n\n",
+                exc_info=error.original,
+            )
 
     # correctly unload the cog
     def __unload(self):
@@ -449,7 +421,7 @@ cog at this point.
 
             # remove all handlers from the logger, this prevents adding
             # multiple times the same handler if the cog gets reloaded
-            log.handlers = []
+            close_logger(log)
 
         # I am forced to put everything in an async function to execute the remove_commands
         # function, and then remove the handlers. Using loop.create_task on remove_commands only
