@@ -7,6 +7,7 @@ from redbot.core.i18n import Translator
 
 from .abc import MixinMeta
 
+log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
 
 
