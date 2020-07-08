@@ -1,13 +1,13 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2020-07-01 00:05+0000\n"
+"POT-Creation-Date: 2020-07-08 00:09+0000\n"
 "Last-Translator: \n"
 "Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: redgettext 3.1\n"
+"Generated-By: redgettext 3.2\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Crowdin-Project: laggrons-dumb-cogs\n"
 "X-Crowdin-Project-ID: 409698\n"
@@ -15,191 +15,191 @@ msgstr ""
 "X-Crowdin-File-ID: 30\n"
 "Language: tr_TR\n"
 
-#: roleinvite/roleinvite.py:35
+#: roleinvite/roleinvite.py:32
 #, docstring
 msgid "\\n    Server autorole following the invite the user used to join the server\\n\\n    Documentation: https://laggron.red/roleinvite.html\\n    "
-msgstr ""
+msgstr "\\n    Kullanıcının sunucuya katılmak için kullandığı davetiyeyi takip eder\\n\\n    Döküman: https://laggron.red/roleinvite.html\\n    "
 
-#: roleinvite/roleinvite.py:93
+#: roleinvite/roleinvite.py:63
 msgid "Request timed out."
 msgstr "İstek zaman aşımına uğradı."
 
-#: roleinvite/roleinvite.py:100
+#: roleinvite/roleinvite.py:70
 #, docstring
 msgid "\\n        Roleinvite cog management\\n\\n        For a clear explaination of how the cog works, read the documentation.\\n        https://laggrons-dumb-cogs.readthedocs.io/\\n        "
-msgstr ""
+msgstr "\\n        Roleinvite cog ayarları\\n\\n        Nasıl kullanıldığını öğrenmek istiyorsanız, dökümanı okuyunuz.\\n        https://laggrons-dumb-cogs.readthedocs.io/\\n        "
 
-#: roleinvite/roleinvite.py:110
+#: roleinvite/roleinvite.py:80
 #, docstring
 msgid "\\n        Link a role to an invite for the autorole system.\\n\\n        Example: `[p]roleinviteset add https://discord.gg/laggron Member`\\n        If this message still shows after using the command, you probably gave a wrong role name.\\n        If you want to link roles to the main autorole system (user joined with an unknown invite),        give `main` instead of a discord invite.\\n        If you want to link roles to the default autorole system (roles given regardless of the        invite used), give `default` instead of a discord invite.\\n        "
-msgstr ""
+msgstr "\\n        Autorole sistemi için bir davetiyeye rol bağlayın.\\n\\n        Örneğin: `[p]roleinviteset add https://discord.gg/laggron Kayıtlı`\\n        Bu mesaj komutu kullandıktan sonra hala görünüyorsa, muhtemelen yanlış bir rol adı vermişsinizdir.\\n       Rolleri ana autorole sistemine bağlamak istiyorsanız (bilinmeyen bir davet ile girenler için),        onlara `main` rolünü ver.\\n        Rolleri varsayılan autorole sistemine bağlamak istiyorsanız (kullanılan davetten bağımsız olarak verilen roller), onlara `varsayılan` rolünü ver.\\n        "
 
-#: roleinvite/roleinvite.py:135
+#: roleinvite/roleinvite.py:105
 msgid "That role is already linked to the invite."
 msgstr "Bu rol zaten bir davet linkine ayarlandı."
 
-#: roleinvite/roleinvite.py:146
+#: roleinvite/roleinvite.py:116
 msgid "**Warning**: This invite is already registered and currently linked to the role(s) `{}`.\\nIf you continue, this invite will give all roles given to the new member. \\nIf you want to edit it, first delete the link using `{}roleinviteset remove`.\\n\\nDo you want to link this invite to {} roles? (yes/no)"
 msgstr "** Uyarı**: Bu davet zaten kayıtlı ve şu anda rol(ler) `{} ' ile bağlantılıdır. Eğer devam ederseniz, bu davet yeni üyeye verilen tüm rolleri verecektir. \\nEğer düzenlemek istiyorsanız, önce `{}roleinviteset remove ' kullanarak bağlantıyı silin.\\n \\nBu davetiyeyi {} rollere bağlamak ister misiniz? (Evet/Hayır)"
 
-#: roleinvite/roleinvite.py:161
+#: roleinvite/roleinvite.py:131
 msgid "That role is higher than mine. I can't add it to new users."
 msgstr "Bu rol benimkinden daha yüksek. Yeni kullanıcılara ekleyemiyorum."
 
-#: roleinvite/roleinvite.py:164
+#: roleinvite/roleinvite.py:134
 msgid "That role is higher than your top role, you can't do that!"
 msgstr "Bu rol senin rolünden daha yüksek, bunu yapamazsın!"
 
-#: roleinvite/roleinvite.py:167
+#: roleinvite/roleinvite.py:137
 msgid "I need the `Manage server` permission!"
 msgstr "`Sunucuyu Yönet` yetkisine ihtiyacım var!"
 
-#: roleinvite/roleinvite.py:170
+#: roleinvite/roleinvite.py:140
 msgid "I need the `Manage roles` permission!"
 msgstr "`Rolleri Yönet` yetkisine ihtiyacım var!"
 
-#: roleinvite/roleinvite.py:178 roleinvite/roleinvite.py:224
-#: roleinvite/roleinvite.py:241
+#: roleinvite/roleinvite.py:148 roleinvite/roleinvite.py:194
+#: roleinvite/roleinvite.py:211
 msgid "That invite cannot be found"
 msgstr "Davet bulunamadı"
 
-#: roleinvite/roleinvite.py:182
+#: roleinvite/roleinvite.py:152
 msgid "That invite doesn't belong to this server!"
 msgstr "Bu davet bu sunucuya ait değil!"
 
-#: roleinvite/roleinvite.py:185
+#: roleinvite/roleinvite.py:155
 msgid "There are no invites generated on this server."
 msgstr "Bu sunucuda oluşturulan davet yok."
 
-#: roleinvite/roleinvite.py:194
+#: roleinvite/roleinvite.py:164
 msgid "The role `{}` is now linked to the main autorole system. (new members will get it if they join with an invite not registered)"
-msgstr ""
+msgstr "Bu rol `{}` ana rol sistemine bağlı. (yeni üyeler bu rolü alacak, eğer kayıtlı bir davet linki ile gelmezlerse)"
 
-#: roleinvite/roleinvite.py:205
+#: roleinvite/roleinvite.py:175
 msgid "The role `{}` is now linked to the default autorole system. (new members will always get this role, whatever invite he used.)"
-msgstr ""
+msgstr "Bu rol `{}` varsayılan autorol olarak kayıt edidli. (yeni gelen tüm üyeler bu rolü alacak, hangi davet linkini kullansa bile.)"
 
-#: roleinvite/roleinvite.py:218
+#: roleinvite/roleinvite.py:188
 msgid "The role `{}` is now linked to the invite `{}`"
 msgstr "Bu rol `{}` bu davet linkine ayarlandı `{}`"
 
-#: roleinvite/roleinvite.py:228
+#: roleinvite/roleinvite.py:198
 #, docstring
 msgid "\\n        Remove a link in this server\\n\\n        Specify a `role` to only remove one role from the invite link list.\\n        Don't specify anything if you want to remove the invite itself.\\n        If you want to edit the main/default autorole system's roles, give         `main`/`default` instead of a discord invite.\\n        "
-msgstr ""
+msgstr "\\n        Bu sunucudan bir link sil\\n\\n        Rolü belirterek `rol` davet bağlantı listesinden yalnızca bir rolü kaldırmak için.\\n        Davetiyenin kendisini kaldırmak istiyorsanız hiçbir şey belirtmeyin.\\n        Ana / varsayılan autorole sisteminin rollerini düzenlemek istiyorsanız, şunları yapın         `main`/`default` discord daveti eklemeden.\\n        "
 
-#: roleinvite/roleinvite.py:250
+#: roleinvite/roleinvite.py:220
 msgid "That invite lost all of its linked roles and was deleted."
 msgstr "Bu davet, tüm bağlantılı rollerini kaybetti ve silindi."
 
-#: roleinvite/roleinvite.py:254
+#: roleinvite/roleinvite.py:224
 msgid "You're about to remove all roles linked to the main autorole.\\n"
 msgstr "Oto role ile bağlantılı tüm rolleri kaldırmak üzeresiniz.\\n"
 
-#: roleinvite/roleinvite.py:256
+#: roleinvite/roleinvite.py:226
 msgid "You're about to remove all roles linked to the default autorole.\\n"
 msgstr "Varsayılan oto role ile bağlantılı tüm rolleri kaldırmak üzeresiniz.\\n"
 
-#: roleinvite/roleinvite.py:258
+#: roleinvite/roleinvite.py:228
 msgid "You're about to remove all roles linked to this invite.\\n"
 msgstr "Bu davetle bağlantılı tüm rolleri kaldırmak üzeresiniz.\\n"
 
-#: roleinvite/roleinvite.py:260
+#: roleinvite/roleinvite.py:230
 msgid "List of roles:\\n{}\\nProceed? (yes/no)\\n\\n"
 msgstr "Rollerin listesi:\\n{}\\nDevam etmek istiyor musun? (evet/hayır)\\n\\n"
 
-#: roleinvite/roleinvite.py:265
+#: roleinvite/roleinvite.py:235
 msgid "Remember that you can remove a single role from this list by typing `{}roleinviteset remove {} [role name]`"
-msgstr ""
+msgstr "Bu listeden tek bir rolü kaldırabileceğinizi unutmayın, bunu yazarak. `{}roleinviteset remove {} [rol ismi]`"
 
-#: roleinvite/roleinvite.py:272
+#: roleinvite/roleinvite.py:242
 msgid "Alright, invite is kept."
-msgstr ""
+msgstr "Tamamdır, invite durmaya devam ediyor."
 
-#: roleinvite/roleinvite.py:277
+#: roleinvite/roleinvite.py:247
 msgid "The invite `{}` has been removed from the list."
 msgstr "Davet `{}` listeden kaldırıldı."
 
-#: roleinvite/roleinvite.py:285
+#: roleinvite/roleinvite.py:255
 msgid "main autorole."
 msgstr "ana oto role."
 
-#: roleinvite/roleinvite.py:287
+#: roleinvite/roleinvite.py:257
 msgid "default autorole."
 msgstr "varsayılan oto role."
 
-#: roleinvite/roleinvite.py:289
+#: roleinvite/roleinvite.py:259
 msgid "invite `{}`."
 msgstr "davet `{}`."
 
-#: roleinvite/roleinvite.py:291
+#: roleinvite/roleinvite.py:261
 msgid "You're about to unlink the `{}` role from the {}\\nProceed? (yes/no)"
-msgstr ""
+msgstr "Bir bağlantıyı kaldırmak üzeresin `{}` rolünü buradan {}\\nDevam etmek istiyor musn? (evet/hayır)"
 
-#: roleinvite/roleinvite.py:297
+#: roleinvite/roleinvite.py:267
 msgid "Alright, role is kept."
 msgstr "Tamamdır, rol durmaya devam ediyor."
 
-#: roleinvite/roleinvite.py:302
+#: roleinvite/roleinvite.py:272
 msgid "The role `{}` is now unlinked from the {}"
 msgstr "Bu rol `{}` bundan kaldırıldı {}"
 
-#: roleinvite/roleinvite.py:307
+#: roleinvite/roleinvite.py:277
 #, docstring
 msgid "\\n        List all links on this server\\n        "
 msgstr "\\n        Bu sunucudaki tüm linklerin listesi\\n        "
 
-#: roleinvite/roleinvite.py:352
+#: roleinvite/roleinvite.py:322
 msgid "There is nothing set on RoleInvite. Type `{}help roleinviteset` for more informations."
 msgstr "Role daveti üzerinde ayarlanmış bir şey yok. Daha fazla bilgi için `{}help roleinviteset` yazın."
 
-#: roleinvite/roleinvite.py:359
+#: roleinvite/roleinvite.py:329
 msgid "**Info:** RoleInvite is currently disabled and won't give roles on member join.\\nType `{}roleinviteset enable` to enable it."
 msgstr "**Bilgi:** Rol daveti şu anda kapalı ve katılan kimseye rol vermeyecek.\\nAçmak için `{}roleinviteset enable` bu komutu kullanın."
 
-#: roleinvite/roleinvite.py:365
+#: roleinvite/roleinvite.py:335
 msgid "List of invites linked to an autorole on this server:"
-msgstr ""
+msgstr "Bu sunucudaki bir autorole bağlı davetlerin listesi:"
 
-#: roleinvite/roleinvite.py:373
+#: roleinvite/roleinvite.py:343
 #, docstring
 msgid "\\n        Enable or disabe the autorole system.\\n\\n        If it was disabled within your action, that means that the bot somehow lost the        `Manage roles` or the `Manage server` permission.\\n        "
-msgstr ""
+msgstr "\\n        Autorole sistemini etkinleştirme veya devre dışı bırakma.\\n\\n        Eğer eklediğiniz işlemleri bot yapmıyorsa büyük ihtimalle bu yetkileri bulunmuyor        `Rolleri Düzenle` ya da `Sunucuyu yönet` bu yetkileri verip tekrar deneyin.\\n        "
 
-#: roleinvite/roleinvite.py:381
+#: roleinvite/roleinvite.py:351
 msgid "I need the `Manage roles` permission."
 msgstr "`Rolleri Yönet` yetkisine ihtiyacım var."
 
-#: roleinvite/roleinvite.py:384
+#: roleinvite/roleinvite.py:354
 msgid "I need the `Manage server` permission."
 msgstr "`Sunucuyu Yönet` yetkisine ihtiyacım var."
 
-#: roleinvite/roleinvite.py:391
+#: roleinvite/roleinvite.py:361
 msgid "The autorole system is now enabled on this server.\\nType `{0.prefix}roleinviteset list` to see what's the current role list.\\nIf the bot lose the `Manage roles` or the `Manage server` permissions "
-msgstr ""
+msgstr "Otorol sistemi bu sunucuda aktifleştirildi.\\nBunu yazarak `{0.prefix}roleinviteset list` mevcut rolleri görebilirsin.\\nEğer bot bu yetkileri kaybederse `Rolleri Yönet` ya da `Sunucuyu yönet` yetkilerini "
 
-#: roleinvite/roleinvite.py:401
+#: roleinvite/roleinvite.py:371
 #, docstring
 msgid "\\n        Get informations about the cog.\\n        "
 msgstr "\\n        Cog hakkında bilgi alın.\\n        "
 
-#: roleinvite/roleinvite.py:405
+#: roleinvite/roleinvite.py:375
 msgid "Laggron's Dumb Cogs V3 - roleinvite\\n\\nVersion: {0.__version__}\\nAuthor: {0.__author__}\\nGithub repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\\nDiscord server: https://discord.gg/AVzjfpR\\nDocumentation: http://laggrons-dumb-cogs.readthedocs.io/\\nHelp translating the cog: https://crowdin.com/project/laggrons-dumb-cogs/\\n\\nSupport my work on Patreon: https://www.patreon.com/retke"
-msgstr ""
+msgstr "Laggron's Dumb Cogs V3 - roleinvite\\n\\nVersiyon: {0.__version__}\\nAuthor: {0.__author__}\\nGithub repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\\nDiscord sunucusu: https://discord.gg/AVzjfpR\\nDocumentation: http://laggrons-dumb-cogs.readthedocs.io/\\nÇeviri yapmamızda yardımcı ol: https://crowdin.com/project/laggrons-dumb-cogs/\\n\\nBeni Patreon'da destekleyin: https://www.patreon.com/retke"
 
-#: roleinvite/roleinvite.py:422
+#: roleinvite/roleinvite.py:392
 msgid "Joined with an unknown invite, main roles given."
 msgstr "Bilinmeyen bir davet ile katıldı, varsayılan roller verildi."
 
-#: roleinvite/roleinvite.py:424
+#: roleinvite/roleinvite.py:394
 msgid "Default roles given."
 msgstr "Varsayılan roller verildi."
 
-#: roleinvite/roleinvite.py:426
+#: roleinvite/roleinvite.py:396
 msgid "Joined with {}"
 msgstr "İle katıldı {}"
 
-#: roleinvite/roleinvite.py:486
+#: roleinvite/roleinvite.py:456
 msgid "Roleinvite autorole. "
 msgstr "Role daveti otomatik rol. "
 

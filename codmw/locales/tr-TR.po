@@ -1,13 +1,13 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2020-06-30 20:12+0000\n"
+"POT-Creation-Date: 2020-07-08 00:09+0000\n"
 "Last-Translator: \n"
 "Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: redgettext 3.1\n"
+"Generated-By: redgettext 3.2\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Crowdin-Project: laggrons-dumb-cogs\n"
 "X-Crowdin-Project-ID: 409698\n"
@@ -15,246 +15,250 @@ msgstr ""
 "X-Crowdin-File-ID: 26\n"
 "Language: tr_TR\n"
 
-#: codmw/codmw.py:46
+#: codmw/codmw.py:47
 msgid "{amount} {unit} ago."
 msgstr "{amount} {unit} önce."
 
-#: codmw/codmw.py:49 codmw/codmw.py:215
+#: codmw/codmw.py:50 codmw/codmw.py:189
 msgid "year"
 msgstr "yıl"
 
-#: codmw/codmw.py:49 codmw/codmw.py:215
+#: codmw/codmw.py:50 codmw/codmw.py:189
 msgid "years"
 msgstr "yıllar"
 
-#: codmw/codmw.py:50 codmw/codmw.py:216
+#: codmw/codmw.py:51 codmw/codmw.py:190
 msgid "month"
 msgstr "ay"
 
-#: codmw/codmw.py:50 codmw/codmw.py:216
+#: codmw/codmw.py:51 codmw/codmw.py:190
 msgid "months"
 msgstr "aylar"
 
-#: codmw/codmw.py:51 codmw/codmw.py:217
+#: codmw/codmw.py:52 codmw/codmw.py:191
 msgid "week"
 msgstr "hafta"
 
-#: codmw/codmw.py:51 codmw/codmw.py:217
+#: codmw/codmw.py:52 codmw/codmw.py:191
 msgid "weeks"
 msgstr "haftalar"
 
-#: codmw/codmw.py:52 codmw/codmw.py:218
+#: codmw/codmw.py:53 codmw/codmw.py:192
 msgid "day"
 msgstr "gün"
 
-#: codmw/codmw.py:52 codmw/codmw.py:218
+#: codmw/codmw.py:53 codmw/codmw.py:192
 msgid "days"
 msgstr "gün"
 
-#: codmw/codmw.py:53 codmw/codmw.py:219
+#: codmw/codmw.py:54 codmw/codmw.py:193
 msgid "hour"
 msgstr "saat"
 
-#: codmw/codmw.py:53 codmw/codmw.py:219
+#: codmw/codmw.py:54 codmw/codmw.py:193
 msgid "hours"
 msgstr "saat"
 
-#: codmw/codmw.py:54 codmw/codmw.py:220
+#: codmw/codmw.py:55 codmw/codmw.py:194
 msgid "minute"
 msgstr "dakika"
 
-#: codmw/codmw.py:54 codmw/codmw.py:220
+#: codmw/codmw.py:55 codmw/codmw.py:194
 msgid "minutes"
 msgstr "dakika"
 
-#: codmw/codmw.py:55 codmw/codmw.py:221
+#: codmw/codmw.py:56 codmw/codmw.py:195
 msgid "second"
 msgstr "saniye"
 
-#: codmw/codmw.py:55 codmw/codmw.py:221
+#: codmw/codmw.py:56 codmw/codmw.py:195
 msgid "seconds"
 msgstr "saniye"
 
-#: codmw/codmw.py:65
+#: codmw/codmw.py:66
 msgid "just now"
 msgstr "şu anda"
 
-#: codmw/codmw.py:69
+#: codmw/codmw.py:70
 msgid "a minute ago"
 msgstr "dakika önce"
 
-#: codmw/codmw.py:73
+#: codmw/codmw.py:74
 msgid "an hour ago"
 msgstr "saat önce"
 
-#: codmw/codmw.py:77
+#: codmw/codmw.py:78
 msgid "yesterday"
 msgstr "dün"
 
-#: codmw/codmw.py:89
+#: codmw/codmw.py:90
 #, docstring
 msgid "\\n    Shows infos and stats about Call of Duty: Modern Warfare.\\n    "
 msgstr "\\n    Call of Duty: Modern Warfare bilgilerini ve istatistiklerini göster.\\n    "
 
-#: codmw/codmw.py:165
+#: codmw/codmw.py:139
 msgid "The bot encountered issues logging in to <https://callofduty.com>.\\nPlease try again later."
 msgstr "Bot oturum açarken bir sıkıntı yaşadı <https://callofduty.com>.\\nLütfen daha sonra tekrar dene."
 
-#: codmw/codmw.py:172
+#: codmw/codmw.py:146
 msgid "This user cannot be found. Check the username and platform."
 msgstr "Bu kullanıcı bulunamıyor.Lütfen ismini ve platformunu kontrol et."
 
-#: codmw/codmw.py:176
+#: codmw/codmw.py:150
 msgid "The bot encountered an unexpected error."
 msgstr "Bot beklenmedik bir hatayla karşılaştı."
 
-#: codmw/codmw.py:187
+#: codmw/codmw.py:161
 msgid "Credentials are not set. You have to use your email and password with the following command: `{prefix}set api cod username,your_username password,your_password`"
 msgstr "Kimlik bilgileri ayarlanmadı. E-postanızı ve şifrenizi bu komut ile ayarlayın: `{prefix}set api cod username BurayakullaniciAdiniz\n"
 "password BurayaŞifreniz`"
 
-#: codmw/codmw.py:230
+#: codmw/codmw.py:204
 msgid " and "
 msgstr " ve "
 
-#: codmw/codmw.py:273
+#: codmw/codmw.py:208
+msgid "None."
+msgstr ""
+
+#: codmw/codmw.py:252
 #, docstring
 msgid "\\n        Show stats of your Call of Duty account.\\n        "
 msgstr "\\n        Call of Duty hesabınızın istatistiklerini gösterir.\\n        "
 
-#: codmw/codmw.py:280
+#: codmw/codmw.py:259
 #, docstring
 msgid "\\n        Show global stats of your Call of Duty account.\\n\\n        `platform` is the platform you play on. Use the following values:\\n        `psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` = Battle.net\\n        `steam` = Steam\\n\\n        `username` is your username on the said platform (tag included if it exists)\\n        "
 msgstr "\\n        Dünya geneli Call of Duty istatistiklerinizi görüntüleyin.\\n\\n        `platform` oynadığın platform. Aşağıdaki komutları kullanın:\\n       `psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` = Battle.net\\\\n        `steam` = Steam\\n\\n        `kullanıcıadı` sizin \"\n"
 "platform'da kullandığınız isminiz (varsa etiket ekleyin)\\n        "
 
-#: codmw/codmw.py:309 codmw/codmw.py:415
+#: codmw/codmw.py:288 codmw/codmw.py:394
 msgid "{username}'s stats"
 msgstr "Bu kullanıcının {username} istatistikleri"
 
-#: codmw/codmw.py:313
+#: codmw/codmw.py:292
 msgid "Level"
 msgstr "Seviye"
 
-#: codmw/codmw.py:314
+#: codmw/codmw.py:293
 msgid "**{level}** {bar} {next_level}"
 msgstr "**{level}** {bar} {next_level}"
 
-#: codmw/codmw.py:326 codmw/codmw.py:419
+#: codmw/codmw.py:305 codmw/codmw.py:398
 msgid "Time played"
 msgstr "Oynama süresi"
 
-#: codmw/codmw.py:330 codmw/codmw.py:425
+#: codmw/codmw.py:309 codmw/codmw.py:404
 msgid "Games played"
 msgstr "Oynanan oyun"
 
-#: codmw/codmw.py:335
+#: codmw/codmw.py:314
 msgid "Wins/Losses"
 msgstr "Kazanma/Kaybetme"
 
-#: codmw/codmw.py:338 codmw/codmw.py:432
+#: codmw/codmw.py:317 codmw/codmw.py:411
 msgid "Winrate"
 msgstr "Kazanma Oranı"
 
-#: codmw/codmw.py:341
+#: codmw/codmw.py:320
 msgid "Win streak"
 msgstr "Art arda kazanma sayısı"
 
-#: codmw/codmw.py:342
+#: codmw/codmw.py:321
 msgid "Current: {current}\\nBest: {best}"
 msgstr "Şu anda: {current}\\nEn iyi: {best}"
 
-#: codmw/codmw.py:349
+#: codmw/codmw.py:328
 msgid "Kills/Deaths/Assists"
 msgstr "Öldürme/Ölme/Asist"
 
-#: codmw/codmw.py:350
+#: codmw/codmw.py:329
 msgid "{kills}/{deaths}/{assists}\\nBest number of kills: {best_kills}\\nBest number of assists: {best_assists}\\n"
 msgstr "{kills}/{deaths}/{assists}\\nEn iyi öldürme sayısı: {best_kills}\\nEn iyi asist sayısı: {best_assists}\\n"
 
-#: codmw/codmw.py:364 codmw/codmw.py:440
+#: codmw/codmw.py:343 codmw/codmw.py:419
 msgid "K/D Ratio"
 msgstr "K/D oranı"
 
-#: codmw/codmw.py:365
+#: codmw/codmw.py:344
 msgid "Average: {avg}\\nBest: {best}"
 msgstr "Ortalama: {avg}\\nEn iyi: {best}"
 
-#: codmw/codmw.py:372
+#: codmw/codmw.py:351
 msgid "Kill streak"
 msgstr "Art arda öldürme"
 
-#: codmw/codmw.py:373
+#: codmw/codmw.py:352
 msgid "Current: {current}\\nBest: {best}"
 msgstr "Şu anda: {current}\\nEn iyi: {best}"
 
-#: codmw/codmw.py:380
+#: codmw/codmw.py:359
 msgid "Accuracy"
 msgstr "İsabet oranı"
 
-#: codmw/codmw.py:383
+#: codmw/codmw.py:362
 msgid "Score per game"
 msgstr "Maç başına puan"
 
-#: codmw/codmw.py:386
+#: codmw/codmw.py:365
 msgid "Best score per minute"
 msgstr "Dakika başına en iyi skor"
 
-#: codmw/codmw.py:395
+#: codmw/codmw.py:374
 #, docstring
 msgid "\\n        Show Warzone stats on your Call of Duty account.\\n\\n        `platform` is the platform you play on. Use the following values:\\n        `psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` = Battle.net\\n        `steam` = Steam\\n\\n        `username` is your username on the said platform (tag included if it exists)\\n        "
 msgstr "\\n        Call of Duty Warzone istatistiklerinizi görüntüleyin.\\n\\n        `platform` is the platform you play on. Use the following values:\\n       `psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` = Battle.net\\n        `steam` = Steam\\n\\n        `username` bu senin platform ismin (etiket varsa ekleyin)\\n        "
 
-#: codmw/codmw.py:429
+#: codmw/codmw.py:408
 msgid "Wins"
 msgstr "Kazanmalar"
 
-#: codmw/codmw.py:435
+#: codmw/codmw.py:414
 msgid "Kills/Deaths"
 msgstr "Öldürme/Ölme"
 
-#: codmw/codmw.py:443
+#: codmw/codmw.py:422
 msgid "Contracts"
 msgstr "Sözleşmeler"
 
-#: codmw/codmw.py:446
+#: codmw/codmw.py:425
 msgid "Revives"
 msgstr "Canlandırmalar"
 
-#: codmw/codmw.py:449
+#: codmw/codmw.py:428
 msgid "Downs"
 msgstr "Düşürmeler"
 
-#: codmw/codmw.py:452
+#: codmw/codmw.py:431
 msgid "Number of tops"
 msgstr "En iyi sıralaması"
 
-#: codmw/codmw.py:453
+#: codmw/codmw.py:432
 msgid "Top 25: {top_25}\\nTop 10: {top_10}\\nTop 5: {top_5}"
 msgstr "Top 25: {top_25}\\nTop 10: {top_10}\\nTop 5: {top_5}"
 
-#: codmw/codmw.py:465
+#: codmw/codmw.py:444
 #, docstring
 msgid "\\n        Show your 5 last Call of Duty matches.\\n\\n        `platform` is the platform you play on. Use the following values:\\n        `psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` = Battle.net\\n        `steam` = Steam\\n\\n        `username` is your username on the said platform (tag included if it exists)\\n        "
 msgstr "\\n        Call of Duty son 5 maçınız.\\n\\n        `platform` senin\" oynadığın platform. Bu komutları takip et:\\n        `psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` = \"Battle.net\\n        `steam` = Steam\\n\\n        `username` bu senin platform da kullandığın isim (etiket varsa ekle)\\n        "
 
-#: codmw/codmw.py:484
+#: codmw/codmw.py:463
 msgid "5 most recent matches."
 msgstr "Son 5 maç."
 
-#: codmw/codmw.py:489
+#: codmw/codmw.py:468
 msgid "Won"
 msgstr "Kazandı"
 
-#: codmw/codmw.py:489
+#: codmw/codmw.py:468
 msgid "Lost"
 msgstr "Kaybetti"
 
-#: codmw/codmw.py:493
+#: codmw/codmw.py:472
 msgid "**{result}** a game of **{gamemode}** on **{map}** {time}"
 msgstr "**{result}** şu oyun modunda **{gamemode}** bu haritada **{map}** {time}"
 
-#: codmw/codmw.py:498
+#: codmw/codmw.py:477
 msgid "⏳ Match lasted {duration}\\nScore: `{score}` | XP: `{xp}`\\nKills: `{kills}` | Deaths: `{deaths}` | KDR: {kdr}%"
 msgstr "⏳ Maç süresi {duration}\\nSkor: `{score}` | XP: `{xp}`\\nÖldürme: `{kills}` | Ölmeler: `{deaths}` | KDR: {kdr}%"
 
