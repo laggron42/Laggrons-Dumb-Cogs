@@ -36,7 +36,7 @@ class Say(BaseCog):
         self.interaction = []
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.4.13"
+    __version__ = "1.4.14"
 
     async def say(
         self, ctx: commands.Context, channel: Optional[discord.TextChannel], text: str, files: list
@@ -178,6 +178,8 @@ class Say(BaseCog):
 
             if message.author == u and isinstance(message.channel, discord.DMChannel):
                 files = await Tunnel.files_from_attatch(message)
+                if message.content.startswith(tuple(await self.bot.get_valid_prefixes())):
+                    return
                 await channel.send(message.content, files=files)
             elif (
                 message.channel != channel
