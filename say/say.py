@@ -36,7 +36,7 @@ class Say(BaseCog):
         self.interaction = []
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.4.13"
+    __version__ = "1.4.14"
 
     async def say(
         self, ctx: commands.Context, channel: Optional[discord.TextChannel], text: str, files: list
