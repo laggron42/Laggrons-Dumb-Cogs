@@ -33,15 +33,16 @@ msgstr ""
 #: instantcmd/instantcmd.py:366
 #, docstring
 msgid "\\n        List all existing commands made using Instant Commands.\\n\\n        If a command name is given and found in the Instant commands list, the code will be shown.\\n        "
-msgstr ""
+msgstr "\\n        Liste toutes les commandes existantes faites avec Instant Commands.\n\n"
+"        Si une commande est donné et trouvé dans la liste des commandes, le code sera affiché.\\n        "
 
 #: instantcmd/instantcmd.py:388
 #, docstring
 msgid "\\n        Show the code of an instantcmd command or listener.\\n        "
-msgstr ""
+msgstr "\\n        Montre le code d'une commande instantcmd ou listener.\\n        "
 
 #: instantcmd/instantcmd.py:404
 #, docstring
 msgid "\\n        Get informations about the cog.\\n        "
-msgstr ""
+msgstr "\\n        Obtenir des informations sur le cog.\\n        "
 

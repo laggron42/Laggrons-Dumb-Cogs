@@ -22,7 +22,7 @@ msgstr ""
 
 #: roleinvite/roleinvite.py:63
 msgid "Request timed out."
-msgstr ""
+msgstr "Requête expirée."
 
 #: roleinvite/roleinvite.py:70
 #, docstring
@@ -197,7 +197,7 @@ msgstr ""
 
 #: roleinvite/roleinvite.py:396
 msgid "Joined with {}"
-msgstr ""
+msgstr "Rejoint avec {}"
 
 #: roleinvite/roleinvite.py:456
 msgid "Roleinvite autorole. "

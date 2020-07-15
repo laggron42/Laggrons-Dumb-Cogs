@@ -53,7 +53,7 @@ msgstr "gün"
 #: warnsystem/__init__.py:115 warnsystem/api.py:184
 #: warnsystem/warnsystem.py:59
 msgid "days"
-msgstr "günler"
+msgstr "gün"
 
 #: warnsystem/__init__.py:116 warnsystem/api.py:185
 #: warnsystem/warnsystem.py:60
@@ -63,7 +63,7 @@ msgstr "saat"
 #: warnsystem/__init__.py:116 warnsystem/api.py:185
 #: warnsystem/warnsystem.py:60
 msgid "hours"
-msgstr "saatler"
+msgstr "saat"
 
 #: warnsystem/__init__.py:117 warnsystem/api.py:186
 #: warnsystem/warnsystem.py:61
@@ -100,7 +100,7 @@ msgstr "uyarı"
 
 #: warnsystem/api.py:567
 msgid "warns"
-msgstr "Uyarıların"
+msgstr "uyarıları"
 
 #: warnsystem/api.py:568 warnsystem/api.py:1063 warnsystem/api.py:1146
 msgid "mute"
@@ -160,7 +160,7 @@ msgstr "Senin"
 
 #: warnsystem/api.py:591
 msgid "has"
-msgstr "vardı"
+msgstr "toplam"
 
 #: warnsystem/api.py:591
 msgid "have"
@@ -168,11 +168,11 @@ msgstr "toplam"
 
 #: warnsystem/api.py:593
 msgid "warnings"
-msgstr "uyarıların var"
+msgstr "uyarıları var"
 
 #: warnsystem/api.py:593
 msgid "warning"
-msgstr "uyarıların var"
+msgstr "uyarıları var"
 
 #: warnsystem/api.py:605 warnsystem/api.py:611
 msgid "*[couldn't create an invite]*"
@@ -209,7 +209,7 @@ msgstr "Durum"
 
 #: warnsystem/api.py:644
 msgid "\\n\\n***The message could not be delivered to the user. They may have DMs disabled, blocked the bot, or may not have a mutual server.***"
-msgstr ""
+msgstr "\\n\\n***Mesaj üyeye teslim edilemedi. Bu üyenin DM'leri kapalı olabilir, botu engellemiş olabilir ya da ortak bir sunucumuz olmayabilir.***"
 
 #: warnsystem/api.py:702 warnsystem/api.py:1041 warnsystem/settings.py:484
 msgid "I can't manage roles, please give me this permission to continue."
@@ -1333,7 +1333,7 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:53
 msgid "{amount} {unit} ago."
-msgstr ""
+msgstr "{amount} {unit} önce."
 
 #: warnsystem/warnsystem.py:72
 msgid "Just now"
