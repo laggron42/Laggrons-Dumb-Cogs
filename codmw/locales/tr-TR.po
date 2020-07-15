@@ -119,7 +119,7 @@ msgstr " ve "
 
 #: codmw/codmw.py:208
 msgid "None."
-msgstr ""
+msgstr "Yok."
 
 #: codmw/codmw.py:252
 #, docstring

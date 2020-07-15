@@ -118,7 +118,7 @@ msgstr " et "
 
 #: codmw/codmw.py:208
 msgid "None."
-msgstr ""
+msgstr "Aucun."
 
 #: codmw/codmw.py:252
 #, docstring
@@ -258,5 +258,5 @@ msgstr ""
 
 #: codmw/codmw.py:477
 msgid "⏳ Match lasted {duration}\\nScore: `{score}` | XP: `{xp}`\\nKills: `{kills}` | Deaths: `{deaths}` | KDR: {kdr}%"
-msgstr ""
+msgstr "⏳ Durée du match {duration}\\nScore : `{score}` | XP: `{xp}`\\nKills : `{kills}` | Morts: `{deaths}` | KDR: {kdr}%"
 

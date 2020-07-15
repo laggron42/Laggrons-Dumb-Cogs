@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2020-07-08 00:09+0000\n"
+"POT-Creation-Date: 2020-07-15 00:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -76,12 +76,12 @@ msgstr ""
 msgid "Request timed out. Session closed"
 msgstr ""
 
-#: say/say.py:207
+#: say/say.py:209
 #, docstring
 msgid "\\n        Get informations about the cog.\\n        "
 msgstr ""
 
-#: say/say.py:211
+#: say/say.py:213
 msgid ""
 "Laggron's Dumb Cogs V3 - say\\n\\nVersion: {0.__version__}\\nAuthor: "
 "{0.__author__}\\nGithub repository: https://github.com/retke/Laggrons-Dumb-"
@@ -91,6 +91,6 @@ msgid ""
 "Patreon: https://www.patreon.com/retke"
 msgstr ""
 
-#: say/say.py:245
+#: say/say.py:247
 msgid "Session closed"
 msgstr ""

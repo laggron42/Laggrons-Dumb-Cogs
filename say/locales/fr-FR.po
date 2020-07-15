@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2020-07-08 00:09+0000\n"
+"POT-Creation-Date: 2020-07-15 00:05+0000\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "MIME-Version: 1.0\n"
@@ -63,16 +63,16 @@ msgstr ""
 msgid "Request timed out. Session closed"
 msgstr "Requête expirée. Session fermée"
 
-#: say/say.py:207
+#: say/say.py:209
 #, docstring
 msgid "\\n        Get informations about the cog.\\n        "
 msgstr ""
 
-#: say/say.py:211
+#: say/say.py:213
 msgid "Laggron's Dumb Cogs V3 - say\\n\\nVersion: {0.__version__}\\nAuthor: {0.__author__}\\nGithub repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\\nDiscord server: https://discord.gg/AVzjfpR\\nDocumentation: http://laggrons-dumb-cogs.readthedocs.io/\\nHelp translating the cog: https://crowdin.com/project/laggrons-dumb-cogs/\\n\\nSupport my work on Patreon: https://www.patreon.com/retke"
 msgstr ""
 
-#: say/say.py:245
+#: say/say.py:247
 msgid "Session closed"
 msgstr "Requête expirée. Session fermée"
 
