@@ -81,11 +81,7 @@ As said before, it's possible to develop extensions to WarnSystem. Currently, th
 This cog is part of the Laggron's Dumb Cogs repository, where utility cogs for managing your server are made!
 If you like this cog, you should check the other cogs from [the repository](https://github.com/retke/Laggrons-Dumb-Cogs)!
 
-You can also support me on Patreon and get exclusive rewards!
-
-<img src="https://c5.patreon.com/external/logo/become_a_patron_button@2x.png" alt="Become a Patreon" width="180"/>
-
-<!-- Replace link by cogs.red link -->
+You can also support me on [Patreon](https://patreon.com/retke) or [Github Sponsors](https://github.com/sponsors/retke/card) and get exclusive rewards!
 
 ## Contribute
 
