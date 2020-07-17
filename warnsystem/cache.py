@@ -59,8 +59,7 @@ class MemoryCache:
         if role_id is not False:
             return role_id
         role_id = await self.data.guild(guild).mute_role()
-        if role_id:
-            self.mute_roles[guild.id] = role_id
+        self.mute_roles[guild.id] = role_id
         return role_id
 
     async def update_mute_role(self, guild: discord.Guild, role: discord.Role):
@@ -136,8 +135,7 @@ class MemoryCache:
         for name, regex in automod_regex.items():
             pattern = re.compile(regex["regex"])
             automod_regex[name]["regex"] = pattern
-        if automod_regex:
-            self.automod_regex[guild.id] = automod_regex
+        self.automod_regex[guild.id] = automod_regex
         return automod_regex
 
     async def add_automod_regex(

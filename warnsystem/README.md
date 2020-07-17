@@ -81,11 +81,7 @@ As said before, it's possible to develop extensions to WarnSystem. Currently, th
 This cog is part of the Laggron's Dumb Cogs repository, where utility cogs for managing your server are made!
 If you like this cog, you should check the other cogs from [the repository](https://github.com/retke/Laggrons-Dumb-Cogs)!
 
-You can also support me on Patreon and get exclusive rewards!
-
-<img src="https://c5.patreon.com/external/logo/become_a_patron_button@2x.png" alt="Become a Patreon" width="180"/>
-
-<!-- Replace link by cogs.red link -->
+You can also support me on [Patreon](https://patreon.com/retke) or [Github Sponsors](https://github.com/sponsors/retke/card) and get exclusive rewards!
 
 ## Contribute
 
@@ -94,6 +90,7 @@ If you're reading this from Github and want to contribute or just understand the
 - `__init__.py` The first file invoked when loading the cog. Nothing really useful here, only the check for the Warnings cog. *Added in 1.3:* Data conversion stuff is located here.
 - `abc.py` Just stuff for the inheritance of some classes.
 - `api.py` The most important functions are there, such as warning a member, getting the warns, generating embeds... Those functions don't need a context to be invoked.
+- `automod.py` Automod setup commands are here (`[p]automod` group command). The actual automod functions are located at the end of `api.py`.
 - `converters.py` The argument parser for the `[p]masswarn` command. Informations are just extracted from text and they're given back to the command (works like a discord.py converter).
 - `errors.py` The custom errors raised by `api.py` are in this file. There are only empty classes inherited from `Exception`.
 - `settings.py` The cog file was getting really long, so I made a `SettingsMixin` class with the `[p]warnset` group command. The cog's class inherits from this one.

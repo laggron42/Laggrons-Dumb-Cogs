@@ -35,7 +35,7 @@ You can also translate the cogs in your language with Crowdin! Create an account
 
 ## Supporting
 
-I'm creating these cogs on my free time. If you like my work, please consider donating on my [Patreon](https://patreon.com/retke), you'll get some exclusive rewards for that!
+I'm creating these cogs on my free time. If you like my work, please consider donating on my [Patreon](https://patreon.com/retke) or [Github Sponsors](https://github.com/sponsors/retke/card), you'll get some exclusive rewards for that!
 
 ## Contact
 
