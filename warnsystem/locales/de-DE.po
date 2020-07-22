@@ -88,7 +88,7 @@ msgstr "Sekunden"
 #: warnsystem/__init__.py:120 warnsystem/api.py:196
 #: warnsystem/warnsystem.py:404
 msgid " and "
-msgstr ""
+msgstr " und "
 
 #: warnsystem/api.py:69
 msgid "The given member cannot be found.\\nIf you're trying to hackban, the user ID is not valid."
@@ -192,7 +192,7 @@ msgstr "Mitglied"
 
 #: warnsystem/api.py:633 warnsystem/warnsystem.py:860
 msgid "Moderator"
-msgstr ""
+msgstr "Moderator"
 
 #: warnsystem/api.py:635 warnsystem/api.py:660 warnsystem/warnsystem.py:864
 msgid "Duration"
@@ -205,7 +205,7 @@ msgstr "Grund"
 
 #: warnsystem/api.py:637 warnsystem/api.py:657
 msgid "Status"
-msgstr ""
+msgstr "Status"
 
 #: warnsystem/api.py:644
 msgid "\\n\\n***The message could not be delivered to the user. They may have DMs disabled, blocked the bot, or may not have a mutual server.***"
@@ -301,11 +301,11 @@ msgstr ""
 
 #: warnsystem/automod.py:49
 msgid "Invalid time format."
-msgstr ""
+msgstr "Ungültiges Zeitformat."
 
 #: warnsystem/automod.py:68 warnsystem/automod.py:69 warnsystem/automod.py:244
 msgid "Not set."
-msgstr ""
+msgstr "Nicht festgelegt."
 
 #: warnsystem/automod.py:70
 msgid "Number of warnings until action: {num}\\n"
@@ -334,7 +334,7 @@ msgstr ""
 #: warnsystem/automod.py:79 warnsystem/automod.py:134
 #: warnsystem/automod.py:529 warnsystem/automod.py:549
 msgid "disabled"
-msgstr ""
+msgstr "deaktiviert"
 
 #: warnsystem/automod.py:81
 msgid "Only count automod: {enabled}\\n\\n"
@@ -342,11 +342,11 @@ msgstr ""
 
 #: warnsystem/automod.py:82
 msgid "yes"
-msgstr ""
+msgstr "ja"
 
 #: warnsystem/automod.py:82
 msgid "no"
-msgstr ""
+msgstr "nein"
 
 #: warnsystem/automod.py:85
 msgid "What will happen:"
@@ -445,7 +445,7 @@ msgstr ""
 
 #: warnsystem/automod.py:207
 msgid "Nothing registered."
-msgstr ""
+msgstr "Nichts registriert."
 
 #: warnsystem/automod.py:217
 msgid "Page {i}/{total}"
@@ -715,7 +715,7 @@ msgstr ""
 
 #: warnsystem/automod.py:677
 msgid "Settings"
-msgstr ""
+msgstr "Einstellungen"
 
 #: warnsystem/automod.py:678
 msgid "Max messages allowed within the threshold: **{max_messages}**\\nThreshold: **{delay} seconds**\\nDelay before reset: **{reset_delay} seconds**  *(see `{prefix}automod antispam delay` for details about this)*"
@@ -1098,7 +1098,7 @@ msgstr ""
 
 #: warnsystem/settings.py:683
 msgid "removes"
-msgstr ""
+msgstr "entfernen"
 
 #: warnsystem/settings.py:683
 msgid "doesn't remove"
@@ -1167,7 +1167,7 @@ msgstr "{number} Subsitution{plural} festgelegt.\\nSchreibe `{prefix}warnset sub
 
 #: warnsystem/settings.py:751
 msgid "s"
-msgstr ""
+msgstr "s"
 
 #: warnsystem/settings.py:762 warnsystem/settings.py:770
 msgid "Too long to be shown..."
@@ -1175,7 +1175,7 @@ msgstr "Zu lang, um angezeigt zu werden..."
 
 #: warnsystem/settings.py:783
 msgid "WarnSystem settings. Page 1/2"
-msgstr ""
+msgstr "WarnSystem-Einstellungen. Seite 1/2"
 
 #: warnsystem/settings.py:784
 msgid "WarnSystem settings. Page 2/2"
@@ -1341,15 +1341,15 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:76
 msgid "A minute ago"
-msgstr ""
+msgstr "Vor einer Minute"
 
 #: warnsystem/warnsystem.py:80
 msgid "An hour ago"
-msgstr ""
+msgstr "Vor einer Stunde"
 
 #: warnsystem/warnsystem.py:84
 msgid "Yesterday"
-msgstr ""
+msgstr "Gestern"
 
 #: warnsystem/warnsystem.py:110
 msgid "A member got a level {} warning."
@@ -1390,7 +1390,7 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:297 warnsystem/warnsystem.py:1261
 msgid "Done."
-msgstr ""
+msgstr "Erledigt."
 
 #: warnsystem/warnsystem.py:331
 msgid "Processing mass warning...\\n{i}/{total} {members} warned ({percent}%)\\n\\n{tick1} Log to the modlog\\n{tick2} Send a DM to all members\\n{tick3}{tick4} {time}\\n{tick5} Reason: {reason}"
@@ -1424,7 +1424,7 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:389
 msgid "users"
-msgstr ""
+msgstr "mitglieder"
 
 #: warnsystem/warnsystem.py:394
 msgid "You're about to set a level {level} warning on {target}.\\n\\n{tick1} Log to the modlog\\n{tick2} Send a DM to all members\\n{tick3}{tick4} {time}\\n{tick5} Reason: {reason}\\n\\nContinue?"
@@ -1432,7 +1432,7 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:411
 msgid "Not set"
-msgstr ""
+msgstr "Nicht gesetzt"
 
 #: warnsystem/warnsystem.py:427
 msgid "Mass warn cancelled."
@@ -1748,7 +1748,7 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:1291
 msgid "User unbanned."
-msgstr ""
+msgstr "Benutzer wurde entbannt."
 
 #: warnsystem/warnsystem.py:1295
 #, docstring
