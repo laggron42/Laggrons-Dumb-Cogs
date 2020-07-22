@@ -21,59 +21,59 @@ msgstr ""
 
 #: codmw/codmw.py:50 codmw/codmw.py:189
 msgid "year"
-msgstr ""
+msgstr "jahr"
 
 #: codmw/codmw.py:50 codmw/codmw.py:189
 msgid "years"
-msgstr ""
+msgstr "jahre"
 
 #: codmw/codmw.py:51 codmw/codmw.py:190
 msgid "month"
-msgstr ""
+msgstr "monat"
 
 #: codmw/codmw.py:51 codmw/codmw.py:190
 msgid "months"
-msgstr ""
+msgstr "monate"
 
 #: codmw/codmw.py:52 codmw/codmw.py:191
 msgid "week"
-msgstr ""
+msgstr "woche"
 
 #: codmw/codmw.py:52 codmw/codmw.py:191
 msgid "weeks"
-msgstr ""
+msgstr "wochen"
 
 #: codmw/codmw.py:53 codmw/codmw.py:192
 msgid "day"
-msgstr ""
+msgstr "tag"
 
 #: codmw/codmw.py:53 codmw/codmw.py:192
 msgid "days"
-msgstr ""
+msgstr "tage"
 
 #: codmw/codmw.py:54 codmw/codmw.py:193
 msgid "hour"
-msgstr ""
+msgstr "stunde"
 
 #: codmw/codmw.py:54 codmw/codmw.py:193
 msgid "hours"
-msgstr ""
+msgstr "stunden"
 
 #: codmw/codmw.py:55 codmw/codmw.py:194
 msgid "minute"
-msgstr ""
+msgstr "minute"
 
 #: codmw/codmw.py:55 codmw/codmw.py:194
 msgid "minutes"
-msgstr ""
+msgstr "minuten"
 
 #: codmw/codmw.py:56 codmw/codmw.py:195
 msgid "second"
-msgstr ""
+msgstr "sekunde"
 
 #: codmw/codmw.py:56 codmw/codmw.py:195
 msgid "seconds"
-msgstr ""
+msgstr "sekunden"
 
 #: codmw/codmw.py:66
 msgid "just now"
@@ -81,15 +81,15 @@ msgstr ""
 
 #: codmw/codmw.py:70
 msgid "a minute ago"
-msgstr ""
+msgstr "vor einer Minute"
 
 #: codmw/codmw.py:74
 msgid "an hour ago"
-msgstr ""
+msgstr "vor einer Stunde"
 
 #: codmw/codmw.py:78
 msgid "yesterday"
-msgstr ""
+msgstr "gestern"
 
 #: codmw/codmw.py:90
 #, docstring
@@ -114,7 +114,7 @@ msgstr ""
 
 #: codmw/codmw.py:204
 msgid " and "
-msgstr ""
+msgstr " und "
 
 #: codmw/codmw.py:208
 msgid "None."

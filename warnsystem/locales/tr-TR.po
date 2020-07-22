@@ -257,7 +257,7 @@ msgstr " `Mesaj Gönder` ve `Bağlantı Yerleştir` rolüne bu kanal için {chan
 
 #: warnsystem/api.py:1045
 msgid "The mute role `{mute_role}` was moved above my top role `{my_role}`. Please move the roles so my top role is above the mute role."
-msgstr ""
+msgstr "`{mute_role}` rolü benim rolümün üstüne taşınmış = `{my_role}`. Lütfen benim rolümü işlem yapabilmem için yukarıya taşıyın."
 
 #: warnsystem/api.py:1054
 msgid "I can't kick members, please give me this permission to continue."
@@ -1139,7 +1139,7 @@ msgstr ""
 
 #: warnsystem/settings.py:729
 msgid "No mute role set."
-msgstr ""
+msgstr "Susturma rolü ayarlanmadı."
 
 #: warnsystem/settings.py:730 warnsystem/settings.py:731
 #: warnsystem/settings.py:732 warnsystem/settings.py:733
@@ -1370,11 +1370,11 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:259
 msgid "You need to set up the mute role before doing this.\\nUse the `[p]warnset mute` command for this."
-msgstr ""
+msgstr "Bu komutu kullanmadan önce susturma rolü ayarlamanız gerekli.\\nBu komut ile `[p]warnset mute` kurulumu yapabilirsiniz."
 
 #: warnsystem/warnsystem.py:266
 msgid "Please set up a modlog channel before warning a member.\\n\\n**With WarnSystem**\\n*Use the `[p]warnset channel` command.*\\n\\n**With Red Modlog**\\n*Load the `modlogs` cog and use the `[p]modlogset modlog` command.*"
-msgstr ""
+msgstr "Lütfen birine uyarı vermeden önce modlog kanalı ayarlayın.\\n\\n**Uyarı sistemi ile yapmak için**\\n*Bu komutu `[p]warnset channel` kullanın.*\\n\\n**Bot ile yapmak için**\\n*Bu komutu kullanabilirsiniz `[p]modlogset modlog`.*"
 
 #: warnsystem/warnsystem.py:277
 msgid "You are not allowed to do this, {member} is higher than you in the role hierarchy. You can only warn members which top role is lower than yours.\\n\\n"
@@ -1440,11 +1440,11 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:450
 msgid "You need to set up the mute role before doing this.\\nUse the `[p]warnset mute` command for this."
-msgstr ""
+msgstr "Bu komutu kullanmadan önce susturma rolü ayarlamanız gerekli.\\nBu komut ile `[p]warnset mute` kurulumu yapabilirsiniz."
 
 #: warnsystem/warnsystem.py:458
 msgid "Please set up a modlog channel before warning a member.\\n\\n**With WarnSystem**\\n*Use the `[p]warnset channel` command.*\\n\\n**With Red Modlog**\\n*Load the `modlogs` cog and use the `[p]modlogset modlog` command.*"
-msgstr ""
+msgstr "Lütfen birine uyarı vermeden önce modlog kanalı ayarlayın.\\n\\n**Uyarı sistemi ile yapmak için**\\n*Bu komutu `[p]warnset channel` kullanın.*\\n\\n**Bot ile yapmak için**\\n*Bu komutu kullanabilirsiniz `[p]modlogset modlog`.*"
 
 #: warnsystem/warnsystem.py:470
 msgid "Done! {failed} {members} out of {total} couldn't be warned."
@@ -1641,7 +1641,7 @@ msgstr "Sebep düzenlenmedi."
 
 #: warnsystem/warnsystem.py:1082
 msgid "Member {member}'s clearance. By selecting ❌ on the user modlog summary, you can remove all warnings given to {member}. __All levels and notes are affected.__\\n**Click on the reaction to confirm the removal of the entire user's modlog. This cannot be undone.**"
-msgstr ""
+msgstr "Bu üyenin {member} sicili. Bu ifadeye tıklayarak ❌ üyenin {member} tüm kayıtlara alınmış uyarılarını sileceksiniz. __Tüm notlar ve uyarılar geçerlidir.__\\n**İfadeye tıklayarak bu işlemi yapmak istediğinizi onaylayın. Unutmayın, bu işlem geri alınamaz.**"
 
 #: warnsystem/warnsystem.py:1099
 msgid "Case #{number} deletion.\\n**Click on the reaction to confirm your action.**"
