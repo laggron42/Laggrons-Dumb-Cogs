@@ -224,7 +224,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
 
         self.task: asyncio.Task
 
-    __version__ = "1.3.6"
+    __version__ = "1.3.7"
     __author__ = ["retke (El Laggron)"]
 
     # helpers
@@ -787,7 +787,13 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         if not user:
             await ctx.send_help()
             return
-        if not await mod.is_mod_or_superior(self.bot, ctx.author) and user != ctx.author:
+        if (
+            not (
+                await mod.is_mod_or_superior(self.bot, ctx.author)
+                or ctx.author.guild_permissions.kick
+            )
+            and user != ctx.author
+        ):
             await ctx.send(_("You are not allowed to see other's warnings!"))
             return
         cases = await self.api.get_all_cases(ctx.guild, user)
@@ -1158,7 +1164,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         await message.edit(content=_("The case was successfully deleted!"), embed=None)
 
     @commands.command()
-    @checks.mod()
+    @checks.mod_or_permissions(kick_members=True)
     @commands.cooldown(1, 10, commands.BucketType.channel)
     async def warnlist(self, ctx: commands.Context, short: bool = False):
         """
@@ -1202,7 +1208,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         await menus.menu(ctx=ctx, pages=pages, controls=menus.DEFAULT_CONTROLS, timeout=60)
 
     @commands.command()
-    @checks.mod()
+    @checks.mod_or_permissions(manage_roles=True)
     async def wsunmute(self, ctx: commands.Context, member: discord.Member):
         """
         Unmute a member muted with WarnSystem.
@@ -1267,7 +1273,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             await ctx.send(page)
 
     @commands.command()
-    @checks.mod()
+    @checks.mod_or_permissions(ban_members=True)
     async def wsunban(self, ctx: commands.Context, member: UnavailableMember):
         """
         Unban a member banned with WarnSystem.

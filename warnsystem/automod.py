@@ -100,7 +100,7 @@ class AutomodMixin(MixinMeta):
         return embed
 
     @commands.group()
-    @checks.admin()
+    @checks.admin_or_permissions(administrator=True)
     async def automod(self, ctx: commands.Context):
         """
         WarnSystem automod configuration.
