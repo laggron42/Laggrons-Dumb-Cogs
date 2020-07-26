@@ -1129,7 +1129,7 @@ class API:
                         f"(ID: {member.id}) after its temporary ban."
                     )
 
-        now = datetime.today()
+        now = datetime.utcnow()
         for guild in self.bot.guilds:
             data = await self.cache.get_temp_action(guild)
             if not data:
