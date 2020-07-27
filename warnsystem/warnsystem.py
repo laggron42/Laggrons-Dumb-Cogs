@@ -790,7 +790,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         if (
             not (
                 await mod.is_mod_or_superior(self.bot, ctx.author)
-                or ctx.author.guild_permissions.kick
+                or ctx.author.guild_permissions.kick_members
             )
             and user != ctx.author
         ):
