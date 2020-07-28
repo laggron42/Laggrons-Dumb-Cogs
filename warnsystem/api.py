@@ -1085,19 +1085,15 @@ class API:
 
     async def _check_endwarn(self):
         async def reinvite(guild, user, reason, duration):
-            channel = None
-            # find an ideal channel for the invite
-            # we get the one with the most members in the order of the guild
-            try:
-                channel = sorted(
-                    [
-                        x
-                        for x in guild.text_channels
-                        if x.permissions_for(guild.me).create_instant_invite
-                    ],
-                    key=lambda x: (x.position, len(x.members)),
-                )[0]
-            except IndexError:
+            channel = next(
+                (
+                    c  # guild.text_channels is already sorted by position
+                    for c in guild.text_channels
+                    if c.permissions_for(guild.me).create_instant_invite
+                ),
+                None,
+            )
+            if channel is None:
                 # can't find a valid channel
                 log.info(
                     f"[Guild {guild.id}] Can't find a text channel where I can create an invite "
