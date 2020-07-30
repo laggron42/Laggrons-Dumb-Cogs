@@ -1321,9 +1321,9 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         warns = await self.cache.get_temp_action(guild)
         to_remove = []  # there can be multiple temp bans, let's not question the moderators
         for member, data in warns.items():
-            if data["level"] == 2 or data["member"] != user.id:
+            if data["level"] == 2 or int(member) != user.id:
                 continue
-            to_remove.append(member)
+            to_remove.append(UnavailableMember(self.bot, guild._state, member))
         if to_remove:
             await self.cache.bulk_remove_temp_action(guild, to_remove)
             log.info(
