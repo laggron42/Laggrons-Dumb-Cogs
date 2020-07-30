@@ -224,7 +224,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
 
         self.task: asyncio.Task
 
-    __version__ = "1.3.7"
+    __version__ = "1.3.8"
     __author__ = ["retke (El Laggron)"]
 
     # helpers
@@ -790,7 +790,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         if (
             not (
                 await mod.is_mod_or_superior(self.bot, ctx.author)
-                or ctx.author.guild_permissions.kick
+                or ctx.author.guild_permissions.kick_members
             )
             and user != ctx.author
         ):
@@ -1321,9 +1321,9 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         warns = await self.cache.get_temp_action(guild)
         to_remove = []  # there can be multiple temp bans, let's not question the moderators
         for member, data in warns.items():
-            if data["level"] == 2 or data["member"] != user.id:
+            if data["level"] == 2 or int(member) != user.id:
                 continue
-            to_remove.append(member)
+            to_remove.append(UnavailableMember(self.bot, guild._state, member))
         if to_remove:
             await self.cache.bulk_remove_temp_action(guild, to_remove)
             log.info(

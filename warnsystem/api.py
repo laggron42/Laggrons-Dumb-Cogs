@@ -1009,7 +1009,9 @@ class API:
             if automod:
                 # This function can be pretty heavy, and the response can be seriously delayed
                 # because of this, so we make it a side process instead
-                self.bot.loop.create_task(self.automod_check_for_autowarn(member, author, level))
+                self.bot.loop.create_task(
+                    self.automod_check_for_autowarn(guild, member, author, level)
+                )
             i += 1
             if progress_tracker:
                 await progress_tracker(i)
@@ -1085,19 +1087,15 @@ class API:
 
     async def _check_endwarn(self):
         async def reinvite(guild, user, reason, duration):
-            channel = None
-            # find an ideal channel for the invite
-            # we get the one with the most members in the order of the guild
-            try:
-                channel = sorted(
-                    [
-                        x
-                        for x in guild.text_channels
-                        if x.permissions_for(guild.me).create_instant_invite
-                    ],
-                    key=lambda x: (x.position, len(x.members)),
-                )[0]
-            except IndexError:
+            channel = next(
+                (
+                    c  # guild.text_channels is already sorted by position
+                    for c in guild.text_channels
+                    if c.permissions_for(guild.me).create_instant_invite
+                ),
+                None,
+            )
+            if channel is None:
                 # can't find a valid channel
                 log.info(
                     f"[Guild {guild.id}] Can't find a text channel where I can create an invite "
@@ -1129,23 +1127,33 @@ class API:
                         f"(ID: {member.id}) after its temporary ban."
                     )
 
-        now = datetime.today()
+        now = datetime.utcnow()
         for guild in self.bot.guilds:
             data = await self.cache.get_temp_action(guild)
             if not data:
                 continue
             to_remove = []
-            for member, action in data.items():
-                member = int(member)
-                taken_on = self._get_datetime(action["time"])
-                duration = self._get_timedelta(action["duration"])
+            for member_id, action in data.items():
+                member_id = int(member_id)
+                try:
+                    taken_on = self._get_datetime(action["time"])
+                    duration = self._get_timedelta(action["duration"])
+                except ValueError as e:
+                    log.error(
+                        f"[Guild {guild.id}] Time or duration cannot be fetched. This is "
+                        "probably leftovers from the conversion of post 1.3 data. Removing the "
+                        f"temp warning, not taking actions... Member: {member_id}, data: {action}",
+                        exc_info=e,
+                    )
+                    to_remove.append(UnavailableMember(self.bot, guild._state, member_id))
+                    continue
                 author = guild.get_member(action["author"])
-                member = guild.get_member(member)
+                member = guild.get_member(member_id)
                 case_reason = action["reason"]
                 level = action["level"]
                 action_str = _("mute") if level == 2 else _("ban")
                 if not member:
-                    member = UnavailableMember(self.bot, guild._state, member)
+                    member = UnavailableMember(self.bot, guild._state, member_id)
                     if level == 2:
                         to_remove.append(member)
                         continue
@@ -1169,7 +1177,12 @@ class API:
                         if level == 5:
                             await guild.unban(member, reason=reason)
                             if await self.data.guild(guild).reinvite():
-                                await reinvite(guild, member, case_reason, action["duration"])
+                                await reinvite(
+                                    guild,
+                                    member,
+                                    case_reason,
+                                    self._format_timedelta(timedelta(seconds=action["duration"])),
+                                )
                     except discord.errors.Forbidden:
                         log.warn(
                             f"[Guild {guild.id}] I lost required permissions for "
@@ -1410,7 +1423,7 @@ class API:
                 del self.automod[guild.id]
 
     async def automod_check_for_autowarn(
-        self, member: discord.Member, author: discord.Member, level: int
+        self, guild: discord.Guild, member: discord.Member, author: discord.Member, level: int
     ):
         """
         Iterate through member's modlog, looking for possible automatic warns.
@@ -1420,10 +1433,9 @@ class API:
 
         This can be a heavy call if there are a lot of possible autowarns and a long modlog.
         """
-        guild = member.guild
         t = datetime.now()
         try:
-            await self._automod_check_for_autowarn(member, author, level)
+            await self._automod_check_for_autowarn(guild, member, author, level)
         except Exception as e:
             log.error(f"[Guild {guild.id}] A problem occured with automod check.", exc_info=e)
         time_taken: timedelta = datetime.now() - t
@@ -1437,12 +1449,11 @@ class API:
             )
 
     async def _automod_check_for_autowarn(
-        self, member: discord.Member, author: discord.Member, level: int
+        self, guild: discord.Guild, member: discord.Member, author: discord.Member, level: int
     ):
         """
         Prevents having to put this whole function into a try/except block.
         """
-        guild = member.guild
         if not self.cache.is_automod_enabled(guild):
             return
         # starting the iteration through warnings can cost performances
