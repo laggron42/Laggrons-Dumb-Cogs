@@ -2,7 +2,7 @@ import discord
 import logging
 
 from abc import ABC
-from typing import Optional
+from typing import Mapping
 
 from redbot.core import commands
 from redbot.core import checks
@@ -10,7 +10,7 @@ from redbot.core import Config
 from redbot.core.bot import Red
 from redbot.core.i18n import Translator, cog_i18n
 
-from .dataclass import ChallongeTournament
+from .dataclass import Tournament
 from .games import Games
 from .registration import Registration
 from .settings import Settings
@@ -81,8 +81,18 @@ class Tournaments(
     def __init__(self, bot: Red):
         self.bot = bot
         self.data = Config.get_conf(cog_instance=self, identifier=260)
-        self.tournament: Optional[ChallongeTournament] = None
+        self.tournaments: Mapping[int, Tournament] = {}
 
         self.data.register_guild(**self.default_guild_settings)
         self.data.init_custom("GAME", 2)  # guild ID > game name
         self.data.register_custom("GAME", **self.default_game_settings)
+
+    @commands.command()
+    async def bracket(self, ctx: commands.Context):
+        """
+        Affiche le lien du bracket du tournoi en cours.
+        """
+        try:
+            await ctx.send(self.tournaments[ctx.guild.id].url)
+        except KeyError:
+            await ctx.send(_("Il n'y a aucun tournoi en cours."))

@@ -52,7 +52,7 @@ def only_phase(*allowed_phases):
     return wrapper
 
 
-async def async_http_retry(func, *args, **kwargs):
+async def async_http_retry(coro):
     """
     Retries the operation in case of a timeout.
 
@@ -61,17 +61,15 @@ async def async_http_retry(func, *args, **kwargs):
     """
     for retry in range(1):
         try:
-            return await func(*args, **kwargs)
+            return await coro
         except ChallongeException as e:
-            log.error(
-                f"Challonge exception. func: {func} args: {args} kwargs: {kwargs}", exc_info=e
-            )
+            log.error(f"Challonge exception. coro: {coro}", exc_info=e)
             if "504" in str(e):
                 await asyncio.sleep(1 + retry)
             else:
                 raise
         except asyncio.exceptions.TimeoutError as e:
-            log.warn(f"Challonge timeout. func: {func} args: {args} kwargs: {kwargs}", exc_info=e)
+            log.warn(f"Challonge timeout. coro: {coro}", exc_info=e)
             continue
     else:
-        raise ChallongeException(f"Tried '{func.__name__}' several times without success")
+        raise ChallongeException(f"Tried '{coro.__name__}' several times without success")

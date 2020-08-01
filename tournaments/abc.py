@@ -1,11 +1,10 @@
 from abc import ABC
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Mapping
 
 if TYPE_CHECKING:
     from redbot.core import Config
     from redbot.core.bot import Red
-
-    from .dataclass import ChallongeTournament
+    from .dataclass import Tournament
 
 
 class MixinMeta(ABC):
@@ -20,4 +19,4 @@ class MixinMeta(ABC):
     def __init__(self):
         self.bot: Red
         self.data: Config
-        self.tournament: Optional[ChallongeTournament]
+        self.tournaments: Mapping[int, Tournament]

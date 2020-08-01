@@ -995,22 +995,14 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
                 )
             )
             return
-        register_time = await self.data.guild(guild).register()
-        checkin_time = await self.data.guild(guild).checkin()
-        credentials = await self.data.guild(guild).credentials()
-        achallonge.set_credentials(credentials["username"], credentials["api"])
+        config_data = await self.data.guild(guild).all()
+        achallonge.set_credentials(
+            config_data["credentials"]["username"], config_data["credentials"]["api"]
+        )
         async with ctx.typing():
             data = await async_http_retry(achallonge.tournaments.show, url, loop=self.bot.loop)
-            tournament: ChallongeTournament = ChallongeTournament.from_challonge_data(
-                data,
-                register_time["opening"],
-                register_time["closing"],
-                checkin_time["opening"],
-                checkin_time["closing"],
-            )
-        del register_time, checkin_time
         games = await self.data.custom("GAME", guild.id).all()
-        if tournament.game not in games:
+        if data["game"].title() not in games:
             message = await ctx.send(
                 _(
                     ":warning: **Le jeu {game} n'est pas enregistré sur le bot !**\n\n"
@@ -1025,7 +1017,7 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
                     "- Liste des stages starters/counters\n"
                     "- Ranking et seeding avec Braacket\n\n"
                     "Souhaitez vous continuer ou annuler ?"
-                ).format(game=tournament.game, prefix=ctx.clean_prefix)
+                ).format(game=data["game"].title(), prefix=ctx.clean_prefix)
             )
             pred = ReactionPredicate.yes_or_no(message, user=ctx.author)
             start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
@@ -1039,7 +1031,10 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
                 return
             await message.delete()
         del games
-        game = await self.data.custom("GAME", guild.id, tournament.game).all()
+        config_data.update(await self.data.custom("GAME", guild.id, data["game"].title()).all())
+        tournament: ChallongeTournament = ChallongeTournament(
+            guild, ctx.clean_prefix, data, config_data
+        )
 
         def format_datetime(datetime: Optional[datetime]):
             if datetime:
@@ -1100,6 +1095,6 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
         if pred.result is False:
             await ctx.send(_("Annulation."))
             return
-        self.tournament = tournament
+        self.tournaments[guild.id] = tournament
         await self.data.guild(guild).tournament.set(tournament.to_dict())
         await ctx.send(_("Le tournoi est bien réglé !"))
