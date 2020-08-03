@@ -21,6 +21,8 @@ class ChallongeTournament(Tournament):
             bot_prefix=prefix,
             data=config_data,
         )
+        self.participant_object = ChallongeParticipant
+        self.match_object = ChallongeMatch
 
     async def start(self):
         await async_http_retry(achallonge.tournaments.start(self.id))
@@ -34,6 +36,16 @@ class ChallongeTournament(Tournament):
     async def add_participants(self, *participants: str):
         raise NotImplementedError
         # idk how bulk_add works with seeds
+
+    async def list_participants(self):
+        return await async_http_retry(
+            achallonge.tournaments.index, self.tournaments[self.guild.id].id
+        )
+
+    async def list_matches(self):
+        return await async_http_retry(
+            achallonge.matches.index, self.tournaments[self.guild.id].id, state="open"
+        )
 
 
 class ChallongeParticipant(Participant):

@@ -1,7 +1,9 @@
 import discord
 import logging
+import asyncio
 from random import choice
 
+from discord.ext import tasks
 from datetime import datetime, timedelta
 from typing import Optional, Mapping
 
@@ -9,6 +11,8 @@ from redbot.core.i18n import Translator
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
+
+MAX_ERRORS = 5
 
 
 class Tournament:
@@ -87,11 +91,16 @@ class Tournament:
         self.ranking = data["ranking"]
         self.stages = data["stages"]
         self.counterpicks = data["counterpicks"]
+        self.participant_object = Participant
+        self.match_object = Match
+        # loop task things
+        self.task: Optional[asyncio.Task] = None
+        self.task_errors = 0
 
     @classmethod
     def from_saved_data(cls, guild: discord.Guild, data: dict, config_data: dict):
         tournament_start = datetime.fromtimestamp(int(data["tournament_start"]))
-        return cls(guild, **data, tournament_start=tournament_start, data=config_data,)
+        return cls(guild, **data, tournament_start=tournament_start, data=config_data)
 
     def to_dict(self) -> dict:
         """Returns a dict ready for Config."""
@@ -105,6 +114,148 @@ class Tournament:
             "tournament_start": int(self.tournament_start.timestamp()),
         }
         return data
+
+    async def _update_participants_list(self, guild: discord.Guild):
+        raw_participants = await self.list_participants()
+        participants = []
+        for participant in raw_participants:
+            member = guild.get_member(participant["name"])
+            participants.append(self.participant_object(member, participant["id"]))
+        self.tournaments[guild.id].participants = participants
+
+    async def _update_match_list(self, guild: discord.Guild):
+        raw_matches = await self.list_matches()
+        matches = []
+        for match in raw_matches:
+            matches.append(self.match_object(guild, self.tournaments[guild.id], match))
+        self.tournaments[guild.id].matches = matches
+
+    async def send_start_messages(self):
+        messages = {
+            self.announcements_channel: _(
+                "Le tournoi **{tournament}** est officiellement lancé ! Bracket : {bracket}\n"
+                ":white_small_square: Vous pouvez y accéder "
+                "à tout moment avec la commande `{prefix}bracket`.\n"
+                ":white_small_square: Vous pouvez consulter les liens de "
+                "stream avec la commande `{prefix}stream`.\n\n"
+                "{participant} On arrête le freeplay ! Le tournoi est sur le "
+                "point de commencer. Veuillez lire les consignes :\n"
+                ":white_small_square: Vos sets sont annoncés dès que disponibles dans "
+                "{queue_channel} : **ne lancez rien sans consulter ce channel**.\n"
+                ":white_small_square: Le ruleset ainsi que les informations pour le "
+                "bannissement des stages sont dispo dans {rules_channel}.\n"
+                ":white_small_square: Le gagnant d'un set doit rapporter le score **dès "
+                "que possible** dans {scores_channel} avec la commande `{prefix}win`.\n"
+                ":white_small_square: Vous pouvez DQ du tournoi avec la commande "
+                "`{prefix}dq`, ou juste abandonner votre set en cours avec `{prefix}ff`.\n"
+                ":white_small_square: En cas de lag qui rend votre set injouable, utilisez "
+                "la commande `{prefix}lag` pour appeler les T.O.\n"
+                ":timer: Vous serez **DQ automatiquement** si vous n'avez pas été actif "
+                "sur votre channel __dans les {delay} minutes qui suivent sa création__."
+            ).format(
+                tournament=self.name,
+                bracket=self.url,
+                participant=self.participant_role.mention,
+                queue_channel=self.queue_channel.mention,
+                rules_channel=self.ruleset_channel.mention,
+                scores_channel=self.scores_channel.mention,
+                delay=self.delay,
+                prefix=self.bot_prefix,
+            ),
+            self.scores_channel: _(
+                ":information_source: La prise en charge des scores "
+                "pour le tournoi **{tournament}** est automatisée :\n"
+                ":white_small_square: Seul **le gagnant du set** envoie "
+                "le score de son set, précédé par la **commande** `{prefix}win`.\n"
+                ":white_small_square: Le message du score doit contenir le "
+                "**format suivant** : `{prefix}win 2-0, 3-2, 3-1, ...`.\n"
+                ":white_small_square: Un mauvais score intentionnel, perturbant le "
+                "déroulement du tournoi, est **passable de DQ et ban**.\n"
+                ":white_small_square: Consultez le bracket afin de "
+                "**vérifier** les informations : {url}\n"
+                ":white_small_square: En cas de mauvais score : "
+                "contactez un TO pour une correction manuelle.\n\n"
+                ":satellite_orbital: Chaque score étant **transmis un par "
+                "un**, il est probable que la communication prenne jusqu'à 30 secondes."
+            ).format(tournament=self.name, url=self.url, prefix=self.bot_prefix),
+            self.queue_channel: _(
+                ":information_source: **Le lancement des sets est automatisé.** "
+                "Veuillez suivre les consignes de ce channel, que ce soit par le bot ou les TOs.\n"
+                ":white_small_square: Tout passage on stream sera notifié à "
+                "l'avance, ici, dans votre channel (ou par DM).\n"
+                ":white_small_square: Tout set devant se jouer en BO5 "
+                "est indiqué ici, et également dans votre channel.\n"
+                ":white_small_square: La personne qui commence les bans "
+                "est indiquée dans votre channel (en cas de besoin : `{prefix}flip`).\n\n"
+                ":timer: Vous serez **DQ automatiquement** si vous n'avez pas été actif "
+                "sur votre channel __dans les {delay} minutes qui suivent sa création__."
+            ).format(delay=self.delay, prefix=self.bot_prefix),
+        }
+        for channel, message in messages.items():
+            try:
+                await channel.send(message)
+            except discord.HTTPException as e:
+                log.error(f"[Guild {self.guild.id}] Can't send message in {channel}.", exc_info=e)
+
+    async def launch_sets(self):
+        async def _get_available_category(self, dest: str, position: int):
+            if dest == "winner":
+                categories = self.winner_categories
+            else:
+                categories = self.loser_categories
+            try:
+                return next(filter(lambda x: len(x.channels < 50), categories))
+            except StopIteration:
+                if categories:
+                    position = categories[-1].position + 1
+                else:
+                    position += 1
+                if dest == "winner":
+                    name = "Winner bracket"
+                else:
+                    name = "Loser bracket"
+                return await self.guild.create_category(
+                    name, reason=_("Nouvelle catégorie de sets.")
+                )
+
+        position = self.category.position + 1 if self.category else len(self.guild.categories)
+        coros = []
+        for match in filter(lambda x: x.underway is False, self.matches):
+            match: Match
+            if match.round > 0:
+                category = await _get_available_category(self.guild, "winner", position)
+            else:
+                category = await _get_available_category(self.guild, "winner", position)
+            coros.append(match.launch(self.guild, category))
+        results = await asyncio.gather(*coros, return_exceptions=True)
+        for result in filter(None, results):
+            log.error(f"[Guild {self.guild.id}] Can't launch a set.", exc_info=result)
+
+    @tasks.loop(seconds=15)
+    async def loop_task(self):
+        coros = [self.launch_sets()]
+        results = await asyncio.gather(*coros, return_exceptions=True)
+        for i, result in enumerate(results):
+            if result is None:
+                continue
+            log.warning(f"[Guild {self.guild.id}] Failed with coro {coros[i]}.", exc_info=result)
+
+    @loop_task.error
+    async def on_loop_task_error(self, exception):
+        self.task_errors += 1
+        if self.task_errors >= MAX_ERRORS:
+            log.critical(
+                f"[Guild {self.guild.id}] Error in loop task. 3rd error, cancelling the task"
+            )
+        else:
+            log.error(f"[Guild {self.guild.id}] Error in loop task. Resuming...")
+            self.task = self.loop_task.start()
+
+    async def start_loop_task(self):
+        self.task = self.loop_task.start()
+
+    async def stop_loop_task(self):
+        self.loop_task.cancel()
 
     async def start(self):
         """
@@ -150,6 +301,28 @@ class Tournament:
         ----------
         participants: List[str]
             The list of participants. The first element will be seeded 1.
+        """
+        raise NotImplementedError
+
+    async def list_participants(self):
+        """
+        Returns the list of participants from the tournament host.
+
+        Returns
+        -------
+        List[str]
+            The list of participants.
+        """
+        raise NotImplementedError
+
+    async def list_matches(self):
+        """
+        Returns the list of matches from the tournament host.
+
+        Returns
+        -------
+        List[str]
+            The list of matches.
         """
         raise NotImplementedError
 
@@ -200,6 +373,10 @@ class Match:
         self.underway = underway
         self.player1 = player1
         self.player2 = player2
+        self.channel: Optional[discord.TextChannel] = None
+        self.start_time: Optional[datetime] = None
+        self.status = "pending"  # can be "pending" "ongoing" "finished"
+        self.last_message: Optional[datetime]
 
     async def send_message(self, channel: Optional[discord.TextChannel] = None) -> bool:
         """
@@ -326,6 +503,7 @@ class Match:
             await self.send_message()
         else:
             await self.send_message(channel)
+            self.channel = channel
 
     async def set_scores(
         self, player1_score: int, player2_score: int, winner: Optional[Participant]
