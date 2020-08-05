@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2020-07-29 00:05+0000\n"
+"POT-Creation-Date: 2020-08-05 00:05+0000\n"
 "Last-Translator: \n"
 "Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
@@ -94,7 +94,7 @@ msgstr "ve"
 msgid "The given member cannot be found.\\nIf you're trying to hackban, the user ID is not valid."
 msgstr "Üye bulunamadı.Eğer hackban kullanıyorsan ID yanlış olabilir"
 
-#: warnsystem/api.py:567 warnsystem/api.py:1063
+#: warnsystem/api.py:567 warnsystem/api.py:1065
 msgid "warn"
 msgstr "uyarı"
 
@@ -102,7 +102,7 @@ msgstr "uyarı"
 msgid "warns"
 msgstr "uyarıları"
 
-#: warnsystem/api.py:568 warnsystem/api.py:1063 warnsystem/api.py:1146
+#: warnsystem/api.py:568 warnsystem/api.py:1065 warnsystem/api.py:1154
 msgid "mute"
 msgstr "sustur"
 
@@ -110,7 +110,7 @@ msgstr "sustur"
 msgid "mutes"
 msgstr "sustur"
 
-#: warnsystem/api.py:569 warnsystem/api.py:1063
+#: warnsystem/api.py:569 warnsystem/api.py:1065
 msgid "kick"
 msgstr "kick"
 
@@ -118,7 +118,7 @@ msgstr "kick"
 msgid "kicks"
 msgstr "kick"
 
-#: warnsystem/api.py:570 warnsystem/api.py:1063
+#: warnsystem/api.py:570 warnsystem/api.py:1065
 msgid "softban"
 msgstr "softban"
 
@@ -126,7 +126,7 @@ msgstr "softban"
 msgid "softbans"
 msgstr "softban"
 
-#: warnsystem/api.py:571 warnsystem/api.py:1063 warnsystem/api.py:1146
+#: warnsystem/api.py:571 warnsystem/api.py:1065 warnsystem/api.py:1154
 msgid "ban"
 msgstr "ban"
 
@@ -134,7 +134,7 @@ msgstr "ban"
 msgid "bans"
 msgstr "ban"
 
-#: warnsystem/api.py:572 warnsystem/api.py:1064 warnsystem/warnsystem.py:814
+#: warnsystem/api.py:572 warnsystem/api.py:1066 warnsystem/warnsystem.py:814
 msgid "unknown"
 msgstr "bilinmiyor"
 
@@ -211,7 +211,7 @@ msgstr "Durum"
 msgid "\\n\\n***The message could not be delivered to the user. They may have DMs disabled, blocked the bot, or may not have a mutual server.***"
 msgstr "\\n\\n***Mesaj üyeye teslim edilemedi. Bu üyenin DM'leri kapalı olabilir, botu engellemiş olabilir ya da ortak bir sunucumuz olmayabilir.***"
 
-#: warnsystem/api.py:702 warnsystem/api.py:1041 warnsystem/settings.py:484
+#: warnsystem/api.py:702 warnsystem/api.py:1043 warnsystem/settings.py:484
 msgid "I can't manage roles, please give me this permission to continue."
 msgstr "Rolleri düzenleyemiyorum, lütfen rol düzenleme yetkisi verin"
 
@@ -251,47 +251,47 @@ msgstr ""
 msgid "Unbanning the softbanned member after cleaning up the messages."
 msgstr "Softban ile yasaklanan üyenin banı açıldı ve mesajları silindi"
 
-#: warnsystem/api.py:1032
+#: warnsystem/api.py:1034
 msgid "I need the `Send messages` and `Embed links` permissions in {channel} to do this."
 msgstr " `Mesaj Gönder` ve `Bağlantı Yerleştir` rolüne bu kanal için {channel} ihtiyacım var "
 
-#: warnsystem/api.py:1045
+#: warnsystem/api.py:1047
 msgid "The mute role `{mute_role}` was moved above my top role `{my_role}`. Please move the roles so my top role is above the mute role."
 msgstr "`{mute_role}` rolü benim rolümün üstüne taşınmış = `{my_role}`. Lütfen benim rolümü işlem yapabilmem için yukarıya taşıyın."
 
-#: warnsystem/api.py:1054
+#: warnsystem/api.py:1056
 msgid "I can't kick members, please give me this permission to continue."
 msgstr "Üyeleri atamıyorum, lütfen yetki verin."
 
-#: warnsystem/api.py:1060
+#: warnsystem/api.py:1062
 msgid "I can't ban members, please give me this permission to continue."
 msgstr "Üyeleri yasaklayamıyorum, lütfen yetki verin."
 
-#: warnsystem/api.py:1066
+#: warnsystem/api.py:1068
 msgid "[WarnSystem] {action} requested by {author} (ID: {author.id}) against {member}. "
 msgstr "[WarnSystem] {action} tarafından istendi {author} (ID: {author.id}) şu üye için {member}. "
 
-#: warnsystem/api.py:1072
+#: warnsystem/api.py:1074
 msgid "\\n\\nDuration: {time} "
 msgstr "Süre"
 
-#: warnsystem/api.py:1075
+#: warnsystem/api.py:1077
 msgid "Reason: {reason}"
 msgstr "Sebep: {reason}"
 
-#: warnsystem/api.py:1077
+#: warnsystem/api.py:1079
 msgid "Reason too long to be shown."
 msgstr "Sebep gösterilmek için çok uzun"
 
-#: warnsystem/api.py:1119
+#: warnsystem/api.py:1117
 msgid "You were unbanned from {guild}, your temporary ban (reason: {reason}) just ended after {duration}.\\nYou can join back using this invite: {invite}"
-msgstr "Şu sunucudan yasağın kalktı {guild}, geçici olarak yasaklanmıştın (sebep: {reason}) artık özgürsün {duration}.\\nBu davet linki ile tekrar katılabilirsin: {invite}"
+msgstr "Bu sunucudan yasağın kalktı {guild}, geçici olarak ({duration}) şu sebep nedeniyle: {reason} yasaklanmıştın. Artık özgürsün.\\nBu davet linki ile tekrar katılabilirsin: {invite}"
 
-#: warnsystem/api.py:1154
+#: warnsystem/api.py:1162
 msgid "End of timed {action} of {member} requested by {author} that lasted for {time}. Reason of the {action}: {reason}"
-msgstr "Bu yasağın {action} kullanıcı ile {member} tarafından istenen {author} süresiyle {time}. Bu sebeple {action}: {reason} olan yasağın süresi bitti"
+msgstr "{action} yasağı alan bu kullanıcı {member}, {author} tarafından verilen {time} yasağın ve bu sebebin {action}: {reason} yasak süresi bitti ve yasağı açıldı. Aynı zamanda kullanıcıya bir davet linki atıldı"
 
-#: warnsystem/api.py:1369
+#: warnsystem/api.py:1382
 msgid "{member} you're sending messages too fast!"
 msgstr "{member} çok fazla mesaj gönderiyorsun. Biraz yavaşla!"
 
@@ -934,13 +934,13 @@ msgstr "`Modlog` veya `user ' belirtmeniz gerekir. Daha fazla ayrıntı için ko
 msgid "The new description for {destination} (warn {level}) was successfully set!"
 msgstr "Bunun için yeni açıklama {destination} (warn {level}) başarıyla ayarlandı!"
 
-#: warnsystem/settings.py:397 warnsystem/warnsystem.py:389
-msgid "user"
-msgstr "kullanıcı"
-
 #: warnsystem/settings.py:397
 msgid "modlog"
 msgstr "modlog"
+
+#: warnsystem/settings.py:397 warnsystem/warnsystem.py:389
+msgid "user"
+msgstr "kullanıcı"
 
 #: warnsystem/settings.py:403
 #, docstring
