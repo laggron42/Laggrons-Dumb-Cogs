@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2020-07-29 00:05+0000\n"
+"POT-Creation-Date: 2020-08-05 00:05+0000\n"
 "Last-Translator: \n"
 "Language-Team: Chinese Traditional, Hong Kong\n"
 "MIME-Version: 1.0\n"
@@ -94,7 +94,7 @@ msgstr ""
 msgid "The given member cannot be found.\\nIf you're trying to hackban, the user ID is not valid."
 msgstr ""
 
-#: warnsystem/api.py:567 warnsystem/api.py:1063
+#: warnsystem/api.py:567 warnsystem/api.py:1065
 msgid "warn"
 msgstr ""
 
@@ -102,7 +102,7 @@ msgstr ""
 msgid "warns"
 msgstr ""
 
-#: warnsystem/api.py:568 warnsystem/api.py:1063 warnsystem/api.py:1146
+#: warnsystem/api.py:568 warnsystem/api.py:1065 warnsystem/api.py:1154
 msgid "mute"
 msgstr ""
 
@@ -110,7 +110,7 @@ msgstr ""
 msgid "mutes"
 msgstr ""
 
-#: warnsystem/api.py:569 warnsystem/api.py:1063
+#: warnsystem/api.py:569 warnsystem/api.py:1065
 msgid "kick"
 msgstr ""
 
@@ -118,7 +118,7 @@ msgstr ""
 msgid "kicks"
 msgstr ""
 
-#: warnsystem/api.py:570 warnsystem/api.py:1063
+#: warnsystem/api.py:570 warnsystem/api.py:1065
 msgid "softban"
 msgstr ""
 
@@ -126,7 +126,7 @@ msgstr ""
 msgid "softbans"
 msgstr ""
 
-#: warnsystem/api.py:571 warnsystem/api.py:1063 warnsystem/api.py:1146
+#: warnsystem/api.py:571 warnsystem/api.py:1065 warnsystem/api.py:1154
 msgid "ban"
 msgstr ""
 
@@ -134,7 +134,7 @@ msgstr ""
 msgid "bans"
 msgstr ""
 
-#: warnsystem/api.py:572 warnsystem/api.py:1064 warnsystem/warnsystem.py:814
+#: warnsystem/api.py:572 warnsystem/api.py:1066 warnsystem/warnsystem.py:814
 msgid "unknown"
 msgstr ""
 
@@ -211,7 +211,7 @@ msgstr ""
 msgid "\\n\\n***The message could not be delivered to the user. They may have DMs disabled, blocked the bot, or may not have a mutual server.***"
 msgstr ""
 
-#: warnsystem/api.py:702 warnsystem/api.py:1041 warnsystem/settings.py:484
+#: warnsystem/api.py:702 warnsystem/api.py:1043 warnsystem/settings.py:484
 msgid "I can't manage roles, please give me this permission to continue."
 msgstr ""
 
@@ -251,47 +251,47 @@ msgstr ""
 msgid "Unbanning the softbanned member after cleaning up the messages."
 msgstr ""
 
-#: warnsystem/api.py:1032
+#: warnsystem/api.py:1034
 msgid "I need the `Send messages` and `Embed links` permissions in {channel} to do this."
 msgstr ""
 
-#: warnsystem/api.py:1045
+#: warnsystem/api.py:1047
 msgid "The mute role `{mute_role}` was moved above my top role `{my_role}`. Please move the roles so my top role is above the mute role."
 msgstr ""
 
-#: warnsystem/api.py:1054
+#: warnsystem/api.py:1056
 msgid "I can't kick members, please give me this permission to continue."
 msgstr ""
 
-#: warnsystem/api.py:1060
+#: warnsystem/api.py:1062
 msgid "I can't ban members, please give me this permission to continue."
 msgstr ""
 
-#: warnsystem/api.py:1066
+#: warnsystem/api.py:1068
 msgid "[WarnSystem] {action} requested by {author} (ID: {author.id}) against {member}. "
 msgstr ""
 
-#: warnsystem/api.py:1072
+#: warnsystem/api.py:1074
 msgid "\\n\\nDuration: {time} "
 msgstr ""
 
-#: warnsystem/api.py:1075
+#: warnsystem/api.py:1077
 msgid "Reason: {reason}"
 msgstr ""
 
-#: warnsystem/api.py:1077
+#: warnsystem/api.py:1079
 msgid "Reason too long to be shown."
 msgstr ""
 
-#: warnsystem/api.py:1119
+#: warnsystem/api.py:1117
 msgid "You were unbanned from {guild}, your temporary ban (reason: {reason}) just ended after {duration}.\\nYou can join back using this invite: {invite}"
 msgstr ""
 
-#: warnsystem/api.py:1154
+#: warnsystem/api.py:1162
 msgid "End of timed {action} of {member} requested by {author} that lasted for {time}. Reason of the {action}: {reason}"
 msgstr ""
 
-#: warnsystem/api.py:1369
+#: warnsystem/api.py:1382
 msgid "{member} you're sending messages too fast!"
 msgstr ""
 
@@ -934,12 +934,12 @@ msgstr ""
 msgid "The new description for {destination} (warn {level}) was successfully set!"
 msgstr ""
 
-#: warnsystem/settings.py:397 warnsystem/warnsystem.py:389
-msgid "user"
-msgstr ""
-
 #: warnsystem/settings.py:397
 msgid "modlog"
+msgstr ""
+
+#: warnsystem/settings.py:397 warnsystem/warnsystem.py:389
+msgid "user"
 msgstr ""
 
 #: warnsystem/settings.py:403
