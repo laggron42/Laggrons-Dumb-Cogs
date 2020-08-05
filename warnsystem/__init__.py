@@ -185,7 +185,7 @@ async def update_config(bot, config):
 
 
 async def setup(bot):
-    init_logger(log, WarnSystem.__class__.__name__)
+    init_logger(log, "WarnSystem")
     n = WarnSystem(bot)
     # the cog conflicts with the core Warnings cog, we must check that
     if "Warnings" in bot.cogs:
