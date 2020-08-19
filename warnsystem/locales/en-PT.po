@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2020-08-05 00:05+0000\n"
+"POT-Creation-Date: 2020-08-19 00:06+0000\n"
 "Last-Translator: \n"
 "Language-Team: Pirate English\n"
 "MIME-Version: 1.0\n"
@@ -236,7 +236,7 @@ msgid "Cannot edit permissions of the channel {channel} because of an unknown er
 msgstr ""
 
 #: warnsystem/api.py:914
-msgid "Cannot take actions on this member, he is above than me in the roles hierarchy. Modify the hierarchy so my top role ({bot_role}) is above {member_role}."
+msgid "Cannot take actions on this member, they are above me in the roles hierarchy. Modify the hierarchy so my top role ({bot_role}) is above {member_role}."
 msgstr ""
 
 #: warnsystem/api.py:929
@@ -642,7 +642,7 @@ msgid "True"
 msgstr ""
 
 #: warnsystem/automod.py:533
-msgid "WarnSystem's antispam feature will make your text channels cleaner by removing and warning members sending undesired content.\\n\\nAntispam is currently **{status}**.\\n{status_change} it with `{prefix}automod antispam {setting}`."
+msgid "WarnSystem's antispam feature will make your text channels cleaner by removing and warning members sending undesired content.\\n\\nAntispam is currently **{status}**.\\n{status_change} it with `{prefix}automod antispam enable {setting}`."
 msgstr ""
 
 #: warnsystem/automod.py:548
