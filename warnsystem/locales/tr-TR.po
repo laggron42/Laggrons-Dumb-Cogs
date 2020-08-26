@@ -289,7 +289,7 @@ msgstr "Bu sunucudan yasağın kalktı {guild}, geçici olarak ({duration}) şu 
 
 #: warnsystem/api.py:1162
 msgid "End of timed {action} of {member} requested by {author} that lasted for {time}. Reason of the {action}: {reason}"
-msgstr "{action} yasağı alan bu kullanıcı {member}, {author} tarafından verilen {time} yasağın ve bu sebebin {action}: {reason} yasak süresi bitti ve yasağı açıldı. Aynı zamanda kullanıcıya bir davet linki atıldı"
+msgstr "{author} tarafından {member} adlı kullanıcıya atılan {time} {action} {reason} yasağın süresi doldu ve yasağı açıldı"
 
 #: warnsystem/api.py:1382
 msgid "{member} you're sending messages too fast!"
@@ -1127,7 +1127,7 @@ msgstr ""
 
 #: warnsystem/settings.py:721
 msgid "Not found"
-msgstr ""
+msgstr "Bulunamadı"
 
 #: warnsystem/settings.py:723
 msgid "Default channel: {channel}\\n"
