@@ -365,7 +365,9 @@ cog at this point.
             await ctx.send("Command not found.")
             return
         await ctx.send(f"Source code for `{ctx.clean_prefix}{command}`:")
-        await ctx.send_interactive(pagify(_commands[command], shorten_by=10), box_lang="py", timeout=60)
+        await ctx.send_interactive(
+            pagify(_commands[command], shorten_by=10), box_lang="py", timeout=60
+        )
 
     @commands.command(hidden=True)
     @checks.is_owner()
