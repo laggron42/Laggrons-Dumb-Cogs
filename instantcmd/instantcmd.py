@@ -364,11 +364,8 @@ cog at this point.
         if command not in _commands:
             await ctx.send("Command not found.")
             return
-        message = (
-            f"Source code for `{ctx.prefix}{command}`:\n" + "```Py\n" + _commands[command] + "```"
-        )
-        for page in pagify(message):
-            await ctx.send(page)
+        await ctx.send(f"Source code for `{ctx.clean_prefix}{command}`:")
+        await ctx.send_interactive(pagify(_commands[command], shorten_by=10), box_lang="py", timeout=60)
 
     @commands.command(hidden=True)
     @checks.is_owner()
