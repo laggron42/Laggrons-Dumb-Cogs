@@ -4,7 +4,6 @@ import logging
 from achallonge import ChallongeException
 
 from redbot.core import commands
-from redbot.core import Config
 from redbot.core.i18n import Translator
 
 log = logging.getLogger("red.laggron.tournaments")
@@ -38,10 +37,12 @@ def only_phase(*allowed_phases):
     """
 
     def wrapper(command: commands.Command) -> commands.Command:
-        async def hook(ctx: commands.Context):
-            data = Config.get_conf(None, identifier=260, cog_name=COG_NAME)
-            phase = await data.guild(ctx.guild).current_phase()
-            if phase in allowed_phases:
+        async def hook(cog, ctx: commands.Context):
+            try:
+                tournament = cog.tournaments[ctx.guild.id]
+            except KeyError:
+                raise commands.UserFeedbackCheckFailure(_("Il n'y a aucun tournoi en cours."))
+            if tournament.phase not in allowed_phases:
                 raise commands.UserFeedbackCheckFailure(
                     _("Cette commande ne peut être exécutée actuellement.")
                 )

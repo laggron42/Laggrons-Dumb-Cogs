@@ -20,4 +20,5 @@ async def setup(bot):
     init_logger(log, Tournaments.__class__.__name__)
     n = Tournaments(bot)
     bot.add_cog(n)
+    await n.restore_tournaments()
     log.debug("Cog successfully loaded on the instance.")

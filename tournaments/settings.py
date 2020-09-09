@@ -23,7 +23,7 @@ from .utils import credentials_check, async_http_retry
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
 
-CHALLONGE_URL_RE = re.compile(r"(?:https?://challonge\.com/)(?P<id>\S+)")
+CHALLONGE_URL_RE = re.compile(r"(?:https?://challonge\.com/)(?P<id>\S[^/]+)(/.*)?")
 
 
 class ChallongeURLConverter(commands.Converter):
@@ -136,7 +136,7 @@ besoin de la fournir directement.
         """
         Réglage de la clé API Challonge.
 
-        Vous pouvez l'obtenir dans les paramètres de votre compte challonge, catégorie "Developer\
+        Vous pouvez l'obtenir dans les paramètres de votre compte challonge, catégorie "Developer \
 API".
         **https://challonge.com/settings/developer**
 
@@ -234,7 +234,7 @@ API".
         """
         Règle le channel du check-in.
 
-        Le début du check-in y sera annoncé, et les gens devront y entrer une commande pour\
+        Le début du check-in y sera annoncé, et les gens devront y entrer une commande pour \
 valider leur inscription.
 
         Donnez aucun channel pour ne pas restreindre l'accès à la commande à un channel.
@@ -264,7 +264,7 @@ valider leur inscription.
         """
         Règle le channel des inscriptions.
 
-        Le début des inscriptions y sera annoncé, et les gens devront y entrer une commande pour\
+        Le début des inscriptions y sera annoncé, et les gens devront y entrer une commande pour \
 s'inscrire ou se désinscrire.
 
         Donnez aucun channel pour ne pas restreindre l'accès à la commande à un channel.
@@ -382,7 +382,7 @@ s'inscrire ou se désinscrire.
         Règle la catégorie de vos channels de tournois.
 
         Cette catégorie sera utilisée pour positionner la création de channels de sets.
-        Une ou plusieurs catégories seront créés juste en dessous de la catégorie réglée avec\
+        Une ou plusieurs catégories seront créés juste en dessous de la catégorie réglée avec \
 cette commande. Ces catégories créées serviront aux channels de sets.
 
         Vous pouvez donner le nom complet de la catégorie ou son ID.
@@ -410,7 +410,7 @@ cette commande. Ces catégories créées serviront aux channels de sets.
         """
         Règle le rôle de participant au tournoi.
 
-        Ce rôle sera assigné aux membres dès leur inscription, et retiré une fois le tournoi\
+        Ce rôle sera assigné aux membres dès leur inscription, et retiré une fois le tournoi \
 terminé.
         """
         guild = ctx.guild
@@ -446,10 +446,10 @@ terminé.
         Ce rôle donnera accès aux commandes de tournois (sauf `[p]challongeset` et
         `[p]tournamentset`).
 
-        :warning: **Utilisez ce rôle uniquement si vous avez besoin de séparer les modérateurs des\
-T.O.**
-        Dans le cas échéant, il est fortement recommandé d'utiliser les commandes de Red :\
-`[p]set addadminrole` et `[p]set addmodrole`. Cela adaptera les permissions de l'intégralité des\
+        :warning: **Utilisez ce rôle uniquement si vous avez besoin de séparer les modérateurs \
+des T.O.**
+        Dans le cas échéant, il est fortement recommandé d'utiliser les commandes de Red : \
+`[p]set addadminrole` et `[p]set addmodrole`. Cela adaptera les permissions de l'intégralité des \
 commandes de ce bot à vos modérateurs et administrateurs.
         """
         guild = ctx.guild
@@ -496,7 +496,7 @@ commandes de ce bot à vos modérateurs et administrateurs.
         """
         Configure les différents jeux des tournois.
 
-        Utilisez d'abord `[p]tournamentset games add`, puis une explication vous sera donnée sur\
+        Utilisez d'abord `[p]tournamentset games add`, puis une explication vous sera donnée sur \
 le reste des commandes.
         """
         pass
@@ -553,7 +553,7 @@ le reste des commandes.
         Donnez le nom de l'ancien jeu, puis son nouveau nom.
         Utilisez des guillmets s'il y a des espaces.
 
-        Exemple: [p]tournamentset games edit "Super Smqsh Bros. Ultimate"\
+        Exemple: [p]tournamentset games edit "Super Smqsh Bros. Ultimate" \
 "Super Smash Bros Ultimate"
         """
         guild = ctx.guild
@@ -590,7 +590,7 @@ le reste des commandes.
             await ctx.send(page)
 
     @tournamentset_games.command(name="show")
-    async def tournamentset_games_show(self, ctx: commands.Context, *, game: GameSetting):
+    async def tournamentset_games_show(self, ctx: commands.Context, game: GameSetting):
         """
         Affiche les réglages d'un jeu.
         """
@@ -675,7 +675,7 @@ le reste des commandes.
         """
         Définis les infos sur les bans (ex: 2-3-1)
 
-        Ces informations seront données à l'ouverture d'un set, et ne demandent pas un format\
+        Ces informations seront données à l'ouverture d'un set, et ne demandent pas un format \
 particulier.
         Utilisez la commande sans paramètre pour réinitialiser cette valeur.
 
@@ -706,7 +706,7 @@ particulier.
 
         Donnez les stages les uns à la suite des autres, avec des guillmets s'il y a des espaces.
 
-        Exemple : `[p]tournamentset games stages "Super Smash Bros. Ultimate" "Champ de Bataille"\
+        Exemple : `[p]tournamentset games stages "Super Smash Bros. Ultimate" "Champ de Bataille" \
 "Destination Finale" "Stade Pokémon 2"`
         """
         guild = ctx.guild
@@ -725,7 +725,7 @@ particulier.
 
         Donnez les stages les uns à la suite des autres, avec des guillmets s'il y a des espaces.
 
-        Exemple : `[p]tournamentset games counters "Super Smash Bros. Ultimate" "Champ de\
+        Exemple : `[p]tournamentset games counters "Super Smash Bros. Ultimate" "Champ de \
 Bataille" "Destination Finale" "Stade Pokémon 2"`
         """
         guild = ctx.guild
@@ -794,16 +794,16 @@ Bataille" "Destination Finale" "Stade Pokémon 2"`
         """
         Règle l'heure d'ouverture et de fermeture des inscriptions.
 
-        Vous devez donner le nombre d'**heures** avant l'ouverture du tournoi pour le début, et le\
-nombre de **minutes** avant l'ouverture du tournoi pour la fin des inscriptions.
+        Vous devez donner le nombre d'**heures** avant l'ouverture du tournoi pour le début, et \
+le nombre de **minutes** avant l'ouverture du tournoi pour la fin des inscriptions.
         D'abord l'heure d'ouverture, puis de fermeture.
 
         L'heure d'ouverture du tournoi est celle réglée sur votre tournoi Challonge.
 
-        Pour désactiver l'ouverture ou la fermeture automatique des inscriptions, donnez 0 pour\
+        Pour désactiver l'ouverture ou la fermeture automatique des inscriptions, donnez 0 pour \
 sa valeur correspondante.
 
-        Exemple: `[p]tournamentset register 48 10` = Ouverture du check-in 45 heures avant\
+        Exemple: `[p]tournamentset register 48 10` = Ouverture du check-in 45 heures avant \
 l'ouverture du tournoi, puis fermeture 10 minutes avant.
         """
         guild = ctx.guild
@@ -830,7 +830,7 @@ l'ouverture du tournoi, puis fermeture 10 minutes avant.
 
         Pour désactiver le check-in, donnez 0 pour les deux valeurs
 
-        Exemple: `[p]tournamentset checkin 60 15` = Ouverture du check-in 60 minutes avant\
+        Exemple: `[p]tournamentset checkin 60 15` = Ouverture du check-in 60 minutes avant \
 l'ouverture du tournoi, puis fermeture 15 minutes avant.
         """
         guild = ctx.guild
@@ -988,11 +988,14 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
             await ctx.send(message)
             return
         del message
-        if self.tournament is not None:
+        tournament = self.tournaments.get(guild.id)
+        if tournament is not None:
             await ctx.send(
-                _("Un tournoi semble déjà être configuré. Utilisez `{prefix}reset`.").format(
-                    prefix=ctx.clean_prefix
-                )
+                _(
+                    "Un tournoi semble déjà être configuré. Si ce tournoi est terminé, utilisez "
+                    "`{prefix}end` pour correctement mettre fin au tournoi. Sinon, utilisez "
+                    "`{prefix}reset` pour remettre les informations à 0."
+                ).format(prefix=ctx.clean_prefix)
             )
             return
         config_data = await self.data.guild(guild).all()
@@ -1000,9 +1003,9 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
             config_data["credentials"]["username"], config_data["credentials"]["api"]
         )
         async with ctx.typing():
-            data = await async_http_retry(achallonge.tournaments.show, url, loop=self.bot.loop)
+            data = await async_http_retry(achallonge.tournaments.show(url))
         games = await self.data.custom("GAME", guild.id).all()
-        if data["game"].title() not in games:
+        if data["game_name"].title() not in games:
             message = await ctx.send(
                 _(
                     ":warning: **Le jeu {game} n'est pas enregistré sur le bot !**\n\n"
@@ -1017,7 +1020,7 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
                     "- Liste des stages starters/counters\n"
                     "- Ranking et seeding avec Braacket\n\n"
                     "Souhaitez vous continuer ou annuler ?"
-                ).format(game=data["game"].title(), prefix=ctx.clean_prefix)
+                ).format(game=data["game_name"].title(), prefix=ctx.clean_prefix)
             )
             pred = ReactionPredicate.yes_or_no(message, user=ctx.author)
             start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
@@ -1031,9 +1034,15 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
                 return
             await message.delete()
         del games
-        config_data.update(await self.data.custom("GAME", guild.id, data["game"].title()).all())
-        tournament: ChallongeTournament = ChallongeTournament(
-            guild, ctx.clean_prefix, data, config_data
+        config_data.update(
+            await self.data.custom("GAME", guild.id, data["game_name"].title()).all()
+        )
+        tournament = ChallongeTournament.build_from_api(
+            guild=guild,
+            config=self.data,
+            prefix=ctx.clean_prefix,
+            data=data,
+            config_data=config_data,
         )
 
         def format_datetime(datetime: Optional[datetime]):
@@ -1065,21 +1074,24 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
                 closing=format_datetime(tournament.checkin_stop),
             ),
         )
-        ruleset = guild.get_channel(game["ruleset"])
+        ruleset = guild.get_channel(config_data["ruleset"])
         ruleset = ruleset.mention if ruleset else _("Non défini")
-        role = guild.get_role(game["role"]) or guild.default_role
-        baninfo = game["baninfo"] or _("Non défini")
+        role = guild.get_role(config_data["role"]) or guild.default_role
+        baninfo = config_data["baninfo"] or _("Non défini")
         embed.add_field(
             name=_("Options du jeu"),
             value=_("Règles : {rules}\nRôle de joueur : {role}\nMode de ban : {ban}").format(
                 rules=ruleset, role=role, ban=baninfo,
             ),
         )
-        if game["stages"]:
-            embed.add_field(name=("Stages"), value="".join([f"- {x}\n" for x in game["stages"]]))
-        if game["counterpicks"]:
+        if config_data["stages"]:
             embed.add_field(
-                name=("Counterpicks"), value="".join([f"- {x}\n" for x in game["counterpicks"]])
+                name=("Stages"), value="".join([f"- {x}\n" for x in config_data["stages"]])
+            )
+        if config_data["counterpicks"]:
+            embed.add_field(
+                name=("Counterpicks"),
+                value="".join([f"- {x}\n" for x in config_data["counterpicks"]]),
             )
         embed.set_footer(
             text=_("Fuseau horaire : {tz}").format(tz=tournament.tournament_start.tzname())
