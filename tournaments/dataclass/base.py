@@ -161,39 +161,40 @@ class Match:
         ).format(self)
         if self.tournament.ruleset_channel:
             message += _(
-                ":white_small_square: Les règles du set doivent "
-                "suivre celles énoncées dans {channel}.\n"
+                ":white_small_square: The rules must follow the ones given in {channel}\n"
             ).format(channel=self.tournament.ruleset_channel.mention)
         if self.tournament.stages:
             message += _(
-                ":white_small_square: La liste des stages légaux à l'heure "
-                "actuelle est disponible avec la commande `{prefix}stages`"
+                ":white_small_square: The list of legal stages "
+                "is available with `{prefix}stages` command.\n"
             ).format(prefix=self.tournament.bot_prefix)
         if self.tournament.counterpicks:
             message += _(
-                ":white_small_square: La liste des counterpicks "
-                "est disponible avec la commande `{prefix}counters`"
+                ":white_small_square: The list of counter stages "
+                "is available with `{prefix}counters` command.\n"
             ).format(prefix=self.tournament.bot_prefix)
-        message += _(
-            ":white_small_square: En cas de lag qui rend la partie injouable, utilisez la "
-            "commande `{prefix}lag` pour appeler les T.O. et résoudre la situation.\n"
-            ":white_small_square: **Dès que le set est terminé**, le gagnant envoie le "
-            "score dans {score_channel} avec la commande `{prefix}win`.\n\n"
-        ).format(
-            prefix=self.tournament.bot_prefix, score_channel=self.tournament.scores_channel.mention
+        score_channel = (
+            _("in {channel}").format(channel=self.tournament.scores_channel.mention)
+            if self.tournament.scores_channel
+            else ""
         )
+        message += _(
+            ":white_small_square: In case of lag making the game unplayable, use the "
+            "`{prefix}lag` command to call the T.O. and solve the problem.\n"
+            ":white_small_square: **As soon as the set is done**, the winner sets the "
+            "score {score_channel} with the `{prefix}win` command.\n\n"
+        ).format(prefix=self.tournament.bot_prefix, score_channel=score_channel)
         if self.tournament.baninfo:
             chosen_player = choice([self.player1, self.player2])
-            message += _(
-                ":game_die: **{player}** est tiré au sort pour "
-                "commencer le ban des stages *({baninfo})*."
-            ).format(player=chosen_player.mention, baninfo=self.tournament.baninfo)
+            message += _(":game_die: **{player}** was picked to begin the bans{baninfo}.").format(
+                player=chosen_player.mention, baninfo=f" *({self.tournament.baninfo})*"
+            )
 
         async def send_in_dm():
             nonlocal message
             message += _(
-                "\n\n**Votre channel n'a pas pu être créé en raison d'un problème. Effectuez "
-                "votre set en MP puis rapportez les résultats.**"
+                "\n\n**You channel can't be created because of a problem. "
+                "Do your set in DM and come back to set the result.**"
             )
             players = (self.player1, self.player2)
             for player in players:
@@ -295,18 +296,14 @@ class Match:
                 f"[Guild {self.guild.id}] Both players inactive, DQing "
                 f"both and cancelling set #{self.set}."
             )
-            # support for more than 2 players
-            players_str = (
-                ", ".join([x.mention for x in players][:-1]) + _(" et ") + players[-1].mention
-            )
             await self.player1.destroy()
             await self.player2.destroy()
             await self.channel.delete()
             await self.tournament.to_channel.send(
                 _(
-                    ":timer: **DQ automatique de {players} pour inactivité** : "
-                    "aucune manifestation à temps des joueurs, le set #{set} est annulé."
-                ).format(players=players_str, set=self.set)
+                    ":information_source: **Automatic DQ of {player1} and {player2} for "
+                    "inactivity,** the set #{set} is cancelled."
+                ).format(player1=self.player1.mention, player2=self.player2.mention, set=self.set)
             )
             self.channel = None
             self.cancel()
@@ -319,23 +316,22 @@ class Match:
                 )
                 await player.destroy()
                 await self.channel.send(
-                    _(
-                        ":timer: **DQ automatique de {player} pour inactivité** : "
-                        "aucune manifestation à temps du joueur."
-                    ).format(player=player.mention)
+                    _(":timer: **Automatic DQ of {player} for inactivity.**").format(
+                        player=player.mention
+                    )
                 )
                 await self.tournament.to_channel.send(
                     _(
-                        ":information_source: **DQ automatique** de {player} "
-                        "pour inactivité, set #{set}."
+                        ":information_source: **Automatic DQ** of {player} "
+                        "for inactivity, set #{set}."
                     ).format(player=player.mention, set=self.set)
                 )
                 try:
                     await player.send(
                         _(
-                            "Désolé, tu as été DQ automatiquement car tu "
-                            "n'as pas été actif sur ton channel de set dans "
-                            "les premières minutes qui ont suivi son lancement."
+                            "Sorry, you were disqualified from this tournament "
+                            "because you weren't active in your channel. Contact the T.O. "
+                            "if you believe this is a mistake."
                         )
                     )
                 except discord.HTTPException:
@@ -357,11 +353,9 @@ class Match:
         if self.channel is not None:
             await self.channel.send(
                 _(
-                    ":bell: __Score rapporté__ : **{winner}** gagne **{score}** !\n"
-                    "*En cas d'erreur, appelez un TO ! Un mauvais score intentionnel "
-                    "est passable de DQ et ban du tournoi.*\n"
-                    "*Note : ce channel sera automatiquement supprimé 5 "
-                    "minutes à partir de la dernière activité.*"
+                    ":bell: __Score reported__ : **{winner}** wins **{score}** !\n"
+                    "*In case of a problem, call a T.O. to fix the score.*\n"
+                    "*Note : this channel will be deleted after 5 minutes of inactivity.*"
                 ).format(winner=winner.mention, score=score)
             )
         self.cancel()
@@ -597,64 +591,68 @@ class Tournament:
             return None
 
     async def send_start_messages(self):
+        scores_channel = (
+            _(" in {channel}").format(channel=self.scores_channel.mention)
+            if self.scores_channel
+            else ""
+        )
         messages = {
             self.announcements_channel: _(
-                "Le tournoi **{tournament}** est officiellement lancé ! Bracket : {bracket}\n"
-                ":white_small_square: Vous pouvez y accéder "
-                "à tout moment avec la commande `{prefix}bracket`.\n"
-                ":white_small_square: Vous pouvez consulter les liens de "
-                "stream avec la commande `{prefix}stream`.\n\n"
-                "{participant} On arrête le freeplay ! Le tournoi est sur le "
-                "point de commencer. Veuillez lire les consignes :\n"
-                ":white_small_square: Vos sets sont annoncés dès que disponibles dans "
-                "{queue_channel} : **ne lancez rien sans consulter ce channel**.\n"
-                ":white_small_square: Le ruleset ainsi que les informations pour le "
-                "bannissement des stages sont dispo dans {rules_channel}.\n"
-                ":white_small_square: Le gagnant d'un set doit rapporter le score **dès "
-                "que possible** dans {scores_channel} avec la commande `{prefix}win`.\n"
-                ":white_small_square: Vous pouvez DQ du tournoi avec la commande "
-                "`{prefix}dq`, ou juste abandonner votre set en cours avec `{prefix}ff`.\n"
-                ":white_small_square: En cas de lag qui rend votre set injouable, utilisez "
-                "la commande `{prefix}lag` pour appeler les T.O.\n"
-                ":timer: Vous serez **DQ automatiquement** si vous n'avez pas été actif "
-                "sur votre channel __dans les {delay} minutes qui suivent sa création__."
+                "The tournament **{tournament}** has started! Bracket: {bracket}\n"
+                ":white_small_square: You can access it "
+                "anytime with the `{prefix}bracket` command.\n"
+                ":white_small_square: You can check the current "
+                "streams with the `{prefix}streams` command.\n\n"
+                "{participant} Please read the instructions :\n"
+                ":white_small_square: Your sets are announced in {queue_channel}.\n"
+                "{rules_channel}"
+                ":white_small_square: The winner of a set must report the score **as soon as "
+                "possible**{scores_channel} with the `{prefix}win` command.\n"
+                ":white_small_square: You can disqualify from the tournament with the "
+                "`{prefix}dq` command, or just abandon your current set with `{prefix}ff` "
+                "command.\n"
+                ":white_small_square: In case of lag making the game unplayable, use the `{prefix}"
+                "lag` command to call the T.O.\n"
+                "{delay}."
             ).format(
                 tournament=self.name,
                 bracket=self.url,
                 participant=self.participant_role.mention,
                 queue_channel=self.queue_channel.mention,
-                rules_channel=self.ruleset_channel.mention,
-                scores_channel=self.scores_channel.mention,
-                delay=self.delay,
+                rules_channel=_(
+                    ":white_small_square: The ruleset is available in {channel}.\n"
+                ).format(channel=self.ruleset_channel.mention)
+                if self.ruleset_channel
+                else "",
+                scores_channel=scores_channel,
+                delay=_(
+                    ":timer: **You will automatically be disqualified if you don't talk in your "
+                    "channel within the first {delay} minutes.**"
+                ).format(delay=self.delay)
+                if self.delay != 0
+                else "",
                 prefix=self.bot_prefix,
             ),
             self.scores_channel: _(
-                ":information_source: La prise en charge des scores "
-                "pour le tournoi **{tournament}** est automatisée :\n"
-                ":white_small_square: Seul **le gagnant du set** envoie "
-                "le score de son set, précédé par la **commande** `{prefix}win`.\n"
-                ":white_small_square: Le message du score doit contenir le "
-                "**format suivant** : `{prefix}win 2-0, 3-2, 3-1, ...`.\n"
-                ":white_small_square: Un mauvais score intentionnel, perturbant le "
-                "déroulement du tournoi, est **passable de DQ et ban**.\n"
-                ":white_small_square: Consultez le bracket afin de "
-                "**vérifier** les informations : {url}\n"
-                ":white_small_square: En cas de mauvais score : "
-                "contactez un TO pour une correction manuelle.\n\n"
-                ":satellite_orbital: Chaque score étant **transmis un par "
-                "un**, il est probable que la communication prenne jusqu'à 30 secondes."
+                ":information_source: Management of the scores for the "
+                "tournament **{tournament}** is automated:\n"
+                ":white_small_square: Only **the winner of the set** "
+                "sends his score with the `{prefix}win` command.\n"
+                ":white_small_square: You must follow this "
+                "format: `{prefix}win 2-0, 3-2, 3-1, ...`.\n"
+                ":white_small_square: Look at the bracket to **check** the informations: {url}\n"
+                ":white_small_square: In case of a wrong input, contact a T.O. for a manual fix."
             ).format(tournament=self.name, url=self.url, prefix=self.bot_prefix),
             self.queue_channel: _(
-                ":information_source: **Le lancement des sets est automatisé.** "
-                "Veuillez suivre les consignes de ce channel, que ce soit par le bot ou les TOs.\n"
-                ":white_small_square: Tout passage on stream sera notifié à "
-                "l'avance, ici, dans votre channel (ou par DM).\n"
-                ":white_small_square: Tout set devant se jouer en BO5 "
-                "est indiqué ici, et également dans votre channel.\n"
-                ":white_small_square: La personne qui commence les bans "
-                "est indiquée dans votre channel (en cas de besoin : `{prefix}flip`).\n\n"
-                ":timer: Vous serez **DQ automatiquement** si vous n'avez pas été actif "
-                "sur votre channel __dans les {delay} minutes qui suivent sa création__."
+                ":information_source: **Set launch is automated.** "
+                "Please follow the instructions in this channel.\n"
+                ":white_small_square: Any streamed set will be "
+                "announced here, and in your channel.\n"
+                ":white_small_square: Any BO5 set will be precised here and in your channel.\n"
+                ":white_small_square: The player beginning the bans is picked and "
+                "annonced in your channel (you can also use `{prefix}flip`).\n\n"
+                ":timer: **You will be disqualified if you were not active in your channel** "
+                "within the {delay} first minutes after the set launch."
             ).format(delay=self.delay, prefix=self.bot_prefix),
         }
         for channel, message in messages.items():
@@ -680,9 +678,7 @@ class Tournament:
                     name = "Winner bracket"
                 else:
                     name = "Loser bracket"
-                channel = await self.guild.create_category(
-                    name, reason=_("Nouvelle catégorie de sets.")
-                )
+                channel = await self.guild.create_category(name, reason=_("New category of sets."))
                 categories.append(channel)
                 return channel
 

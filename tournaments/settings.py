@@ -31,7 +31,7 @@ class ChallongeURLConverter(commands.Converter):
         result = CHALLONGE_URL_RE.match(argument)
         link_id = result.group("id")
         if not link_id:
-            raise commands.BadArgument(_("URL Challonge invalide."))
+            raise commands.BadArgument(_("Invalid Challonge URL."))
         return link_id
 
 
@@ -41,10 +41,7 @@ class GameSetting(commands.Converter):
         games = await config.custom("GAME", ctx.guild.id).all()
         if argument not in games:
             raise commands.BadArgument(
-                _(
-                    "Ce jeu n'existe pas. Vérifiez le nom, et utilisez des "
-                    "guillmets s'il y a des espaces."
-                )
+                _("This game doesn't exist. Check the name, and use quotes if there are spaces.")
             )
         return argument
 
@@ -83,31 +80,31 @@ class Settings(MixinMeta):
         text = ""
         if not_set["channels"]:
             text += (
-                _("Les channels suivants ne sont pas configurés:\n")
+                _("The following channels are not configured:\n")
                 + "".join([f"- {x}\n" for x in not_set["channels"]])
                 + "\n"
             )
         if not_set["roles"]:
             text += (
-                _("Les roles suivants ne sont pas configurés:\n")
+                _("The following roles are not configured:\n")
                 + "".join([f"- {x}\n" for x in not_set["roles"]])
                 + "\n"
             )
         if lost["channels"]:
             text += (
-                _("Les channels suivants ont été perdus:\n")
+                _("The following channels were lost:\n")
                 + "".join([f"- {x}\n" for x in not_set["channels"]])
                 + "\n"
             )
         if lost["roles"]:
             text += (
-                _("Les roles suivants ont été perdus:\n")
+                _("The following roles were lost:\n")
                 + "".join([f"- {x}\n" for x in not_set["roles"]])
                 + "\n"
             )
         text += _(
-            "Merci de configurer les paramètres manquants avec les commandes "
-            "`{prefix}tournamentset channels` et `{prefix}tournamentset roles`."
+            "Please configure the missing settings with the "
+            "`{prefix}tournamentset channels` and `{prefix}tournamentset roles` commands."
         ).format(prefix=ctx.clean_prefix)
         return text
 
@@ -115,56 +112,56 @@ class Settings(MixinMeta):
     @checks.admin_or_permissions(administrator=True)
     async def challongeset(self, ctx: commands.Context):
         """
-        Règle les informations Challonge pour ce serveur.
+        Configure the Challonge credentials for this server.
 
-        Vous allez devoir utiliser le même compte Challonge que celui qui crée les tournois.
+        You will have to use the same Challonge account as the one creating the tournaments.
 
-        Vous avez besoin d'un nom d'utilisateur et d'une clé API, obtenable dans les paramètres \
-de votre compte (Developer API).
+        You need a username and an API key, obtainable in the user settings (Developer API).
         https://challonge.com/settings/developer
 
-        Utilisez `[p]challongeset username` et `[p]challongeset api`.
+        Use `[p]challongeset username` and `[p]challongeset api`.
 
-        :warning: **Attention, votre clé d'API est secrète ! Soyez sûr de ne pas envoyer cette \
-clé à n'importe qui.** La commande `[p]challongeset api` vous demandera votre clé en MP, pas \
-besoin de la fournir directement.
+        :warning: **Careful, your API key is private ! Be sure to do not send this key to \
+anyone**. The command `[p]challongeset api` will ask for your key in DM, no need to provide \
+it directly.
         """
         pass
 
     @challongeset.command(name="api")
     async def challongeset_api(self, ctx: commands.Context, api_key: Optional[str]):
         """
-        Réglage de la clé API Challonge.
+        Set the Challonge API Key
 
-        Vous pouvez l'obtenir dans les paramètres de votre compte challonge, catégorie "Developer \
-API".
+        You can obtain this in your Challonge user settings, "Developer API" category.
         **https://challonge.com/settings/developer**
 
-        :warning: **Attention, cette clé est secrète !**
+        :warning: **Careful, this key is secret !**
         """
         guild = ctx.guild
         if api_key is not None:
             if ctx.channel.has_permissions(guild.me).manage_messages:
-                await ctx.message.delete()
+                try:
+                    await ctx.message.delete()
+                except Exception:
+                    pass
             await self.data.guild(guild).credentials.username.set(api_key)
-            await ctx.send(_("La clé API a bien été réglée."))
+            await ctx.send(_("The API key was successfully set."))
             return
         try:
             await ctx.author.send(
                 _(
-                    "Veuillez envoyer la clé API Challonge ici.\n"
-                    "Ouvrez ce site, ou aller dans vos paramètres d'utilisateur Challonge, "
-                    'catégorie "Developer API", pour obtenir votre clé.\n'
+                    "Please send the Challonge API key here.\n"
+                    'Go to this website, or go in your Challonge user settings, "Developer API" '
+                    "category, to obtain your key.\n"
                     "**https://challonge.com/settings/developer**"
                 )
             )
         except discord.HTTPException:
             await ctx.send(
                 _(
-                    "Je n'ai pas pu vous envoyer de message privé. Activez les messages sur ce "
-                    "serveur, ou utilisez la commande comme ceci: `{prefix}challongeset api <clé "
-                    "API>`.\nAttention cependant à ne pas utiliser cette commande n'importe où, "
-                    "votre clé doit rester secrète !"
+                    "I can't send you a DM. Activate the DMs on this server, or use the command "
+                    "like this: `{prefix}challongeset api <api key>`.\n"
+                    "Pay attention to where you type this command, your key must stay private!"
                 ).format(prefix=ctx.clean_prefix)
             )
             return
@@ -172,37 +169,37 @@ API".
         try:
             message = await self.bot.wait_for("message", check=pred, timeout=300)
         except asyncio.TimeoutError:
-            await ctx.author.send(_("Requête expirée."))
+            await ctx.author.send(_("Request timed out."))
             return
         await self.data.guild(guild).credentials.api.set(message.content)
-        await ctx.author.send(_("La clé API a bien été réglée."))
+        await ctx.author.send(_("The API key was successfully set."))
 
     @challongeset.command(name="username")
     async def challongeset_username(self, ctx: commands.Context, username: str):
         """
-        Réglage du nom d'utilisateur Challonge utilisé sur ce serveur.
+        Set the Challonge username
 
-        Exemple: `[p]challongeset username laggron42`
+        Example: `[p]challongeset username laggron42`
         """
         guild = ctx.guild
         await self.data.guild(guild).credentials.username.set(username)
-        await ctx.send(_("Le nouveau nom d'utilisateur a bien été réglé."))
+        await ctx.send(_("The username was successfully set."))
 
-    @commands.group()
+    @commands.group(aliases=["tset"])
     @checks.admin_or_permissions(administrator=True)
     async def tournamentset(self, ctx: commands.Context):
         """
-        Paramètres des tournois sur ce serveur.
+        Tournament settings on this server.
 
-        Note: seul les administrateurs ont accès à ces commandes, pas les T.O.
-        Tapez `[p]firstsetup` pour plus d'infos sur les permissions.
+        Only administrators have access to those commands, not the T.O.
+        Type `[p]firstsetup` for more info on permissions.
         """
         pass
 
     @tournamentset.group(name="channels")
     async def tournamentset_channels(self, ctx: commands.Context):
         """
-        Réglage des différents channels.
+        Channels settings.
         """
         pass
 
@@ -211,261 +208,254 @@ API".
         self, ctx: commands.Context, *, channel: discord.TextChannel
     ):
         """
-        Règle le channel des annonces.
+        Set the announcements channel.
 
-        Les annonces suivantes y seront envoyées :
-        - Début des inscriptions
-        - Lancement du tournoi
-        - Fin du tournoi
+        The following announcements will be sent there :
+        - Start of register
+        - Tournament launch
+        - Tournament end
         """
         guild = ctx.guild
         if not channel.permissions_for(guild.me).read_messages:
-            await ctx.send(_("Je n'ai pas la permission de lire les messages dans ce channel."))
+            await ctx.send(_("I don't have the permission to read messages in this channel."))
         elif not channel.permissions_for(guild.me).send_messages:
-            await ctx.send(_("Je n'ai pas la permission d'envoyer de messages dans ce channel."))
+            await ctx.send(_("I don't have the permission to send messages in this channel."))
         else:
             await self.data.guild(guild).channels.announcements.set(channel.id)
-            await ctx.send(_("Le nouveau channel est bien réglé."))
+            await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="checkin")
     async def tournamentset_channels_checkin(
         self, ctx: commands.Context, *, channel: Optional[discord.TextChannel]
     ):
         """
-        Règle le channel du check-in.
+        Set the check-in channel.
 
-        Le début du check-in y sera annoncé, et les gens devront y entrer une commande pour \
-valider leur inscription.
+        The start of the check-in will be announced there, and participants will have to enter a \
+command to confirm their registration.
 
-        Donnez aucun channel pour ne pas restreindre l'accès à la commande à un channel.
+        Don't set this to keep the command channel unrestricted (can be typed anywhere).
         """
         guild = ctx.guild
         if channel is None:
             await self.data.guild(guild).channels.checkin.set(None)
             await ctx.send(
                 _(
-                    "Le check-in se fera désormais dans n'importe quel channel. Attention "
-                    "cependant, les permissions de Red s'appliquent toujours."
+                    "The check-in will now be available in any channel. Careful, "
+                    "Red's permissions system still applies."
                 )
             )
             return
         if not channel.permissions_for(guild.me).read_messages:
-            await ctx.send(_("Je n'ai pas la permission de lire les messages dans ce channel."))
+            await ctx.send(_("I don't have the permission to read messages in this channel."))
         elif not channel.permissions_for(guild.me).send_messages:
-            await ctx.send(_("Je n'ai pas la permission d'envoyer de messages dans ce channel."))
+            await ctx.send(_("I don't have the permission to send messages in this channel."))
         else:
             await self.data.guild(guild).channels.checkin.set(channel.id)
-            await ctx.send(_("Le nouveau channel est bien réglé."))
+            await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="register")
     async def tournamentset_channels_register(
         self, ctx: commands.Context, *, channel: Optional[discord.TextChannel]
     ):
         """
-        Règle le channel des inscriptions.
+        Set the registration channel.
 
-        Le début des inscriptions y sera annoncé, et les gens devront y entrer une commande pour \
-s'inscrire ou se désinscrire.
+        The start of the registration will be announced there, and participants will have to \
+enter a command to register or unregister.
 
-        Donnez aucun channel pour ne pas restreindre l'accès à la commande à un channel.
+        Don't set this to keep the command channel unrestricted (can be typed anywhere).
         """
         guild = ctx.guild
         if channel is None:
             await self.data.guild(guild).channels.register.set(None)
             await ctx.send(
                 _(
-                    "Les inscriptions se feront désormais dans n'importe quel channel. Attention "
-                    "cependant, les permissions de Red s'appliquent toujours."
+                    "The registration will now be available in any channel. Careful, "
+                    "Red's permissions system still applies."
                 )
             )
             return
-        if not channel.permissions_for(guild.me).send_messages:
-            await ctx.send(_("Je n'ai pas la permission d'envoyer de messages dans ce channel."))
+        if not channel.permissions_for(guild.me).read_messages:
+            await ctx.send(_("I don't have the permission to read messages in this channel."))
+        elif not channel.permissions_for(guild.me).send_messages:
+            await ctx.send(_("I don't have the permission to send messages in this channel."))
         else:
             await self.data.guild(guild).channels.register.set(channel.id)
-            await ctx.send(_("Le nouveau channel est bien réglé."))
+            await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="scores")
     async def tournamentset_channels_scores(
         self, ctx: commands.Context, *, channel: Optional[discord.TextChannel]
     ):
         """
-        Règle le channel d'entrée des scores.
+        Set the score entry channel.
 
-        Les gens devront y entrer une commande pour enregistrer leur résultat.
+        Members will have to enter a command there to register their score.
 
-        Donnez aucun channel pour ne pas restreindre l'accès à la commande à un channel.
+        Don't set this to keep the command channel unrestricted (can be typed anywhere).
         """
         guild = ctx.guild
         if channel is None:
             await self.data.guild(guild).channels.scores.set(None)
             await ctx.send(
                 _(
-                    "L'entrée des scores se fera désormais dans n'importe quel channel. Attention "
-                    "cependant, les permissions de Red s'appliquent toujours."
+                    "The score entry will now be available in any channel. Careful, "
+                    "Red's permissions system still applies."
                 )
             )
             return
         if not channel.permissions_for(guild.me).read_messages:
-            await ctx.send(_("Je n'ai pas la permission de lire les messages dans ce channel."))
+            await ctx.send(_("I don't have the permission to read messages in this channel."))
         elif not channel.permissions_for(guild.me).send_messages:
-            await ctx.send(_("Je n'ai pas la permission d'envoyer de messages dans ce channel."))
+            await ctx.send(_("I don't have the permission to send messages in this channel."))
         else:
             await self.data.guild(guild).channels.scores.set(channel.id)
-            await ctx.send(_("Le nouveau channel est bien réglé."))
+            await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="queue")
     async def tournamentset_channels_queue(
         self, ctx: commands.Context, *, channel: discord.TextChannel
     ):
         """
-        Règle le channel d'annonces des sets.
+        Define the set announcement channel. 
         """
         guild = ctx.guild
         if not channel.permissions_for(guild.me).read_messages:
-            await ctx.send(_("Je n'ai pas la permission de lire les messages dans ce channel."))
+            await ctx.send(_("I don't have the permission to read messages in this channel."))
         elif not channel.permissions_for(guild.me).send_messages:
-            await ctx.send(_("Je n'ai pas la permission d'envoyer de messages dans ce channel."))
+            await ctx.send(_("I don't have the permission to send messages in this channel."))
         else:
             await self.data.guild(guild).channels.queue.set(channel.id)
-            await ctx.send(_("Le nouveau channel est bien réglé."))
+            await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="stream")
     async def tournamentset_channels_stream(
         self, ctx: commands.Context, *, channel: discord.TextChannel
     ):
         """
-        Règle le channel d'annonces des streams.
-
-        Il est conseillé de garder ce channel restreint aux T.O. et aux streamers.
+        Set the stream announcement channel.
         """
         guild = ctx.guild
         if not channel.permissions_for(guild.me).read_messages:
-            await ctx.send(_("Je n'ai pas la permission de lire les messages dans ce channel."))
+            await ctx.send(_("I don't have the permission to read messages in this channel."))
         elif not channel.permissions_for(guild.me).send_messages:
-            await ctx.send(_("Je n'ai pas la permission d'envoyer de messages dans ce channel."))
+            await ctx.send(_("I don't have the permission to send messages in this channel."))
         else:
             await self.data.guild(guild).channels.stream.set(channel.id)
-            await ctx.send(_("Le nouveau channel est bien réglé."))
+            await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="to")
     async def tournamentset_channels_to(
         self, ctx: commands.Context, *, channel: discord.TextChannel
     ):
         """
-        Règle le channel des T.O.
+        Set the T.O. channel.
 
-        Il est conseillé de garder ce channel restreint aux T.O. uniquement.
-        Les annonces suivantes y seront envoyées :
-        - Lag test demandé avec la commande `[p]lag`
-        - Set prenant trop de temps
-        - DQ automatique d'un joueur pour inactivité
+        It is recommanded to keep this channel closed to T.O.s only.
+        The following announcements will be sent there:
+        - Lag tests requested with the `[p]lag` command
+        - Sets slowing down the bracket
+        - Automatic DQs because of inactivity
 
-        Attention, ce réglage ne donne pas de permissions supplémentaires aux personnes ayant
-        accès au channel. Les paramètres de Red déterminent ceux ayant accès aux commandes. Tapez
-        `[p]firstsetup` pour plus d'infos.
+        Careful, this channel does not grant additional permissions to people with write access.
+        The Red permissions system will define if someone has access to the commands. Type
+        `[p]firstsetup` for more info.
         """
         guild = ctx.guild
         if not channel.permissions_for(guild.me).read_messages:
-            await ctx.send(_("Je n'ai pas la permission de lire les messages dans ce channel."))
+            await ctx.send(_("I don't have the permission to read messages in this channel."))
         elif not channel.permissions_for(guild.me).send_messages:
-            await ctx.send(_("Je n'ai pas la permission d'envoyer de messages dans ce channel."))
+            await ctx.send(_("I don't have the permission to send messages in this channel."))
         else:
             await self.data.guild(guild).channels.to.set(channel.id)
-            await ctx.send(_("Le nouveau channel est bien réglé."))
+            await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="category")
     async def tournamentset_channels_category(
         self, ctx: commands.Context, *, category: discord.CategoryChannel
     ):
         """
-        Règle la catégorie de vos channels de tournois.
+        Set the category of your tournaments channels.
 
-        Cette catégorie sera utilisée pour positionner la création de channels de sets.
-        Une ou plusieurs catégories seront créés juste en dessous de la catégorie réglée avec \
-cette commande. Ces catégories créées serviront aux channels de sets.
+        This category will be used for the position of the categories containing the sets channel.
+        One or more categories will be created below the category defined with this command.
 
-        Vous pouvez donner le nom complet de la catégorie ou son ID.
+        You can either give the complete name of the category, or its ID.
         """
         guild = ctx.guild
         await self.data.guild(guild).channels.category.set(category.id)
-        await ctx.send(_("La nouvelle catégorie est bien réglée."))
+        await ctx.send(_("The category was successfully set."))
 
     @tournamentset.group(name="roles")
     async def tournamentset_roles(self, ctx: commands.Context):
         """
-        Réglage des différents rôles.
+        Roles settings.
 
-        Donnez le nom complet du rôle ou son ID.
+        Give the complete name of the role, or its ID.
 
-        Le rôle de T.O. est optionel si vos T.O. sont également des modérateurs sur votre serveur.
-        Dans le cas contraire, privilégiez le système de permissions de Red avec les commande
-        `[p]set addadminrole` et `[p]set addmodrole`.
-        Pour plus d'infos sur les permissions, tapez `[p]firstsetup`.
+        The T.O. role is optional if your T.O. are also moderators of this server. Otherwise,
+        you should rather use the Red permissions system with `[p]set addadminrole` and
+        `[p]set addmodrole`.
+        For more info, type `[p]firstsetup`.
         """
         pass
 
     @tournamentset_roles.command(name="participant")
     async def tournamentset_roles_participant(self, ctx: commands.Context, *, role: discord.Role):
         """
-        Règle le rôle de participant au tournoi.
+        Set the participant role in the tournament.
 
-        Ce rôle sera assigné aux membres dès leur inscription, et retiré une fois le tournoi \
-terminé.
+        This role will be assigned to memebers as soon as they register, and removed once the \
+tournament ends.
         """
         guild = ctx.guild
         if role.position >= guild.me.top_role.position:
-            await ctx.send(
-                _("Ce rôle est trop élevé. Placez le en dessous de mon rôle principal.")
-            )
+            await ctx.send(_("This role is too high. Place it below my main role."))
             return
         await self.data.guild(guild).roles.participant.set(role.id)
-        await ctx.send(_("Le nouveau rôle est bien réglé."))
+        await ctx.send(_("The role was successfully set."))
 
     @tournamentset_roles.command(name="streamer")
     async def tournamentset_roles_streamer(self, ctx: commands.Context, *, role: discord.Role):
         """
-        Règle le rôle de streamer, ou casteur.
+        Set the streamer role.
 
-        Ce rôle donnera accès aux channels de sets, ainsi qu'aux commandes de streamer.
+        This role will give access to the sets channels, and the streamer commands.
         """
         guild = ctx.guild
         if role.position >= guild.me.top_role.position:
-            await ctx.send(
-                _("Ce rôle est trop élevé. Placez le en dessous de mon rôle principal.")
-            )
+            await ctx.send(_("This role is too high. Place it below my main role."))
             return
         await self.data.guild(guild).roles.streamer.set(role.id)
-        await ctx.send(_("Le nouveau rôle est bien réglé."))
+        await ctx.send(_("The role was successfully set."))
 
     @tournamentset_roles.command(name="to")
     async def tournamentset_roles_to(self, ctx: commands.Context, *, role: discord.Role):
         """
-        Règle le rôle de T.O. (tournament organizer)
+        Set the T.O. role (Tournament Organizer).
 
-        Ce rôle donnera accès aux commandes de tournois (sauf `[p]challongeset` et
-        `[p]tournamentset`).
+        This role gives access to the tournament commands (except `[p]challongeset` and \
+`[p]tournamentset`).
 
-        :warning: **Utilisez ce rôle uniquement si vous avez besoin de séparer les modérateurs \
-des T.O.**
-        Dans le cas échéant, il est fortement recommandé d'utiliser les commandes de Red : \
-`[p]set addadminrole` et `[p]set addmodrole`. Cela adaptera les permissions de l'intégralité des \
-commandes de ce bot à vos modérateurs et administrateurs.
+        :warning: **Use this setting only if you need to separate moderators from T.O.**
+        Otherwise, it is strongly recommanded to use the Red commands: `[p]set addadminrole` and \
+`[p]set addmodrole`. This will adapt the permissions of all commands from this bot to your \
+moderators and admins.
         """
         guild = ctx.guild
         if role.permissions.kick_members or role.permissions.manage_roles:
             # we consider this role is a mod role
             message = await ctx.send(
                 _(
-                    ":warning: Ce rôle semble avoir des permissions de modérateur ou "
-                    "d'administrateur.\n\n"
-                    "Il est fortement recommandé d'utiliser les commandes "
-                    "de Red, `{prefix}set addadminrole` et `{prefix}set addmodrole`, "
-                    "pour configurer vos rôles de modération et d'administration, adaptant les "
-                    "permissions de l'intégralité des commandes du bot à votre staff.\n"
-                    "Ce réglage est conseillé pour les T.O. n'étant pas modérateurs.\n"
-                    "Pour plus d'informations, tapez `{prefix}firstsetup`.\n\n"
-                    "Êtes vous sûr de vouloir continuer ?"
+                    ":warning: This role seems to have moderator or administrator permissions.\n\n"
+                    "It is strongly recommanded to use the Red permissions system with `{prefix}"
+                    "set addadminrole` and `{prefix}set addmodrole` to configure your moderator "
+                    "and administrator roles, adapting the permissions of all commands of this "
+                    "bot to your staff.\n"
+                    "This setting is recommanded for T.O.s that aren't moderators.\n"
+                    "For more info, type `{prefix}firstsetup`.\n\n"
+                    "Do you want to continue?"
                 ).format(prefix=ctx.clean_prefix)
             )
             pred = ReactionPredicate.yes_or_no(message, user=ctx.author)
@@ -473,7 +463,7 @@ commandes de ce bot à vos modérateurs et administrateurs.
             try:
                 await self.bot.wait_for("reaction_add", check=pred, timeout=60)
             except asyncio.TimeoutError:
-                await ctx.send(_("Requête expirée."))
+                await ctx.send(_("Request timed out."))
                 if ctx.channel.permissions_for(guild.me).manage_messages:
                     try:
                         await message.clear_reactions()
@@ -481,43 +471,41 @@ commandes de ce bot à vos modérateurs et administrateurs.
                         pass
                 return
             if pred.result is False:
-                await ctx.send(_("Annulation..."))
+                await ctx.send(_("Cancelling..."))
                 return
         if role.position >= guild.me.top_role.position:
-            await ctx.send(
-                _("Ce rôle est trop élevé. Placez le en dessous de mon rôle principal.")
-            )
+            await ctx.send(_("This role is too high. Place it below my main role."))
             return
         await self.data.guild(guild).roles.to.set(role.id)
-        await ctx.send(_("Le nouveau rôle est bien réglé."))
+        await ctx.send(_("The role was successfully set."))
 
     @tournamentset.group(name="games")
     async def tournamentset_games(self, ctx: commands.Context):
         """
-        Configure les différents jeux des tournois.
+        Configure the different games of the tournaments.
 
-        Utilisez d'abord `[p]tournamentset games add`, puis une explication vous sera donnée sur \
-le reste des commandes.
+        First use `[p]tournamentset games add`, then an explaination will be given on the \
+other commands.
         """
         pass
 
     @tournamentset_games.command(name="add")
     async def tournamentset_games_add(self, ctx: commands.Context, *, name: str):
         """
-        Ajoute un nouveau jeu dans la liste.
+        Add a new game to the list.
 
-        Le nom doit être le nom exact tel qu'il est affiché sur Challonge.
+        The name must be the exact same as how it is shown on Challonge.
 
-        Exemple: "Super Smash Bros. Ultimate"
+        Example: "Super Smash Bros. Ultimate"
         """
         guild = ctx.guild
         games = await self.data.custom("GAME", guild.id).all()
         if name in games:
             await ctx.send(
                 _(
-                    "Ce jeu existe déjà.\n"
-                    "Supprimez le avec `{prefix}tournamentset games delete` ou éditez son "
-                    "nom avec `{prefix}tournamentset games edit`."
+                    "This game already exists.\n"
+                    "Delete it with `{prefix}tset games delete` or edit its name "
+                    "with `{prefix}tset games edit`."
                 ).format(prefix=ctx.clean_prefix)
             )
             return
@@ -525,21 +513,20 @@ le reste des commandes.
         await self.data.custom("GAME", guild.id, name).role.set(None)
         await ctx.send(
             _(
-                "Jeu ajouté à la liste !\n\n"
-                "Vous pouvez désormais effectuer plusieurs réglages :\n"
-                "- `{prefix}tournamentset games ruleset` : Réglage du channel de ruleset\n"
-                "- `{prefix}tournamentset games role` : Réglage du rôle de joueur\n"
-                "- `{prefix}tournamentset games baninfo` : Infos sur les bans de stage "
-                "(ex: 2-3-1)\n"
-                "- `{prefix}tournamentset games stages` : Liste des stages autorisés\n"
-                "- `{prefix}tournamentset games counters` : Liste des counters autorisés\n"
-                "- `{prefix}tournamentset games ranking` : Réglage du ranking Braacket\n\n"
-                "- `{prefix}tournamentset games edit` : Editez le nom de ce jeu\n"
-                "- `{prefix}tournamentset games delete` : Supprimez ce jeu de la liste\n\n"
-                "Tous ces réglages sont optionels, mais apporteront plus de détails aux joueurs, "
-                "ainsi que des nouvelles commandes (comme `{prefix}stages` ou `{prefix}rules`).\n"
-                "Attention, si le rôle n'est pas réglé, le rôle @everyone sera utilisé par "
-                "défaut pour les permissions et la mention à l'ouverture des inscriptions."
+                "Game added to the list!\n\n"
+                "You can now do multiple settings:\n"
+                "- `{prefix}tset games ruleset` : Set the ruleset channel\n"
+                "- `{prefix}tset games role` : Set the player role\n"
+                "- `{prefix}tset games baninfo` : Infos on the ban mode (ex: 2-3-1)\n"
+                "- `{prefix}tset games stages` : List of authorized stages\n"
+                "- `{prefix}tset games counters` : List of authorized counters\n"
+                "- `{prefix}tset games ranking` : Braacket settings\n\n"
+                "- `{prefix}tset games edit` : Edit the name of this game\n"
+                "- `{prefix}tset games delete` : Delete this game from the list\n\n"
+                "Those settings are optionnal, but they will bring more details to the player "
+                "and more commands (such as `{prefix}stages` or `{prefix}rules`).\n"
+                "Careful, if the role isn't set, the @everyone role will be used by default "
+                "for permissions when starting the registration."
             ).format(prefix=ctx.clean_prefix)
         )
 
@@ -548,12 +535,12 @@ le reste des commandes.
         self, ctx: commands.Context, old_name: GameSetting, new_name: str
     ):
         """
-        Edite le nom d'un jeu dans la liste.
+        Edit the name of a game in the list.
 
-        Donnez le nom de l'ancien jeu, puis son nouveau nom.
-        Utilisez des guillmets s'il y a des espaces.
+        Give the old name of the game, then its new name.
+        Use quotes if there are spaces.
 
-        Exemple: [p]tournamentset games edit "Super Smqsh Bros. Ultimate" \
+        Example: [p]tournamentset games edit "Super Smqsh Bros. Ultimate" \
 "Super Smash Bros Ultimate"
         """
         guild = ctx.guild
@@ -561,29 +548,29 @@ le reste des commandes.
             content = games[old_name]
             games[new_name] = content
             del games[old_name]
-        await ctx.send(_("Le nom a bien été édité !"))
+        await ctx.send(_("The name was successfully edited."))
 
     @tournamentset_games.command(name="delete", aliases=["del", "remove"])
     async def tournamentset_games_delete(self, ctx: commands.Context, game: GameSetting):
         """
-        Supprime un jeu de la liste.
+        Delete a game from the list.
         """
         guild = ctx.guild
         async with self.data.custom("GAME", guild.id).all() as games:
             del games[game]
-        await ctx.send(_("Le jeu a bien été supprimé de la liste."))
+        await ctx.send(_("The game was successfully removed from the list."))
 
     @tournamentset_games.command(name="list")
     async def tournamentset_games_list(self, ctx: commands.Context):
         """
-        Affiche tous les jeux enregistrés.
+        Display all saved games.
         """
         guild = ctx.guild
         async with self.data.custom("GAME", guild.id).all() as games:
             if not games:
-                await ctx.send(_("Aucun jeu enregistré."))
+                await ctx.send(_("No saved game."))
                 return
-            text = _("Liste des jeux enregistrés :\n\n")
+            text = _("List of saved games:\n\n")
             for game in games.keys():
                 text += f"- {game}\n"
         for page in pagify(text):
@@ -592,11 +579,11 @@ le reste des commandes.
     @tournamentset_games.command(name="show")
     async def tournamentset_games_show(self, ctx: commands.Context, game: GameSetting):
         """
-        Affiche les réglages d'un jeu.
+        Show the settings of a game
         """
         guild = ctx.guild
         if not ctx.channel.permissions_for(guild.me).embed_links:
-            await ctx.send(_("J'ai besoin de la permission d'intégrer des liens dans ce channel."))
+            await ctx.send(_("I need the `Embed links` permission in this channel."))
             return
         data = await self.data.custom("GAME", guild.id, game).all()
         role_id = data["role"]
@@ -604,21 +591,19 @@ le reste des commandes.
             role = "@everyone"
         else:
             role = guild.get_role(role_id)
-            role = role.name if role else _("Rôle perdu.")
+            role = role.name if role else _("Lost role.")
         ruleset = guild.get_channel(data["ruleset"])
-        ruleset = ruleset.mention if ruleset else _("Channel perdu.")
-        baninfo = data["baninfo"] if data["baninfo"] else _("Non réglé.")
-        embed = discord.Embed(title=_("Réglages du jeu {game}").format(game=game))
+        ruleset = ruleset.mention if ruleset else _("Lost channel.")
+        baninfo = data["baninfo"] if data["baninfo"] else _("Not set.")
+        embed = discord.Embed(title=_("Settings of game {game}").format(game=game))
         embed.description = _(
-            "Rôle de joueur : {role}\n"
-            "Channel des règles : {channel}\n"
-            "Infos de ban : {baninfo}"
+            "Player role: {role}\n" "Rules channel: {channel}\n" "Ban info: {baninfo}"
         ).format(role=role, channel=ruleset, baninfo=baninfo)
         if data["stages"]:
             embed.add_field(name=_("Stages"), value="\n".join([f"- {x}" for x in data["stages"]]))
         if data["counterpicks"]:
             embed.add_field(
-                name=_("Contres"), value="\n".join([f"- {x}" for x in data["counters"]])
+                name=_("Counters"), value="\n".join([f"- {x}" for x in data["counters"]])
             )
         if data["ranking"]["league_name"]:
             embed.add_field(
@@ -628,7 +613,7 @@ le reste des commandes.
                 ),
             )
         else:
-            embed.add_field(name=_("Ranking league"), value=_("Pas configuré."))
+            embed.add_field(name=_("Ranking league"), value=_("Not set."))
         await ctx.send(embed=embed)
 
     @tournamentset_games.command(name="ruleset")
@@ -636,104 +621,103 @@ le reste des commandes.
         self, ctx: commands.Context, game: GameSetting, *, channel: discord.TextChannel
     ):
         """
-        Définis le channel des règles pour un jeu.
+        Set the channel of the rules for a game.
 
-        Exemple: `[p]tournamentset games ruleset "Super Smash Bros. Ultimate" #règles-tournois`
+        Example: `[p]tournamentset games ruleset "Super Smash Bros. Ultimate" #tournament-rules`
         """
         guild = ctx.guild
         await self.data.custom("GAME", guild.id, game).ruleset.set(channel.id)
-        await ctx.send(_("Le nouveau channel est bien réglé."))
+        await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_games.command(name="role")
     async def tournamentset_games_role(
         self, ctx: commands.Context, game: GameSetting, *, role: Optional[discord.Role]
     ):
         """
-        Définis le rôle de joueur pour un jeu.
+        Define the player role.
 
-        Ce rôle sera utilisé pour :
-        - Régler les permissions du channel d'inscriptions lorsqu'elles sont ouvertes
-        - Mentionner les joueurs à l'ouverture des inscriptions
+        This role will be used for:
+        - Setting the permissions of the registration channel when they are opened
+        - Mention players when opening the registration
 
-        Donnez le nom complet du rôle ou son ID.
+        Give the entire name of the role or its ID.
 
-        Si ce rôle n'est pas fourni, le rôle @everyone est utilisé par défaut (sans mention).
-        Utilisez la commande sans indiquer de rôle pour le réinitialiser à sa valeur par défaut.
+        If this role isn't set, the @everyone role is used by default (without pinging).
+        Use this command without role to reset it to its initial state.
         """
         guild = ctx.guild
         if role is None:
             await self.data.custom("GAME", guild.id, game).role.set(None)
-            await ctx.send(_("Le rôle a été réinitialisé à sa valeur par défaut."))
+            await ctx.send(_("The role was reset to its initial state."))
         else:
             await self.data.custom("GAME", guild.id, game).role.set(role.id)
-            await ctx.send(_("Le nouveau rôle est bien réglé."))
+            await ctx.send(_("The role was successfully set."))
 
     @tournamentset_games.command(name="baninfo")
     async def tournamentset_games_baninfo(
         self, ctx: commands.Context, game: GameSetting, *, text: Optional[str]
     ):
         """
-        Définis les infos sur les bans (ex: 2-3-1)
+        Define infos on the bans (ex: 2-3-1)
 
-        Ces informations seront données à l'ouverture d'un set, et ne demandent pas un format \
-particulier.
-        Utilisez la commande sans paramètre pour réinitialiser cette valeur.
+        Those informations will be given when opening a set, and do not require a specific format.
+        Use this command without parameter to reset it to its initial state.
 
-        Exemple : Si la valeur réglée est "2-3-1", voici ce qui s'affichera :
-        ":game_die: **[joueur 1]** est tiré au sort pour commencer le ban des stages *(2-3-1)*"
+        Example : If the value is set to "2-3-1", here is what will be shown:
+        ":game_die: **[player 1]** was picked to begin the bans *(2-3-1)*"
         """
         guild = ctx.guild
         if text is not None and len(text) > 256:
             await ctx.send(
                 _(
-                    "Ce texte est trop long (>256 caractères). "
-                    "Tapez `{prefix}help tournamentset games baninfo` pour plus de détails."
+                    "This text is too long (>256 characters). "
+                    "Type `{prefix}help tournamentset games baninfo` for details."
                 ).format(prefix=ctx.clean_prefix)
             )
             return
         await self.data.custom("GAME", guild.id, game).baninfo.set(text)
         if text is not None:
-            await ctx.send(_("Le nouveau texte est bien réglé."))
+            await ctx.send(_("The text was successfully set."))
         else:
-            await ctx.send(_("Le texte a été supprimé."))
+            await ctx.send(_("The text was successfully deleted."))
 
     @tournamentset_games.command(name="stages")
     async def tournamentset_games_stages(
         self, ctx: commands.Context, game: GameSetting, *stages: str
     ):
         """
-        Définis la liste des stages autorisés.
+        Define the list of authorized stages.
 
-        Donnez les stages les uns à la suite des autres, avec des guillmets s'il y a des espaces.
+        Give the stages one after another, with quotes if there are spaces.
 
-        Exemple : `[p]tournamentset games stages "Super Smash Bros. Ultimate" "Champ de Bataille" \
-"Destination Finale" "Stade Pokémon 2"`
+        Example : `[p]tournamentset games stages "Super Smash Bros. Ultimate" Battlefield \
+"Final Destination" "Pokémon Stadium 2"`
         """
         guild = ctx.guild
         await self.data.custom("GAME", guild.id, game).stages.set(stages)
         if stages:
-            await ctx.send(_("Les nouveaux stages ont bien été réglés."))
+            await ctx.send(_("The stages were successfully set."))
         else:
-            await ctx.send(_("La liste des stages a été supprimée."))
+            await ctx.send(_("The stage list was deleted."))
 
     @tournamentset_games.command(name="counters")
     async def tournamentset_games_counters(
         self, ctx: commands.Context, game: GameSetting, *counters: str
     ):
         """
-        Définis la liste des stages contres autorisés.
+        Define the list of authorized counter stages.
 
-        Donnez les stages les uns à la suite des autres, avec des guillmets s'il y a des espaces.
+        Give the stages one after another, with quotes if there are spaces.
 
-        Exemple : `[p]tournamentset games counters "Super Smash Bros. Ultimate" "Champ de \
-Bataille" "Destination Finale" "Stade Pokémon 2"`
+        Example : `[p]tournamentset games stages "Super Smash Bros. Ultimate" Battlefield \
+"Final Destination" "Pokémon Stadium 2"`
         """
         guild = ctx.guild
         await self.data.custom("GAME", guild.id, game).counters.set(counters)
         if counters:
-            await ctx.send(_("Les nouveaux stages ont bien été réglés."))
+            await ctx.send(_("The stages were successfully set."))
         else:
-            await ctx.send(_("La liste des stages a été supprimée."))
+            await ctx.send(_("The stage list was deleted."))
 
     @tournamentset_games.command(name="ranking")
     async def tournamentset_games_ranking(
@@ -744,19 +728,19 @@ Bataille" "Destination Finale" "Stade Pokémon 2"`
         league_id: Optional[str],
     ):
         """
-        Définis les informations du ranking Braacket pour un jeu.
+        Define Braacket ranking informations for a game.
 
-        Ceci sera utilisé pour le seeding.
-        Vous devez donner le nom de la ligue, suivi de son ID.
+        This will be used for seeding.
+        You need to give the league's name, followed by its ID.
 
-        Omettez les deux valeurs pour supprimer ces informations.
+        Omit both values to reset those informations.
         """
         guild = ctx.guild
         if league_name is None and league_id is None:
             await self.data.custom("GAME", guild.id, game).ranking.set(
                 {"league_name": None, "league_id": None}
             )
-            await ctx.send(_("Les informations de ranking ont été supprimées."))
+            await ctx.send(_("Ranking informations deleted."))
         elif league_name is None or league_id is None:
             # only one value provided
             await ctx.send_help()
@@ -764,93 +748,94 @@ Bataille" "Destination Finale" "Stade Pokémon 2"`
             await self.data.custom("GAME", guild.id, game).ranking.set(
                 {"league_name": league_name, "league_id": league_id}
             )
-            await ctx.send(_("Les nouvelles informations de ranking ont été configurées."))
+            await ctx.send(_("The ranking informations were successfully set."))
 
     @tournamentset.command(name="delay")
     async def tournamentset_delay(self, ctx: commands.Context, delay: int):
         """
-        Règle le délai avant DQ automatique d'un joueur inactif.
+        Set the delay before automatically DQing an inactive player.
 
-        Ce délai est en minutes.
-        Donnez 0 minutes pour désactiver.
+        This delay is in minutes.
+        Give 0 minutes to disable.
         """
         guild = ctx.guild
         if delay < 0:
-            await ctx.send(_("Un délai ne peut pas être négatif !"))
+            await ctx.send(_("This can't be negative!"))
             return
         await self.data.guild(guild).delay.set(delay)
         if delay == 0:
-            await ctx.send(_("Le DQ automatique est désormais désactivé."))
+            await ctx.send(_("Automatic DQ is now disabled."))
         else:
             await ctx.send(
                 _(
-                    "Si un joueur ne réponds toujours pas dans son channel {delay} minutes "
-                    "après sa création, il sera DQ automatiquement."
+                    "Done. If a player doesn't respond in his channel {delay} minutes "
+                    "after its creation, he will automatically be disqualified."
                 ).format(delay=delay)
             )
 
     @tournamentset.command(name="register")
     async def tournamentset_register(self, ctx: commands.Context, opening: int, closing: int):
         """
-        Règle l'heure d'ouverture et de fermeture des inscriptions.
+        Set the opening and closing time of the registration.
 
-        Vous devez donner le nombre d'**heures** avant l'ouverture du tournoi pour le début, et \
-le nombre de **minutes** avant l'ouverture du tournoi pour la fin des inscriptions.
-        D'abord l'heure d'ouverture, puis de fermeture.
+        You need to give the number of **hours** before the opening of the tournament for the \
+beginning, and the number of **minutes** before the opening of the tournament for the ending of \
+the registration.
+        First the opening hour, then the closing hour.
 
-        L'heure d'ouverture du tournoi est celle réglée sur votre tournoi Challonge.
+        Date and time of the tournament's start is the one defined on Challonge. 
 
-        Pour désactiver l'ouverture ou la fermeture automatique des inscriptions, donnez 0 pour \
-sa valeur correspondante.
+        To disable the automatic opening/closing of the registration, give 0 for its \
+corresponding value.
 
-        Exemple: `[p]tournamentset register 48 10` = Ouverture du check-in 45 heures avant \
-l'ouverture du tournoi, puis fermeture 10 minutes avant.
+        Example: `[p]tournamentset register 48 10` = Opening of the registration 45 hours before \
+the opening of the tournament, then closing 10 minutes before.
         """
         guild = ctx.guild
         await self.data.guild(guild).register.set({"opening": opening, "closing": closing})
         if opening == 0 and closing == 0:
-            await ctx.send(_("Les inscriptions automatiques sont désormais désactivées."))
+            await ctx.send(_("Automatic registration is now disabled."))
         else:
             await ctx.send(
                 _(
-                    "Les inscriptions seront ouvertes {opening} heures avant le début et fermées "
-                    "{closing} minutes avant le début du tournoi."
+                    "Registration will now open {opening} hours before the start and closed "
+                    "{closing} minutes before the start of the tournament."
                 ).format(opening=opening, closing=closing)
             )
 
     @tournamentset.command(name="checkin")
     async def tournamentset_checkin(self, ctx: commands.Context, opening: int, closing: int):
         """
-        Règle l'heure d'ouverture et de fermeture du check-in.
+        Set the opening and closing time of the check-in.
 
-        Vous devez donner le nombre de minutes avant l'ouverture du tournoi pour chaque valeur.
-        D'abord l'heure d'ouverture, puis de fermeture.
+        You need to give the number of minutes before the start of the tournament for each value.
+        First the opening hour, then the closing hour.
 
-        L'heure d'ouverture du tournoi est celle réglée sur votre tournoi Challonge.
+        Date and time of the tournament's start is the one defined on Challonge. 
 
-        Pour désactiver le check-in, donnez 0 pour les deux valeurs
+        To disable the check-in, give 0 for both values.
 
-        Exemple: `[p]tournamentset checkin 60 15` = Ouverture du check-in 60 minutes avant \
-l'ouverture du tournoi, puis fermeture 15 minutes avant.
+        Example: `[p]tournamentset checkin 60 15` = Opening of the check-in 60 minutes before \
+the start of the tournament, then closing 15 minutes before.
         """
         guild = ctx.guild
         await self.data.guild(guild).checkin.set({"opening": opening, "closing": closing})
         if opening == 0 and closing == 0:
-            await ctx.send(_("Le check-in est désormais désactivé."))
+            await ctx.send(_("The check-in is now disabled."))
         else:
             await ctx.send(
                 _(
-                    "Le check-in sera ouvert {opening} minutes avant le début et fermé "
-                    "{closing} minutes avant le début du tournoi."
+                    "Check-in will now open {opening} minutes before the start and closed "
+                    "{closing} minutes before the start of the tournament."
                 ).format(opening=opening, closing=closing)
             )
 
     @tournamentset.command(name="startbo5")
     async def tournamentset_startbo5(self, ctx: commands.Context, level: int):
         """
-        Règle quand les sets passent au format Best of 5 (BO5)
+        Define when the sets switch to Best of 5 format (BO5)
 
-        Vous devez entrer un nombre pour définir le niveau:
+        You need to enter a number to define the level:
         0 = top 7
         1 = top 5
         2 = top 3 (winner + loser final)
@@ -858,59 +843,59 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
         """
         guild = ctx.guild
         await self.data.guild(guild).start_bo5.set(level)
-        await ctx.send(_("Le niveau a bien été réglé."))
+        await ctx.send(_("The level was successfully set."))
 
     @tournamentset.command(name="settings")
     async def tournamentset_settings(self, ctx: commands.Context):
         """
-        Affiche tous les réglages de ce serveur.
+        Show all settings for this server.
         """
         guild = ctx.guild
         if not ctx.channel.permissions_for(guild.me).embed_links:
-            await ctx.send(_("J'ai besoin de la permission d'intégrer des liens dans ce channel."))
+            await ctx.send(_("I need the `Embed links` permission in this channel."))
             return
         data = await self.data.guild(guild).all()
         no_games = len(await self.data.custom("GAME", guild.id).all())
         if data["credentials"]["api"]:
-            challonge = _("Configuré")
+            challonge = _("Configured")
         else:
-            challonge = _("Non configuré. Utilisez `{prefix}challongeset`").format(
+            challonge = _("Not configured. Use `{prefix}challongeset`").format(
                 prefix=ctx.clean_prefix
             )
         delay = data["delay"]
         start_bo5 = data["start_bo5"]
         if data["register"]["opening"] != 0:
-            register_start = _("{time} heures avant le début du tournoi.").format(
+            register_start = _("{time} hours before the start of the tournament.").format(
                 time=data["register"]["opening"]
             )
         else:
             register_start = _("manuelle.")
         if data["register"]["closing"] != 0:
-            register_end = _("{time} minutes avant le début du tournoi.").format(
+            register_end = _("{time} minutes before the start of the tournament.").format(
                 time=data["register"]["closing"]
             )
         else:
             register_end = _("manuelle.")
         if data["checkin"]["opening"] != 0:
-            checkin_start = _("{time} minutes avant le début du tournoi.").format(
+            checkin_start = _("{time} minutes before the start of the tournament.").format(
                 time=data["checkin"]["opening"]
             )
         else:
             checkin_start = _("manuelle.")
         if data["checkin"]["closing"] != 0:
-            checkin_end = _("{time} minutes avant le début du tournoi.").format(
+            checkin_end = _("{time} minutes before the start of the tournament.").format(
                 time=data["checkin"]["closing"]
             )
         else:
-            checkin_end = _("manuelle.")
+            checkin_end = _("Manual.")
         channels = {}
         for k, v in data["channels"].items():
             if not v:
-                channels[k] = _("Non réglé")
+                channels[k] = _("Not set")
                 continue
             channel = guild.get_channel(v)
             if not channel:
-                channels[k] = _("Perdu")
+                channels[k] = _("Lost")
             else:
                 if isinstance(channel, discord.TextChannel):
                     channels[k] = channel.mention
@@ -918,9 +903,9 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
                     # category
                     channels[k] = channel.name
         channels = _(
-            "Catégorie : {category}\n\n"
-            "Annonces : {announcements}\n"
-            "Inscriptions : {register}\n"
+            "Category : {category}\n\n"
+            "Announcements : {announcements}\n"
+            "Registration : {register}\n"
             "Check-in : {checkin}\n"
             "Queue : {queue}\n"
             "Scores : {scores}\n"
@@ -930,7 +915,7 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
         roles = {}
         for k, v in data["roles"].items():
             if not v:
-                roles[k] = _("Non réglé")
+                roles[k] = _("Not set")
             role = guild.get_role(v)
             if not role:
                 roles[k] = _("Perdu")
@@ -942,10 +927,10 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
         embeds = []
         embed = discord.Embed(title=_("Paramètres"))
         embed.description = _(
-            "Identifiants Challonge : {challonge}\n"
-            "Nombre de jeux configurés : {games}\n"
-            "Délai avant DQ : {delay} minutes\n"
-            "Début du BO5 : {bo5} *(utilisez `{prefix}help tournamentset delay`)*"
+            "Challonge credentials : {challonge}\n"
+            "Number of configured games : {games}\n"
+            "Delay before DQ : {delay} minutes\n"
+            "Begin of BO5 : {bo5} *(use `{prefix}help tournamentset delay`)*"
         ).format(
             challonge=challonge,
             games=no_games,
@@ -954,21 +939,21 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
             prefix=ctx.clean_prefix,
         )
         embed.add_field(
-            name=_("Inscriptions"),
-            value=_("Ouverture : {opening}\nFermeture : {closing}").format(
+            name=_("Registration"),
+            value=_("Opening : {opening}\nClosing : {closing}").format(
                 opening=register_start, closing=register_end
             ),
         )
         embed.add_field(
             name=_("Check-in"),
-            value=_("Ouverture : {opening}\nFermeture : {closing}").format(
+            value=_("Opening : {opening}\nClosing : {closing}").format(
                 opening=checkin_start, closing=checkin_end
             ),
         )
         embeds.append(embed)
-        embed = discord.Embed(title=_("Paramètres"))
+        embed = discord.Embed(title=_("Settings"))
         embed.add_field(name=_("Channels"), value=channels)
-        embed.add_field(name=_("Rôles"), value=roles)
+        embed.add_field(name=_("Roles"), value=roles)
         embeds.append(embed)
         await menus.menu(ctx, embeds, controls=menus.DEFAULT_CONTROLS)
 
@@ -978,9 +963,9 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
     @commands.cooldown(1, 30, commands.BucketType.guild)
     async def setup(self, ctx: commands.Context, url: ChallongeURLConverter):
         """
-        Setup le tournoi actuel du serveur.
+        Setup the next tournament for this server.
 
-        Vous devez donner un URL Challonge valide.
+        You must give a valid Challonge URL.
         """
         guild = ctx.guild
         message = await self._verify_settings(ctx)
@@ -992,9 +977,9 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
         if tournament is not None:
             await ctx.send(
                 _(
-                    "Un tournoi semble déjà être configuré. Si ce tournoi est terminé, utilisez "
-                    "`{prefix}end` pour correctement mettre fin au tournoi. Sinon, utilisez "
-                    "`{prefix}reset` pour remettre les informations à 0."
+                    "A tournament seems to be already configured. If this tournament is done, "
+                    "use `{prefix}end` to correctly end the tournament. Else, use `{prefix}reset` "
+                    "to clear the tournament from the bot."
                 ).format(prefix=ctx.clean_prefix)
             )
             return
@@ -1008,18 +993,18 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
         if data["game_name"].title() not in games:
             message = await ctx.send(
                 _(
-                    ":warning: **Le jeu {game} n'est pas enregistré sur le bot !**\n\n"
-                    "Vous pouvez configurer les différents réglages de ce jeu en tapant la "
-                    "commande `{prefix}tournamentset games add {game}`.\n"
-                    "Sinon, vous pouvez continuer sans configuration, mais les fonctions "
-                    "suivantes ne seront pas disponibles :\n"
-                    "- Indication d'un channel de règles\n"
-                    "- Utilisation d'un rôle pour les permissions des inscriptions (le rôle "
-                    "@everyone sera utilisé)\n"
-                    "- Précision du mode de ban\n"
-                    "- Liste des stages starters/counters\n"
-                    "- Ranking et seeding avec Braacket\n\n"
-                    "Souhaitez vous continuer ou annuler ?"
+                    ":warning: **The game {game} isn't registered on this bot !**\n\n"
+                    "You can configure the different settings of this game by typing the "
+                    "following command: `{prefix}tset games add {game}`\n"
+                    "Else, you can continue without configuration, but the following "
+                    "function will be unavailable:\n"
+                    "- Indication of a ruleset channel\n"
+                    "- Use of a role for the permissions of the registration (the @everyone "
+                    "role will be used instead)\n"
+                    "- Precision of a ban mode\n"
+                    "- List of starters/counters stages\n"
+                    "- Ranking and seeding with Braacket\n\n"
+                    "Would you like to continue or cancel?"
                 ).format(game=data["game_name"].title(), prefix=ctx.clean_prefix)
             )
             pred = ReactionPredicate.yes_or_no(message, user=ctx.author)
@@ -1027,10 +1012,10 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
             try:
                 await self.bot.wait_for("reaction_add", check=pred, timeout=30)
             except asyncio.TimeoutError:
-                await ctx.send(_("Requête expirée."))
+                await ctx.send(_("Request timed out."))
                 return
             if pred.result is False:
-                await ctx.send(_("Annulation."))
+                await ctx.send(_("Cancelling..."))
                 return
             await message.delete()
         del games
@@ -1049,38 +1034,38 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
             if datetime:
                 return datetime.strftime("%a %d %b %H:%M")
             else:
-                return _("Manuelle")
+                return _("Manual")
 
         embed = discord.Embed(title=f"{tournament.name} • *{tournament.game}*")
         embed.url = tournament.url
         if tournament.limit is not None:
-            embed.description = _("Tournoi de {limit} joueurs.").format(limit=tournament.limit)
+            embed.description = _("Tournament of {limit} players.").format(limit=tournament.limit)
         else:
-            embed.description = _("Tournoi sans limite de joueurs.")
-        embed.description += _("\nDébut du tournoi: {date}").format(
+            embed.description = _("Tournoi without player limit.")
+        embed.description += _("\nTournament start: {date}").format(
             date=format_datetime(tournament.tournament_start)
         )
         embed.add_field(
-            name=_("Inscriptions"),
-            value=_("Ouverture : {opening}\nFermeture : {closing}").format(
+            name=_("Registration"),
+            value=_("Opening: {opening}\nClosing : {closing}").format(
                 opening=format_datetime(tournament.register_start),
                 closing=format_datetime(tournament.register_stop),
             ),
         )
         embed.add_field(
             name=_("Check-in"),
-            value=_("Ouverture : {opening}\nFermeture : {closing}").format(
+            value=_("Opening: {opening}\nClosing : {closing}").format(
                 opening=format_datetime(tournament.checkin_start),
                 closing=format_datetime(tournament.checkin_stop),
             ),
         )
         ruleset = guild.get_channel(config_data["ruleset"])
-        ruleset = ruleset.mention if ruleset else _("Non défini")
+        ruleset = ruleset.mention if ruleset else _("Not set")
         role = guild.get_role(config_data["role"]) or guild.default_role
-        baninfo = config_data["baninfo"] or _("Non défini")
+        baninfo = config_data["baninfo"] or _("Not set")
         embed.add_field(
-            name=_("Options du jeu"),
-            value=_("Règles : {rules}\nRôle de joueur : {role}\nMode de ban : {ban}").format(
+            name=_("Game options"),
+            value=_("Rules: {rules}\nPlayer role: {role}\nBan mode: {ban}").format(
                 rules=ruleset, role=role, ban=baninfo,
             ),
         )
@@ -1093,20 +1078,18 @@ l'ouverture du tournoi, puis fermeture 15 minutes avant.
                 name=("Counterpicks"),
                 value="".join([f"- {x}\n" for x in config_data["counterpicks"]]),
             )
-        embed.set_footer(
-            text=_("Fuseau horaire : {tz}").format(tz=tournament.tournament_start.tzname())
-        )
-        message = await ctx.send(_("Les informations sont-elles correctes ?"), embed=embed)
+        embed.set_footer(text=_("Time zone: {tz}").format(tz=tournament.tournament_start.tzname()))
+        message = await ctx.send(_("Is this correct?"), embed=embed)
         pred = ReactionPredicate.yes_or_no(message, user=ctx.author)
         start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
         try:
             await self.bot.wait_for("reaction_add", check=pred, timeout=30)
         except asyncio.TimeoutError:
-            await ctx.send(_("Requête expirée."))
+            await ctx.send(_("Request timed out."))
             return
         if pred.result is False:
-            await ctx.send(_("Annulation."))
+            await ctx.send(_("Cancelling..."))
             return
         self.tournaments[guild.id] = tournament
         await self.data.guild(guild).tournament.set(tournament.to_dict())
-        await ctx.send(_("Le tournoi est bien réglé !"))
+        await ctx.send(_("The tournament is now set!"))

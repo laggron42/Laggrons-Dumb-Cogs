@@ -1,9 +1,7 @@
 import logging
 import importlib.util
-from .tournaments import Tournaments
 
 from redbot.core.errors import CogLoadError
-from laggron_utils import init_logger
 
 if not importlib.util.find_spec("laggron_utils"):
     raise CogLoadError(
@@ -12,6 +10,9 @@ if not importlib.util.find_spec("laggron_utils"):
         "or type `pip3 install -U git+https://github.com/retke/Laggron-utils.git` in the "
         "terminal to install the library."
     )
+
+from .tournaments import Tournaments
+from laggron_utils import init_logger
 
 log = logging.getLogger("red.laggron.tournaments")
 

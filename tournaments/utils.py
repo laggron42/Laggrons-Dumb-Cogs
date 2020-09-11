@@ -22,8 +22,8 @@ def credentials_check(command: commands.Command) -> commands.Command:
         if any([x is None for x in credentials.values()]):
             raise commands.UserFeedbackCheckFailure(
                 _(
-                    "Vous devez régler vos paramètres Challonge avant d'utiliser cette "
-                    "commande! Tapez `{prefix}help challongeset` pour plus d'informations."
+                    "You need to set your Challonge credentials before using this "
+                    "command! Use `{prefix}help challongeset` for more info."
                 ).format(prefix=ctx.clean_prefix)
             )
 
@@ -41,10 +41,10 @@ def only_phase(*allowed_phases):
             try:
                 tournament = cog.tournaments[ctx.guild.id]
             except KeyError:
-                raise commands.UserFeedbackCheckFailure(_("Il n'y a aucun tournoi en cours."))
+                raise commands.UserFeedbackCheckFailure(_("There's no ongoing tournament."))
             if tournament.phase not in allowed_phases:
                 raise commands.UserFeedbackCheckFailure(
-                    _("Cette commande ne peut être exécutée actuellement.")
+                    _("This command cannot be executed right now.")
                 )
 
         command.before_invoke(hook)
@@ -64,7 +64,7 @@ async def async_http_retry(coro):
         try:
             return await coro
         except ChallongeException as e:
-            log.error(f"Challonge exception. coro: {coro}", exc_info=e)
+            log.error(f"Challonge exception. coro: {coro.__name__}", exc_info=e)
             if "504" in str(e):
                 await asyncio.sleep(1 + retry)
             else:

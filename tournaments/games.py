@@ -23,8 +23,8 @@ class ScoreConverter(commands.Converter):
         if score is None:
             raise commands.BadArgument(
                 _(
-                    "Le format entré est incorrect.\n"
-                    "Veuillez réessayer dans le bon format (3-0, 2-1, 3-2...)"
+                    "The given format is incorrect.\n"
+                    "Please retry in the right format (3-0, 2-1, 3-2...)"
                 )
             )
         return score.group("score1"), score.group("score2")
@@ -67,25 +67,25 @@ class Games(MixinMeta):
     @checks.mod_or_permissions(administrator=True)
     async def start(self, ctx: commands.Context):
         """
-        Démarre le tournoi.
+        Starts the tournament.
         """
         guild = ctx.guild
         tournament: Tournament = self.tournaments.get(guild.id)
         if tournament is None:
             await ctx.send(
-                _("Il n'y a aucun tournoi en cours. Utilisez d'abord `{prefix}setup`.").format(
+                _("There is no setup tournament. Use `{prefix}setup` first.").format(
                     prefix=ctx.clean_prefix
                 )
             )
             return
         # check for register status
-        embed = discord.Embed(title=_("Lancement du tournoi..."))
+        embed = discord.Embed(title=_("Starting the tournament..."))
         embed.description = _("Jeu: {game}\n" "URL: {url}").format(
             game=tournament.game, url=tournament.url
         )
         embed.add_field(
             name=_("Progression"),
-            value=_("**Lancement...**\n*Envoi des messages*\n*Lancement des sets*"),
+            value=_("**Starting...**\n*Sending messages*\n*Launching sets*"),
             inline=False,
         )
         message = await ctx.send(embed=embed)
@@ -94,9 +94,7 @@ class Games(MixinMeta):
             0,
             name=_("Progression"),
             value=_(
-                ":white_check_mark: Lancement\n"
-                "**Envoi des messages...**\n"
-                "*Lancement des sets*"
+                ":white_check_mark: Starting\n" "**Sending messages...**\n" "*Launching sets*"
             ),
             inline=False,
         )
@@ -106,9 +104,9 @@ class Games(MixinMeta):
             0,
             name=_("Progression"),
             value=_(
-                ":white_check_mark: Lancement\n"
-                ":white_check_mark: Envoi des messages\n"
-                "**Lancement des sets...**"
+                ":white_check_mark: Starting\n"
+                ":white_check_mark: Sending messages\n"
+                "**Launching sets...**"
             ),
             inline=False,
         )
@@ -121,8 +119,8 @@ class Games(MixinMeta):
             )
             await ctx.send(
                 _(
-                    ":warning: Erreur lors du lancement des sets. Consultez les logs "
-                    "pour plus d'informations."
+                    ":warning: Error while launching sets, check your console "
+                    "or logs for more informations."
                 )
             )
             return
@@ -130,31 +128,31 @@ class Games(MixinMeta):
             0,
             name=_("Progression"),
             value=_(
-                ":white_check_mark: Lancement\n"
-                ":white_check_mark: Envoi des messages\n"
-                ":white_check_mark: Lancement des sets"
+                ":white_check_mark: Starting\n"
+                ":white_check_mark: Sending messages\n"
+                ":white_check_mark: Launching sets"
             ),
             inline=False,
         )
         await message.edit(embed=embed)
         tournament.start_loop_task()
-        await ctx.send(_("Le tournoi est lancé !"))
+        await ctx.send(_("The tournament has now started!"))
 
     @only_phase("ongoing")
     @commands.command()
     async def win(self, ctx: commands.Context, *, score: ScoreConverter):
         """
-        Règle le score de votre set. À utiliser par le gagnant.
+        Set the score of your set. To be used by the winner.
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
         try:
             player = next(filter(lambda x: x.id == ctx.author.id, tournament.participants))
         except StopIteration:
-            await ctx.send(_("Vous n'êtes pas participant au tournoi."))
+            await ctx.send(_("You are not a member of this tournament."))
             return
         if player.match is None:
-            await ctx.send(_("Vous n'avez aucun match en cours."))
+            await ctx.send(_("You don't have any ongoing match."))
             return
         if ctx.author.id == player.match.player2.id:
             score = score[::-1]  # player1-player2 format
@@ -167,7 +165,7 @@ class Games(MixinMeta):
     @commands.command()
     async def bracket(self, ctx: commands.Context):
         """
-        Affiche le bracket du tournoi.
+        Show the tournament's bracket.
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
@@ -177,14 +175,14 @@ class Games(MixinMeta):
     @commands.command()
     async def stages(self, ctx: commands.Context):
         """
-        Affiche la liste des stages légaux.
+        Show the list of legal stages.
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
         if not tournament.stages:
-            await ctx.send(_("Il n'y a pas de stages légaux spécifiés pour ce jeu."))
+            await ctx.send(_("There are no legal stages specified for this game."))
         else:
-            text = _("__Stages légaux :__") + "\n\n- " + "\n- ".join(tournament.stages)
+            text = _("__Legal stages:__") + "\n\n- " + "\n- ".join(tournament.stages)
             for page in pagify(text):
                 await ctx.send(page)
 
@@ -192,13 +190,13 @@ class Games(MixinMeta):
     @commands.command(aliases=["counters"])
     async def counterpicks(self, ctx: commands.Context):
         """
-        Affiche la liste des counters.
+        Show the list of legal counter stages
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
         if not tournament.counterpicks:
-            await ctx.send(_("Il n'y a pas de counters spécifiés pour ce jeu."))
+            await ctx.send(_("There are no counter stages specified for this game."))
         else:
-            text = _("__Counters :__") + "\n\n- " + "\n- ".join(tournament.counterpicks)
+            text = _("__Counters:__") + "\n\n- " + "\n- ".join(tournament.counterpicks)
             for page in pagify(text):
                 await ctx.send(page)

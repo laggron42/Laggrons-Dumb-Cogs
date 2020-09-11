@@ -137,8 +137,8 @@ class Tournaments(
         if isinstance(error, achallonge.ChallongeException):
             await ctx.send(
                 _(
-                    "Erreur de Challonge: {error}\n"
-                    "Si ce problème persiste, contactez les T.O. ou un administrateur du bot."
+                    "Error from Challonge: {error}\n"
+                    "If this problem persists, contact T.O.s or an admin of the bot."
                 ).format(error=error.args[0])
             )
         else:
