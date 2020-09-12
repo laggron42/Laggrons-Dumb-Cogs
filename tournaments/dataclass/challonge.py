@@ -5,11 +5,13 @@ import logging
 from typing import Optional
 
 from redbot.core import Config
+from redbot.core.i18n import Translator
 
 from ..utils import async_http_retry
 from .base import Tournament, Match, Participant
 
 log = logging.getLogger("red.laggron.tournaments")
+_ = Translator("Tournaments", __file__)
 
 
 class ChallongeParticipant(Participant):
@@ -21,16 +23,6 @@ class ChallongeParticipant(Participant):
         cls = cls(member, tournament)
         cls._player_id = data["id"]
         return cls
-
-    def __eq__(self, other: dict):
-        if isinstance(other, dict):
-            return self.player_id == other["id"]
-        elif isinstance(other, self):
-            return self.player_id == other.player_id
-        raise NotImplementedError
-
-    def __hash__(self):
-        return self.player_id
 
     @property
     def player_id(self):
@@ -57,14 +49,6 @@ class ChallongeMatch(Match):
                 filter(lambda x: x.player_id == data["player2_id"], tournament.participants)
             ),
         )
-
-    def __eq__(self, other: dict):
-        if isinstance(other, dict):
-            return self.id == other["id"]
-        raise NotImplementedError
-
-    def __hash__(self):
-        return self.id
 
     async def set_scores(
         self, player1_score: int, player2_score: int, winner: Optional[Participant] = None
@@ -120,7 +104,88 @@ class ChallongeTournament(Tournament):
 
     @classmethod
     def from_saved_data(cls, guild, config, data, config_data):
-        return super().from_saved_data(guild, config, data, config_data,)
+        return super().from_saved_data(guild, config, data, config_data)
+
+    async def _update_participants_list(self):
+        raw_participants = await self.list_participants()
+        participants = []
+        for participant in raw_participants:
+            cached: Participant
+            # yeah, discord.py tools works with that
+            cached = discord.utils.get(self.participants, player_id=participant["id"])
+            if cached is None:
+                try:
+                    participants.append(
+                        self.participant_object.build_from_api(self.tournament, participant)
+                    )
+                except RuntimeError:
+                    await async_http_retry(
+                        achallonge.participants.destroy(self.tournament.id, participant["id"])
+                    )
+                    await self.to_channel.send(
+                        _(
+                            ':warning: Challonge participant with name "{name}" can\'t be found '
+                            "in this server. This can be due to a name change, or the "
+                            "member left.\nPlayer is disqualified from this tournament."
+                        ).format(name=participant["name"])
+                    )
+            else:
+                participants.append(cached)
+        self.participants = participants
+
+    async def _update_match_list(self):
+        raw_matches = await self.list_matches()
+        matches = []
+        remote_changes = []
+        for match in raw_matches:
+            cached: Match
+            # yeah, discord.py tools works with that
+            cached = discord.utils.get(self.matches, id=match["id"])
+            if cached is None:
+                if match["state"] != "open":
+                    # empty or finished
+                    continue
+                matches.append(self.match_object.build_from_api(self.tournament, match))
+                continue
+            # we check for upstream bracket changes compared to our cache
+            if cached.status == "ongoing" and match["state"] == "complete":
+                # score was set manually
+                winner_score, loser_score = match["scores_csv"]
+                winner = discord.utils.get(self.participants, player_id=match["winner_id"])
+                # Challonge always give the winner score first
+                # need to know the actual player1/2 score, and swap if needed
+                if winner == cached.player1:
+                    await cached.end(winner_score, loser_score, upload=False)
+                else:
+                    await cached.end(loser_score, winner_score, upload=False)
+                log.info(
+                    f"[Guild {self.guild.id}] Ended set {self.set} because of remote score "
+                    f"update (score {match['scores_csv']} winner {str(winner)})"
+                )
+                remote_changes.append(cached.set)
+            elif cached.status == "ongoing" and match["state"] == "pending":
+                # the previously open match is now pending, this means the bracket changed
+                # mostl likely due to a score change on a parent match
+                await cached.force_end()
+                log.info(
+                    f"[Guild {self.guild.id}] Ended set {self.set} because of bracket "
+                    "changes (now marked as pending by Challonge)."
+                )
+                remote_changes.append(cached.set)
+                continue
+            elif cached.status == "finished" and match["state"] == "open":
+                # the previously finished match is now open, this means a TO manually
+                # removed the score set previously. we are therefore relaunching
+                await cached.relaunch()
+                remote_changes.append(cached.set)
+            # there is one last case where a finished match can be listed as pending
+            # unlike the above case, we don't have to immediatly do something, the updated
+            # sets will be automatically created when the time comes. we'll just leave the timer
+            # do its job and delete the channel.
+            matches.append(cached)
+        self.matches = matches
+        if remote_changes:
+            await self.warn_bracket_change(remote_changes)
 
     async def start(self):
         self.phase = "ongoing"

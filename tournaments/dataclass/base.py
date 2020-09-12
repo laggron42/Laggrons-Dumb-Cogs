@@ -59,12 +59,6 @@ class Participant(discord.Member):
         self.match = None
         self.spoke = False
 
-    def __eq__(self, other):
-        raise NotImplementedError
-
-    def __hash__(self):
-        return NotImplementedError
-
     @property
     def player_id(self):
         raise NotImplementedError
@@ -135,13 +129,9 @@ class Match:
             "last_message": self.last_message.timestamp() if self.last_message else None,
         }
 
-    def __eq__(self, other):
-        raise NotImplementedError
-
-    def __hash__(self):
-        raise NotImplementedError
-
-    async def send_message(self, channel: Optional[discord.TextChannel] = None) -> bool:
+    async def send_message(
+        self, channel: Optional[discord.TextChannel] = None, reset: bool = False
+    ) -> bool:
         """
         Send a message in the created channel.
 
@@ -150,13 +140,22 @@ class Match:
         channel: Optional[discord.TextChannel]
             The channel where the message needs to be send. If this is ``None``, the message will
             be sent in DM instead.
+        reset: bool
+            ``True`` if the match is started because of a reset.
 
         Returns
         -------
         bool
             ``False`` if the message couldn't be sent, and was sent in DM instead.
         """
-        message = _(
+        if reset is True:
+            message = _(
+                ":warning: **The bracket was modified!** This results in this match having to be "
+                "replayed. Please check your new position on the bracket.\n\n"
+            )
+        else:
+            message = ""
+        message += _(
             ":arrow_forward: **{0.set}** : {0.player1.mention} vs {0.player2.mention}\n"
         ).format(self)
         if self.tournament.ruleset_channel:
@@ -244,7 +243,7 @@ class Match:
             self.set, category=category, overwrites=overwrites, reason=_("Lancement du set")
         )
 
-    async def launch(self, category: discord.CategoryChannel, *allowed_roles: list):
+    async def launch(self, *allowed_roles: list, restart: bool = False):
         """
         Launches the set.
 
@@ -256,24 +255,16 @@ class Match:
 
         Parameters
         ----------
-        category: discord.CategoryChannel
-            The category where to put the new text channel.
         allowed_roles: List[discord.Role]
             A list of roles with read_messages permission in the text channel.
+        restart: bool
+            If the match is restarted.
         """
-        stop = False
-        if self.player1.unavailable is True:
-            log.info(f"[Guild {self.guild.id}] DQing player 1, set {self.set}")
-            await self.player1.destroy()
-            stop = True
-        if self.player2.unavailable is True:
-            log.info(f"[Guild {self.guild.id}] DQing player 2, set {self.set}")
-            await self.player2.destroy()
-            stop = True
-        if stop:
-            self.status = "finished"
-            return
         self.status = "ongoing"
+        category = await self.tournament._get_available_category(
+            "winner" if self.round > 0 else "loser"
+        )
+        allowed_roles.extend(self.tournament.allowed_roles)
         try:
             channel = await self.create_channel(category, *allowed_roles)
         except discord.HTTPException as e:
@@ -281,13 +272,37 @@ class Match:
                 f"[Guild {self.guild.id}] Couldn't create a channel for the set {self.set}.",
                 exc_info=e,
             )
-            await self.send_message()
+            await self.send_message(reset=restart)
         else:
-            await self.send_message(channel)
+            await self.send_message(channel, reset=restart)
             self.channel = channel
         finally:
             await self.mark_as_underway()
             self.underway = True
+            self.start_time = datetime.utcnow()
+
+    async def relaunch(self):
+        """
+        This is called in case of a match reset (usually from remote).
+
+        We inform the players they need to play their set again, eventually re-use their old
+        channel if it still exists.
+        """
+        if self.channel is not None:
+            await self.mark_as_underway()
+            self.status = "ongoing"
+            await self.channel.send(
+                _(
+                    "{player1} {player2}\n"
+                    ":warning: The score of this set was reset on the bracket. "
+                    "Therefore, **the set must be replayed**. Ask the T.O. if you have "
+                    "questions or believe this is a mistake."
+                ).format(player1=self.player1.mention, player2=self.player2.mention)
+            )
+            self.underway = True
+            self.start_time = datetime.utcnow()
+        else:
+            await self.launch(restart=True)
 
     async def check_inactive_and_delete(self):
         players = (self.player1, self.player2)
@@ -339,11 +354,12 @@ class Match:
                     pass
                 self.cancel()
 
-    async def end(self, player1_score: int, player2_score: int):
+    async def end(self, player1_score: int, player2_score: int, upload: bool = True):
         """
         Set the score and end the match.
         """
-        await self.set_scores(player1_score, player2_score)
+        if upload is True:
+            await self.set_scores(player1_score, player2_score)
         winner = self.player1 if player1_score > player2_score else self.player2
         score = (
             f"{player1_score}-{player2_score}"
@@ -359,6 +375,34 @@ class Match:
                 ).format(winner=winner.mention, score=score)
             )
         self.cancel()
+
+    async def force_end(self):
+        """
+        Called when a set is cancelled (remove bracket modifications).
+
+        The channel is deleted, a DM is sent, and the instance will most likely be deleted soon
+        after.
+        """
+        self.player1.reset()
+        self.player2.reset()
+        for player in (self.player1, self.player2):
+            try:
+                await player.send(
+                    _(
+                        ":warning: **Your set is cancelled!** This is probably because of "
+                        "manual bracket modifications.\nCheck the bracket, and contact a T.O. "
+                        "if you believe this is a problem."
+                    )
+                )
+            except discord.HTTPException:
+                pass
+        if self.channel is not None:
+            await self.channel.delete(
+                reason=_(
+                    "Remote returned a different match list. I am therefore clearing the "
+                    "outdated matches. Check the bracket for details."
+                )
+            )
 
     def cancel(self):
         self.player1.reset()
@@ -557,17 +601,40 @@ class Tournament:
         data = self.to_dict()
         await self.data.guild(self.guild).tournament.set(data)
 
-    async def _update_participants_list(self):
-        raw_participants = await self.list_participants()
-        for participant in raw_participants:
-            if participant not in self.participants:
-                self.participants.append(self.participant_object.build_from_api(self, participant))
+    @property
+    def allowed_roles(self):
+        allowed_roles = []
+        if self.to_role is not None:
+            allowed_roles.append(self.to_role)
+        if self.streamer_role is not None:
+            allowed_roles.append(self.streamer_role)
+        return allowed_roles
 
-    async def _update_match_list(self):
-        raw_matches = await self.list_matches()
-        for match in raw_matches:
-            if match not in self.matches:
-                self.matches.append(self.match_object.build_from_api(self, match))
+    async def _get_available_category(self, dest: str):
+        position = self.category.position + 1 if self.category else len(self.guild.categories)
+        if dest == "winner":
+            categories = self.winner_categories
+        else:
+            categories = self.loser_categories
+        try:
+            return next(filter(lambda x: len(x.channels) < 50, categories))
+        except StopIteration:
+            if categories:
+                position = categories[-1].position + 1
+            else:
+                position += 1
+            if dest == "winner":
+                name = "Winner bracket"
+            else:
+                name = "Loser bracket"
+            channel = await self.guild.create_category(
+                name, reason=_("New category of sets."), position=position
+            )
+            if dest == "winner":
+                self.winner_categories.append(channel)
+            else:
+                self.loser_categories.append(channel)
+            return channel
 
     def find_participant(
         self, *, player_id: Optional[str] = None, discord_id: Optional[int] = None
@@ -662,48 +729,27 @@ class Tournament:
                 log.error(f"[Guild {self.guild.id}] Can't send message in {channel}.", exc_info=e)
 
     async def launch_sets(self):
-        async def _get_available_category(dest: str, position: int):
-            if dest == "winner":
-                categories = self.winner_categories
-            else:
-                categories = self.loser_categories
-            try:
-                return next(filter(lambda x: len(x.channels) < 50, categories))
-            except StopIteration:
-                if categories:
-                    position = categories[-1].position + 1
-                else:
-                    position += 1
-                if dest == "winner":
-                    name = "Winner bracket"
-                else:
-                    name = "Loser bracket"
-                channel = await self.guild.create_category(name, reason=_("New category of sets."))
-                categories.append(channel)
-                return channel
-
-        position = self.category.position + 1 if self.category else len(self.guild.categories)
-        allowed_roles = []
-        if self.to_role is not None:
-            allowed_roles.append(self.to_role)
-        if self.streamer_role is not None:
-            allowed_roles.append(self.streamer_role)
         coros = []
-        await self._update_participants_list()
-        await self._update_match_list()
-        for match in filter(lambda x: x.status == "pending", self.matches):
+        for match in filter(lambda x: x.status == "pending", self.matches)[:50]:
             match: Match
-            if match.round > 0:
-                category = await _get_available_category("winner", position)
-            else:
-                category = await _get_available_category("winner", position)
-            coros.append(match.launch(category, *allowed_roles))
+            coros.append(match.launch())
         results = await asyncio.gather(*coros, return_exceptions=True)
         for result in filter(None, results):
             log.error(f"[Guild {self.guild.id}] Can't launch a set.", exc_info=result)
 
+    async def warn_bracket_change(self, *sets):
+        await self.to_channel.send(
+            _(
+                ":information_source: Changes were detected on the upstream bracket.\n"
+                "This may result in multiple sets ending, relaunch or cancellation.\n"
+                "Affected sets: {sets}"
+            ).format(sets=", ".join([f"#{x}" for x in sets]))
+        )
+
     @tasks.loop(seconds=15)
     async def loop_task(self):
+        await self._update_participants_list()
+        await self._update_match_list()
         coros = [self.launch_sets()]
         results = await asyncio.gather(*coros, return_exceptions=True)
         for i, result in enumerate(results):
@@ -732,6 +778,32 @@ class Tournament:
 
     def stop_loop_task(self):
         self.loop_task.cancel()
+
+    async def _update_participants_list(self):
+        """
+        Updates the internal list of participants, checking for changes such as:
+
+        *   Player DQ/removal
+        *   New player added (pre game)
+
+        .. warning:: A name change on remote is considered as a player removal + addition. If the
+            name doesn't match any member, he will be rejected.
+        """
+        raise NotImplementedError
+
+    async def _update_match_list(self):
+        """
+        Updates the internal list of changes, checking for changes such as:
+
+        *   Score set manually
+
+        *   Score modified (if there are ongoing/finished sets beyond this match in the bracket,
+            they will be reset)
+
+        *   Match reset (the set will be relaunched, ongoing/finished sets beyond this match in
+            the bracket will be reset)
+        """
+        raise NotImplementedError
 
     async def start(self):
         """
