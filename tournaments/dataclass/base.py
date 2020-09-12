@@ -40,6 +40,12 @@ class Participant(discord.Member):
         # used to detect inactivity after the launch of a set
         self.unavailable = False  # if the member is not found in the guild, this is true
 
+    def __repr__(self):
+        return (
+            "<Participant player_id={0.player_id} tournament_name={0.tournament.name} "
+            "tournament_id={0.tournament.id} spoke={0.spoke} id={1.id} name={1.name!r}>"
+        ).format(self, self._user)
+
     @classmethod
     def from_saved_data(cls, tournament: Tournament, data: dict):
         member = tournament.guild.get_member(data["discord_id"])
@@ -96,6 +102,13 @@ class Match:
         self.checked_dq = False
         player1.match = self
         player2.match = self
+
+    def __repr__(self):
+        return (
+            "<Match status={0.status} round={0.round} set={0.set} id={0.id} underway={0.underway} "
+            "channel={0.channel} start={0.start} tournament={0.tournament.name} "
+            "guild_id={0.guild.id} player1={0.player1.name} player2={0.player2.name}>"
+        ).format(self)
 
     @classmethod
     def from_saved_data(cls, tournament: Tournament, player1, player2, data: dict):
@@ -535,6 +548,12 @@ class Tournament:
         # loop task things
         self.task: Optional[asyncio.Task] = None
         self.task_errors = 0
+
+    def __repr__(self):
+        return (
+            "<Tournament name={0.name} phase={0.pase} status={0.status} url={0.url} game={0.game} "
+            "limit={0.limit} id={0.id} guild_id={0.guild.id}>"
+        ).format(self)
 
     participant_object = Participant
     match_object = Match
