@@ -114,7 +114,7 @@ class Tournaments(
 
     async def restore_tournaments(self):
         count = 0
-        log.debug(f"Resuming tournaments...")
+        log.debug("Resuming tournaments...")
         for guild_id, data in (await self.data.all_guilds()).items():
             if data["tournament"]["name"] is None:
                 continue
@@ -148,7 +148,7 @@ class Tournaments(
         if count > 0:
             log.info(f"Resumed {count} tournaments.")
         else:
-            log.info(f"No tournament had to be resumed.")
+            log.info("No tournament had to be resumed.")
 
     async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
         try:
