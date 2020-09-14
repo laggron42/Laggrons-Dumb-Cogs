@@ -1,14 +1,17 @@
 import discord
 import logging
 import re
+import asyncio
 
 from redbot.core import commands
 from redbot.core import checks
 from redbot.core.i18n import Translator
 from redbot.core.utils.chat_formatting import pagify
+from redbot.core.utils.predicates import ReactionPredicate
+from redbot.core.utils.menus import start_adding_reactions
 
 from .abc import MixinMeta
-from .dataclass import Tournament, Match
+from .dataclass import Tournament, Match, Participant
 from .utils import credentials_check, only_phase
 
 log = logging.getLogger("red.laggron.tournaments")
@@ -160,6 +163,67 @@ class Games(MixinMeta):
         # TODO: verify minimum time for a match
         await player.match.end(*score)
         await ctx.tick()
+
+    @only_phase("ongoing")
+    @commands.command(aliases=["ff"])
+    async def forfeit(self, ctx: commands.Context):
+        """
+        Forfeit your current match.
+
+        This will set a score of (-1 0)
+        """
+        guild = ctx.guild
+        tournament = self.tournaments[guild.id]
+        player: Participant
+        try:
+            player = next(filter(lambda x: x.id == ctx.author.id, tournament.participants))
+        except StopIteration:
+            await ctx.send(_("You are not a member of this tournament."))
+            return
+        if player.match is None:
+            await ctx.send(_("You don't have any ongoing match."))
+            return
+        message = await ctx.send(_("Are you sure you want to forfeit this match?"))
+        pred = ReactionPredicate.yes_or_no(message, ctx.author)
+        try:
+            await self.bot.wait_for("reaction_add", check=pred, timeout=20)
+        except asyncio.TimeoutError:
+            await ctx.send(_("Request timed out."))
+            return
+        if pred.result is True:
+            await player.match.forfeit(player)
+            await ctx.tick()
+        else:
+            await ctx.send(_("You are continuing this match."))
+
+    @only_phase("ongoing")
+    @commands.command(aliases=["dq"])
+    async def disqualify(self, ctx: commands.Context):
+        """
+        Disqualify yourself from the tournament.
+        """
+        guild = ctx.guild
+        tournament = self.tournaments[guild.id]
+        player: Participant
+        try:
+            player = next(filter(lambda x: x.id == ctx.author.id, tournament.participants))
+        except StopIteration:
+            await ctx.send(_("You are not a member of this tournament."))
+            return
+        message = await ctx.send(_("Are you sure you want to stop the tournament?"))
+        pred = ReactionPredicate.yes_or_no(message, ctx.author)
+        try:
+            await self.bot.wait_for("reaction_add", check=pred, timeout=20)
+        except asyncio.TimeoutError:
+            await ctx.send(_("Request timed out."))
+            return
+        if pred.result is True:
+            await player.destroy()
+            if player.match is not None:
+                await player.match.disqualify(player)
+            await ctx.tick()
+        else:
+            await ctx.send(_("You are continuing this tournament."))
 
     @only_phase("ongoing")
     @commands.command()

@@ -97,8 +97,8 @@ class Match:
         self.player2 = player2
         self.channel: Optional[discord.TextChannel] = None
         self.start_time: Optional[datetime] = None
+        self.end_time: Optional[datetime] = None
         self.status = "pending"  # can be "pending" "ongoing" "finished"
-        self.last_message: Optional[datetime] = None
         self.checked_dq = False
         player1.match = self
         player2.match = self
@@ -120,12 +120,11 @@ class Match:
             match.status = "pending"
         else:
             match.status = data["status"]
+            match.checked_dq = data["checked_dq"]
             match.start_time = (
                 datetime.fromtimestamp(data["start_time"]) if data["start_time"] else None
             )
-            match.last_message = (
-                datetime.fromtimestamp(data["last_message"]) if data["last_message"] else None
-            )
+            match.end_time = datetime.fromtimestamp(data["end_time"]) if data["end_time"] else None
         return match
 
     def to_dict(self) -> dict:
@@ -138,8 +137,9 @@ class Match:
             "player2": self.player2.player_id,
             "channel": self.channel.id if self.channel else None,
             "start_time": self.start_time.timestamp() if self.start_time else None,
+            "end_time": self.end_time.timestamp() if self.end_time else None,
             "status": self.status,
-            "last_message": self.last_message.timestamp() if self.last_message else None,
+            "checked_dq": self.checked_dq,
         }
 
     async def send_message(
@@ -318,6 +318,7 @@ class Match:
             await self.launch(restart=True)
 
     async def check_inactive_and_delete(self):
+        self.checked_dq = True
         players = (self.player1, self.player2)
         if all((x.spoke is False for x in players)):
             log.debug(
@@ -417,13 +418,65 @@ class Match:
                 )
             )
 
+    async def disqualify(self, player: Participant):
+        """
+        Called when a player in the set is destroyed.
+
+        There is no API call, just messages sent to the players.
+        """
+        self.cancel()
+        winner = self.player1 if self.player1.id != player.id else self.player2
+        if self.channel is not None:
+            await self.channel.send(
+                _(
+                    "Player {player.mention} disqualified himself from the tournament.\n"
+                    "{winner.mention} is winning this set!"
+                ).format(player=player, winner=winner)
+            )
+        else:
+            try:
+                await winner.send(
+                    _(
+                        "Your opponent disqualified himself from the tournament.\n"
+                        "You are winning this set!"
+                    )
+                )
+            except discord.HTTPException:
+                pass
+
+    async def forfeit(self, player: Participant):
+        """
+        Called when a player in the set forfeits this match.
+
+        This doesn't always mean that the player quits the tournament, he may continue in the
+        loser bracker.
+
+        Sets a score of -1 0
+        """
+        if player.id == self.player1.id:
+            score = (-1, 0)
+        else:
+            score = (-1, 0)
+        await self.set_scores(*score)
+        self.cancel()
+        winner = self.player1 if self.player1.id != player.id else self.player2
+        if self.channel is not None:
+            await self.channel.send(
+                _(
+                    "Player {player.mention} forfeits this set.\n{winner.mention} is winning!"
+                ).format(player=player, winner=winner)
+            )
+        else:
+            try:
+                await winner.send(_("Your opponent forfeited.\nYou are winning this set!"))
+            except discord.HTTPException:
+                pass
+
     def cancel(self):
         self.player1.reset()
         self.player2.reset()
         self.status = "finished"
-        if self.channel is not None:
-            loop = asyncio.get_event_loop()
-            self.deletion_task = loop.create_task(self._end_deletion_task())
+        self.end_time = datetime.utcnow()
 
     async def set_scores(
         self, player1_score: int, player2_score: int, winner: Optional[Participant] = None
@@ -749,12 +802,27 @@ class Tournament:
 
     async def launch_sets(self):
         coros = []
-        for match in filter(lambda x: x.status == "pending", self.matches)[:50]:
+        for match in filter(lambda x: x.status == "pending", self.matches):
             match: Match
             coros.append(match.launch())
         results = await asyncio.gather(*coros, return_exceptions=True)
         for result in filter(None, results):
             log.error(f"[Guild {self.guild.id}] Can't launch a set.", exc_info=result)
+
+    async def check_for_channel_timeout(self):
+        match: Match
+        for match in filter(
+            lambda x: x.status != "pending" and x.channel is not None, self.matches
+        ):
+            if match.status == "ongoing":
+                if (
+                    match.checked_dq
+                    and (match.start_time + timedelta(minutes=self.delay)) > datetime.utcnow()
+                ):
+                    await match.check_inactive_and_delete()
+            elif match.status == "finished":
+                if match.channel and (match.end_time + timedelta(minutes=5)) > datetime.utcnow():
+                    await match.channel.delete(reason=_("5 minutes passed after set end."))
 
     async def warn_bracket_change(self, *sets):
         await self.to_channel.send(
@@ -767,9 +835,19 @@ class Tournament:
 
     @tasks.loop(seconds=15)
     async def loop_task(self):
-        await self._update_participants_list()
-        await self._update_match_list()
-        coros = [self.launch_sets()]
+        try:
+            await self._update_participants_list()
+            await self._update_match_list()
+        except Exception as e:
+            log.error(
+                f"[Guild {self.guild.id}] Can't update internal match and participant list! "
+                "This may be an error from the upstream bracket, or the bot failed when "
+                "checking for changes.",
+                exc_info=e,
+            )
+            self.task_errors += 1
+            return
+        coros = [self.launch_sets(), self.check_for_channel_timeout()]
         results = await asyncio.gather(*coros, return_exceptions=True)
         for i, result in enumerate(results):
             if result is None:
@@ -790,7 +868,7 @@ class Tournament:
             log.error(
                 f"[Guild {self.guild.id}] Error in loop task. Resuming...", exc_info=exception
             )
-            self.task = self.loop_task.start()
+            self.start_loop_task()
 
     def start_loop_task(self):
         self.task = self.loop_task.start()
