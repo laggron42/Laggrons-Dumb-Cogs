@@ -13,7 +13,8 @@
     "install_msg": "Thank you for installing the tournaments cog. Please check the wiki for all informations about the cog.\nhttps://laggrons-dumb-cogs.readthedocs.io/tournaments.html\n\nType `[p]help Tournaments` for a quick overview of the commands",
     "required_cogs": {},
     "requirements": [
-        "git+https://github.com/retke/Laggron-utils.git"
+        "git+https://github.com/retke/Laggron-utils.git",
+        "apychal"
     ],
     "short": "Tools for managing your tournaments on Discord.",
     "tags": [

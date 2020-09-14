@@ -10,6 +10,11 @@ if not importlib.util.find_spec("laggron_utils"):
         "or type `pip3 install -U git+https://github.com/retke/Laggron-utils.git` in the "
         "terminal to install the library."
     )
+if not importlib.util.find_spec("achallonge"):
+    raise CogLoadError(
+        "You need the `apychal` package for this cog. Use the command `[p]pipinstall apychal` "
+        "or type `pip3 install -U apychal` in the terminal to install the library."
+    )
 
 from .tournaments import Tournaments
 from laggron_utils import init_logger
