@@ -443,7 +443,7 @@ class Match:
         if self.channel is not None:
             await self.channel.send(
                 _(
-                    "Player {player.mention} disqualified himself from the tournament.\n"
+                    "Player {player.mention} was disqualified from the tournament.\n"
                     "{winner.mention} is winning this set!"
                 ).format(player=player, winner=winner)
             )
@@ -451,7 +451,7 @@ class Match:
             try:
                 await winner.send(
                     _(
-                        "Your opponent disqualified himself from the tournament.\n"
+                        "Your opponent was disqualified from the tournament.\n"
                         "You are winning this set!"
                     )
                 )
