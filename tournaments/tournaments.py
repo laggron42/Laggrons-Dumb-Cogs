@@ -91,6 +91,27 @@ class Tournaments(
         self.data.init_custom("GAME", 2)  # guild ID > game name
         self.data.register_custom("GAME", **self.default_game_settings)
 
+    __version__ = "indev"
+    __author__ = ["retke (El Laggron)", "Wonderfall"]
+
+    @commands.command(hidden=True)
+    async def tournamentsinfo(self, ctx: commands.Context):
+        """
+        Get informations about the cog.
+        """
+        await ctx.send(
+            _(
+                "Laggron's Dumb Cogs V3 - tournaments\n\n"
+                "Version: {0.__version__}\n"
+                "Authors: {0.__author__[0]} and {0.__author__[1]}\n\n"
+                "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
+                "Discord server: https://discord.gg/AVzjfpR\n"
+                "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n"
+                "Help translating the cog: https://crowdin.com/project/laggrons-dumb-cogs/\n\n"
+                "Support my work on Patreon: https://www.patreon.com/retke"
+            ).format(self)
+        )
+
     async def restore_tournaments(self):
         count = 0
         log.debug(f"Resuming tournaments...")
