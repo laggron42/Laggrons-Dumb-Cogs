@@ -214,6 +214,12 @@ class Match:
                     await player.send(message)
                 except discord.HTTPException as e:
                     log.warning(f"Can't send a DM to {str(player)} for his set.", exc_info=e)
+            if self.tournament.queue_channel is not None:
+                await self.tournament.queue_channel.send(
+                    _("{player1} {player2} Play your set in DM").format(
+                        player1=self.player1.mention, player2=self.player2.mention
+                    )
+                )
 
         if channel is None:
             await send_in_dm()
@@ -229,6 +235,14 @@ class Match:
             print("j'aurais du envoyer un message là mais je fais pas chier")
             return False
         else:
+            if self.tournament.queue_channel is not None:
+                await self.tournament.queue_channel.send(
+                    _("{player1} {player2} Play your set in the channel {channel}").format(
+                        player1=self.player1.mention,
+                        player2=self.player2.mention,
+                        channel=channel.mention,
+                    )
+                )
             return True
 
     async def create_channel(
@@ -795,6 +809,8 @@ class Tournament:
             ).format(delay=self.delay, prefix=self.bot_prefix),
         }
         for channel, message in messages.items():
+            if channel is None:
+                continue
             try:
                 await channel.send(message)
             except discord.HTTPException as e:
