@@ -149,6 +149,7 @@ class Games(MixinMeta):
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
+        scores_channel = tournament.scores_channel
         try:
             player = next(filter(lambda x: x.id == ctx.author.id, tournament.participants))
         except StopIteration:
@@ -156,6 +157,13 @@ class Games(MixinMeta):
             return
         if player.match is None:
             await ctx.send(_("You don't have any ongoing match."))
+            return
+        if scores_channel is not None:
+            await ctx.send(
+                _("You have to use this command in {channel}.").format(
+                    channel=scores_channel.mention
+                )
+            )
             return
         if ctx.author.id == player.match.player2.id:
             score = score[::-1]  # player1-player2 format
