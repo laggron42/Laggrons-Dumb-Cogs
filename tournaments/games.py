@@ -143,6 +143,29 @@ class Games(MixinMeta):
 
     @only_phase("ongoing")
     @commands.command()
+    async def end(self, ctx: commands.Context):
+        """
+        Ends the current tournament.
+        """
+        guild = ctx.guild
+        tournament: Tournament = self.tournaments[guild.id]
+        if any(x.status == "ongoing" for x in tournament.matches):
+            await ctx.send(_("There are still ongoing matches."))
+            return
+        async with ctx.typing():
+            tournament.stop_loop_task()
+            await tournament.end()
+            categories = tournament.winner_categories + tournament.loser_categories
+            for category in categories:
+                for channel in category.text_channels:
+                    await channel.delete()
+                await category.delete()
+        await self.data.guild(guild).tournament.set({})
+        del self.tournaments[guild.id]
+        await ctx.send(_("Tournament ended."))
+
+    @only_phase("ongoing")
+    @commands.command()
     async def win(self, ctx: commands.Context, *, score: ScoreConverter):
         """
         Set the score of your set. To be used by the winner.
