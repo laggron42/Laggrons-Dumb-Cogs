@@ -27,6 +27,22 @@ if listener is None:
         return lambda x: x
 
 
+class InviteConverter(commands.InviteConverter):
+    # Yes, I could use that converter everywhere and do something cleaner, but honnestly
+    # I didn't touch this cog for so log that now I'm too afraid of breaking something.
+    # So unless something is really not working or causing a problem, I'm probably not
+    # going to change the code. The first step would be getting rid of this stupid Config
+    # which stores entire invite links, making http and https different invites.
+    #
+    # yeah fuck me
+
+    async def convert(self, ctx: commands.Context, argument: str):
+        if argument in ["main", "default"]:
+            return argument
+        else:
+            return (await super().convert(ctx, argument)).url
+
+
 @cog_i18n(_)
 class RoleInvite(BaseCog):
     """
@@ -50,7 +66,7 @@ class RoleInvite(BaseCog):
         bot.loop.create_task(self.api.update_invites())
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "2.0.2"
+    __version__ = "2.0.3"
 
     async def _check(self, ctx: commands.Context):
         """
@@ -194,7 +210,7 @@ class RoleInvite(BaseCog):
         await ctx.send(_("That invite cannot be found"))
 
     @inviteset.command()
-    async def remove(self, ctx, invite: str, *, role: discord.Role = None):
+    async def remove(self, ctx, invite: InviteConverter, *, role: discord.Role = None):
         """
         Remove a link in this server
 
@@ -204,8 +220,6 @@ class RoleInvite(BaseCog):
         `main`/`default` instead of a discord invite.
         """
         invites = await self.data.guild(ctx.guild).invites()
-        invites = {x.split("/")[-1]: y for x, y in invites.items()}  # removes https://discord.gg/
-        invite = invite.split("/")[-1]  # also removes https://discord.gg
         bot_invite = invites.get(invite)
         if not bot_invite:
             await ctx.send(_("That invite cannot be found"))
@@ -216,7 +230,7 @@ class RoleInvite(BaseCog):
             roles = [discord.utils.get(ctx.guild.roles, id=x) for x in bot_invite["roles"]]
             roles = [x for x in roles if x]  # removes deleted roles
             if not roles:  # no more roles after cleaning
-                await self.api.remove_invite(ctx.guild, f"http://discord.gg/{invite}")
+                await self.api.remove_invite(ctx.guild, invite)
                 await ctx.send(_("That invite lost all of its linked roles and was deleted."))
                 return
 
@@ -242,10 +256,10 @@ class RoleInvite(BaseCog):
                 await ctx.send(_("Alright, invite is kept."))
                 return
 
-            await self.api.remove_invite(ctx.guild, invite=f"http://discord.gg/{invite}")
+            await self.api.remove_invite(ctx.guild, invite)
             await ctx.send(
                 _("The invite `{}` has been removed from the list.").format(
-                    self.api.escape_invite_links(f"http://discord.gg/{invite}")
+                    self.api.escape_invite_links(invite)
                 )
             )
 
