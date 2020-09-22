@@ -115,12 +115,10 @@ class ChallongeTournament(Tournament):
             cached = discord.utils.get(self.participants, player_id=participant["id"])
             if cached is None:
                 try:
-                    participants.append(
-                        self.participant_object.build_from_api(self.tournament, participant)
-                    )
+                    participants.append(self.participant_object.build_from_api(self, participant))
                 except RuntimeError:
                     await async_http_retry(
-                        achallonge.participants.destroy(self.tournament.id, participant["id"])
+                        achallonge.participants.destroy(self.id, participant["id"])
                     )
                     await self.to_channel.send(
                         _(
@@ -145,7 +143,7 @@ class ChallongeTournament(Tournament):
                 if match["state"] != "open":
                     # empty or finished
                     continue
-                matches.append(self.match_object.build_from_api(self.tournament, match))
+                matches.append(self.match_object.build_from_api(self, match))
                 continue
             # we check for upstream bracket changes compared to our cache
             if cached.status == "ongoing" and match["state"] == "complete":

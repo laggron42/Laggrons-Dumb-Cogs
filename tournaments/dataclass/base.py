@@ -106,7 +106,7 @@ class Match:
     def __repr__(self):
         return (
             "<Match status={0.status} round={0.round} set={0.set} id={0.id} underway={0.underway} "
-            "channel={0.channel} start={0.start} tournament={0.tournament.name} "
+            "channel={0.channel} start={0.start_time} tournament={0.tournament.name} "
             "guild_id={0.guild.id} player1={0.player1.name} player2={0.player2.name}>"
         ).format(self)
 
@@ -270,7 +270,7 @@ class Match:
             self.set, category=category, overwrites=overwrites, reason=_("Lancement du set")
         )
 
-    async def launch(self, *allowed_roles: list, restart: bool = False):
+    async def launch(self, restart: bool = False, *allowed_roles: list):
         """
         Launches the set.
 
@@ -291,6 +291,7 @@ class Match:
         category = await self.tournament._get_available_category(
             "winner" if self.round > 0 else "loser"
         )
+        allowed_roles = list(allowed_roles)
         allowed_roles.extend(self.tournament.allowed_roles)
         try:
             channel = await self.create_channel(category, *allowed_roles)
@@ -630,7 +631,7 @@ class Tournament:
     def from_saved_data(
         cls, guild: discord.Guild, config: Config, data: dict, config_data: dict,
     ):
-        tournament_start = datetime.fromtimestamp(int(data["tournament_start"]))
+        tournament_start = datetime.utcfromtimestamp(int(data["tournament_start"]))
         participants = data["participants"]
         matches = data["matches"]
         winner_categories = data["winner_categories"]
