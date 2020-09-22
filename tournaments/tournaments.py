@@ -181,6 +181,4 @@ class Tournaments(
         match: Match
         for tournament in self.tournaments.values():
             cancel(tournament.loop_task)
-            for match in tournament.matches:
-                cancel(match.timeout_task)
-                cancel(match.deletion_task)
+            cancel(tournament.debug_task)

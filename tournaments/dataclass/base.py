@@ -7,10 +7,13 @@ from random import choice
 
 from discord.ext import tasks
 from datetime import datetime, timedelta
-from typing import Optional
+from random import choice
+from babel.dates import format_date, format_time
+from typing import Optional, Tuple
 
 from redbot.core import Config
-from redbot.core.i18n import Translator
+from redbot.core.i18n import Translator, get_babel_locale
+from redbot.core.data_manager import cog_data_path
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -616,6 +619,7 @@ class Tournament:
         # loop task things
         self.task: Optional[asyncio.Task] = None
         self.task_errors = 0
+        self.debug_task = asyncio.get_event_loop().create_task(self.debug_loop_task())
 
     def __repr__(self):
         return (
@@ -905,6 +909,41 @@ class Tournament:
 
     def stop_loop_task(self):
         self.loop_task.cancel()
+
+    async def debug_loop_task(self):
+        def dump(match_file, participants_file):
+            content = ""
+            m: Match
+            for i, m in enumerate(self.matches):
+                content += (
+                    f"----- MATCH {i} -----\n"
+                    f"status={m.status} round={m.round} set={m.set} id={m.id}\n"
+                    f"start_time={m.start_time} end_time={m.end_time} underway={m.underway} "
+                    f"channel={m.channel.id if m.channel else None}\n"
+                    f"player1= name={m.player1} player_id={m.player1.player_id} spoke="
+                    f"{m.player1.spoke} discord_id={m.player1.id}\n"
+                    f"player1= name={m.player2} player_id={m.player2.player_id} spoke="
+                    f"{m.player2.spoke} discord_id={m.player2.id}\n\n"
+                )
+            match_file.write(content)
+            content = ""
+            p: Participant
+            for i, p in enumerate(self.participants):
+                content += (
+                    f"----- PARTICIPANT {i} -----\n"
+                    f"name={p} id={p.id} player_id={p.player_id}\n"
+                    f"match_round={p.match.round if p.match else None} match_id="
+                    f"{p.match.id if p.match else None} spoke={p.spoke}\n\n"
+                )
+            participants_file.write(content)
+
+        while True:
+            m_file = open(cog_data_path(raw_name="Tournaments") / "matches.txt", "w+")
+            p_file = open(cog_data_path(raw_name="Tournaments") / "participants.txt", "w+")
+            dump(m_file, p_file)
+            m_file.close()
+            p_file.close()
+            await asyncio.sleep(1)
 
     async def _update_participants_list(self):
         """
