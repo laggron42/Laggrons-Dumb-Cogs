@@ -48,14 +48,8 @@ class Games(MixinMeta):
             return
         if tournament.status != "ongoing":
             return
-        match: Match
-        try:
-            i, match = next(
-                filter(
-                    lambda x: x[1].channel.id == message.channel.id, enumerate(tournament.matches)
-                )
-            )
-        except StopIteration:
+        i, match = tournament.find_match(channel_id=message.channel.id)
+        if match is None:
             return
         if match.status == "finished" and not match.deletion_task.cancelled():
             match.reset_deletion_task()

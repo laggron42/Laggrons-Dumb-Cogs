@@ -725,24 +725,37 @@ class Tournament:
 
     def find_participant(
         self, *, player_id: Optional[str] = None, discord_id: Optional[int] = None
-    ):
+    ) -> Tuple[int, Participant]:
         if player_id:
             try:
-                return next(filter(lambda x: x.player_id == player_id, self.participants))
+                return next(
+                    filter(lambda x: x[1].player_id == player_id, enumerate(self.participants))
+                )
             except StopIteration:
-                return None
+                return None, None
         elif discord_id:
             try:
-                return next(filter(lambda x: x.id == discord_id, self.participants))
+                return next(filter(lambda x: x[1].id == discord_id, enumerate(self.participants)))
             except StopIteration:
-                return None
+                return None, None
         raise RuntimeError("Provide either player_id or discord_id")
 
-    def find_match(self, match_id: str):
-        try:
-            return next(filter(lambda x: x.id == match_id, self.matches))
-        except StopIteration:
-            return None
+    def find_match(
+        self, match_id: Optional[str], channel_id: Optional[int]
+    ) -> Tuple[int, Participant]:
+        if match_id:
+            try:
+                return next(filter(lambda x: x[1].id == match_id, enumerate(self.matches)))
+            except StopIteration:
+                return None, None
+        if channel_id:
+            try:
+                return next(
+                    filter(lambda x: x[1].channel.id == channel_id, enumerate(self.matches))
+                )
+            except StopIteration:
+                return None, None
+        raise RuntimeError("Provide either match_id or channel_id")
 
     async def send_start_messages(self):
         scores_channel = (

@@ -116,7 +116,7 @@ class Tournaments(
         count = 0
         log.debug("Resuming tournaments...")
         for guild_id, data in (await self.data.all_guilds()).items():
-            if data["tournament"]["name"] is None:
+            if not data["tournament"] or data["tournament"]["name"] is None:
                 continue
             guild = self.bot.get_guild(guild_id)
             if not guild:
