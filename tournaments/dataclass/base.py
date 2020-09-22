@@ -3,7 +3,6 @@ from __future__ import annotations
 import discord
 import logging
 import asyncio
-from random import choice
 
 from discord.ext import tasks
 from datetime import datetime, timedelta
