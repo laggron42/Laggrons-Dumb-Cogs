@@ -204,7 +204,52 @@ class Games(MixinMeta):
                 await match.force_end()
             await tournament._clear_categories()
         tournament.matches = []
+        tournament.stop_loop_task()
         await ctx.send(_("Channels cleared."))
+
+    @commands.command()
+    async def reset(self, ctx: commands.Context):
+        """
+        Resets the current tournament from the bot.
+        """
+        guild = ctx.guild
+        if not ctx.channel.permissions_for(guild.me).add_reactions:
+            await ctx.send(_('I need the "Add reactions" permission.'))
+            return
+        try:
+            tournament = self.tournaments[guild.id]
+        except KeyError:
+            await ctx.send(_("There's no tournament setup on this server."))
+            return
+        if tournament.phase == "ongoing":
+            await ctx.send(
+                _("The tournament is ongoing. Please use `{prefix}resetbracket` first.").format(
+                    prefix=ctx.clean_prefix
+                )
+            )
+            return
+        if tournament.phase in ("register", "checkin"):
+            message = await ctx.send(
+                _(
+                    ":warning: **Warning!**\n"
+                    "If you continue, the participants registered will be lost. Then you will be "
+                    "able to configure a new tournament with `{prefix}setup`.\n"
+                    "**The participants __cannot__ be recovered!** Do you want to continue?"
+                )
+            )
+            pred = ReactionPredicate.yes_or_no(message, ctx.author)
+            start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
+            try:
+                await self.bot.wait_for("reaction_add", check=pred, timeout=30)
+            except asyncio.TimeoutError:
+                await ctx.send(_("Timed out."))
+                return
+            if not pred.result:
+                await ctx.send(_("Cancelling."))
+                return
+        del self.tournaments[guild.id]
+        await self.data.guild(guild).tournament.set({})
+        await ctx.send(_("Tournament removed!"))
 
     @only_phase("ongoing")
     @commands.command()
