@@ -151,11 +151,9 @@ class Tournaments(
             log.info("No tournament had to be resumed.")
 
     async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
-        try:
-            error = error.original
-        except AttributeError:
-            pass
-        if isinstance(error, achallonge.ChallongeException):
+        if isinstance(
+            error.original if hasattr(error, "original") else error, achallonge.ChallongeException
+        ):
             await ctx.send(
                 _(
                     "Error from Challonge: {error}\n"

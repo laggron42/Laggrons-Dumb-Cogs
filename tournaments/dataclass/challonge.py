@@ -32,6 +32,15 @@ class ChallongeParticipant(Participant):
         await async_http_retry(achallonge.participants.destroy(self.tournament.id, self.player_id))
         log.debug(f"Destroyed player {self.player_id} (tournament {self.tournament.id})")
 
+    async def send(self, content):
+        # THIS IS USED FOR TESTING AND SHOULD BE REMOVED
+        log.info(f"DM {str(self)}: {content}")
+
+    @property
+    def mention(self):
+        # THIS IS USED FOR TESTING AND SHOULD BE REMOVED
+        return str(self)
+
 
 class ChallongeMatch(Match):
     @classmethod
@@ -141,14 +150,17 @@ class ChallongeTournament(Tournament):
             cached = discord.utils.get(self.matches, id=match["id"])
             if cached is None:
                 if match["state"] != "open":
-                    # empty or finished
+                    # still empty, or finished (and we don't want to load finished sets into cache)
                     continue
                 matches.append(self.match_object.build_from_api(self, match))
                 continue
             # we check for upstream bracket changes compared to our cache
             if cached.status == "ongoing" and match["state"] == "complete":
                 # score was set manually
-                winner_score, loser_score = match["scores_csv"]
+                try:
+                    winner_score, loser_score = match["scores_csv"].split("-")
+                except ValueError:
+                    winner_score, loser_score = 0, 0
                 winner = discord.utils.get(self.participants, player_id=match["winner_id"])
                 # Challonge always give the winner score first
                 # need to know the actual player1/2 score, and swap if needed
@@ -157,7 +169,7 @@ class ChallongeTournament(Tournament):
                 else:
                     await cached.end(loser_score, winner_score, upload=False)
                 log.info(
-                    f"[Guild {self.guild.id}] Ended set {self.set} because of remote score "
+                    f"[Guild {self.guild.id}] Ended set {cached.set} because of remote score "
                     f"update (score {match['scores_csv']} winner {str(winner)})"
                 )
                 remote_changes.append(cached.set)
@@ -166,7 +178,7 @@ class ChallongeTournament(Tournament):
                 # mostl likely due to a score change on a parent match
                 await cached.force_end()
                 log.info(
-                    f"[Guild {self.guild.id}] Ended set {self.set} because of bracket "
+                    f"[Guild {self.guild.id}] Ended set {cached.set} because of bracket "
                     "changes (now marked as pending by Challonge)."
                 )
                 remote_changes.append(cached.set)
@@ -181,9 +193,15 @@ class ChallongeTournament(Tournament):
             # sets will be automatically created when the time comes. we'll just leave the timer
             # do its job and delete the channel.
             matches.append(cached)
+        difference = list(set(self.matches).difference(matches))
+        if difference:
+            log.debug(
+                f"[Guild {self.guild.id}] Removing these matches from cache:\n"
+                + "\n".join([repr(x) for x in difference])
+            )
         self.matches = matches
         if remote_changes:
-            await self.warn_bracket_change(remote_changes)
+            await self.warn_bracket_change(*remote_changes)
 
     async def start(self):
         self.phase = "ongoing"
@@ -207,4 +225,7 @@ class ChallongeTournament(Tournament):
         return await async_http_retry(achallonge.participants.index(self.id))
 
     async def list_matches(self):
-        return await async_http_retry(achallonge.matches.index(self.id, state="open"))
+        return await async_http_retry(achallonge.matches.index(self.id))
+
+    async def reset(self):
+        await async_http_retry(achallonge.tournaments.reset(self.id))

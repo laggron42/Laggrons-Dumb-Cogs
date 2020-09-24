@@ -51,8 +51,6 @@ class Games(MixinMeta):
         i, match = tournament.find_match(channel_id=message.channel.id)
         if match is None:
             return
-        if match.status == "finished" and not match.deletion_task.cancelled():
-            match.reset_deletion_task()
         elif match.status == "ongoing":
             if match.player1.id == message.author.id and match.player1.spoke is False:
                 self.tournaments[guild.id].matches[i].player1.spoke = True
@@ -86,6 +84,7 @@ class Games(MixinMeta):
             inline=False,
         )
         message = await ctx.send(embed=embed)
+        tournament.status = "ongoing"
         await tournament.start()
         embed.set_field_at(
             0,
@@ -148,7 +147,7 @@ class Games(MixinMeta):
             return
         async with ctx.typing():
             tournament.stop_loop_task()
-            await tournament.end()
+            await tournament.stop()
             categories = tournament.winner_categories + tournament.loser_categories
             for category in categories:
                 for channel in category.text_channels:
@@ -157,6 +156,55 @@ class Games(MixinMeta):
         await self.data.guild(guild).tournament.set({})
         del self.tournaments[guild.id]
         await ctx.send(_("Tournament ended."))
+
+    @only_phase("ongoing", "finished")
+    @commands.command()
+    async def resetbracket(self, ctx: commands.Context):
+        """
+        Resets the bracket and stops the bot's activity.
+        """
+        if not ctx.channel.permissions_for(ctx.guild.me).add_reactions:
+            await ctx.send(_('I need the "Add reactions" permission.'))
+            return
+        tournament = self.tournaments[ctx.guild.id]
+        message = await ctx.send(
+            _(
+                ":warning: **Warning!**\n"
+                "If you continue, the entire progression will be lost, and the bot will roll "
+                "back to its previous state. Then you will be able to start again with `{prefix}"
+                "start`.\n**The matches __cannot__ be recovered!** Do you want to continue?"
+            ).format(prefix=ctx.clean_prefix)
+        )
+        pred = ReactionPredicate.yes_or_no(message, ctx.author)
+        start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
+        try:
+            await self.bot.wait_for("reaction_add", check=pred, timeout=30)
+        except asyncio.TimeoutError:
+            await ctx.send(_("Timed out."))
+            return
+        if not pred.result:
+            await ctx.send(_("Cancelling."))
+            return
+        tournament.stop_loop_task()
+        await tournament.reset()
+        message = _("The tournament has been reset.")
+        if tournament.matches:
+            message += _(
+                "\nStarting channels deletion, this may take a while... "
+                "Please wait for this to be done before trying to restart."
+            )
+        await ctx.send(message)
+        tournament.status = "pending"
+        tournament.participants = []
+        # tournament.streamers = []
+        if not tournament.matches:
+            return
+        async with ctx.typing():
+            for match in tournament.matches:
+                await match.force_end()
+            await tournament._clear_categories()
+        tournament.matches = []
+        await ctx.send(_("Channels cleared."))
 
     @only_phase("ongoing")
     @commands.command()
@@ -175,7 +223,7 @@ class Games(MixinMeta):
         if player.match is None:
             await ctx.send(_("You don't have any ongoing match."))
             return
-        if scores_channel is not None:
+        if scores_channel is not None and scores_channel.id != ctx.channel.id:
             await ctx.send(
                 _("You have to use this command in {channel}.").format(
                     channel=scores_channel.mention
@@ -237,6 +285,7 @@ class Games(MixinMeta):
             return
         message = await ctx.send(_("Are you sure you want to stop the tournament?"))
         pred = ReactionPredicate.yes_or_no(message, ctx.author)
+        start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
         try:
             await self.bot.wait_for("reaction_add", check=pred, timeout=20)
         except asyncio.TimeoutError:
