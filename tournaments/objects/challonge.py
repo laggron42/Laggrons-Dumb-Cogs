@@ -115,6 +115,9 @@ class ChallongeTournament(Tournament):
     def from_saved_data(cls, guild, config, data, config_data):
         return super().from_saved_data(guild, config, data, config_data)
 
+    async def _get_all_rounds(self):
+        return [x["round"] for x in await self.list_matches()]
+
     async def _update_participants_list(self):
         raw_participants = await self.list_participants()
         participants = []

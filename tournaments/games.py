@@ -3,6 +3,8 @@ import logging
 import re
 import asyncio
 
+from datetime import datetime, timedelta
+
 from redbot.core import commands
 from redbot.core import checks
 from redbot.core.i18n import Translator
@@ -30,7 +32,7 @@ class ScoreConverter(commands.Converter):
                     "Please retry in the right format (3-0, 2-1, 3-2...)"
                 )
             )
-        return score.group("score1"), score.group("score2")
+        return int(score.group("score1")), int(score.group("score2"))
 
 
 class Games(MixinMeta):
@@ -56,6 +58,8 @@ class Games(MixinMeta):
                 self.tournaments[guild.id].matches[i].player1.spoke = True
             elif match.player2.id == message.author.id and match.player2.spoke is False:
                 self.tournaments[guild.id].matches[i].player2.spoke = True
+        elif match.status == "finished":
+            match.end_time = datetime.utcnow()
 
     @credentials_check
     @mod_or_to()
@@ -133,6 +137,7 @@ class Games(MixinMeta):
             inline=False,
         )
         await message.edit(embed=embed)
+        await tournament._get_top8()
         tournament.start_loop_task()
         await ctx.send(_("The tournament has now started!"))
 
@@ -262,6 +267,7 @@ class Games(MixinMeta):
     @only_phase("ongoing")
     @commands.command()
     @commands.guild_only()
+    @commands.cooldown(1, 3, commands.BucketType.user)
     async def win(self, ctx: commands.Context, *, score: ScoreConverter):
         """
         Set the score of your set. To be used by the winner.
@@ -284,10 +290,43 @@ class Games(MixinMeta):
                 )
             )
             return
+        if (player.match.start_time + timedelta(minutes=5)) > datetime.utcnow():
+            await ctx.send(
+                _(
+                    "You need to wait for 5 minutes at least after the beginning of your "
+                    "match before being able to set your score. T.O.s can bypass this by "
+                    "setting the score manually on the bracket."
+                )
+            )
+            return
+        if score == (0, 0):
+            await ctx.send(
+                _(
+                    "That's a quite special score you've got there dude, you gotta tell "
+                    "me how to win without playing, I'm interested..."
+                )
+            )
+            return
+        # after second thought, checking the score based on BO3/BO5 is a bad idea
+        # there are plenty of cases where a set could end with a lower score (bracket slowed down)
+        # I'll leave the code here, uncomment if you want a strict score check
+        #
+        # limit = 5 if player.match.is_bo5 else 3
+        # mode = _("(BO5)") if player.match.is_bo5 else _("(BO3)")
+        # if sum(score) > limit:
+        #     await ctx.send(
+        #         _("The score does not follow the format of this set {mode}.\n").format(mode=mode)
+        #         + _(":arrow_forward: sum should not be greater than {num}").format(num=limit)
+        #     )
+        #     return
+        # if max(score) != limit // 2 + 1:
+        #     await ctx.send(
+        #         _("The score does not follow the format of this set {mode}.\n").format(mode=mode)
+        #         + _(":arrow_forward: highest score should be {num}").format(num=limit // 2 + 1)
+        #     )
+        #     return
         if ctx.author.id == player.match.player2.id:
             score = score[::-1]  # player1-player2 format
-        # TODO: verify BO3/BO5 format
-        # TODO: verify minimum time for a match
         await player.match.end(*score)
         await ctx.tick()
 

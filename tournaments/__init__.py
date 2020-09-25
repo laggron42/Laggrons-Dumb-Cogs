@@ -23,8 +23,9 @@ log = logging.getLogger("red.laggron.tournaments")
 
 
 async def setup(bot):
-    init_logger(log, Tournaments.__class__.__name__)
+    init_logger(log, "Tournaments")
     n = Tournaments(bot)
     bot.add_cog(n)
+    await bot.wait_until_ready()
     await n.restore_tournaments()
     log.debug("Cog successfully loaded on the instance.")

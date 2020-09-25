@@ -98,11 +98,19 @@ class Match:
         self.underway = underway
         self.player1 = player1
         self.player2 = player2
+        self.is_top8 = (
+            round >= tournament.top_8["winner"]["top8"]
+            or round <= tournament.top_8["loser"]["top8"]
+        )
+        self.is_bo5 = (
+            round >= tournament.top_8["winner"]["bo5"] or round <= tournament.top8["loser"]["bo5"]
+        )
+        self.round_name = self._get_name()
         self.channel: Optional[discord.TextChannel] = None
         self.start_time: Optional[datetime] = None
         self.end_time: Optional[datetime] = None
         self.status = "pending"  # can be "pending" "ongoing" "finished"
-        self.checked_dq = False
+        self.checked_dq = True if self.is_top8 else False
         player1.match = self
         player2.match = self
 
@@ -145,6 +153,23 @@ class Match:
             "checked_dq": self.checked_dq,
         }
 
+    def _get_name(self) -> str:
+        if self.round > 0:
+            max_round = self.tournament.top_8["winner"]["top8"]
+            return {
+                max_round: _("Grand Final"),
+                max_round - 1: _("Winners Final"),
+                max_round - 2: _("Winners Semi-Final"),
+                max_round - 3: _("Winners Quarter-Final"),
+            }.get(self.round, default=_("Winners round {round}").format(round=self.round))
+        elif self.round < 0:
+            max_round = self.tournament.top_8["loser"]["top8"]
+            return {
+                max_round: _("Losers Final"),
+                max_round + 1: _("Losers Semi-Final"),
+                max_round + 2: _("Losers Quarter-Final"),
+            }.get(self.round, default=_("Losers round {round}").format(round=self.round))
+
     async def send_message(
         self, channel: Optional[discord.TextChannel] = None, reset: bool = False
     ) -> bool:
@@ -171,9 +196,10 @@ class Match:
             )
         else:
             message = ""
+        top8 = _("**(top 8)** :fire:") if self.is_top8 else ""
         message += _(
-            ":arrow_forward: **{0.set}** : {0.player1.mention} vs {0.player2.mention}\n"
-        ).format(self)
+            ":arrow_forward: **{0.set}** : {0.player1.mention} vs {0.player2.mention}  {top8}\n"
+        ).format(self, top8=top8)
         if self.tournament.ruleset_channel:
             message += _(
                 ":white_small_square: The rules must follow the ones given in {channel}\n"
@@ -197,13 +223,18 @@ class Match:
             ":white_small_square: In case of lag making the game unplayable, use the "
             "`{prefix}lag` command to call the T.O. and solve the problem.\n"
             ":white_small_square: **As soon as the set is done**, the winner sets the "
-            "score {score_channel} with the `{prefix}win` command.\n\n"
-        ).format(prefix=self.tournament.bot_prefix, score_channel=score_channel)
+            "score {score_channel} with the `{prefix}win` command.\n"
+            ":arrow_forward: You will play this set as a {type}."
+        ).format(
+            prefix=self.tournament.bot_prefix,
+            score_channel=score_channel,
+            type=_("**BO5** *(best of 5)*") if self.is_bo5 else _("**BO3** *(best of 3)*"),
+        )
         if self.tournament.baninfo:
             chosen_player = choice([self.player1, self.player2])
-            message += _(":game_die: **{player}** was picked to begin the bans{baninfo}.").format(
-                player=chosen_player.mention, baninfo=f" *({self.tournament.baninfo})*"
-            )
+            message += _(
+                ":game_die: **{player}** was picked to begin the bans *({baninfo})*."
+            ).format(player=chosen_player.mention, baninfo=self.tournament.baninfo)
 
         async def send_in_dm():
             nonlocal message
@@ -239,9 +270,16 @@ class Match:
         else:
             if self.tournament.queue_channel is not None:
                 await self.tournament.queue_channel.send(
-                    _("{player1} {player2} Play your set in the channel {channel}").format(
+                    _(
+                        ":arrow_forward: **{name}** ({bo_type}): {player1} vs {player2} "
+                        "{on_stream} {top8} in {channel}"
+                    ).format(
+                        name=self.round_name,
+                        bo_type=_("(BO5)") if self.is_bo5 else _("(BO3)"),
                         player1=self.player1.mention,
                         player2=self.player2.mention,
+                        on_stream="",
+                        top8=top8,
                         channel=channel.mention,
                     )
                 )
@@ -635,6 +673,10 @@ class Tournament:
         # loop task things
         self.task: Optional[asyncio.Task] = None
         self.task_errors = 0
+        self.top_8 = {
+            "winner": {"top8": None, "bo5": None},
+            "loser": {"top8": None, "bo5": None},
+        }
         self.debug_task = asyncio.get_event_loop().create_task(self.debug_loop_task())
 
     def __repr__(self):
@@ -757,6 +799,41 @@ class Tournament:
         self.winner_categories = []
         self.loser_categories = []
 
+    async def _get_top8(self):
+        # if you're wondering how this works, well I have no idea :D
+        # this was mostly taken from the original bot this cog is based on, ATOS by Wonderfall
+        # https://github.com/Wonderfall/ATOS/blob/master/bot.py#L1355-L1389
+        rounds = await self._get_all_rounds()
+        top8 = self.top_8
+        # calculate top 8
+        top8["winner"]["top8"] = max(rounds) - 2
+        top8["loser"]["top8"] = min(rounds) + 2
+        # minimal values, in case of a small tournament
+        if top8["winner"]["top8"] < 1:
+            top8["winner"]["top8"] = 1
+        if top8["loser"]["top8"] > -1:
+            top8["loser"]["top8"] = -1
+        # calculate bo5 start
+        if self.start_bo5 > 0:
+            top8["winner"]["bo5"] = top8["winner"]["top8"] + self.start_bo5 - 1
+        elif self.start_bo5 in (0, 1):
+            top8["winner"]["bo5"] = top8["winner"]["top8"] + self.start_bo5
+        else:
+            top8["winner"]["bo5"] = top8["winner"]["top8"] + self.start_bo5 + 1
+        if self.start_bo5 > 1:
+            top8["loser"]["bo5"] = min(rounds)  # top 3 is loser final anyway
+        else:
+            top8["loser"]["bo5"] = top8["loser"]["bo5"] - self.start_bo5
+        # avoid aberrant values
+        if top8["winner"]["bo5"] > max(rounds):
+            top8["winner"]["bo5"] = max(rounds)
+        if top8["winner"]["bo5"] < 1:
+            top8["winner"]["bo5"] = 1
+        if top8["loser"]["bo5"] < min(rounds):
+            top8["loser"]["bo5"] = min(rounds)
+        if top8["loser"]["bo5"] > -1:
+            top8["loser"]["bo5"] = -1
+
     def find_participant(
         self, *, player_id: Optional[str] = None, discord_id: Optional[int] = None
     ) -> Tuple[int, Participant]:
@@ -776,7 +853,7 @@ class Tournament:
 
     def find_match(
         self, *, match_id: Optional[str] = None, channel_id: Optional[int] = None
-    ) -> Tuple[int, Participant]:
+    ) -> Tuple[int, Match]:
         if match_id:
             try:
                 return next(filter(lambda x: x[1].id == match_id, enumerate(self.matches)))
@@ -1004,6 +1081,20 @@ class Tournament:
             p_file.close()
             await asyncio.sleep(1)
 
+    async def _get_all_rounds(self) -> List[int]:
+        """
+        Return a list of all rounds in the bracket. This is used to determine the top 8.
+
+        This is a new method because our Match class will not be created without players, so
+        we add this new method which only fetch what we need.
+
+        Returns
+        -------
+        List[int]
+            The list of rounds.
+        """
+        raise NotImplementedError
+
     async def _update_participants_list(self):
         """
         Updates the internal list of participants, checking for changes such as:
@@ -1077,7 +1168,7 @@ class Tournament:
         """
         raise NotImplementedError
 
-    async def list_participants(self):
+    async def list_participants(self) -> List[Participant]:
         """
         Returns the list of participants from the tournament host.
 
@@ -1088,7 +1179,7 @@ class Tournament:
         """
         raise NotImplementedError
 
-    async def list_matches(self):
+    async def list_matches(self) -> List[Match]:
         """
         Returns the list of matches from the tournament host.
 

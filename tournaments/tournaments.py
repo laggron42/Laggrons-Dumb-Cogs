@@ -140,6 +140,7 @@ class Tournaments(
                     )
                     self.tournaments[guild_id] = tournament
                     if tournament.phase == "ongoing":
+                        await tournament._get_top8()
                         tournament.start_loop_task()
             except Exception as e:
                 log.error(f"[Guild {guild_id}] Failed to resume tournament.", exc_info=e)
