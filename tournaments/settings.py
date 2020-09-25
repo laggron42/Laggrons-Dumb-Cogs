@@ -1044,7 +1044,7 @@ the start of the tournament, then closing 15 minutes before.
         if tournament.limit is not None:
             embed.description = _("Tournament of {limit} players.").format(limit=tournament.limit)
         else:
-            embed.description = _("Tournoi without player limit.")
+            embed.description = _("Tournament without player limit.")
         embed.description += _("\nTournament start: {date}").format(
             date=format_datetime(tournament.tournament_start)
         )
@@ -1096,3 +1096,136 @@ the start of the tournament, then closing 15 minutes before.
         self.tournaments[guild.id] = tournament
         await self.data.guild(guild).tournament.set(tournament.to_dict())
         await ctx.send(_("The tournament is now set!"))
+
+    @mod_or_to()
+    @commands.command(aliases=["tinfo"])
+    @commands.guild_only()
+    async def tournamentinfo(self, ctx: commands.Context):
+        """
+        Shows infos about the current tournament.
+        """
+        try:
+            t = self.tournaments[ctx.guild.id]
+        except KeyError:
+            await ctx.send(_("There's no tournament setup on this server."))
+            return
+
+        def get_time(d: datetime):
+            if d:
+                return d.strftime("%d/%m/%y %H:%M UTC")
+            else:
+                return _("Manual")
+
+        def get_channel(c: discord.TextChannel):
+            if c:
+                return c.mention
+            else:
+                return _("Not set.")
+
+        embed = discord.Embed(title=f"{t.name} • *{t.game}*")
+        embed.url = t.url
+        embed.description = _("Current phase: {phase}").format(phase=t.phase)
+        if t.phase == "pending":
+            embed.add_field(name=_("Start time"), value=get_time(t.tournament_start), inline=True)
+            embed.add_field(
+                name=_("Limit of participants"),
+                value=t.limit if t.limit else _("Not set."),
+                inline=True,
+            )
+            embed.add_field(
+                name=_("Channels"),
+                value=_("Registration: {register}\nCheck-in: {checkin}").format(
+                    register=get_channel(t.register_channel),
+                    checkin=get_channel(t.checkin_channel),
+                ),
+            )
+            embed.add_field(
+                name=_("Registration"),
+                value=_("Opening: {start}\nClosing: {stop}").format(
+                    start=get_time(t.register_start), stop=get_time(t.register_stop)
+                ),
+                inline=True,
+            )
+            embed.add_field(
+                name=_("Check-in"),
+                value=_("Opening: {start}\nClosing: {stop}").format(
+                    start=get_time(t.checkin_start), stop=get_time(t.checkin_stop)
+                ),
+                inline=True,
+            )
+        elif t.phase == "register":
+            limit = f"/{t.limit}" if t.limit else _(" *(no limit)*")
+            embed.add_field(name=_("Start time"), value=get_time(t.tournament_start), inline=True)
+            embed.add_field(
+                name=_("Participants registered"),
+                value=f"{len(t.participants)}{limit}",
+                inline=True,
+            )
+            embed.add_field(
+                name=_("Registration channel"),
+                value=t.register_channel.mention if t.register_channel else _("Not set"),
+                inline=True,
+            )
+            embed.add_field(
+                name=_("Register end time"), value=get_time(t.register_stop), inline=True,
+            )
+            embed.add_field(
+                name=_("Check-in"),
+                value=_("Opening: {start}\nClosing: {stop}").format(
+                    start=get_time(t.checkin_start), stop=get_time(t.checkin_stop)
+                ),
+                inline=True,
+            )
+        elif t.phase == "checkin":
+            limit = f"/{t.limit}" if t.limit else _(" *(no limit)*")
+            embed.add_field(name=_("Start time"), value=get_time(t.tournament_start), inline=True)
+            embed.add_field(
+                name=_("Participants registered"),
+                value=f"{len(t.participants)}{limit}",
+                inline=True,
+            )
+            embed.add_field(
+                name=_("Channels"),
+                value=_("Registration: {register}\nCheck-in: {checkin}").format(
+                    register=get_channel(t.register_channel),
+                    checkin=get_channel(t.checkin_channel),
+                ),
+            )
+            embed.add_field(
+                name=_("Register end time"), value=get_time(t.register_stop), inline=True,
+            )
+            embed.add_field(
+                name=_("Check-in end time"), value=get_time(t.checkin_stop), inline=True,
+            )
+            checked_in = len([x for x in t.participants if x.checked_in])
+            embed.add_field(
+                name=_(
+                    "Participants checked-in",
+                    value=f"{checked_in}/{len(t.participants)}",
+                    inline=True,
+                )
+            )
+        elif t.phase == "ongoing":
+            embed.add_field(
+                name=_("Participants"),
+                value=_("Total: {total}\nIn-game: {ingame}").format(
+                    total=len(t.participants), ingame=len([x for x in t.participants if x.match])
+                ),
+                inline=False,
+            )
+            embed.add_field(
+                name=_("Matchs"),
+                value=_(
+                    "Total: {total}\nOngoing: {ongoing}\n"
+                    "Scheduled: {scheduled}\nEnded (awaiting deletion): {ended}"
+                ).format(
+                    total=len(t.matches),
+                    ongoing=len([x for x in t.matches if x.status == "ongoing"]),
+                    scheduled=len([x for x in t.matches if x.status == "pending"]),
+                    ended=len([x for x in t.matches if x.status == "finished"]),
+                ),
+                inline=False,
+            )
+        else:
+            raise RuntimeError
+        await ctx.send(embed=embed)

@@ -46,7 +46,7 @@ class Games(MixinMeta):
             tournament: Tournament = self.tournaments[guild.id]
         except KeyError:
             return
-        if tournament.status != "ongoing":
+        if tournament.phase != "ongoing":
             return
         i, match = tournament.find_match(channel_id=message.channel.id)
         if match is None:
@@ -86,7 +86,7 @@ class Games(MixinMeta):
             inline=False,
         )
         message = await ctx.send(embed=embed)
-        tournament.status = "ongoing"
+        tournament.phase = "ongoing"
         await tournament.start()
         embed.set_field_at(
             0,
@@ -200,7 +200,7 @@ class Games(MixinMeta):
                 "Please wait for this to be done before trying to restart."
             )
         await ctx.send(message)
-        tournament.status = "pending"
+        tournament.phase = "pending"
         tournament.participants = []
         # tournament.streamers = []
         if not tournament.matches:

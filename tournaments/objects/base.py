@@ -639,8 +639,8 @@ class Tournament:
 
     def __repr__(self):
         return (
-            "<Tournament name={0.name} phase={0.pase} status={0.status} url={0.url} game={0.game} "
-            "limit={0.limit} id={0.id} guild_id={0.guild.id}>"
+            "<Tournament name={0.name} phase={0.phase} status={0.status} url={0.url} "
+            "game={0.game} limit={0.limit} id={0.id} guild_id={0.guild.id}>"
         ).format(self)
 
     participant_object = Participant
