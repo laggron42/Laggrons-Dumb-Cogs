@@ -12,7 +12,7 @@ from redbot.core.utils.menus import start_adding_reactions
 
 from .abc import MixinMeta
 from .objects import Tournament, Match, Participant
-from .utils import credentials_check, only_phase
+from .utils import credentials_check, only_phase, mod_or_to
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -58,7 +58,9 @@ class Games(MixinMeta):
                 self.tournaments[guild.id].matches[i].player2.spoke = True
 
     @credentials_check
+    @mod_or_to()
     @commands.command()
+    @commands.guild_only()
     @checks.mod_or_permissions(administrator=True)
     async def start(self, ctx: commands.Context):
         """
@@ -135,7 +137,9 @@ class Games(MixinMeta):
         await ctx.send(_("The tournament has now started!"))
 
     @only_phase("ongoing")
+    @mod_or_to()
     @commands.command()
+    @commands.guild_only()
     async def end(self, ctx: commands.Context):
         """
         Ends the current tournament.
@@ -158,7 +162,9 @@ class Games(MixinMeta):
         await ctx.send(_("Tournament ended."))
 
     @only_phase("ongoing", "finished")
+    @mod_or_to()
     @commands.command()
+    @commands.guild_only()
     async def resetbracket(self, ctx: commands.Context):
         """
         Resets the bracket and stops the bot's activity.
@@ -207,7 +213,9 @@ class Games(MixinMeta):
         tournament.stop_loop_task()
         await ctx.send(_("Channels cleared."))
 
+    @mod_or_to()
     @commands.command()
+    @commands.guild_only()
     async def reset(self, ctx: commands.Context):
         """
         Resets the current tournament from the bot.
@@ -253,6 +261,7 @@ class Games(MixinMeta):
 
     @only_phase("ongoing")
     @commands.command()
+    @commands.guild_only()
     async def win(self, ctx: commands.Context, *, score: ScoreConverter):
         """
         Set the score of your set. To be used by the winner.
@@ -284,6 +293,7 @@ class Games(MixinMeta):
 
     @only_phase("ongoing")
     @commands.command(aliases=["ff"])
+    @commands.guild_only()
     async def forfeit(self, ctx: commands.Context):
         """
         Forfeit your current match.
@@ -316,6 +326,7 @@ class Games(MixinMeta):
 
     @only_phase("ongoing")
     @commands.command(aliases=["dq"])
+    @commands.guild_only()
     async def disqualify(self, ctx: commands.Context):
         """
         Disqualify yourself from the tournament.
@@ -346,6 +357,7 @@ class Games(MixinMeta):
 
     @only_phase("ongoing")
     @commands.command()
+    @commands.guild_only()
     async def bracket(self, ctx: commands.Context):
         """
         Show the tournament's bracket.
@@ -356,6 +368,7 @@ class Games(MixinMeta):
 
     @only_phase("ongoing")
     @commands.command()
+    @commands.guild_only()
     async def stages(self, ctx: commands.Context):
         """
         Show the list of legal stages.
@@ -371,6 +384,7 @@ class Games(MixinMeta):
 
     @only_phase("ongoing")
     @commands.command(aliases=["counters"])
+    @commands.guild_only()
     async def counterpicks(self, ctx: commands.Context):
         """
         Show the list of legal counter stages

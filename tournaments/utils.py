@@ -6,6 +6,8 @@ from achallonge import ChallongeException
 from redbot.core import commands
 from redbot.core.i18n import Translator
 
+from .objects import Tournament
+
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
 
@@ -51,6 +53,27 @@ def only_phase(*allowed_phases):
         return command
 
     return wrapper
+
+
+def mod_or_to():
+    async def check(ctx: commands.Context):
+        if ctx.author.id == ctx.guild.owner.id:
+            return True
+        if ctx.author.guild_permissions.administrator:
+            return True
+        if await ctx.bot.is_mod(ctx.author):
+            return True
+        if await ctx.bot.is_owner(ctx.author):
+            return True
+        try:
+            tournament: Tournament = ctx.cog.tournaments[ctx.guild.id]
+        except KeyError:
+            return False
+        if tournament.to_role in ctx.author.roles:
+            return True
+        return False
+
+    return commands.check(check)
 
 
 async def async_http_retry(coro):

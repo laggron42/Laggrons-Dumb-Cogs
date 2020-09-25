@@ -18,7 +18,7 @@ from redbot.core.utils.chat_formatting import pagify
 
 from .abc import MixinMeta
 from .objects import ChallongeTournament
-from .utils import credentials_check, async_http_retry
+from .utils import credentials_check, async_http_retry, mod_or_to
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -109,6 +109,7 @@ class Settings(MixinMeta):
         return text
 
     @commands.group()
+    @commands.guild_only()
     @checks.admin_or_permissions(administrator=True)
     async def challongeset(self, ctx: commands.Context):
         """
@@ -186,6 +187,7 @@ it directly.
         await ctx.send(_("The username was successfully set."))
 
     @commands.group(aliases=["tset"])
+    @commands.guild_only()
     @checks.admin_or_permissions(administrator=True)
     async def tournamentset(self, ctx: commands.Context):
         """
@@ -958,8 +960,9 @@ the start of the tournament, then closing 15 minutes before.
         await menus.menu(ctx, embeds, controls=menus.DEFAULT_CONTROLS)
 
     @credentials_check
+    @mod_or_to()
     @commands.command()
-    @checks.mod_or_permissions(administrator=True)
+    @commands.guild_only()
     @commands.cooldown(1, 30, commands.BucketType.guild)
     async def setup(self, ctx: commands.Context, url: ChallongeURLConverter):
         """
