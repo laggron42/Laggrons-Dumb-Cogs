@@ -808,12 +808,12 @@ class Tournament:
                 ":white_small_square: You can check the current "
                 "streams with the `{prefix}streams` command.\n\n"
                 "{participant} Please read the instructions :\n"
-                ":white_small_square: Your sets are announced in {queue_channel}.\n"
+                "{queue_channel}"
                 "{rules_channel}"
                 ":white_small_square: The winner of a set must report the score **as soon as "
                 "possible**{scores_channel} with the `{prefix}win` command.\n"
                 ":white_small_square: You can disqualify from the tournament with the "
-                "`{prefix}dq` command, or just abandon your current set with `{prefix}ff` "
+                "`{prefix}dq` command, or just abandon your current set with the `{prefix}ff` "
                 "command.\n"
                 ":white_small_square: In case of lag making the game unplayable, use the `{prefix}"
                 "lag` command to call the T.O.\n"
@@ -822,7 +822,11 @@ class Tournament:
                 tournament=self.name,
                 bracket=self.url,
                 participant=self.participant_role.mention,
-                queue_channel=self.queue_channel.mention,
+                queue_channel=_(
+                    ":white_small_square: Your sets are announced in {channel}.\n"
+                ).format(channel=self.queue_channel.mention)
+                if self.queue_channel
+                else "",
                 rules_channel=_(
                     ":white_small_square: The ruleset is available in {channel}.\n"
                 ).format(channel=self.ruleset_channel.mention)

@@ -54,7 +54,7 @@ class Settings(MixinMeta):
         guild = ctx.guild
         not_set = {"channels": [], "roles": []}
         lost = {"channels": [], "roles": []}
-        required_channels = ["announcements", "queue", "to"]
+        required_channels = ["to"]
         required_roles = ["participant"]
         data = await self.data.guild(guild).all()
         for name, channel_id in data["channels"].items():
