@@ -11,7 +11,7 @@ from redbot.core import Config
 from redbot.core.bot import Red
 from redbot.core.i18n import Translator, cog_i18n
 
-from .dataclass import Tournament, Match, ChallongeTournament
+from .objects import Tournament, Match, ChallongeTournament
 from .games import Games
 from .registration import Registration
 from .settings import Settings

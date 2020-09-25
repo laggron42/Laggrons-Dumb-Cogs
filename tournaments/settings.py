@@ -17,7 +17,7 @@ from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
 from redbot.core.utils.chat_formatting import pagify
 
 from .abc import MixinMeta
-from .dataclass import ChallongeTournament
+from .objects import ChallongeTournament
 from .utils import credentials_check, async_http_retry
 
 log = logging.getLogger("red.laggron.tournaments")

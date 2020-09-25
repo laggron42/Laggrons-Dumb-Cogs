@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Mapping
 if TYPE_CHECKING:
     from redbot.core import Config
     from redbot.core.bot import Red
-    from .dataclass import Tournament
+    from .objects import Tournament
 
 
 class MixinMeta(ABC):

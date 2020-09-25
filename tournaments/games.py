@@ -11,7 +11,7 @@ from redbot.core.utils.predicates import ReactionPredicate
 from redbot.core.utils.menus import start_adding_reactions
 
 from .abc import MixinMeta
-from .dataclass import Tournament, Match, Participant
+from .objects import Tournament, Match, Participant
 from .utils import credentials_check, only_phase
 
 log = logging.getLogger("red.laggron.tournaments")
