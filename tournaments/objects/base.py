@@ -39,10 +39,11 @@ class Participant(discord.Member):
         self._user = member._user
         # now our own stuff
         self.tournament = tournament
+        self._player_id = None
+        self.checked_in = False
         self.match: Optional[Match] = None
         self.spoke = False  # True as soon as the participant sent a message in his channel
         # used to detect inactivity after the launch of a set
-        self.unavailable = False  # if the member is not found in the guild, this is true
 
     def __repr__(self):
         return (
@@ -71,6 +72,15 @@ class Participant(discord.Member):
     def reset(self):
         self.match = None
         self.spoke = False
+
+    async def check(self):
+        self.checked_in = True
+        log.debug(f"[Guild {self.guild.id}] Player {self} registered.")
+        await self.send(
+            _("You successfully checked in for the tournament **{name}**!").format(
+                name=self.tournament.name
+            )
+        )
 
     @property
     def player_id(self):
@@ -583,7 +593,7 @@ class Match:
         if player.id == self.player1.id:
             score = (-1, 0)
         else:
-            score = (-1, 0)
+            score = (0, -1)
         await self.set_scores(*score)
         self.cancel()
         winner = self.player1 if self.player1.id != player.id else self.player2
@@ -726,7 +736,8 @@ class Tournament:
         self.ranking: dict = data["ranking"]
         self.stages: list = data["stages"]
         self.counterpicks: list = data["counterpicks"]
-        self.phase = "pending"  # can be "pending" "register" "checkout" "ongoing" "finished"
+        self.phase = "pending"  # can be "pending" "register" "checkin" "ongoing" "finished"
+        self.register_message: Optional[discord.Message] = None  # message being updated
         # loop task things
         self.task: Optional[asyncio.Task] = None
         self.task_errors = 0
@@ -988,6 +999,15 @@ class Tournament:
                 return None, None
         raise RuntimeError("Provide either channel or discord_id")
 
+    async def register_participant(self, member: discord.Member):
+        await member.add_roles(self.participant_role, reason=_("Registering to tournament."))
+        participant = self.participant_object(member, self)
+        if self.checkin_start and self.checkin_start > datetime.utcnow():
+            # registering during check-in, count as already checked
+            participant.checked_in = True
+        self.participants.append(participant)
+        log.debug(f"[Guild {self.guild.id}] Player {member} registered.")
+
     async def send_start_messages(self):
         scores_channel = (
             _(" in {channel}").format(channel=self.scores_channel.mention)
@@ -1064,6 +1084,59 @@ class Tournament:
                 await channel.send(message)
             except discord.HTTPException as e:
                 log.error(f"[Guild {self.guild.id}] Can't send message in {channel}.", exc_info=e)
+
+    def _prepare_register_message(self):
+        def format_datetime(date: datetime, only_time=False):
+            date = format_date(date, format="full", locale=locale)
+            time = format_time(date, format="short", locale=locale)
+            if only_time:
+                return time
+            return _("{date} at {time}").format(date=date, time=time)
+
+        locale = get_babel_locale()
+        if self.checkin_start:
+            checkin = _(":white_small_square: __Check-in:__ From {begin} to {end}\n").format(
+                begin=format_datetime(self.checkin_start, True),
+                end=format_datetime(self.checkin_stop or self.tournament_start, True),
+            )
+        else:
+            checkin = ""
+        if self.limit:
+            limit = _("{registered}/{limit} participants registered").format(
+                registered=len(self.participants), limit=self.limit
+            )
+        else:
+            limit = _("{registered} participants registered *(no limit set)*").format(
+                registered=len(self.participants)
+            )
+        if self.ruleset_channel:
+            ruleset = _(":white_small_square: __Ruleset:__ See {channel}\n").format(
+                channel=self.ruleset_channel.mention
+            )
+        else:
+            ruleset = ""
+        return _(
+            "**{t.name}** | *{t.game}*\n\n"
+            ":white_small_square: __Date:__ {date}\n"
+            ":white_small_square: __Register:__ Closing at {time}\n"
+            "{checkin}"
+            ":white_small_square: __Participants:__ {limit}\n"
+            ":white_small_square: __Bracket:__ {t.url}\n"
+            "{ruleset}\n"
+            "You can register/unregister to this tournament with "
+            "the `{t.bot_prefix}in` and `{t.bot_prefix}out` commands.\n"
+            "*Note: your Discord username will be used in the bracket.*"
+        ).format(
+            t=self,
+            date=format_datetime(self.tournament_start),
+            time=format_datetime(self.register_stop or self.tournament_start, True),
+            checkin=checkin,
+            limit=limit,
+            ruleset=ruleset,
+        )
+
+    async def send_register_message(self):
+        self.register_message = await self.register_channel.send(self._prepare_register_message())
 
     async def launch_sets(self):
         match: Match
