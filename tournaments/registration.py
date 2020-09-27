@@ -12,4 +12,15 @@ _ = Translator("Tournaments", __file__)
 
 
 class Registration(MixinMeta):
-    pass
+
+    @commands.command(name="in")
+    @commands.guild_only()
+    @commands.check()  # TODO : Rajouter les vérifs
+    async def auto_inscription(self, ctx: commands.Context):
+        pass
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.check()  # TODO : Rajouter les vérifs
+    async def out(self, ctx: commands.Context):
+        pass
