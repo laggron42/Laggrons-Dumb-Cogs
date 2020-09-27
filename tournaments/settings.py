@@ -871,19 +871,19 @@ the start of the tournament, then closing 15 minutes before.
                 time=data["register"]["opening"]
             )
         else:
-            register_start = _("manuelle.")
+            register_start = _("manual.")
         if data["register"]["closing"] != 0:
             register_end = _("{time} minutes before the start of the tournament.").format(
                 time=data["register"]["closing"]
             )
         else:
-            register_end = _("manuelle.")
+            register_end = _("manual.")
         if data["checkin"]["opening"] != 0:
             checkin_start = _("{time} minutes before the start of the tournament.").format(
                 time=data["checkin"]["opening"]
             )
         else:
-            checkin_start = _("manuelle.")
+            checkin_start = _("manual.")
         if data["checkin"]["closing"] != 0:
             checkin_end = _("{time} minutes before the start of the tournament.").format(
                 time=data["checkin"]["closing"]
@@ -920,7 +920,7 @@ the start of the tournament, then closing 15 minutes before.
                 roles[k] = _("Not set")
             role = guild.get_role(v)
             if not role:
-                roles[k] = _("Perdu")
+                roles[k] = _("Lost")
             else:
                 roles[k] = role.name
         roles = _(

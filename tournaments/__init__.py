@@ -22,10 +22,14 @@ from laggron_utils import init_logger
 log = logging.getLogger("red.laggron.tournaments")
 
 
+async def restore_tournaments(bot, cog):
+    await bot.wait_until_ready()
+    await cog.restore_tournaments()
+
+
 async def setup(bot):
     init_logger(log, "Tournaments")
     n = Tournaments(bot)
     bot.add_cog(n)
-    await bot.wait_until_ready()
-    await n.restore_tournaments()
+    bot.loop.create_task(restore_tournaments(bot, n))
     log.debug("Cog successfully loaded on the instance.")

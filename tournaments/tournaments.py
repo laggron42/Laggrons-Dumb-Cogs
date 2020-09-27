@@ -135,12 +135,11 @@ class Tournaments(
                         continue
                     achallonge.set_credentials(credentials["username"], credentials["api"])
                     data.update(game_data)
-                    tournament = ChallongeTournament.from_saved_data(
+                    tournament = await ChallongeTournament.from_saved_data(
                         guild, self.data, data["tournament"], data
                     )
                     self.tournaments[guild_id] = tournament
                     if tournament.phase == "ongoing":
-                        await tournament._get_top8()
                         tournament.start_loop_task()
             except Exception as e:
                 log.error(f"[Guild {guild_id}] Failed to resume tournament.", exc_info=e)

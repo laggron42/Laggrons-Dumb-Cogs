@@ -3,13 +3,14 @@ from __future__ import annotations
 import discord
 import logging
 import asyncio
+import contextlib
 
 from discord.ext import tasks
 from random import choice
 from itertools import islice
 from datetime import datetime, timedelta
 from babel.dates import format_date, format_time
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple, List, Union
 
 from redbot.core import Config
 from redbot.core.i18n import Translator, get_babel_locale
@@ -52,6 +53,9 @@ class Participant(discord.Member):
     @classmethod
     def from_saved_data(cls, tournament: Tournament, data: dict):
         member = tournament.guild.get_member(data["discord_id"])
+        if member is None:
+            log.warning(f"[Guild {tournament.guild.id}] Lost participannt {data['discord_id']}")
+            return None
         participant = cls(member, tournament)
         participant._player_id = data["player_id"]
         participant.spoke = data["spoke"]
@@ -103,7 +107,7 @@ class Match:
             or round <= tournament.top_8["loser"]["top8"]
         )
         self.is_bo5 = (
-            round >= tournament.top_8["winner"]["bo5"] or round <= tournament.top8["loser"]["bo5"]
+            round >= tournament.top_8["winner"]["bo5"] or round <= tournament.top_8["loser"]["bo5"]
         )
         self.round_name = self._get_name()
         self.channel: Optional[discord.TextChannel] = None
@@ -111,8 +115,13 @@ class Match:
         self.end_time: Optional[datetime] = None
         self.status = "pending"  # can be "pending" "ongoing" "finished"
         self.checked_dq = True if self.is_top8 else False
-        player1.match = self
-        player2.match = self
+        self.streamer: Optional[Streamer] = None
+        self.on_hold = False  # True if this is match is awaiting for a stream
+        # one or more players can be None
+        # if this is the case, the bot will most likely close the match right after this
+        with contextlib.suppress(AttributeError):
+            player1.match = self
+            player2.match = self
 
     def __repr__(self):
         return (
@@ -122,7 +131,7 @@ class Match:
         ).format(self)
 
     @classmethod
-    def from_saved_data(cls, tournament: Tournament, player1, player2, data: dict):
+    def from_saved_data(cls, tournament: Tournament, player1, player2, data: dict) -> Match:
         match = cls(
             tournament, data["round"], data["set"], data["id"], data["underway"], player1, player2
         )
@@ -161,26 +170,29 @@ class Match:
                 max_round - 1: _("Winners Final"),
                 max_round - 2: _("Winners Semi-Final"),
                 max_round - 3: _("Winners Quarter-Final"),
-            }.get(self.round, default=_("Winners round {round}").format(round=self.round))
+            }.get(self.round, _("Winners round {round}").format(round=self.round))
         elif self.round < 0:
             max_round = self.tournament.top_8["loser"]["top8"]
             return {
                 max_round: _("Losers Final"),
                 max_round + 1: _("Losers Semi-Final"),
                 max_round + 2: _("Losers Quarter-Final"),
-            }.get(self.round, default=_("Losers round {round}").format(round=self.round))
+            }.get(self.round, _("Losers round {round}").format(round=self.round))
 
-    async def send_message(
-        self, channel: Optional[discord.TextChannel] = None, reset: bool = False
-    ) -> bool:
+    async def _dm_players(self, message: str):
+        players = (self.player1, self.player2)
+        for player in players:
+            try:
+                await player.send(message)
+            except discord.HTTPException as e:
+                log.warning(f"Can't send a DM to {str(player)} for his set.", exc_info=e)
+
+    async def send_message(self, reset: bool = False) -> bool:
         """
         Send a message in the created channel.
 
         Parameters
         ----------
-        channel: Optional[discord.TextChannel]
-            The channel where the message needs to be send. If this is ``None``, the message will
-            be sent in DM instead.
         reset: bool
             ``True`` if the match is started because of a reset.
 
@@ -198,7 +210,7 @@ class Match:
             message = ""
         top8 = _("**(top 8)** :fire:") if self.is_top8 else ""
         message += _(
-            ":arrow_forward: **{0.set}** : {0.player1.mention} vs {0.player2.mention}  {top8}\n"
+            ":arrow_forward: **{0.set}** : {0.player1.mention} vs {0.player2.mention} {top8}\n"
         ).format(self, top8=top8)
         if self.tournament.ruleset_channel:
             message += _(
@@ -224,7 +236,7 @@ class Match:
             "`{prefix}lag` command to call the T.O. and solve the problem.\n"
             ":white_small_square: **As soon as the set is done**, the winner sets the "
             "score {score_channel} with the `{prefix}win` command.\n"
-            ":arrow_forward: You will play this set as a {type}."
+            ":arrow_forward: You will play this set as a {type}.\n"
         ).format(
             prefix=self.tournament.bot_prefix,
             score_channel=score_channel,
@@ -233,8 +245,16 @@ class Match:
         if self.tournament.baninfo:
             chosen_player = choice([self.player1, self.player2])
             message += _(
-                ":game_die: **{player}** was picked to begin the bans *({baninfo})*."
+                ":game_die: **{player}** was picked to begin the bans *({baninfo})*.\n"
             ).format(player=chosen_player.mention, baninfo=self.tournament.baninfo)
+        if self.streamer is not None:
+            message += _("**\nYou will be on stream on {streamer}!**\n")
+            if self.on_hold is True:
+                message += _(
+                    ":warning: **Do not play your set for now and wait for your turn.** "
+                    "I will send a message once it is your turn with instructions."
+                )
+            # else, we're about to send another message with instructions
 
         async def send_in_dm():
             nonlocal message
@@ -242,12 +262,7 @@ class Match:
                 "\n\n**You channel can't be created because of a problem. "
                 "Do your set in DM and come back to set the result.**"
             )
-            players = (self.player1, self.player2)
-            for player in players:
-                try:
-                    await player.send(message)
-                except discord.HTTPException as e:
-                    log.warning(f"Can't send a DM to {str(player)} for his set.", exc_info=e)
+            await self._dm_players(message)
             if self.tournament.queue_channel is not None:
                 await self.tournament.queue_channel.send(
                     _("{player1} {player2} Play your set in DM").format(
@@ -255,11 +270,11 @@ class Match:
                     )
                 )
 
-        if channel is None:
+        if self.channel is None:
             await send_in_dm()
             return False
         try:
-            await channel.send(message)
+            await self.channel.send(message)
         except discord.HTTPException as e:
             log.error(
                 f"[Guild {self.guild.id}] Can't create a channel for the set {self.set}",
@@ -271,19 +286,49 @@ class Match:
             if self.tournament.queue_channel is not None:
                 await self.tournament.queue_channel.send(
                     _(
-                        ":arrow_forward: **{name}** ({bo_type}): {player1} vs {player2} "
+                        ":arrow_forward: **{name}** ({bo_type}): {player1} vs {player2}"
                         "{on_stream} {top8} in {channel}"
                     ).format(
                         name=self.round_name,
-                        bo_type=_("(BO5)") if self.is_bo5 else _("(BO3)"),
+                        bo_type=_("BO5") if self.is_bo5 else _("BO3"),
                         player1=self.player1.mention,
                         player2=self.player2.mention,
-                        on_stream="",
+                        on_stream=_(" **on stream!**") if self.streamer else "",
                         top8=top8,
-                        channel=channel.mention,
+                        channel=self.channel.mention,
                     )
                 )
             return True
+
+    async def start_stream(self):
+        destination = self.channel or self._dm_players
+        if self.streamer.room_id:
+            access = _("\n\nHere are the access codes:\nID: {id}\nPasscode: {passcode}").format(
+                id=self.streamer.room_id, passcode=self.streamer.room_code
+            )
+        else:
+            access = ""
+        if self.status != "ongoing":
+            await self._start()
+        self.on_hold = False
+        self.checked_dq = True
+        await destination.send(
+            _("You can go on stream on {channel} !{access}").format(
+                channel=self.streamer.link, access=access
+            )
+        )
+
+    async def cancel_stream(self):
+        destination = self.channel or self._dm_players
+        self.streamer = None
+        self.on_hold = False
+        await self._start()
+        await destination.send(
+            _(
+                "{player1} {player2} The stream was cancelled. You can start you match normally.\n"
+                ":warning: AFK checks are re-enabled."
+            ).format(player1=self.player1.mention, player2=self.player2.mention)
+        )
 
     async def create_channel(
         self, category: discord.CategoryChannel, *allowed_roles: list
@@ -309,6 +354,13 @@ class Match:
         return await self.guild.create_text_channel(
             self.set, category=category, overwrites=overwrites, reason=_("Lancement du set")
         )
+
+    async def _start(self):
+        await self.mark_as_underway()
+        self.status = "ongoing"
+        self.underway = True
+        self.checked_dq = False
+        self.start_time = datetime.utcnow()
 
     async def launch(
         self,
@@ -337,7 +389,6 @@ class Match:
         allowed_roles: List[discord.Role]
             A list of roles with read_messages permission in the text channel.
         """
-        self.status = "ongoing"
         if category is None:
             category = await self.tournament._get_available_category(
                 "winner" if self.round > 0 else "loser"
@@ -351,14 +402,13 @@ class Match:
                 f"[Guild {self.guild.id}] Couldn't create a channel for the set {self.set}.",
                 exc_info=e,
             )
-            await self.send_message(reset=restart)
         else:
-            await self.send_message(channel, reset=restart)
             self.channel = channel
-        finally:
-            await self.mark_as_underway()
-            self.underway = True
-            self.start_time = datetime.utcnow()
+        await self.send_message(reset=restart)
+        if self.on_hold is False:
+            await self._start()
+            if self.streamer is not None:
+                await self.start_stream()
 
     async def relaunch(self):
         """
@@ -490,18 +540,23 @@ class Match:
                 )
             )
 
-    async def disqualify(self, player: Participant):
+    async def disqualify(self, player: Union[Participant, int]):
         """
         Called when a player in the set is destroyed.
 
         There is no API call, just messages sent to the players.
         """
         self.cancel()
-        winner = self.player1 if self.player1.id != player.id else self.player2
+        if isinstance(player, int):
+            winner = self.player1 if self.player1 is not None else self.player2
+            player = _("Player with ID {id} (lost on Discord) ").format(id=player)
+        else:
+            winner = self.player1 if self.player1.id != player.id else self.player2
+            player = _("Player {player}").format(player=player.mention)
         if self.channel is not None:
             await self.channel.send(
                 _(
-                    "Player {player.mention} was disqualified from the tournament.\n"
+                    "Player {player} was disqualified from the tournament.\n"
                     "{winner.mention} is winning this set!"
                 ).format(player=player, winner=winner)
             )
@@ -545,8 +600,9 @@ class Match:
                 pass
 
     def cancel(self):
-        self.player1.reset()
-        self.player2.reset()
+        with contextlib.suppress(AttributeError):
+            self.player1.reset()
+            self.player2.reset()
         self.status = "finished"
         self.end_time = datetime.utcnow()
 
@@ -610,6 +666,7 @@ class Tournament:
         self.bot_prefix = bot_prefix
         self.participants: List[Participant] = []
         self.matches: List[Match] = []
+        self.streamers: List[Streamer] = []
         self.winner_categories: List[discord.CategoryChannel] = []
         self.loser_categories: List[discord.CategoryChannel] = []
         self.category: discord.CategoryChannel = guild.get_channel(
@@ -690,16 +747,17 @@ class Tournament:
     tournament_type = "base"  # should be "challonge", or "smash.gg"...
 
     @classmethod
-    def from_saved_data(
+    async def from_saved_data(
         cls, guild: discord.Guild, config: Config, data: dict, config_data: dict,
     ):
         tournament_start = datetime.utcfromtimestamp(int(data["tournament_start"]))
         participants = data["participants"]
         matches = data["matches"]
+        streamers = data["streamers"]
         winner_categories = data["winner_categories"]
         loser_categories = data["loser_categories"]
         phase = data["phase"]
-        del data["tournament_start"], data["participants"], data["matches"]
+        del data["tournament_start"], data["participants"], data["matches"], data["streamers"]
         del data["winner_categories"], data["loser_categories"], data["phase"]
         del data["tournament_type"]
         tournament = cls(
@@ -707,16 +765,48 @@ class Tournament:
         )
         if type:
             tournament.type = type
-        tournament.participants = [
-            tournament.participant_object.from_saved_data(tournament, data)
-            for data in participants
-        ]
+        if phase == "ongoing":
+            await tournament._get_top8()
+        tournament.participants = list(
+            filter(
+                None,
+                [
+                    tournament.participant_object.from_saved_data(tournament, data)
+                    for data in participants
+                ],
+            )
+        )
         for data in matches:
             player1 = tournament.find_participant(player_id=data["player1"])[1]
             player2 = tournament.find_participant(player_id=data["player2"])[1]
-            tournament.matches.append(
-                tournament.match_object.from_saved_data(tournament, player1, player2, data)
-            )
+            match = tournament.match_object.from_saved_data(tournament, player1, player2, data)
+            if player1 is None and player2 is None:
+                if match.channel:
+                    await tournament.destroy_player(data["player1"])
+                    await tournament.destroy_player(data["player2"])
+                    await match.channel.delete()
+                    await tournament.to_channel.send(
+                        _(":information_source: Set {match} cancelled, both players left.").format(
+                            set=match.set
+                        )
+                    )
+                    continue
+            stop = False
+            for i, player in enumerate((player1, player2), start=1):
+                if player is None:
+                    await tournament.destroy_player(data[f"player{i}"])
+                    await match.disqualify(data[f"player{i}"])
+                    await tournament.to_channel.send(
+                        _(
+                            ":information_source: Set {set} finished, "
+                            "player with ID {player} can't be found."
+                        ).format(set=match.set, player=data[f"player{i}"])
+                    )
+                    stop = True
+            if stop:
+                continue
+            tournament.matches.append(match)
+        tournament.streamers = [Streamer.from_saved_data(tournament, x) for x in streamers]
         tournament.winner_categories = list(
             filter(None, [guild.get_channel(x) for x in winner_categories])
         )
@@ -739,6 +829,7 @@ class Tournament:
             "bot_prefix": self.bot_prefix,
             "participants": [x.to_dict() for x in self.participants],
             "matches": [x.to_dict() for x in self.matches],
+            "streamers": [x.to_dict() for x in self.streamers],
             "winner_categories": [x.id for x in self.winner_categories],
             "loser_categories": [x.id for x in self.loser_categories],
             "phase": self.phase,
@@ -823,7 +914,7 @@ class Tournament:
         if self.start_bo5 > 1:
             top8["loser"]["bo5"] = min(rounds)  # top 3 is loser final anyway
         else:
-            top8["loser"]["bo5"] = top8["loser"]["bo5"] - self.start_bo5
+            top8["loser"]["bo5"] = top8["loser"]["top8"] - self.start_bo5
         # avoid aberrant values
         if top8["winner"]["bo5"] > max(rounds):
             top8["winner"]["bo5"] = max(rounds)
@@ -852,14 +943,23 @@ class Tournament:
         raise RuntimeError("Provide either player_id or discord_id")
 
     def find_match(
-        self, *, match_id: Optional[str] = None, channel_id: Optional[int] = None
+        self,
+        *,
+        match_id: Optional[int] = None,
+        match_set: Optional[int] = None,
+        channel_id: Optional[int] = None,
     ) -> Tuple[int, Match]:
         if match_id:
             try:
                 return next(filter(lambda x: x[1].id == match_id, enumerate(self.matches)))
             except StopIteration:
                 return None, None
-        if channel_id:
+        elif match_set:
+            try:
+                return next(filter(lambda x: x[1].set == match_set, enumerate(self.matches)))
+            except StopIteration:
+                return None, None
+        elif channel_id:
             try:
                 return next(
                     filter(
@@ -869,7 +969,24 @@ class Tournament:
                 )
             except StopIteration:
                 return None, None
-        raise RuntimeError("Provide either match_id or channel_id")
+        raise RuntimeError("Provide either match_id, match_set or channel_id")
+
+    def find_streamer(
+        self, *, channel: Optional[str] = None, discord_id: Optional[int] = None
+    ) -> Tuple[int, Streamer]:
+        if channel:
+            try:
+                return next(filter(lambda x: x[1].channel == channel, enumerate(self.streamers)))
+            except StopIteration:
+                return None, None
+        elif discord_id:
+            try:
+                return next(
+                    filter(lambda x: x[1].member.id == discord_id, enumerate(self.streamers))
+                )
+            except StopIteration:
+                return None, None
+        raise RuntimeError("Provide either channel or discord_id")
 
     async def send_start_messages(self):
         scores_channel = (
@@ -952,7 +1069,9 @@ class Tournament:
         match: Match
         coros = []
         # islice will limit the output to 20. see this as list[:20] but with a generator
-        for match in islice(filter(lambda x: x.status == "pending", self.matches), 20):
+        for match in islice(
+            filter(lambda x: x.status == "pending" and x.channel is None, self.matches), 20
+        ):
             # we get the category in the iteration instead of the gather
             # because if all functions call _get_available_category at the same time,
             # a new category will be returned for each
@@ -961,6 +1080,16 @@ class Tournament:
         results = await asyncio.gather(*coros, return_exceptions=True)
         for result in filter(None, results):
             log.error(f"[Guild {self.guild.id}] Can't launch a set.", exc_info=result)
+
+    def update_streamer_list(self):
+        for streamer in self.streamers:
+            streamer._update_list()
+
+    async def launch_streams(self):
+        match: Match
+        for match in filter(lambda x: x.streamer and x.on_hold, self.matches):
+            if match.streamer.current_match.id == match.id:
+                await match.start_stream()
 
     async def check_for_channel_timeout(self):
         match: Match
@@ -995,6 +1124,7 @@ class Tournament:
         try:
             await self._update_participants_list()
             await self._update_match_list()
+            self.update_streamer_list()
         except Exception as e:
             log.error(
                 f"[Guild {self.guild.id}] Can't update internal match and participant list! "
@@ -1010,6 +1140,11 @@ class Tournament:
             if result is None:
                 continue
             log.warning(f"[Guild {self.guild.id}] Failed with coro {coros[i]}.", exc_info=result)
+        try:
+            await self.launch_streams()
+        except Exception as e:
+            log.error(f"[Guild {self.guild.id}] Can't update streams.", exc_info=e)
+            self.task_errors += 1
         # saving is done after all of our jobs, so the data shouldn't move too much
         await self.save()
 
@@ -1033,52 +1168,60 @@ class Tournament:
     def stop_loop_task(self):
         self.loop_task.cancel()
 
+    def _debug_dump(self):
+        file = open(cog_data_path(raw_name="Tournaments") / "debug.txt", "w+")
+        content = ""
+        m: Match
+        for i, m in enumerate(self.matches):
+            if m.start_time and m.checked_dq is False:
+                time_until_dq_check = (
+                    m.start_time + timedelta(minutes=self.delay)
+                ) - datetime.utcnow()
+            else:
+                time_until_dq_check = None
+            if m.end_time:
+                time_until_delete = (m.end_time + timedelta(minutes=5)) - datetime.utcnow()
+            else:
+                time_until_delete = None
+            content += (
+                f"----- MATCH {i} -----\n"
+                f"status={m.status} round={m.round} set={m.set} id={m.id}\n"
+                f"start_time={m.start_time.strftime('%H:%M:%S') if m.start_time else None} "
+                f"end_time={m.end_time.strftime('%H:%M:%S') if m.end_time else None} "
+                f"underway={m.underway} channel={m.channel.id if m.channel else None}\n"
+                f"checked_dq={m.checked_dq} time_until_dq_check={time_until_dq_check} "
+                f"time_until_delete={time_until_delete}\n"
+                f"player1= name={m.player1} player_id={m.player1.player_id} spoke="
+                f"{m.player1.spoke} discord_id={m.player1.id}\n"
+                f"player1= name={m.player2} player_id={m.player2.player_id} spoke="
+                f"{m.player2.spoke} discord_id={m.player2.id}\n\n"
+            )
+        content += "\n\n\n"
+        s: Streamer
+        for i, s in enumerate(self.streamers):
+            content += (
+                f"----- STREAMER {i} -----\n"
+                f"link={s.link} room_id={s.room_id} room_code={s.room_code}\n"
+                f"member={s.member}\n"
+                f"current_match={s.current_match}\n"
+                f"matches={s.matches}\n\n"
+            )
+        content += "\n\n\n"
+        p: Participant
+        for i, p in enumerate(self.participants):
+            content += (
+                f"----- PARTICIPANT {i} -----\n"
+                f"name={p} id={p.id} player_id={p.player_id}\n"
+                f"match_set={p.match.set if p.match else None} match_id="
+                f"{p.match.id if p.match else None} spoke={p.spoke}\n\n"
+            )
+        file.write(content)
+        file.close()
+
     async def debug_loop_task(self):
-        def dump(match_file, participants_file):
-            content = ""
-            m: Match
-            for i, m in enumerate(self.matches):
-                if m.start_time and m.checked_dq is False:
-                    time_until_dq_check = (
-                        m.start_time + timedelta(minutes=self.delay)
-                    ) - datetime.utcnow()
-                else:
-                    time_until_dq_check = None
-                if m.end_time:
-                    time_until_delete = (m.end_time + timedelta(minutes=5)) - datetime.utcnow()
-                else:
-                    time_until_delete = None
-                content += (
-                    f"----- MATCH {i} -----\n"
-                    f"status={m.status} round={m.round} set={m.set} id={m.id}\n"
-                    f"start_time={m.start_time.strftime('%H:%M:%S') if m.start_time else None} "
-                    f"end_time={m.end_time.strftime('%H:%M:%S') if m.end_time else None} "
-                    f"underway={m.underway} channel={m.channel.id if m.channel else None}\n"
-                    f"checked_dq={m.checked_dq} time_until_dq_check={time_until_dq_check} "
-                    f"time_until_delete={time_until_delete}\n"
-                    f"player1= name={m.player1} player_id={m.player1.player_id} spoke="
-                    f"{m.player1.spoke} discord_id={m.player1.id}\n"
-                    f"player1= name={m.player2} player_id={m.player2.player_id} spoke="
-                    f"{m.player2.spoke} discord_id={m.player2.id}\n\n"
-                )
-            match_file.write(content)
-            content = ""
-            p: Participant
-            for i, p in enumerate(self.participants):
-                content += (
-                    f"----- PARTICIPANT {i} -----\n"
-                    f"name={p} id={p.id} player_id={p.player_id}\n"
-                    f"match_set={p.match.set if p.match else None} match_id="
-                    f"{p.match.id if p.match else None} spoke={p.spoke}\n\n"
-                )
-            participants_file.write(content)
 
         while True:
-            m_file = open(cog_data_path(raw_name="Tournaments") / "matches.txt", "w+")
-            p_file = open(cog_data_path(raw_name="Tournaments") / "participants.txt", "w+")
-            dump(m_file, p_file)
-            m_file.close()
-            p_file.close()
+            self._debug_dump()
             await asyncio.sleep(1)
 
     async def _get_all_rounds(self) -> List[int]:
@@ -1168,6 +1311,17 @@ class Tournament:
         """
         raise NotImplementedError
 
+    async def destroy_player(self, player_id: str):
+        """
+        Destroys a player. This is the same call as Player.destroy, but only the player ID is
+        needed. Useful for unavailable discord member.
+
+        Parameters
+        ----------
+        player_id: str
+            The player to remove.
+        """
+
     async def list_participants(self) -> List[Participant]:
         """
         Returns the list of participants from the tournament host.
@@ -1195,3 +1349,139 @@ class Tournament:
         Resets the bracket.
         """
         raise NotImplementedError
+
+
+class Streamer:
+    """
+    Represents a streamer in the tournament. Will be assigned to matches. Does not necessarily
+    exists on remote depending on the provider.
+    """
+
+    def __init__(
+        self,
+        tournament: Tournament,
+        member: discord.Member,
+        channel: str,
+        respect_order: bool = False,
+    ):
+        self.tournament = tournament
+        self.member = member
+        self.channel = channel
+        self.respect_order = respect_order
+        self.link = f"https://www.twitch.tv/{channel}/"
+        self.room_id = None
+        self.room_code = None
+        self.matches: List[Union[Match, int]] = []
+        self.current_match: Optional[Match] = None
+
+    @classmethod
+    def from_saved_data(cls, tournament: Tournament, data: dict):
+        guild = tournament.guild
+        member = guild.get_member(data["member"])
+        if member is None:
+            raise RuntimeError("Streamer member lost.")
+        cls = cls(tournament, member, data["channel"], data["respect_order"])
+        cls.room_id = data["room_id"]
+        cls.room_code = data["room_code"]
+        cls.matches = list(
+            filter(None, [tournament.find_match(match_set=x)[1] for x in data["matches"]])
+        )
+        if data["current_match"]:
+            cls.current_match = tournament.find_match(match_set=data["current_match"])[1]
+            if cls.current_match is not None:
+                cls.current_match.streamer = cls
+        return cls
+
+    def to_dict(self) -> dict:
+        return {
+            "member": self.member.id,
+            "channel": self.channel,
+            "respect_order": self.respect_order,
+            "room_id": self.room_id,
+            "room_code": self.room_code,
+            "matches": [self.get_set(x) for x in self.matches],
+            "current_match": self.current_match.id if self.current_match else None,
+        }
+
+    def get_set(self, x):
+        return x.set if hasattr(x, "set") else x
+
+    def __str__(self):
+        return self.link
+
+    def set_room(self, room_id: str, code: Optional[str] = None):
+        self.room_id = room_id
+        self.room_code = code
+
+    def add_matches(self, *sets: int):
+        errors = {}
+        for _set in sets:
+            if _set in [self.get_set(x) for x in self.matches]:
+                errors[_set] = _("You already have that set in your queue.")
+                continue
+            for streamer in self.tournament.streamers:
+                if _set in [self.get_set(x) for x in streamer.matches]:
+                    errors[_set] = _(
+                        "That set already has a streamer defined *(<{streamer}>)*."
+                    ).format(streamer=streamer)
+                    continue
+            match = self.tournament.find_match(match_set=str(_set))[1]
+            if match:
+                if match.status == "ongoing":
+                    errors[_set] = _("That match is already ongoing.")
+                    continue
+                elif match.status == "finished":
+                    errors[_set] = _("That match is finished.")
+                    continue
+                match.streamer = self
+            self.matches.append(match or _set)
+        return errors
+
+    def remove_matches(self, *sets: int):
+        new_list = [x for x in self.matches if self.get_set(x) not in sets]
+        if len(new_list) == len(self.matches):
+            raise KeyError("None of the given sets found.")
+        else:
+            self.matches = new_list
+
+    def swap_match(self, set1: str, set2: str):
+        try:
+            i1, match1 = next(enumerate(filter(lambda x: set1 == self.get_set(x), self.matches)))
+            i2, match2 = next(enumerate(filter(lambda x: set2 == self.get_set(x), self.matches)))
+        except StopIteration as e:
+            raise KeyError("One set not found.") from e
+        self.matches[i1] = match2
+        self.matches[i2] = match1
+
+    async def end(self):
+        for match in filter(lambda x: isinstance(x, Match), self.matches):
+            await match.cancel_stream()
+
+    def _update_list(self):
+        matches = []
+        for match in self.matches:
+            if isinstance(match, Match):
+                matches.append(match)
+                continue
+            match_object = self.tournament.find_match(match_set=str(match))[1]
+            if match_object:
+                if match_object.status != "pending":
+                    continue
+                match_object.streamer = self
+                match_object.on_hold = True
+                matches.append(match_object)
+            else:
+                matches.append(match)
+        self.matches = matches
+        if self.current_match:
+            if self.current_match.status != "finished":
+                return  # wait for it to end
+            self.matches.remove(self.current_match)
+        self.current_match = None
+        try:
+            next_match = self.matches[0]
+        except IndexError:
+            return
+        if isinstance(next_match, int):
+            return
+        self.current_match = next_match

@@ -139,6 +139,7 @@ class Games(MixinMeta):
         await message.edit(embed=embed)
         await tournament._get_top8()
         tournament.start_loop_task()
+        await tournament.save()
         await ctx.send(_("The tournament has now started!"))
 
     @only_phase("ongoing")
@@ -158,13 +159,49 @@ class Games(MixinMeta):
             tournament.stop_loop_task()
             await tournament.stop()
             categories = tournament.winner_categories + tournament.loser_categories
-            for category in categories:
-                for channel in category.text_channels:
-                    await channel.delete()
-                await category.delete()
+            failed_category = False
+            try:
+                for category in categories:
+                    for channel in category.text_channels:
+                        await channel.delete()
+                    await category.delete()
+            except discord.HTTPException as e:
+                log.warning(
+                    f"[Guild {ctx.guild.id}] Failed to remove some channels/categories.\n"
+                    f"Last channel: {channel} Last category: {category}",
+                    exc_info=e,
+                )
+                failed_category = True
+            failed = []
+            if tournament.participant_role:
+                channels = [
+                    tournament.checkin_channel,
+                    tournament.queue_channel,
+                    tournament.register_channel,
+                    tournament.scores_channel,
+                ]
+                for channel in channels:
+                    try:
+                        await channel.set_permissions(
+                            tournament.participant_role, send_messages=False
+                        )
+                    except discord.HTTPException as e:
+                        log.warning(
+                            f"[Guild {ctx.guild.id}] Failed to edit channel {channel.id}",
+                            exc_info=e,
+                        )
+                        failed.append(channel)
         await self.data.guild(guild).tournament.set({})
         del self.tournaments[guild.id]
-        await ctx.send(_("Tournament ended."))
+        message = _("Tournament ended.")
+        if failed_category:
+            message += _(
+                "\n\nFailed when clearing the channels and categories. See logs for details."
+            )
+        if failed:
+            message += _("\n\nFailed closing the following channels:\n- ")
+            message += "\n- ".join([x.mention for x in failed])
+        await ctx.send(message)
 
     @only_phase("ongoing", "finished")
     @mod_or_to()
@@ -207,16 +244,18 @@ class Games(MixinMeta):
         await ctx.send(message)
         tournament.phase = "pending"
         tournament.participants = []
-        # tournament.streamers = []
+        tournament.streamers = []
         if not tournament.matches:
             return
         async with ctx.typing():
             for match in tournament.matches:
                 await match.force_end()
             await tournament._clear_categories()
-        tournament.matches = []
         tournament.stop_loop_task()
-        await ctx.send(_("Channels cleared."))
+        await tournament.save()
+        if tournament.matches:
+            await ctx.send(_("Channels cleared."))
+        tournament.matches = []
 
     @mod_or_to()
     @commands.command()
@@ -352,6 +391,7 @@ class Games(MixinMeta):
             return
         message = await ctx.send(_("Are you sure you want to forfeit this match?"))
         pred = ReactionPredicate.yes_or_no(message, ctx.author)
+        start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
         try:
             await self.bot.wait_for("reaction_add", check=pred, timeout=20)
         except asyncio.TimeoutError:

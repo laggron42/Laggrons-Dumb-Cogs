@@ -32,20 +32,20 @@ class ChallongeParticipant(Participant):
         await async_http_retry(achallonge.participants.destroy(self.tournament.id, self.player_id))
         log.debug(f"Destroyed player {self.player_id} (tournament {self.tournament.id})")
 
-    async def send(self, content):
-        # THIS IS USED FOR TESTING AND SHOULD BE REMOVED
-        log.info(f"DM {str(self)}: {content}")
+    # async def send(self, content):
+    #     # THIS IS USED FOR TESTING AND SHOULD BE REMOVED
+    #     log.info(f"DM {str(self)}: {content}")
 
-    @property
-    def mention(self):
-        # THIS IS USED FOR TESTING AND SHOULD BE REMOVED
-        return str(self)
+    # @property
+    # def mention(self):
+    #     # THIS IS USED FOR TESTING AND SHOULD BE REMOVED
+    #     return str(self)
 
 
 class ChallongeMatch(Match):
     @classmethod
     def build_from_api(cls, tournament: Tournament, data: dict):
-        return cls(
+        cls = cls(
             tournament=tournament,
             round=data["round"],
             set=str(data["suggested_play_order"]),
@@ -58,6 +58,9 @@ class ChallongeMatch(Match):
                 filter(lambda x: x.player_id == data["player2_id"], tournament.participants)
             ),
         )
+        if data["state"] == "complete":
+            cls.status = "finished"
+        return cls
 
     async def set_scores(
         self, player1_score: int, player2_score: int, winner: Optional[Participant] = None
@@ -126,6 +129,8 @@ class ChallongeTournament(Tournament):
             # yeah, discord.py tools works with that
             cached = discord.utils.get(self.participants, player_id=participant["id"])
             if cached is None:
+                if participant["active"] is False:
+                    continue  # disqualified player
                 try:
                     participants.append(self.participant_object.build_from_api(self, participant))
                 except RuntimeError:
@@ -190,6 +195,10 @@ class ChallongeTournament(Tournament):
                 # the previously finished match is now open, this means a TO manually
                 # removed the score set previously. we are therefore relaunching
                 await cached.relaunch()
+                log.info(
+                    f"[Guild {self.guild.id}] Reopening set {cached.set} because of bracket "
+                    "changes (now marked as open by Challonge)."
+                )
                 remote_changes.append(cached.set)
             # there is one last case where a finished match can be listed as pending
             # unlike the above case, we don't have to immediatly do something, the updated
@@ -223,6 +232,10 @@ class ChallongeTournament(Tournament):
     async def add_participants(self, *participants: str):
         raise NotImplementedError
         # idk how bulk_add works with seeds
+
+    async def destroy_player(self, player_id: str):
+        await async_http_retry(achallonge.participants.destroy(self.id, player_id))
+        log.debug(f"Destroyed player {player_id} (tournament {self.id})")
 
     async def list_participants(self):
         return await async_http_retry(achallonge.participants.index(self.id))
