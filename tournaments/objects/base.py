@@ -765,6 +765,17 @@ class Tournament:
     match_object = Match
     tournament_type = "base"  # should be "challonge", or "smash.gg"...
 
+    def cancel(self):
+        if self.task:
+            self.stop_loop_task()
+        try:
+            self.debug_task.cancel()
+        except AttributeError:
+            pass
+
+    def __del__(self):
+        self.cancel()
+
     @classmethod
     async def from_saved_data(
         cls, guild: discord.Guild, config: Config, data: dict, config_data: dict,

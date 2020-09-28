@@ -299,6 +299,7 @@ class Games(MixinMeta):
             if not pred.result:
                 await ctx.send(_("Cancelling."))
                 return
+        tournament.cancel()
         del self.tournaments[guild.id]
         await self.data.guild(guild).tournament.set({})
         await ctx.send(_("Tournament removed!"))

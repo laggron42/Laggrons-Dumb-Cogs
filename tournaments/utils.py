@@ -44,6 +44,8 @@ def only_phase(*allowed_phases):
                 tournament = cog.tournaments[ctx.guild.id]
             except KeyError:
                 raise commands.UserFeedbackCheckFailure(_("There's no ongoing tournament."))
+            if not allowed_phases:
+                return  # just checking if tournament exists
             if tournament.phase not in allowed_phases:
                 raise commands.UserFeedbackCheckFailure(
                     _("This command cannot be executed right now.")
