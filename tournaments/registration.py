@@ -106,3 +106,32 @@ class Registration(MixinMeta):
         del participant  # not truely deleted until the last reference is removed
         log.debug(f"[Guild {ctx.guild.id}] Player {ctx.author} unregistered.")
         await ctx.tick()
+
+    @only_phase("pending")
+    @commands.command(name="inscriptions")
+    async def begin_registration(self, ctx: commands.Context):
+        """
+        Starts the registration phase.
+        """
+        tournament = self.tournaments[ctx.guild.id]
+        register_channel = tournament.register_channel
+        await register_channel.purge(limit=None)
+        # participant_role = tournament.participant_role
+
+        # if tournament['reaction_mode']:
+        #   await register_channel.set_permissions(participant_role, read_messages=True, send_messages=False,
+        #                                          add_reactions=False)
+        # else:
+        #   await register_channel.set_permissions(participant_role, read_messages=True, send_messages=True,
+        #                                          add_reactions=False)
+        #   await register_channel.edit(slowmode_delay=60)
+
+        await ctx.message.add_reaction("✅")
+
+        # await tournament.announcements_channel.send(
+        #    f"{server_logo} Inscriptions pour le **{tournoi['name']}** ouvertes dans <#{register_channel}> !
+        #    Consultez-y les messages épinglés. <@&{gamelist[tournoi['game']]['role']}>\n"
+        #    f":calendar_spiral: Ce tournoi aura lieu le**{format_date(tournoi['début_tournoi'], format='full',
+        #    locale=language)} à {format_time(tournoi['début_tournoi'], format='short', locale=language)}**.")
+
+        # msg d'annonce
