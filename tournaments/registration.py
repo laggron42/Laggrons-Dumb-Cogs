@@ -1,12 +1,9 @@
 import discord
 import logging
-import asyncio
 
-from datetime import datetime
 from discord.ext import tasks
 
 from redbot.core import commands
-from redbot.core import checks
 from redbot.core.i18n import Translator
 
 from .abc import MixinMeta
@@ -45,12 +42,13 @@ class Registration(MixinMeta):
         self.task_errors += 1
         if self.task_errors >= MAX_ERRORS:
             log.critical(
-                f"[Guild {self.guild.id}] Error in loop task. 3rd error, cancelling the task",
+                "Error in loop task. 3rd error, cancelling the task ...",
                 exc_info=exception,
             )
         else:
             log.error(
-                f"[Guild {self.guild.id}] Error in loop task. Resuming...", exc_info=exception
+                "Error in loop task. Resuming ...",
+                exc_info=exception
             )
             self.update_message_loop.start()
 
