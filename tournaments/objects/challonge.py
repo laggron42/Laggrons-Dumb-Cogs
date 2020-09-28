@@ -44,19 +44,56 @@ class ChallongeParticipant(Participant):
 
 class ChallongeMatch(Match):
     @classmethod
-    def build_from_api(cls, tournament: Tournament, data: dict):
+    async def build_from_api(cls, tournament: Tournament, data: dict):
+        player1 = tournament.find_participant(player_id=data["player1_id"])[1]
+        player2 = tournament.find_participant(player_id=data["player2_id"])[1]
+        # here we will be looking for a very special case where the match and
+        # its players exists but one of the players isn't in our cache
+        # I got this exact case when resetting a match with a disqualified player.
+        # player is disqualified, so not loaded in our cache, but challonge somehow still
+        # considers this match as open and playable, so we'll try to fix this...
+        for i, player in enumerate((player1, player2)):
+            if player is None:
+                if i == 0:
+                    i = 2
+                    score = "-1-0"
+                else:
+                    i = 1
+                    score = "0--1"
+                await async_http_retry(
+                    achallonge.matches.update(
+                        tournament.id,
+                        data["id"],
+                        scores_csv=score,
+                        winner_id=data[f"player{i}_id"],
+                    )
+                )
+                log.info(
+                    f"[Guild {tournament.guild.id}] Forced Challonge player with ID "
+                    f"{data[f'player{i}_id']} losing match {data['suggested_play_order']} (ID: "
+                    f"{data['id']}), the player is already disqualified (Challonge bug for "
+                    "listing this match as open and pending)."
+                )
+                await tournament.to_channel.send(
+                    _(
+                        ":warning: A bug occured on set {set} (one player disqualified but "
+                        "still listed in an open match, Challonge bug). The bot attempted "
+                        "a fix by forcing a winner, but you might want to check the bracket "
+                        "and make sure everything is fine."
+                    ).format(set=data["suggested_play_order"])
+                )
+                return
+        # if both players are disqualified, we set only the first one as the winner, but
+        # the second one will be immediatly disqualified because of the update on bracket.
+        # yes all of this mess is to blame on Challonge
         cls = cls(
             tournament=tournament,
             round=data["round"],
             set=str(data["suggested_play_order"]),
             id=data["id"],
             underway=bool(data["underway_at"]),
-            player1=next(
-                filter(lambda x: x.player_id == data["player1_id"], tournament.participants)
-            ),
-            player2=next(
-                filter(lambda x: x.player_id == data["player2_id"], tournament.participants)
-            ),
+            player1=player1,
+            player2=player2,
         )
         if data["state"] == "complete":
             cls.status = "finished"
@@ -160,7 +197,9 @@ class ChallongeTournament(Tournament):
                 if match["state"] != "open":
                     # still empty, or finished (and we don't want to load finished sets into cache)
                     continue
-                matches.append(self.match_object.build_from_api(self, match))
+                match_object = await self.match_object.build_from_api(self, match)
+                if match_object:
+                    matches.append(match_object)
                 continue
             # we check for upstream bracket changes compared to our cache
             if cached.status == "ongoing" and match["state"] == "complete":
