@@ -258,7 +258,9 @@ class Match:
                 ":game_die: **{player}** was picked to begin the bans *({baninfo})*.\n"
             ).format(player=chosen_player.mention, baninfo=self.tournament.baninfo)
         if self.streamer is not None:
-            message += _("**\nYou will be on stream on {streamer}!**\n")
+            message += _("**\nYou will be on stream on {streamer}!**\n").format(
+                streamer=self.streamer.link
+            )
             if self.on_hold is True:
                 message += _(
                     ":warning: **Do not play your set for now and wait for your turn.** "
@@ -493,6 +495,7 @@ class Match:
                     # blocked or DMs not allowed
                     pass
                 self.cancel()
+                break
 
     async def end(self, player1_score: int, player2_score: int, upload: bool = True):
         """
