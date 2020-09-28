@@ -517,12 +517,12 @@ class Match:
         if self.channel is not None:
             await self.channel.send(
                 _(
-                    ":bell: __Score reported__ : **{winner}** wins **{score}** !\n"
+                    ":bell: __Score reported__ : **{winner}** wins{score} !\n"
                     "*In case of a problem, call a T.O. to fix the score.*\n"
                     "*Note : this channel will be deleted after 5 minutes of inactivity.*{remote}"
                 ).format(
                     winner=winner.mention,
-                    score=score,
+                    score=f" **{score}**" if sum(score) > 0 else "",
                     remote=_("\n\n:information_source: The score was directly set on the bracket.")
                     if upload is False
                     else "",
@@ -566,7 +566,7 @@ class Match:
         """
         self.cancel()
         if isinstance(player, int):
-            winner = self.player1 if self.player1 is not None else self.player2
+            winner = self.player1 if self.player1.player_id == player else self.player2
             player = _("Player with ID {id} (lost on Discord) ").format(id=player)
         else:
             winner = self.player1 if self.player1.id != player.id else self.player2

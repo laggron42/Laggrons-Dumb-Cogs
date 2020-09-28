@@ -168,7 +168,7 @@ class ChallongeTournament(Tournament):
                 try:
                     winner_score, loser_score = match["scores_csv"].split("-")
                 except ValueError:
-                    winner_score, loser_score = 0, 0
+                    winner_score, loser_score = 0, -1
                 winner = discord.utils.get(self.participants, player_id=match["winner_id"])
                 # Challonge always give the winner score first
                 # need to know the actual player1/2 score, and swap if needed
