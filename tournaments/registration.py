@@ -65,22 +65,17 @@ class Registration(MixinMeta):
         participant = tournament.find_participant(discord_id=ctx.author.id)[1]
         if participant is not None:
             # participant checkin-in
-            if ctx.channel.id != tournament.checkin_channel.id:
+            if tournament.checkin_channel and ctx.channel.id != tournament.checkin_channel.id:
                 await ctx.send(_("You cannot check in this channel."))
                 return
-            if not tournament.checkin_start < datetime.utcnow() < tournament.checkin_stop:
+            if tournament.phase != "checkin":
                 await ctx.send(_("The check-in hasn't started yet."))
                 return
             await participant.check()
         else:
             # participant registering
-            if ctx.channel.id != tournament.register_channel.id:
+            if tournament.register_channel and ctx.channel.id != tournament.register_channel.id:
                 await ctx.send(_("You cannot register in this channel."))
-                return
-            if not tournament.register_start < datetime.utcnow() < tournament.register_stop:
-                # this shouldn't be reachable because of the @only_phase decorator
-                # but it's still worth checking
-                await ctx.send(_("The registration hasn't started yet."))
                 return
             if tournament.limit and len(tournament.participants) + 1 > tournament.limit:
                 await ctx.send(_("No more places for this tournament."))

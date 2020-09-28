@@ -1002,7 +1002,7 @@ class Tournament:
     async def register_participant(self, member: discord.Member):
         await member.add_roles(self.participant_role, reason=_("Registering to tournament."))
         participant = self.participant_object(member, self)
-        if self.checkin_start and self.checkin_start > datetime.utcnow():
+        if self.phase == "checkin":
             # registering during check-in, count as already checked
             participant.checked_in = True
         self.participants.append(participant)
