@@ -23,7 +23,7 @@ from .utils import credentials_check, async_http_retry, mod_or_to
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
 
-CHALLONGE_URL_RE = re.compile(r"(?:https?://challonge\.com/)(?P<id>\S[^/]+)(/.*)?")
+CHALLONGE_URL_RE = re.compile(r"(?:https?://challonge\.com/)(\S{1,2}/)?(?P<id>\S[^/]+)(/.*)?")
 
 
 class ChallongeURLConverter(commands.Converter):
@@ -992,6 +992,9 @@ the start of the tournament, then closing 15 minutes before.
         )
         async with ctx.typing():
             data = await async_http_retry(achallonge.tournaments.show(url))
+        if data is None:
+            await ctx.send(_("Tournament not found. Check your URL."))
+            return
         games = await self.data.custom("GAME", guild.id).all()
         if data["game_name"].title() not in games:
             message = await ctx.send(
