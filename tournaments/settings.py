@@ -140,7 +140,7 @@ it directly.
         """
         guild = ctx.guild
         if api_key is not None:
-            if ctx.channel.has_permissions(guild.me).manage_messages:
+            if ctx.channel.permissions_for(guild.me).manage_messages:
                 try:
                     await ctx.message.delete()
                 except Exception:
