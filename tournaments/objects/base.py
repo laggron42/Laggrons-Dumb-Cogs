@@ -140,6 +140,11 @@ class Match:
             "guild_id={0.guild.id} player1={0.player1.name} player2={0.player2.name}>"
         ).format(self)
 
+    def __del__(self):
+        if self.streamer is not None:
+            self.streamer.current_match = None
+            self.streamer.matches.remove(self)
+
     @classmethod
     def from_saved_data(cls, tournament: Tournament, player1, player2, data: dict) -> Match:
         match = cls(
