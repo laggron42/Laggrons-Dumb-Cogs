@@ -1460,7 +1460,7 @@ class Streamer:
         cls.room_id = data["room_id"]
         cls.room_code = data["room_code"]
         cls.matches = list(
-            filter(None, [tournament.find_match(match_set=x)[1] for x in data["matches"]])
+            filter(None, [tournament.find_match(match_set=x)[1] or x for x in data["matches"]])
         )
         if data["current_match"]:
             cls.current_match = tournament.find_match(match_set=data["current_match"])[1]
