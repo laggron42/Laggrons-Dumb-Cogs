@@ -715,7 +715,7 @@ other commands.
 "Final Destination" "Pokémon Stadium 2"`
         """
         guild = ctx.guild
-        await self.data.custom("GAME", guild.id, game).counters.set(counters)
+        await self.data.custom("GAME", guild.id, game).counterpicks.set(counters)
         if counters:
             await ctx.send(_("The stages were successfully set."))
         else:
@@ -927,7 +927,7 @@ the start of the tournament, then closing 15 minutes before.
             "Participant : {participant}\n" "Streamer : {streamer}\n" "T.O. : {to}\n"
         ).format(**roles)
         embeds = []
-        embed = discord.Embed(title=_("Paramètres"))
+        embed = discord.Embed(title=_("Parameters"))
         embed.description = _(
             "Challonge credentials : {challonge}\n"
             "Number of configured games : {games}\n"
