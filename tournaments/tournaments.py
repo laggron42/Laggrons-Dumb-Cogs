@@ -1,6 +1,7 @@
 import logging
 import asyncio
 import achallonge
+import discord
 
 from abc import ABC
 from typing import Mapping
@@ -16,6 +17,7 @@ from .games import Games
 from .registration import Registration
 from .settings import Settings
 from .streams import Streams
+from .troubleshooting import Troubleshooting
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -34,7 +36,13 @@ class CompositeMetaClass(type(commands.Cog), type(ABC)):
 
 @cog_i18n(_)
 class Tournaments(
-    Games, Registration, Settings, Streams, commands.Cog, metaclass=CompositeMetaClass
+    Games,
+    Registration,
+    Settings,
+    Streams,
+    Troubleshooting,
+    commands.Cog,
+    metaclass=CompositeMetaClass,
 ):
 
     default_guild_settings = {
@@ -66,10 +74,10 @@ class Tournaments(
             "bot_prefix": None,
             "participants": [],
             "matches": [],
+            "streamers": [],
             "winner_categories": [],
             "loser_categories": [],
             "phase": None,
-            "type": None,
         },
     }
 
@@ -112,6 +120,24 @@ class Tournaments(
             ).format(self)
         )
 
+    async def _restore_tournament(self, guild: discord.Guild, data: dict = None) -> Tournament:
+        if data is None:
+            data = await self.data.guild(guild).all()
+        game_data = await self.data.custom("GAME", guild.id, data["tournament"]["game"]).all()
+        if data["tournament"]["tournament_type"] == "challonge":
+            if any([x is None for x in data["credentials"].values()]):
+                raise RuntimeError(
+                    _("The challonge credentials were lost. Can't resume tournament.")
+                )
+            achallonge.set_credentials(data["credentials"]["username"], data["credentials"]["api"])
+            data.update(game_data)
+            tournament = await ChallongeTournament.from_saved_data(
+                guild, self.data, data["tournament"], data
+            )
+            if tournament.phase == "ongoing":
+                tournament.start_loop_task()
+            return tournament
+
     async def restore_tournaments(self):
         count = 0
         log.debug("Resuming tournaments...")
@@ -122,28 +148,11 @@ class Tournaments(
             if not guild:
                 continue
             try:
-                game_data = await self.data.custom(
-                    "GAME", guild_id, data["tournament"]["game"]
-                ).all()
-                if data["tournament"]["tournament_type"] == "challonge":
-                    credentials = await self.data.guild_from_id(guild_id).credentials()
-                    if any([x is None for x in credentials.values()]):
-                        log.warning(
-                            f"[Guild {guild_id}] Credentials not found, "
-                            "not resuming the tournament."
-                        )
-                        continue
-                    achallonge.set_credentials(credentials["username"], credentials["api"])
-                    data.update(game_data)
-                    tournament = await ChallongeTournament.from_saved_data(
-                        guild, self.data, data["tournament"], data
-                    )
-                    self.tournaments[guild_id] = tournament
-                    if tournament.phase == "ongoing":
-                        tournament.start_loop_task()
+                tournament = await self._restore_tournament(guild, data)
             except Exception as e:
                 log.error(f"[Guild {guild_id}] Failed to resume tournament.", exc_info=e)
             else:
+                self.tournaments[guild.id] = tournament
                 count += 1
         if count > 0:
             log.info(f"Resumed {count} tournaments.")

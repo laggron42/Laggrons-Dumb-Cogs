@@ -4,13 +4,14 @@ import re
 import asyncio
 
 from datetime import datetime, timedelta
+from copy import deepcopy
 
 from redbot.core import commands
 from redbot.core import checks
 from redbot.core.i18n import Translator
 from redbot.core.utils.chat_formatting import pagify
 from redbot.core.utils.predicates import ReactionPredicate
-from redbot.core.utils.menus import start_adding_reactions
+from redbot.core.utils import menus
 
 from .abc import MixinMeta
 from .objects import Tournament, Match, Participant
@@ -156,7 +157,7 @@ class Games(MixinMeta):
             await ctx.send(_("There are still ongoing matches."))
             return
         async with ctx.typing():
-            tournament.stop_loop_task()
+            tournament.cancel()
             await tournament.stop()
             categories = tournament.winner_categories + tournament.loser_categories
             failed_category = False
@@ -224,7 +225,7 @@ class Games(MixinMeta):
             ).format(prefix=ctx.clean_prefix)
         )
         pred = ReactionPredicate.yes_or_no(message, ctx.author)
-        start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
+        menus.start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
         try:
             await self.bot.wait_for("reaction_add", check=pred, timeout=30)
         except asyncio.TimeoutError:
@@ -233,7 +234,7 @@ class Games(MixinMeta):
         if not pred.result:
             await ctx.send(_("Cancelling."))
             return
-        tournament.stop_loop_task()
+        tournament.cancel()
         await tournament.reset()
         message = _("The tournament has been reset.")
         if tournament.matches:
@@ -251,7 +252,6 @@ class Games(MixinMeta):
             for match in tournament.matches:
                 await match.force_end()
             await tournament._clear_categories()
-        tournament.stop_loop_task()
         await tournament.save()
         if tournament.matches:
             await ctx.send(_("Channels cleared."))
@@ -290,7 +290,7 @@ class Games(MixinMeta):
                 )
             )
             pred = ReactionPredicate.yes_or_no(message, ctx.author)
-            start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
+            menus.start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
             try:
                 await self.bot.wait_for("reaction_add", check=pred, timeout=30)
             except asyncio.TimeoutError:
@@ -392,7 +392,7 @@ class Games(MixinMeta):
             return
         message = await ctx.send(_("Are you sure you want to forfeit this match?"))
         pred = ReactionPredicate.yes_or_no(message, ctx.author)
-        start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
+        menus.start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
         try:
             await self.bot.wait_for("reaction_add", check=pred, timeout=20)
         except asyncio.TimeoutError:
@@ -421,7 +421,7 @@ class Games(MixinMeta):
             return
         message = await ctx.send(_("Are you sure you want to stop the tournament?"))
         pred = ReactionPredicate.yes_or_no(message, ctx.author)
-        start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
+        menus.start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
         try:
             await self.bot.wait_for("reaction_add", check=pred, timeout=20)
         except asyncio.TimeoutError:
@@ -477,3 +477,40 @@ class Games(MixinMeta):
             text = _("__Counters:__") + "\n\n- " + "\n- ".join(tournament.counterpicks)
             for page in pagify(text):
                 await ctx.send(page)
+
+    @mod_or_to()
+    @only_phase("ongoing")
+    @commands.command()
+    @commands.guild_only()
+    async def lsmatches(self, ctx: commands.Context):
+        """
+        List matches, sorted by their duration.
+        """
+        guild = ctx.guild
+        tournament = self.tournaments[guild.id]
+        embed = discord.Embed(
+            title=_("List of ongoing matches"), description=_("Sorted by duration")
+        )
+        embed.url = tournament.url
+        text = ""
+        match: Match
+        for match in sorted(
+            filter(lambda x: x.status == "ongoing", tournament.matches), key=lambda x: x.start_time
+        ):
+            duration = datetime.utcnow() - match.start_time
+            text += _("Set {set} ({time}): {player1} vs {player2}\n").format(
+                set=match.channel.mention
+                if match.channel
+                else _("#{set} *in DM*").format(set=match.set),
+                time=duration.strftime("%H:%M:%S"),
+                player1=match.player1.mention,
+                player2=match.player2.mention,
+            )
+        pages = list(pagify(text, page_length=1024))
+        embeds = []
+        for i, page in enumerate(pages):
+            _embed = deepcopy(embed)
+            _embed.add_field(name="\u200B", value=page, inline=False)
+            _embed.set_footer(text=_("Page {i}/{total}").format(i=i, total=len(pages)))
+            embeds.append(_embed)
+        await menus.menu(ctx, embeds, controls=menus.DEFAULT_CONTROLS)

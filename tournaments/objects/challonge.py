@@ -32,14 +32,14 @@ class ChallongeParticipant(Participant):
         await async_http_retry(achallonge.participants.destroy(self.tournament.id, self.player_id))
         log.debug(f"Destroyed player {self.player_id} (tournament {self.tournament.id})")
 
-    # async def send(self, content):
-    #     # THIS IS USED FOR TESTING AND SHOULD BE REMOVED
-    #     log.info(f"DM {str(self)}: {content}")
+    async def send(self, content):
+        # THIS IS USED FOR TESTING AND SHOULD BE REMOVED
+        log.info(f"DM {str(self)}: {content}")
 
-    # @property
-    # def mention(self):
-    #     # THIS IS USED FOR TESTING AND SHOULD BE REMOVED
-    #     return str(self)
+    @property
+    def mention(self):
+        # THIS IS USED FOR TESTING AND SHOULD BE REMOVED
+        return str(self)
 
 
 class ChallongeMatch(Match):
@@ -284,3 +284,16 @@ class ChallongeTournament(Tournament):
 
     async def reset(self):
         await async_http_retry(achallonge.tournaments.reset(self.id))
+
+    @staticmethod
+    async def show(_id):
+        result = await async_http_retry(achallonge.tournaments.show(_id))
+        return {
+            "name": result["name"],
+            "game": result["game_name"].title(),
+            "url": result["full_challonge_url"],
+            "id": result["id"],
+            "limit": result["signup_cap"],
+            "status": result["state"],
+            "tournament_start": result["start_at"],
+        }

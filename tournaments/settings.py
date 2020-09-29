@@ -1229,6 +1229,18 @@ the start of the tournament, then closing 15 minutes before.
                 ),
                 inline=False,
             )
+            if t.task is None or t.loop_task.failed():
+                embed.add_field(
+                    name="\u200B",
+                    value=_(
+                        ":warning: **The background task is not running.**\n"
+                        "This is either a bug, or someone paused it manually. Resume it with "
+                        "`{prefix}tfix resumetask`.\n"
+                        "Type `{prefix}help tfix pausetask` for details about "
+                        "the role of this background loop task."
+                    ).format(prefix=ctx.clean_prefix),
+                    inline=False,
+                )
         else:
             raise RuntimeError
         await ctx.send(embed=embed)

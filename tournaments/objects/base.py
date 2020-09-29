@@ -522,7 +522,7 @@ class Match:
                     "*Note : this channel will be deleted after 5 minutes of inactivity.*{remote}"
                 ).format(
                     winner=winner.mention,
-                    score=f" **{score}**" if sum(score) > 0 else "",
+                    score=f" **{score}**" if player1_score + player2_score > 0 else "",
                     remote=_("\n\n:information_source: The score was directly set on the bracket.")
                     if upload is False
                     else "",
@@ -793,8 +793,6 @@ class Tournament:
         tournament = cls(
             guild, config, **data, tournament_start=tournament_start, data=config_data
         )
-        if type:
-            tournament.type = type
         if phase == "ongoing":
             await tournament._get_top8()
         tournament.participants = list(
@@ -925,6 +923,8 @@ class Tournament:
         # this was mostly taken from the original bot this cog is based on, ATOS by Wonderfall
         # https://github.com/Wonderfall/ATOS/blob/master/bot.py#L1355-L1389
         rounds = await self._get_all_rounds()
+        if not rounds:
+            return
         top8 = self.top_8
         # calculate top 8
         top8["winner"]["top8"] = max(rounds) - 2
@@ -1213,6 +1213,9 @@ class Tournament:
 
     @tasks.loop(seconds=15)
     async def loop_task(self):
+        if self.task_errors >= MAX_ERRORS:
+            log.critical(f"[Guild {self.guild.id}] Reached 3 errors, closing the task...")
+            self.stop_loop_task()
         try:
             await self._update_participants_list()
             await self._update_match_list()
@@ -1258,7 +1261,7 @@ class Tournament:
         self.task = self.loop_task.start()
 
     def stop_loop_task(self):
-        self.loop_task.cancel()
+        self.task.cancel()
 
     def _debug_dump(self):
         file = open(cog_data_path(raw_name="Tournaments") / "debug.txt", "w+")
