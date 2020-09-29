@@ -58,6 +58,7 @@ Welcome to Laggron's Dumb Cogs's official documentation!
    instantcommands
    roleinvite
    say
+   tournaments
    warnsystem
 
 .. toctree::
