@@ -179,7 +179,7 @@ class Match:
 
     def _get_name(self) -> str:
         if self.round > 0:
-            max_round = self.tournament.top_8["winner"]["top8"]
+            max_round = self.tournament.top_8["winner"]["top8"] + 2
             return {
                 max_round: _("Grand Final"),
                 max_round - 1: _("Winners Final"),
@@ -187,7 +187,7 @@ class Match:
                 max_round - 3: _("Winners Quarter-Final"),
             }.get(self.round, _("Winners round {round}").format(round=self.round))
         elif self.round < 0:
-            max_round = self.tournament.top_8["loser"]["top8"]
+            max_round = self.tournament.top_8["loser"]["top8"] - 3
             return {
                 max_round: _("Losers Final"),
                 max_round + 1: _("Losers Semi-Final"),
