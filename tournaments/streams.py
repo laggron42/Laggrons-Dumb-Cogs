@@ -50,16 +50,24 @@ class TwitchChannelConverter(commands.Converter):
 # I'll use a better solution if I'm not too lazy and need to edit this part
 class Streams(MixinMeta):
     @only_phase("ongoing")
-    @commands.group()
+    @commands.group(invoke_without_command=True)
     @commands.guild_only()
-    @commands.check(mod_or_streamer)
     async def stream(self, ctx: commands.Context):
         """
-        Manage streams inside the tournament.
+        Display streams, or manage them.
         """
-        pass
+        if ctx.invoked_subcommand is None:
+            tournament = self.tournaments[ctx.guild.id]
+            if not tournament.streamers:
+                await ctx.send(_("No streamers in this tournament for now."))
+                return
+            if len(tournament.streamers) == 1:
+                await ctx.send(tournament.streamers[0].link)
+            else:
+                await ctx.send("\n".join([x.link for x in tournament.streamers]))
 
     @stream.command(name="init")
+    @commands.check(mod_or_streamer)
     async def stream_init(self, ctx: commands.Context, url: TwitchChannelConverter):
         """
         Initialize your stream.
@@ -73,7 +81,33 @@ class Streams(MixinMeta):
         tournament.streamers.append(streamer)
         await ctx.tick()
 
+    @stream.command(name="list")
+    @commands.check(mod_or_streamer)
+    async def stream_list(self, ctx: commands.Context):
+        """
+        List streams.
+        """
+        tournament = self.tournaments[ctx.guild.id]
+        streamers = tournament.streamers
+        if not streamers:
+            await ctx.send(_("No streamers in this tournament for now."))
+            return
+        text = _("__List of streamers on this tournament__\n\n")
+        for streamer in streamers:
+            match = streamer.current_match
+            text += _("<{s.link}> by {s.member}: {current}").format(
+                s=streamer,
+                current=_("On set {set}").format(
+                    set=match.channel.mention if match.channel else f"#{match.set}"
+                )
+                if match
+                else _("Pending"),
+            )
+        for page in pagify(text):
+            await ctx.send(page)
+
     @stream.command(name="set")
+    @commands.check(mod_or_streamer)
     async def stream_set(
         self,
         ctx: commands.Context,
@@ -118,6 +152,7 @@ class Streams(MixinMeta):
         await ctx.tick()
 
     @stream.command(name="transfer")
+    @commands.check(mod_or_streamer)
     async def stream_transfer(
         self,
         ctx: commands.Context,
@@ -161,6 +196,7 @@ any streamer/T.O. can edit anyone's stream.
         await ctx.tick()
 
     @stream.command(name="add")
+    @commands.check(mod_or_streamer)
     async def stream_add(
         self, ctx: commands.Context, channel: Optional[TwitchChannelConverter], *sets: int,
     ):
@@ -211,6 +247,7 @@ any streamer/T.O. can edit anyone's stream.
             await ctx.tick()
 
     @stream.command(name="remove", aliases=["del", "delete"])
+    @commands.check(mod_or_streamer)
     async def stream_remove(
         self, ctx: commands.Context, channel: Optional[TwitchChannelConverter], *sets: int,
     ):
@@ -259,6 +296,7 @@ any streamer/T.O. can edit anyone's stream.
             await ctx.tick()
 
     @stream.command(name="swap")
+    @commands.check(mod_or_streamer)
     async def stream_swap(
         self,
         ctx: commands.Context,
@@ -304,6 +342,7 @@ any streamer/T.O. can edit anyone's stream.
         await ctx.tick()
 
     @stream.command(name="info")
+    @commands.check(mod_or_streamer)
     async def stream_info(
         self, ctx: commands.Context, channel: Optional[TwitchChannelConverter],
     ):
@@ -372,6 +411,7 @@ any streamer/T.O. can edit anyone's stream.
             await menus.menu(ctx, embeds, controls=menus.DEFAULT_CONTROLS)
 
     @stream.command(name="end")
+    @commands.check(mod_or_streamer)
     async def stream_end(
         self, ctx: commands.Context, channel: Optional[TwitchChannelConverter],
     ):
