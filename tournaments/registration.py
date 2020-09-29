@@ -4,10 +4,13 @@ import logging
 from discord.ext import tasks
 
 from redbot.core import commands
-from redbot.core.i18n import Translator
+from redbot.core.i18n import Translator, get_babel_locale
 
 from .abc import MixinMeta
 from .utils import only_phase
+
+from datetime import datetime
+from babel.dates import format_date, format_time
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -115,23 +118,30 @@ class Registration(MixinMeta):
         """
         tournament = self.tournaments[ctx.guild.id]
         register_channel = tournament.register_channel
-        await register_channel.purge(limit=None)
-        # participant_role = tournament.participant_role
+        participant_role = tournament.participant_role
+        game_role = tournament.game_role
 
-        # if tournament['reaction_mode']:
-        #   await register_channel.set_permissions(participant_role, read_messages=True, send_messages=False,
-        #                                          add_reactions=False)
-        # else:
-        #   await register_channel.set_permissions(participant_role, read_messages=True, send_messages=True,
-        #                                          add_reactions=False)
-        #   await register_channel.edit(slowmode_delay=60)
+        await register_channel.purge(limit=None)
+        await register_channel.set_permissions(participant_role, read_messages=True, send_messages=True,
+                                               add_reactions=False)
+        await register_channel.edit(slowmode_delay=60)
 
         await ctx.message.add_reaction("✅")
 
-        # await tournament.announcements_channel.send(
-        #    f"{server_logo} Inscriptions pour le **{tournoi['name']}** ouvertes dans <#{register_channel}> !
-        #    Consultez-y les messages épinglés. <@&{gamelist[tournoi['game']]['role']}>\n"
-        #    f":calendar_spiral: Ce tournoi aura lieu le**{format_date(tournoi['début_tournoi'], format='full',
-        #    locale=language)} à {format_time(tournoi['début_tournoi'], format='short', locale=language)}**.")
+        locale = get_babel_locale()
 
-        # msg d'annonce
+        def format_datetime(date: datetime):
+            date = format_date(date, format="full", locale=locale)
+            time = format_time(date, format="short", locale=locale)
+            return _("{date} at {time}").format(date=date, time=time)
+
+        await tournament.announcements_channel.send(_(
+            "Inscriptions for the **{tournament.name}** are opened in {register_channel} ! "
+            "Consult the pinned messages {game_role}\n"
+            ":calendar_spiral: This tournament will occur on **{date}**.").
+                                                    format(tournament=tournament,
+                                                           register_channel=register_channel.mention,
+                                                           game_role=game_role.mention,
+                                                           date=format_datetime(tournament.tournament_start)
+                                                           )
+        )
