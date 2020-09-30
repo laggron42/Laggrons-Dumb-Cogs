@@ -49,6 +49,10 @@ class Tournaments(
         "credentials": {"username": None, "api": None},  # challonge login info
         "current_phase": None,  # possible values are "setup", "register", "checkin", "run"
         "delay": 10,
+        "time_until_warn": {  # warn brackets taking too much time
+            "bo3": (25, 10),  # time until warn in channel, then time until warning the T.O.s
+            "bo5": (30, 10),  # in minutes
+        },
         "register": {"opening": 0, "closing": 10},
         "checkin": {"opening": 60, "closing": 15},
         "start_bo5": 0,

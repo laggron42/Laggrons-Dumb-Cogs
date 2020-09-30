@@ -10,6 +10,7 @@ from typing import Optional
 from redbot.core import commands
 from redbot.core import checks
 from redbot.core import Config
+from redbot.core.commands import TimedeltaConverter
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
 from redbot.core.utils.menus import start_adding_reactions
@@ -775,6 +776,37 @@ other commands.
                 ).format(delay=delay)
             )
 
+    @tournamentset.command(name="warntime")
+    async def tournamentset_warntime(
+        self,
+        ctx: commands.Context,
+        time_until_warn_in_channel: int,
+        time_until_to_warn: int,
+        mode: str = "bo3",
+    ):
+        """
+        Set the time until warning for too long matches.
+
+        You set two delays: the delay until warning the players about the length of their match, \
+then the delay until warning the T.O.s about this match, both in minutes.
+        The second delay is in addition to the first one.
+        You also have to set the mode, either "bo3" or "bo5". Defaults to "bo3" if not set.
+
+        Examples:
+        `[p]tset warntime 30 10`: will warn the players 30 minutes after the start of their \
+match, then warn the T.O.s 10 minutes after the first warn (so 40 minutes in total).
+        `[p]tset warntime 40 10 bo5`: same as above, but for bo5 matches instead, and with 40 \
+minutes before the first one instead of 30.
+        """
+        guild = ctx.guild
+        if mode not in ("bo3", "bo5"):
+            await ctx.send(_('The mode must either be "bo3" or "bo5".'))
+            return
+        await self.data.guild(guild).time_until_warn.set_raw(
+            mode, value=(time_until_warn_in_channel, time_until_to_warn)
+        )
+        await ctx.send(_("New values have been set."))
+
     @tournamentset.command(name="register")
     async def tournamentset_register(self, ctx: commands.Context, opening: int, closing: int):
         """
@@ -857,6 +889,18 @@ the start of the tournament, then closing 15 minutes before.
             await ctx.send(_("I need the `Embed links` permission in this channel."))
             return
         data = await self.data.guild(guild).all()
+
+        def get_warn_time(mode):
+            return _(
+                "__{mode}__\n"
+                "First warn: after {first} minutes\n"
+                "T.O. warn: {second} minutes after first warn"
+            ).format(
+                mode=mode.upper(),
+                first=data["time_until_warn"][mode][0],
+                second=data["time_until_warn"][mode][1],
+            )
+
         no_games = len(await self.data.custom("GAME", guild.id).all())
         if data["credentials"]["api"]:
             challonge = _("Configured")
@@ -951,6 +995,11 @@ the start of the tournament, then closing 15 minutes before.
             value=_("Opening : {opening}\nClosing : {closing}").format(
                 opening=checkin_start, closing=checkin_end
             ),
+        )
+        embed.add_field(
+            name=_("Warn long matches"),
+            value=get_warn_time("bo3") + "\n\n" + get_warn_time("bo5"),
+            inline=False,
         )
         embeds.append(embed)
         embed = discord.Embed(title=_("Settings"))
@@ -1229,7 +1278,7 @@ the start of the tournament, then closing 15 minutes before.
                 ),
                 inline=False,
             )
-            if t.task is None or t.loop_task.failed():
+            if t.task is None or not t.loop_task.is_running():
                 embed.add_field(
                     name="\u200B",
                     value=_(

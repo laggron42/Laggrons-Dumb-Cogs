@@ -125,6 +125,8 @@ class Match:
         self.end_time: Optional[datetime] = None
         self.status = "pending"  # can be "pending" "ongoing" "finished"
         self.checked_dq = True if self.is_top8 else False
+        self.warned: Optional[Union[datetime, bool]] = None
+        # time of the first warn for duration, if any. if a second warn was sent, set to True
         self.streamer: Optional[Streamer] = None
         self.on_hold = False  # True if this is match is awaiting for a stream
         # one or more players can be None
@@ -144,6 +146,11 @@ class Match:
         if self.streamer is not None:
             self.streamer.current_match = None
             self.streamer.matches.remove(self)
+
+    @property
+    def duration(self) -> Optional[timedelta]:
+        if self.start_time:
+            return datetime.utcnow() - self.start_time
 
     @classmethod
     def from_saved_data(cls, tournament: Tournament, player1, player2, data: dict) -> Match:
@@ -502,6 +509,38 @@ class Match:
                 self.cancel()
                 break
 
+    async def warn_length(self):
+        target = self.channel or self._dm_players
+        await target.send(
+            _(
+                ":warning: This match is taking a lot of time!\n"
+                "As soon as this is finished, set your score with `{prefix}win`{channel}.\n"
+                "T.O.s will be warned if this match is still ongoing in {time} minutes."
+            ).format(
+                prefix=self.tournament.bot_prefix,
+                channel=_(" in {channel}").format(channel=self.tournament.scores_channel.mention)
+                if self.tournament.scores_channel
+                else "",
+                time=self.tournament.time_until_warn["bo5" if self.is_bo5 else "bo3"][1],
+            )
+        )
+        self.warned = datetime.utcnow()
+
+    async def warn_to_length(self):
+        await self.tournament.to_channel.send(
+            _(
+                ":warning: The set {set} is taking a lot of time (now open since {time} minutes)."
+            ).format(
+                set=self.channel.mention
+                if self.channel
+                else _("#{set} (in DM)").format(set=self.set),
+                time=round(self.duration.total_seconds() // 60),
+            )
+        )
+        self.warned = True
+        target = self.channel or self._dm_players
+        await target.send(_("Your match is taking too much time, T.O.s were warned."))
+
     async def end(self, player1_score: int, player2_score: int, upload: bool = True):
         """
         Set the score and end the match.
@@ -711,6 +750,10 @@ class Tournament:
         self.streamer_role: discord.Role = guild.get_role(data["roles"].get("streamer"))
         self.to_role: discord.Role = guild.get_role(data["roles"].get("to"))
         self.delay: int = data["delay"]
+        self.time_until_warn = {
+            "bo3": data["time_until_warn"].get("bo3", (25, 10)),
+            "bo5": data["time_until_warn"].get("bo5", (30, 10)),
+        }  # the default values are somehow not loaded into the dict sometimes
         self.register: dict = data["register"]
         self.checkin: dict = data["checkin"]
         self.start_bo5: int = data["start_bo5"]
@@ -924,7 +967,7 @@ class Tournament:
         # https://github.com/Wonderfall/ATOS/blob/master/bot.py#L1355-L1389
         rounds = await self._get_all_rounds()
         if not rounds:
-            return
+            raise RuntimeError("There are no matches available.")
         top8 = self.top_8
         # calculate top 8
         top8["winner"]["top8"] = max(rounds) - 2
@@ -1190,10 +1233,7 @@ class Tournament:
             enumerate(self.matches),
         ):
             if match.status == "ongoing":
-                if (
-                    not match.checked_dq
-                    and (match.start_time + timedelta(minutes=self.delay)) < datetime.utcnow()
-                ):
+                if not match.checked_dq and match.duration > timedelta(minutes=self.delay):
                     log.debug(f"Checking inactivity for match {match.set}")
                     await match.check_inactive()
             elif match.status == "finished":
@@ -1201,6 +1241,20 @@ class Tournament:
                     log.debug(f"Checking deletion for match {match.set}")
                     await match.channel.delete(reason=_("5 minutes passed after set end."))
                     del self.matches[i]
+
+    async def check_for_too_long_matches(self):
+        match: Match
+        for match in filter(
+            lambda x: x.status == "ongoing" and not x.on_hold and x.streamer is None, self.matches,
+        ):
+            max_length = self.time_until_warn["bo5" if match.is_bo5 else "bo3"]
+            if match.warned is True:
+                pass
+            elif match.warned is None:
+                if match.duration > timedelta(minutes=max_length[0]):
+                    await match.warn_length()
+            elif datetime.utcnow() > match.warned + timedelta(minutes=max_length[1]):
+                await match.warn_to_length()
 
     async def warn_bracket_change(self, *sets):
         await self.to_channel.send(
@@ -1214,7 +1268,7 @@ class Tournament:
     @tasks.loop(seconds=15)
     async def loop_task(self):
         if self.task_errors >= MAX_ERRORS:
-            log.critical(f"[Guild {self.guild.id}] Reached 3 errors, closing the task...")
+            log.critical(f"[Guild {self.guild.id}] Reached 5 errors, closing the task...")
             self.stop_loop_task()
         try:
             await self._update_participants_list()
@@ -1229,12 +1283,17 @@ class Tournament:
             )
             self.task_errors += 1
             return
-        coros = [self.launch_sets(), self.check_for_channel_timeout()]
+        coros = [
+            self.launch_sets(),
+            self.check_for_channel_timeout(),
+            self.check_for_too_long_matches(),
+        ]
         results = await asyncio.gather(*coros, return_exceptions=True)
         for i, result in enumerate(results):
             if result is None:
                 continue
             log.warning(f"[Guild {self.guild.id}] Failed with coro {coros[i]}.", exc_info=result)
+            self.task_errors += 1
         try:
             await self.launch_streams()
         except Exception as e:
@@ -1248,7 +1307,7 @@ class Tournament:
         self.task_errors += 1
         if self.task_errors >= MAX_ERRORS:
             log.critical(
-                f"[Guild {self.guild.id}] Error in loop task. 3rd error, cancelling the task",
+                f"[Guild {self.guild.id}] Error in loop task. 5th error, cancelling the task",
                 exc_info=exception,
             )
         else:
