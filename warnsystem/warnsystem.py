@@ -224,7 +224,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
 
         self.task: asyncio.Task
 
-    __version__ = "1.3.6"
+    __version__ = "1.3.10"
     __author__ = ["retke (El Laggron)"]
 
     # helpers
@@ -397,7 +397,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                     "{tick2} Send a DM to all members\n"
                     "{tick3}"
                     "{tick4} {time}\n"
-                    "{tick5} Reason: {reason}\n\n"
+                    "{tick5} Reason: {reason}\n\n{warning}"
                     "Continue?"
                 ).format(
                     level=level,
@@ -409,6 +409,12 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                     time=time_str,
                     tick5=tick5,
                     reason=reason or _("Not set"),
+                    warning=_(
+                        ":warning: You're about to warn a lot of members! Avoid doing this to "
+                        "prevent being rate limited by Discord, especially if you enabled DMs.\n\n"
+                    )
+                    if len(members) > 50 and level > 1
+                    else "",
                 ),
                 file=file,
             )
@@ -787,7 +793,13 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         if not user:
             await ctx.send_help()
             return
-        if not await mod.is_mod_or_superior(self.bot, ctx.author) and user != ctx.author:
+        if (
+            not (
+                await mod.is_mod_or_superior(self.bot, ctx.author)
+                or ctx.author.guild_permissions.kick_members
+            )
+            and user != ctx.author
+        ):
             await ctx.send(_("You are not allowed to see other's warnings!"))
             return
         cases = await self.api.get_all_cases(ctx.guild, user)
@@ -1158,7 +1170,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         await message.edit(content=_("The case was successfully deleted!"), embed=None)
 
     @commands.command()
-    @checks.mod()
+    @checks.mod_or_permissions(kick_members=True)
     @commands.cooldown(1, 10, commands.BucketType.channel)
     async def warnlist(self, ctx: commands.Context, short: bool = False):
         """
@@ -1202,7 +1214,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         await menus.menu(ctx=ctx, pages=pages, controls=menus.DEFAULT_CONTROLS, timeout=60)
 
     @commands.command()
-    @checks.mod()
+    @checks.mod_or_permissions(manage_roles=True)
     async def wsunmute(self, ctx: commands.Context, member: discord.Member):
         """
         Unmute a member muted with WarnSystem.
@@ -1267,7 +1279,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             await ctx.send(page)
 
     @commands.command()
-    @checks.mod()
+    @checks.mod_or_permissions(ban_members=True)
     async def wsunban(self, ctx: commands.Context, member: UnavailableMember):
         """
         Unban a member banned with WarnSystem.
@@ -1315,9 +1327,9 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         warns = await self.cache.get_temp_action(guild)
         to_remove = []  # there can be multiple temp bans, let's not question the moderators
         for member, data in warns.items():
-            if data["level"] == 2 or data["member"] != user.id:
+            if data["level"] == 2 or int(member) != user.id:
                 continue
-            to_remove.append(member)
+            to_remove.append(UnavailableMember(self.bot, guild._state, member))
         if to_remove:
             await self.cache.bulk_remove_temp_action(guild, to_remove)
             log.info(

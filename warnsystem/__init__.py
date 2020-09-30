@@ -4,9 +4,6 @@ import re
 
 from redbot.core.i18n import Translator
 from datetime import datetime, timedelta
-from laggron_utils import init_logger, close_logger
-
-from .warnsystem import WarnSystem
 
 try:
     from redbot.core.errors import CogLoadError
@@ -26,6 +23,9 @@ if not importlib.util.find_spec("laggron_utils"):
         "or type `pip3 install -U git+https://github.com/retke/Laggron-utils.git` in the "
         "terminal to install the library."
     )
+
+from laggron_utils import init_logger, close_logger
+from .warnsystem import WarnSystem
 
 _ = Translator("WarnSystem", __file__)
 log = logging.getLogger("red.laggron.warnsystem")
@@ -185,7 +185,7 @@ async def update_config(bot, config):
 
 
 async def setup(bot):
-    init_logger(log, WarnSystem.__class__.__name__)
+    init_logger(log, "WarnSystem")
     n = WarnSystem(bot)
     # the cog conflicts with the core Warnings cog, we must check that
     if "Warnings" in bot.cogs:

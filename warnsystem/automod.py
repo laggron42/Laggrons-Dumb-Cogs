@@ -100,7 +100,7 @@ class AutomodMixin(MixinMeta):
         return embed
 
     @commands.group()
-    @checks.admin()
+    @checks.admin_or_permissions(administrator=True)
     async def automod(self, ctx: commands.Context):
         """
         WarnSystem automod configuration.
@@ -534,7 +534,7 @@ you shouldn't need further setup.
                     "WarnSystem's antispam feature will make your text channels cleaner by "
                     "removing and warning members sending undesired content.\n\n"
                     "Antispam is currently **{status}**.\n"
-                    "{status_change} it with `{prefix}automod antispam {setting}`."
+                    "{status_change} it with `{prefix}automod antispam enable {setting}`."
                 ).format(
                     prefix=ctx.clean_prefix,
                     status=status,

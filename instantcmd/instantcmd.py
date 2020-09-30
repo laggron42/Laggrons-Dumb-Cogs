@@ -80,7 +80,7 @@ class InstantCommands(BaseCog):
         bot.loop.create_task(self.resume_commands())
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.2.1"
+    __version__ = "1.2.2"
 
     # def get_config_identifier(self, name):
     # """
@@ -364,11 +364,10 @@ cog at this point.
         if command not in _commands:
             await ctx.send("Command not found.")
             return
-        message = (
-            f"Source code for `{ctx.prefix}{command}`:\n" + "```Py\n" + _commands[command] + "```"
+        await ctx.send(f"Source code for `{ctx.clean_prefix}{command}`:")
+        await ctx.send_interactive(
+            pagify(_commands[command], shorten_by=10), box_lang="py", timeout=60
         )
-        for page in pagify(message):
-            await ctx.send(page)
 
     @commands.command(hidden=True)
     @checks.is_owner()
