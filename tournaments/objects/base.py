@@ -819,6 +819,7 @@ class Tournament:
     def __del__(self):
         self.cancel()
 
+    # Config-related stuff
     @classmethod
     async def from_saved_data(
         cls, guild: discord.Guild, config: Config, data: dict, config_data: dict,
@@ -921,6 +922,7 @@ class Tournament:
             allowed_roles.append(self.streamer_role)
         return allowed_roles
 
+    # some common utils
     async def _get_available_category(self, dest: str):
         position = self.category.position + 1 if self.category else len(self.guild.categories)
         if dest == "winner":
@@ -998,6 +1000,16 @@ class Tournament:
         if top8["loser"]["bo5"] > -1:
             top8["loser"]["bo5"] = -1
 
+    async def warn_bracket_change(self, *sets):
+        await self.to_channel.send(
+            _(
+                ":information_source: Changes were detected on the upstream bracket.\n"
+                "This may result in multiple sets ending, relaunch or cancellation.\n"
+                "Affected sets: {sets}"
+            ).format(sets=", ".join([f"#{x}" for x in sets]))
+        )
+
+    # tools for finding objects within the instance's lists of Participants, Matches and Streamers
     def find_participant(
         self, *, player_id: Optional[str] = None, discord_id: Optional[int] = None
     ) -> Tuple[int, Participant]:
@@ -1061,6 +1073,60 @@ class Tournament:
                 return None, None
         raise RuntimeError("Provide either channel or discord_id")
 
+    # registration and check-in related methods
+    def _prepare_register_message(self):
+        def format_datetime(date: datetime, only_time=False):
+            date = format_date(date, format="full", locale=locale)
+            time = format_time(date, format="short", locale=locale)
+            if only_time:
+                return time
+            return _("{date} at {time}").format(date=date, time=time)
+
+        locale = get_babel_locale()
+        if self.checkin_start:
+            checkin = _(":white_small_square: __Check-in:__ From {begin} to {end}\n").format(
+                begin=format_datetime(self.checkin_start, True),
+                end=format_datetime(self.checkin_stop or self.tournament_start, True),
+            )
+        else:
+            checkin = ""
+        if self.limit:
+            limit = _("{registered}/{limit} participants registered").format(
+                registered=len(self.participants), limit=self.limit
+            )
+        else:
+            limit = _("{registered} participants registered *(no limit set)*").format(
+                registered=len(self.participants)
+            )
+        if self.ruleset_channel:
+            ruleset = _(":white_small_square: __Ruleset:__ See {channel}\n").format(
+                channel=self.ruleset_channel.mention
+            )
+        else:
+            ruleset = ""
+        return _(
+            "**{t.name}** | *{t.game}*\n\n"
+            ":white_small_square: __Date:__ {date}\n"
+            ":white_small_square: __Register:__ Closing at {time}\n"
+            "{checkin}"
+            ":white_small_square: __Participants:__ {limit}\n"
+            ":white_small_square: __Bracket:__ {t.url}\n"
+            "{ruleset}\n"
+            "You can register/unregister to this tournament with "
+            "the `{t.bot_prefix}in` and `{t.bot_prefix}out` commands.\n"
+            "*Note: your Discord username will be used in the bracket.*"
+        ).format(
+            t=self,
+            date=format_datetime(self.tournament_start),
+            time=format_datetime(self.register_stop or self.tournament_start, True),
+            checkin=checkin,
+            limit=limit,
+            ruleset=ruleset,
+        )
+
+    async def send_register_message(self):
+        self.register_message = await self.register_channel.send(self._prepare_register_message())
+
     async def register_participant(self, member: discord.Member):
         await member.add_roles(self.participant_role, reason=_("Registering to tournament."))
         participant = self.participant_object(member, self)
@@ -1070,6 +1136,7 @@ class Tournament:
         self.participants.append(participant)
         log.debug(f"[Guild {self.guild.id}] Player {member} registered.")
 
+    # starting the tournament...
     async def send_start_messages(self):
         scores_channel = (
             _(" in {channel}").format(channel=self.scores_channel.mention)
@@ -1147,59 +1214,7 @@ class Tournament:
             except discord.HTTPException as e:
                 log.error(f"[Guild {self.guild.id}] Can't send message in {channel}.", exc_info=e)
 
-    def _prepare_register_message(self):
-        def format_datetime(date: datetime, only_time=False):
-            date = format_date(date, format="full", locale=locale)
-            time = format_time(date, format="short", locale=locale)
-            if only_time:
-                return time
-            return _("{date} at {time}").format(date=date, time=time)
-
-        locale = get_babel_locale()
-        if self.checkin_start:
-            checkin = _(":white_small_square: __Check-in:__ From {begin} to {end}\n").format(
-                begin=format_datetime(self.checkin_start, True),
-                end=format_datetime(self.checkin_stop or self.tournament_start, True),
-            )
-        else:
-            checkin = ""
-        if self.limit:
-            limit = _("{registered}/{limit} participants registered").format(
-                registered=len(self.participants), limit=self.limit
-            )
-        else:
-            limit = _("{registered} participants registered *(no limit set)*").format(
-                registered=len(self.participants)
-            )
-        if self.ruleset_channel:
-            ruleset = _(":white_small_square: __Ruleset:__ See {channel}\n").format(
-                channel=self.ruleset_channel.mention
-            )
-        else:
-            ruleset = ""
-        return _(
-            "**{t.name}** | *{t.game}*\n\n"
-            ":white_small_square: __Date:__ {date}\n"
-            ":white_small_square: __Register:__ Closing at {time}\n"
-            "{checkin}"
-            ":white_small_square: __Participants:__ {limit}\n"
-            ":white_small_square: __Bracket:__ {t.url}\n"
-            "{ruleset}\n"
-            "You can register/unregister to this tournament with "
-            "the `{t.bot_prefix}in` and `{t.bot_prefix}out` commands.\n"
-            "*Note: your Discord username will be used in the bracket.*"
-        ).format(
-            t=self,
-            date=format_datetime(self.tournament_start),
-            time=format_datetime(self.register_stop or self.tournament_start, True),
-            checkin=checkin,
-            limit=limit,
-            ruleset=ruleset,
-        )
-
-    async def send_register_message(self):
-        self.register_message = await self.register_channel.send(self._prepare_register_message())
-
+    # now this is the loop task stuff, the one that runs during the tournament (not other phases)
     async def launch_sets(self):
         match: Match
         coros = []
@@ -1255,15 +1270,6 @@ class Tournament:
                     await match.warn_length()
             elif datetime.utcnow() > match.warned + timedelta(minutes=max_length[1]):
                 await match.warn_to_length()
-
-    async def warn_bracket_change(self, *sets):
-        await self.to_channel.send(
-            _(
-                ":information_source: Changes were detected on the upstream bracket.\n"
-                "This may result in multiple sets ending, relaunch or cancellation.\n"
-                "Affected sets: {sets}"
-            ).format(sets=", ".join([f"#{x}" for x in sets]))
-        )
 
     @tasks.loop(seconds=15)
     async def loop_task(self):
@@ -1322,6 +1328,7 @@ class Tournament:
     def stop_loop_task(self):
         self.task.cancel()
 
+    # debug util
     def _debug_dump(self):
         file = open(cog_data_path(raw_name="Tournaments") / "debug.txt", "w+")
         content = ""
@@ -1378,6 +1385,8 @@ class Tournament:
             self._debug_dump()
             await asyncio.sleep(1)
 
+    # abstract methods that will have to be overwritten by the class that inherits from this
+    # represents the API calls done to the remote bracket
     async def _get_all_rounds(self) -> List[int]:
         """
         Return a list of all rounds in the bracket. This is used to determine the top 8.
