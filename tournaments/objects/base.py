@@ -1,4 +1,5 @@
 from __future__ import annotations
+from os import stat
 
 import discord
 import logging
@@ -55,7 +56,7 @@ class Participant(discord.Member):
     def from_saved_data(cls, tournament: Tournament, data: dict):
         member = tournament.guild.get_member(data["discord_id"])
         if member is None:
-            log.warning(f"[Guild {tournament.guild.id}] Lost participannt {data['discord_id']}")
+            log.warning(f"[Guild {tournament.guild.id}] Lost participant {data['discord_id']}")
             return None
         participant = cls(member, tournament)
         participant._player_id = data["player_id"]
@@ -782,12 +783,19 @@ class Tournament:
         else:
             self.checkin_stop = None
         self.ruleset_channel: discord.TextChannel = guild.get_channel(data["ruleset"])
-        self.game_role = guild.get_role(data["role"])  # this is the role assigned to the game
+        self.game_role: discord.Role = guild.get_role(data["role"]) or guild.default_role
         self.baninfo: str = data["baninfo"]
         self.ranking: dict = data["ranking"]
         self.stages: list = data["stages"]
         self.counterpicks: list = data["counterpicks"]
-        self.phase = "pending"  # can be "pending" "register" "checkin" "ongoing" "finished"
+        self.phase = "pending"  # can be multiple values:
+        # "pending": initial value, when the tournament is registered
+        # "register": when registration/checkin is active
+        # "awaiting": registration is done, participants are ready, waiting for upload and start
+        # "ongoing": tournament started, also called the "high panic and RAM usage moment"
+        # "finished": tournament ended. not even sure if it's possible, since tournament is deleted
+        self.registration_active = False
+        self.checkin_active = False
         self.register_message: Optional[discord.Message] = None  # message being updated
         # loop task things
         self.task: Optional[asyncio.Task] = None
@@ -923,6 +931,15 @@ class Tournament:
         return allowed_roles
 
     # some common utils
+    @staticmethod
+    def _format_datetime(date: datetime, only_time=False):
+        locale = get_babel_locale()
+        date = format_date(date, format="full", locale=locale)
+        time = format_time(date, format="short", locale=locale)
+        if only_time:
+            return time
+        return _("{date} at {time}").format(date=date, time=time)
+
     async def _get_available_category(self, dest: str):
         position = self.category.position + 1 if self.category else len(self.guild.categories)
         if dest == "winner":
@@ -1075,18 +1092,10 @@ class Tournament:
 
     # registration and check-in related methods
     def _prepare_register_message(self):
-        def format_datetime(date: datetime, only_time=False):
-            date = format_date(date, format="full", locale=locale)
-            time = format_time(date, format="short", locale=locale)
-            if only_time:
-                return time
-            return _("{date} at {time}").format(date=date, time=time)
-
-        locale = get_babel_locale()
         if self.checkin_start:
             checkin = _(":white_small_square: __Check-in:__ From {begin} to {end}\n").format(
-                begin=format_datetime(self.checkin_start, True),
-                end=format_datetime(self.checkin_stop or self.tournament_start, True),
+                begin=self._format_datetime(self.checkin_start, True),
+                end=self._format_datetime(self.checkin_stop or self.tournament_start, True),
             )
         else:
             checkin = ""
@@ -1117,15 +1126,174 @@ class Tournament:
             "*Note: your Discord username will be used in the bracket.*"
         ).format(
             t=self,
-            date=format_datetime(self.tournament_start),
-            time=format_datetime(self.register_stop or self.tournament_start, True),
+            date=self._format_datetime(self.tournament_start),
+            time=self._format_datetime(self.register_stop or self.tournament_start, True),
             checkin=checkin,
             limit=limit,
             ruleset=ruleset,
         )
 
-    async def send_register_message(self):
-        self.register_message = await self.register_channel.send(self._prepare_register_message())
+    async def start_registration(self):
+        self.phase = "register"
+        self.registration_active = True
+        if self.register_channel:
+            self.register_message = await self.register_channel.send(
+                self._prepare_register_message()
+            )
+            await self.register_message.pin()
+            await self.register_channel.set_permissions(self.game_role, send_messages=True)
+        if self.announcements_channel:
+            if self.register_channel:
+                message = _(
+                    "{role} Registrations for the tournament **{tournament}** are now opened "
+                    "in {channel}! See the pinned message there for details.\n"
+                    ":calendar_spiral: This tournament will take place on **{date}**."
+                ).format(
+                    tournament=self.name,
+                    channel=self.register_channel.mention,
+                    role=self.game_role.mention
+                    if self.game_role != self.guild.default_role
+                    else "",
+                    date=self._format_datetime(self.tournament_start),
+                )
+            else:
+                if self.checkin_start:
+                    checkin = _(
+                        ":white_small_square: __Check-in:__ From {begin} to {end}\n"
+                    ).format(
+                        begin=self._format_datetime(self.checkin_start, True),
+                        end=self._format_datetime(
+                            self.checkin_stop or self.tournament_start, True
+                        ),
+                    )
+                else:
+                    checkin = ""
+                if self.limit:
+                    limit = _("Limited to {limit} particiapants.").format(
+                        registered=len(self.participants), limit=self.limit
+                    )
+                else:
+                    limit = _("No limit set.")
+                if self.ruleset_channel:
+                    ruleset = _(":white_small_square: __Ruleset:__ See {channel}\n").format(
+                        channel=self.ruleset_channel.mention
+                    )
+                else:
+                    ruleset = ""
+                message = _(
+                    "{role} Registrations for the tournament **{t.name}** are now opened!\n"
+                    ":calendar_spiral: This tournament will take place on **{date}**.\n\n"
+                    ":white_small_square: __Register:__ Closing at {time}\n"
+                    "{checkin}"
+                    ":white_small_square: __Participants:__ {limit}\n"
+                    ":white_small_square: __Bracket:__ {t.url}\n"
+                    "{ruleset}\n"
+                    "You can register/unregister to this tournament with "
+                    "the `{t.bot_prefix}in` and `{t.bot_prefix}out` commands.\n"
+                    "*Note: your Discord username will be used in the bracket.*"
+                ).format(
+                    t=self,
+                    role=self.game_role.mention
+                    if self.game_role != self.guild.default_role
+                    else "",
+                    date=self._format_datetime(self.tournament_start),
+                    register=self._format_datetime(self.register_start or self.tournament_start),
+                    checkin=checkin,
+                    limit=limit,
+                    ruleset=ruleset,
+                )
+            mentions = discord.AllowedMentions(roles=[self.game_role]) if self.game_role else None
+            await self.announcements_channel.send(message, allowed_mentions=mentions)
+
+    async def end_registration(self):
+        if not self.checkin_active:
+            self.phase = "awaiting"
+        self.registration_active = False
+        if self.register_channel:
+            self.register_message = None
+            await self.register_channel.set_permissions(self.game_role, send_messages=False)
+            await self.register_channel.send(_("Registration ended."))
+        elif self.announcements_channel:  # no registration channel, so we announce somewhere else
+            await self.announcements_channel.send(_("Registration ended."))
+
+    async def start_check_in(self):
+        self.phase = "checkin"
+        self.checkin_active = True
+        message = _(
+            "{role} The check-in for **{t.name}** has started!\n"
+            "You have to confirm your presence by typing `{t.bot_prefix}in` here{end_time}.\n"
+            "If you want to unregister, type `{t.bot_prefix}out` instead.\n\n"
+            ":warning: If you don't check in time, you will be unregistered!"
+        ).format(
+            t=self,
+            role=self.participant_role.mention,
+            end_time=_(" until {}").format(
+                self._format_datetime(self.checkin_stop, only_time=True)
+            )
+            if self.checkin_stop
+            else "",
+        )
+        mentions = discord.AllowedMentions(roles=[self.participant_role])
+        if self.checkin_channel:
+            message = await self.checkin_channel.send(message, allowed_mentions=mentions)
+            await message.pin()
+            await self.checkin_channel.set_permissions(self.participant_role, send_messages=True)
+        elif self.announcements_channel:
+            await self.announcements_channel.send(message, allowed_mentions=mentions)
+        if self.register_channel and self.registration_active:
+            await self.register_channel.send(
+                _(
+                    ":information_source: Check-in started{channel}!\n"
+                    "You can still register here until {end_time}. "
+                    "Anyone registering as of now will already be checked in."
+                ).format(
+                    channel=_(" in {}").format(self.checkin_channel.mention)
+                    if self.checkin_channel
+                    else "",
+                    end_time=self._format_datetime(
+                        self.register_stop or self.tournament_start, only_time=True
+                    ),
+                )
+            )
+
+    async def call_check_in(self, with_dm: bool = False):
+        """
+        Pings participants that have not checked in yet.
+
+        Only works with a check-in channel setup and a stop time.
+        """
+        if not self.checkin_channel:
+            return
+        if not self.checkin_stop:
+            return
+        members = [x for x in self.participants if not x.checked_in]
+        if not members:
+            return
+        await self.checkin_channel.send(
+            _(
+                ":clock1: **Check-in reminder!**\n\n- {members}\n\n"
+                "You have until {end_time} to check-in, or you'll be unregistered."
+            ).format(
+                members="\n- ".join([x.mention for x in members]),
+                end_time=self._format_datetime(self.checkin_stop, only_time=True),
+            )
+        )
+        if with_dm:
+            for member in members:
+                try:
+                    await member.send(
+                        _(
+                            ":warning: **Attention!** You have **{time} minutes** left "
+                            "for checking-in to the tournament **{tournament}**."
+                        ).format(
+                            time=round(
+                                (self.checkin_stop - datetime.utcnow()).total_seconds() // 60
+                            ),
+                            tournament=self.name,
+                        )
+                    )
+                except discord.HTTPException:
+                    pass
 
     async def register_participant(self, member: discord.Member):
         await member.add_roles(self.participant_role, reason=_("Registering to tournament."))
@@ -1135,6 +1303,19 @@ class Tournament:
             participant.checked_in = True
         self.participants.append(participant)
         log.debug(f"[Guild {self.guild.id}] Player {member} registered.")
+
+    async def unregister_participant(self, member: discord.Member):
+        i, participant = self.find_participant(discord_id=member.id)
+        if i is None:
+            raise KeyError("Participant not found.")
+        await participant.remove_roles(
+            self.participant_role, reason=_("Unregistering from tournament.")
+        )
+        del self.participants[i]
+        try:
+            await participant.send(_("You were unregistered from the tournament."))
+        except discord.Forbidden:
+            pass
 
     # starting the tournament...
     async def send_start_messages(self):
