@@ -82,7 +82,7 @@ class Games(MixinMeta):
             return
         # check for register status
         embed = discord.Embed(title=_("Starting the tournament..."))
-        embed.description = _("Jeu: {game}\n" "URL: {url}").format(
+        embed.description = _("Game: {game}\n" "URL: {url}").format(
             game=tournament.game, url=tournament.url
         )
         embed.add_field(

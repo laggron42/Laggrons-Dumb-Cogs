@@ -195,7 +195,6 @@ it directly.
         Tournament settings on this server.
 
         Only administrators have access to those commands, not the T.O.
-        Type `[p]firstsetup` for more info on permissions.
         """
         pass
 
@@ -214,7 +213,7 @@ it directly.
         Set the announcements channel.
 
         The following announcements will be sent there :
-        - Start of register
+        - Start of registration
         - Tournament launch
         - Tournament end
         """
@@ -362,8 +361,7 @@ enter a command to register or unregister.
         - Automatic DQs because of inactivity
 
         Careful, this channel does not grant additional permissions to people with write access.
-        The Red permissions system will define if someone has access to the commands. Type
-        `[p]firstsetup` for more info.
+        The Red permissions system will define if someone has access to the commands.
         """
         guild = ctx.guild
         if not channel.permissions_for(guild.me).read_messages:
@@ -397,10 +395,9 @@ enter a command to register or unregister.
 
         Give the complete name of the role, or its ID.
 
-        The T.O. role is optional if your T.O. are also moderators of this server. Otherwise,
-        you should rather use the Red permissions system with `[p]set addadminrole` and
-        `[p]set addmodrole`.
-        For more info, type `[p]firstsetup`.
+        The T.O. role is optional if your T.O. are also moderators of this server. Otherwise, \
+you should rather use the Red permissions system with `[p]set addadminrole` and \
+`[p]set addmodrole`.
         """
         pass
 
@@ -409,7 +406,7 @@ enter a command to register or unregister.
         """
         Set the participant role in the tournament.
 
-        This role will be assigned to memebers as soon as they register, and removed once the \
+        This role will be assigned to members as soon as they register, and removed once the \
 tournament ends.
         """
         guild = ctx.guild
@@ -439,7 +436,7 @@ tournament ends.
         Set the T.O. role (Tournament Organizer).
 
         This role gives access to the tournament commands (except `[p]challongeset` and \
-`[p]tournamentset`).
+`[p]tset`).
 
         :warning: **Use this setting only if you need to separate moderators from T.O.**
         Otherwise, it is strongly recommanded to use the Red commands: `[p]set addadminrole` and \
@@ -457,7 +454,6 @@ moderators and admins.
                     "and administrator roles, adapting the permissions of all commands of this "
                     "bot to your staff.\n"
                     "This setting is recommanded for T.O.s that aren't moderators.\n"
-                    "For more info, type `{prefix}firstsetup`.\n\n"
                     "Do you want to continue?"
                 ).format(prefix=ctx.clean_prefix)
             )
@@ -487,7 +483,7 @@ moderators and admins.
         """
         Configure the different games of the tournaments.
 
-        First use `[p]tournamentset games add`, then an explaination will be given on the \
+        First use `[p]tset games add`, then an explaination will be given on the \
 other commands.
         """
         pass
@@ -543,7 +539,7 @@ other commands.
         Give the old name of the game, then its new name.
         Use quotes if there are spaces.
 
-        Example: [p]tournamentset games edit "Super Smqsh Bros. Ultimate" \
+        Example: [p]tset games edit "Super Smqsh Bros. Ultimate" \
 "Super Smash Bros Ultimate"
         """
         guild = ctx.guild
@@ -626,7 +622,7 @@ other commands.
         """
         Set the channel of the rules for a game.
 
-        Example: `[p]tournamentset games ruleset "Super Smash Bros. Ultimate" #tournament-rules`
+        Example: `[p]tset games ruleset "Super Smash Bros. Ultimate" #tournament-rules`
         """
         guild = ctx.guild
         await self.data.custom("GAME", guild.id, game).ruleset.set(channel.id)
@@ -693,7 +689,7 @@ other commands.
 
         Give the stages one after another, with quotes if there are spaces.
 
-        Example : `[p]tournamentset games stages "Super Smash Bros. Ultimate" Battlefield \
+        Example : `[p]tset games stages "Super Smash Bros. Ultimate" Battlefield \
 "Final Destination" "Pokémon Stadium 2"`
         """
         guild = ctx.guild
@@ -712,7 +708,7 @@ other commands.
 
         Give the stages one after another, with quotes if there are spaces.
 
-        Example : `[p]tournamentset games stages "Super Smash Bros. Ultimate" Battlefield \
+        Example : `[p]tset games counters "Super Smash Bros. Ultimate" Battlefield \
 "Final Destination" "Pokémon Stadium 2"`
         """
         guild = ctx.guild
@@ -822,7 +818,7 @@ the registration.
         To disable the automatic opening/closing of the registration, give 0 for its \
 corresponding value.
 
-        Example: `[p]tournamentset register 48 10` = Opening of the registration 45 hours before \
+        Example: `[p]tset register 48 10` = Opening of the registration 48 hours before \
 the opening of the tournament, then closing 10 minutes before.
         """
         guild = ctx.guild
@@ -849,7 +845,7 @@ the opening of the tournament, then closing 10 minutes before.
 
         To disable the check-in, give 0 for both values.
 
-        Example: `[p]tournamentset checkin 60 15` = Opening of the check-in 60 minutes before \
+        Example: `[p]tset checkin 60 15` = Opening of the check-in 60 minutes before \
 the start of the tournament, then closing 15 minutes before.
         """
         guild = ctx.guild
@@ -1251,11 +1247,9 @@ the start of the tournament, then closing 15 minutes before.
             )
             checked_in = len([x for x in t.participants if x.checked_in])
             embed.add_field(
-                name=_(
-                    "Participants checked-in",
-                    value=f"{checked_in}/{len(t.participants)}",
-                    inline=True,
-                )
+                name=_("Participants checked-in"),
+                value=f"{checked_in}/{len(t.participants)}",
+                inline=True,
             )
         elif t.phase == "ongoing":
             embed.add_field(

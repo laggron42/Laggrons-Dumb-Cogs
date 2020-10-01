@@ -376,7 +376,7 @@ class Match:
         for role in allowed_roles:
             overwrites[role] = discord.PermissionOverwrite(read_messages=True)
         return await self.guild.create_text_channel(
-            self.set, category=category, overwrites=overwrites, reason=_("Lancement du set")
+            self.set, category=category, overwrites=overwrites, reason=_("Set launch")
         )
 
     async def _start(self):
