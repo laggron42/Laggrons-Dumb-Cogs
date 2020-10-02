@@ -131,7 +131,13 @@ class ChallongeMatch(Match):
 class ChallongeTournament(Tournament):
     @classmethod
     def build_from_api(
-        cls, guild: discord.Guild, config: Config, prefix: str, data: dict, config_data: dict
+        cls,
+        guild: discord.Guild,
+        config: Config,
+        prefix: str,
+        cog_version: str,
+        data: dict,
+        config_data: dict,
     ):
         return cls(
             guild=guild,
@@ -144,6 +150,7 @@ class ChallongeTournament(Tournament):
             status=data["state"],
             tournament_start=data["start_at"],
             bot_prefix=prefix,
+            cog_version=cog_version,
             data=config_data,
         )
 
@@ -152,8 +159,8 @@ class ChallongeTournament(Tournament):
     tournament_type = "challonge"
 
     @classmethod
-    def from_saved_data(cls, guild, config, data, config_data):
-        return super().from_saved_data(guild, config, data, config_data)
+    def from_saved_data(cls, guild, config, cog_version, data, config_data):
+        return super().from_saved_data(guild, config, cog_version, data, config_data)
 
     async def _get_all_rounds(self):
         return [x["round"] for x in await self.list_matches()]

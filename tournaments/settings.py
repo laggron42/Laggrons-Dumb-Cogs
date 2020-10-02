@@ -1077,6 +1077,7 @@ the start of the tournament, then closing 15 minutes before.
             guild=guild,
             config=self.data,
             prefix=ctx.clean_prefix,
+            cog_version=self.__version__,
             data=data,
             config_data=config_data,
         )

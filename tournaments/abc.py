@@ -21,6 +21,7 @@ class MixinMeta(ABC):
         self.bot: Red
         self.data: Config
         self.tournaments: Mapping[int, Tournament]
+        self.__version__: str
 
     def _restore_tournament(self, guild: discord.Guild, data: dict = None) -> Tournament:
         pass

@@ -136,7 +136,7 @@ class Tournaments(
             achallonge.set_credentials(data["credentials"]["username"], data["credentials"]["api"])
             data.update(game_data)
             tournament = await ChallongeTournament.from_saved_data(
-                guild, self.data, data["tournament"], data
+                guild, self.data, self.__version__, data["tournament"], data
             )
             if tournament.phase == "ongoing":
                 tournament.start_loop_task()

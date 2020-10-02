@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from babel.dates import format_date, format_time
 from typing import Optional, Tuple, List, Union
 
+from redbot import __version__ as red_version
 from redbot.core import Config
 from redbot.core.i18n import Translator, get_babel_locale
 from redbot.core.data_manager import cog_data_path
@@ -710,6 +711,7 @@ class Tournament:
         status: str,
         tournament_start: datetime,
         bot_prefix: str,
+        cog_version: str,
         data: dict,
     ):
         self.guild = guild
@@ -722,6 +724,7 @@ class Tournament:
         self.status = status
         self.tournament_start = tournament_start
         self.bot_prefix = bot_prefix
+        self.cog_version = cog_version
         self.participants: List[Participant] = []
         self.matches: List[Match] = []
         self.streamers: List[Streamer] = []
@@ -830,7 +833,7 @@ class Tournament:
     # Config-related stuff
     @classmethod
     async def from_saved_data(
-        cls, guild: discord.Guild, config: Config, data: dict, config_data: dict,
+        cls, guild: discord.Guild, config: Config, cog_version: str, data: dict, config_data: dict,
     ):
         tournament_start = datetime.utcfromtimestamp(int(data["tournament_start"]))
         participants = data["participants"]
@@ -843,7 +846,12 @@ class Tournament:
         del data["winner_categories"], data["loser_categories"], data["phase"]
         del data["tournament_type"]
         tournament = cls(
-            guild, config, **data, tournament_start=tournament_start, data=config_data
+            guild,
+            config,
+            **data,
+            tournament_start=tournament_start,
+            cog_version=cog_version,
+            data=config_data,
         )
         if phase == "ongoing":
             await tournament._get_top8()
