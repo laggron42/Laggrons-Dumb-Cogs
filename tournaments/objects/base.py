@@ -1303,6 +1303,56 @@ class Tournament:
                 except discord.HTTPException:
                     pass
 
+    async def end_checkin(self):
+        self.checkin_active = False
+        if not self.registration_active:
+            self.phase = "awaiting"
+        to_remove = []
+        failed = []
+        for i, member in filter(lambda x: x[1].checked_in is False, enumerate(self.participants)):
+            try:
+                await member.remove_roles(
+                    self.participant_role, reason=_("Participant not checked.")
+                )
+            except discord.HTTPException as e:
+                log.warn(
+                    f"[Guild {self.guild.id}] Can't remove participant role from unchecked "
+                    f"participant {member} (ID: {member.id}) after check-in end.",
+                    exc_info=e,
+                )
+                failed.append(member)
+            try:
+                await member.send(
+                    _(
+                        "You didn't check-in on time. "
+                        "You are therefore unregistered from the tournament **{tournament}**."
+                    )
+                )
+            except discord.HTTPException:
+                pass
+            to_remove.append(i)
+        for i in to_remove:
+            del self.participants[i]
+        text = _(":information_source: Check-in was ended. {removed}").format(
+            removed=_("{} participants didn't check and were unregistered.").format(to_remove)
+            if to_remove
+            else _("No participant was unregistered.")
+        )
+        if failed:
+            text += _("\n\n:warning: {} participants couldn't have their roles removed:\n")
+            text += " ".join([x.mention for x in failed])
+        for page in pagify(text):
+            await self.to_channel.send(page)
+        if self.checkin_channel:
+            await self.register_channel.set_permissions(self.game_role, send_messages=False)
+            await self.register_channel.send(
+                _("Check-in ended. Participants who didn't check are unregistered.")
+            )
+        elif self.announcements_channel:
+            await self.announcements_channel.send(
+                _("Check-in ended. Participants who didn't check are unregistered.")
+            )
+
     async def register_participant(self, member: discord.Member):
         await member.add_roles(self.participant_role, reason=_("Registering to tournament."))
         participant = self.participant_object(member, self)
