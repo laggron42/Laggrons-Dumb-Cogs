@@ -4,13 +4,10 @@ import logging
 from discord.ext import tasks
 
 from redbot.core import commands
-from redbot.core.i18n import Translator, get_babel_locale
+from redbot.core.i18n import Translator
 
 from .abc import MixinMeta
 from .utils import only_phase, mod_or_to
-
-from datetime import datetime
-from babel.dates import format_date, format_time
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -125,7 +122,6 @@ class Registration(MixinMeta):
         tournament = self.tournaments[ctx.guild.id]
         register_channel = tournament.register_channel
         participant_role = tournament.participant_role
-        game_role = tournament.game_role
 
         await register_channel.purge(limit=None)
         await register_channel.set_permissions(
@@ -134,8 +130,3 @@ class Registration(MixinMeta):
         await register_channel.edit(slowmode_delay=60)
 
         await ctx.message.add_reaction("✅")
-
-        def format_datetime(date: datetime):
-            date = format_date(date, format="full", locale=locale)
-            time = format_time(date, format="short", locale=locale)
-            return _("{date} at {time}").format(date=date, time=time)
