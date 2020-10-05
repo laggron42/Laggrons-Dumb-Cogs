@@ -171,7 +171,7 @@ class Tournaments(
                 _(
                     "Error from Challonge: {error}\n"
                     "If this problem persists, contact T.O.s or an admin of the bot."
-                ).format(error=error.args[0])
+                ).format(error=error.original.args[0])
             )
         else:
             await self.bot.on_command_error(ctx, error, unhandled_by_cog=True)

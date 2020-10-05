@@ -3,18 +3,19 @@ import importlib.util
 
 from redbot.core.errors import CogLoadError
 
-if not importlib.util.find_spec("laggron_utils"):
-    raise CogLoadError(
-        "You need the `laggron_utils` package for any cog from Laggron's Dumb Cogs. "
-        "Use the command `[p]pipinstall git+https://github.com/retke/Laggron-utils.git` "
-        "or type `pip3 install -U git+https://github.com/retke/Laggron-utils.git` in the "
-        "terminal to install the library."
-    )
-if not importlib.util.find_spec("achallonge"):
-    raise CogLoadError(
-        "You need the `apychal` package for this cog. Use the command `[p]pipinstall apychal` "
-        "or type `pip3 install -U apychal` in the terminal to install the library."
-    )
+dependencies = {
+    "laggron_utils": "git+https://github.com/retke/Laggron-utils.git",
+    "achallonge": "apychal",
+    "aiofiles": "aiofiles",
+}
+
+for dependency, package in dependencies.items():
+    if not importlib.util.find_spec(dependency):
+        raise CogLoadError(
+            f"You need the `{dependency}` package for this cog. Use the command `[p]pipinstall "
+            f"{package}` or type `pip3 install -U {package}` "
+            "in the terminal to install the library."
+        )
 
 from .tournaments import Tournaments
 from laggron_utils import init_logger

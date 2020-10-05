@@ -1,3 +1,4 @@
+import achallonge
 import discord
 import logging
 import re
@@ -10,6 +11,7 @@ from redbot.core import commands
 from redbot.core import checks
 from redbot.core.i18n import Translator
 from redbot.core.utils.chat_formatting import pagify
+from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 from redbot.core.utils import menus
 
@@ -303,6 +305,69 @@ class Games(MixinMeta):
         del self.tournaments[guild.id]
         await self.data.guild(guild).tournament.set({})
         await ctx.send(_("Tournament removed!"))
+
+    @only_phase("pending", "register", "awaiting")
+    @mod_or_to()
+    @commands.command()
+    @commands.guild_only()
+    @commands.cooldown(1, 10, commands.BucketType.guild)
+    async def upload(self, ctx: commands.Context):
+        """
+        Upload the participants to the bracket, and seed if possible.
+
+        If you set braacket informations, the bot will seed participants based on this.
+        Previously added participants in the bracket will be overwritten.
+        """
+        guild = ctx.guild
+        tournament = self.tournaments[guild.id]
+        message = None
+        if not tournament.participants:
+            await ctx.send(_(":warning: No participant registered."))
+            return
+        if tournament.checkin_active:
+            message = _(
+                "Check-in is still ongoing. Participants not checked yet won't be uploaded."
+            )
+        elif not all([x.checked_in for x in tournament.participants]):
+            message = _("Check-in was not done. All participants will be uploaded.")
+        if message:
+            message = await ctx.send(f":warning: {message}\n" + _("Do you want to continue?"))
+            pred = ReactionPredicate.yes_or_no(message, ctx.author)
+            start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
+            try:
+                await self.bot.wait_for("reaction_add", check=pred, timeout=30)
+            except asyncio.TimeoutError:
+                await ctx.send(_("Timed out."))
+                return
+            if pred.result is False:
+                await ctx.send(_("Cancelled."))
+                return
+        try:
+            async with ctx.typing():
+                await tournament.seed_participants_and_upload(tournament.checkin_active)
+        except achallonge.ChallongeException:
+            raise
+        except Exception as e:
+            log.error(f"[Guild {ctx.guild.id}] Failed seeding/uploading participants.", exc_info=e)
+            await ctx.send(
+                _(
+                    "An error occured while seeding/uploading. "
+                    "Check your logs or contact an admin of the bot."
+                )
+            )
+        else:
+            await ctx.send(
+                _("{len} participants successfully {seed}uploaded to the bracket!").format(
+                    len=len(
+                        [x.checked_in for x in tournament.participants]
+                        if tournament.checkin_active
+                        else tournament.participants
+                    ),
+                    seed=_("seeded and ")
+                    if tournament.ranking["league_name"] and tournament.ranking["league_id"]
+                    else "",
+                )
+            )
 
     @only_phase("ongoing")
     @commands.command()

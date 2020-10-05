@@ -7,7 +7,7 @@ from redbot.core import commands
 from redbot.core.i18n import Translator, get_babel_locale
 
 from .abc import MixinMeta
-from .utils import only_phase
+from .utils import only_phase, mod_or_to
 
 from datetime import datetime
 from babel.dates import format_date, format_time
@@ -45,14 +45,10 @@ class Registration(MixinMeta):
         self.task_errors += 1
         if self.task_errors >= MAX_ERRORS:
             log.critical(
-                "Error in loop task. 3rd error, cancelling the task ...",
-                exc_info=exception,
+                "Error in loop task. 3rd error, cancelling the task ...", exc_info=exception,
             )
         else:
-            log.error(
-                "Error in loop task. Resuming ...",
-                exc_info=exception
-            )
+            log.error("Error in loop task. Resuming ...", exc_info=exception)
             self.update_message_loop.start()
 
     @only_phase("register", "checkin")
@@ -111,8 +107,18 @@ class Registration(MixinMeta):
         await ctx.tick()
 
     @only_phase("pending")
-    @commands.command(name="inscriptions")
-    async def begin_registration(self, ctx: commands.Context):
+    @mod_or_to()
+    @commands.group()
+    async def register(self, ctx: commands.Context):
+        """
+        Start and stop the registration for the tournament.
+
+        Automated start and stop can be setup with `[p]tset registration`.
+        """
+        pass
+
+    @register.command(name="start")
+    async def register_start(self, ctx: commands.Context):
         """
         Starts the registration phase.
         """
@@ -122,26 +128,14 @@ class Registration(MixinMeta):
         game_role = tournament.game_role
 
         await register_channel.purge(limit=None)
-        await register_channel.set_permissions(participant_role, read_messages=True, send_messages=True,
-                                               add_reactions=False)
+        await register_channel.set_permissions(
+            participant_role, read_messages=True, send_messages=True, add_reactions=False
+        )
         await register_channel.edit(slowmode_delay=60)
 
         await ctx.message.add_reaction("✅")
-
-        locale = get_babel_locale()
 
         def format_datetime(date: datetime):
             date = format_date(date, format="full", locale=locale)
             time = format_time(date, format="short", locale=locale)
             return _("{date} at {time}").format(date=date, time=time)
-
-        await tournament.announcements_channel.send(_(
-            "Inscriptions for the **{tournament.name}** are opened in {register_channel} ! "
-            "Consult the pinned messages {game_role}\n"
-            ":calendar_spiral: This tournament will occur on **{date}**.").
-                                                    format(tournament=tournament,
-                                                           register_channel=register_channel.mention,
-                                                           game_role=game_role.mention,
-                                                           date=format_datetime(tournament.tournament_start)
-                                                           )
-        )

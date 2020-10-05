@@ -2,7 +2,7 @@ import achallonge
 import discord
 import logging
 
-from typing import Optional
+from typing import List, Optional
 
 from redbot.core import Config
 from redbot.core.i18n import Translator
@@ -15,15 +15,6 @@ _ = Translator("Tournaments", __file__)
 
 
 class ChallongeParticipant(Participant):
-    @classmethod
-    def build_from_api(cls, tournament: Tournament, data: dict):
-        member = tournament.guild.get_member_named(data["name"])
-        if member is None:
-            raise RuntimeError("Participant not found in guild.")
-        cls = cls(member, tournament)
-        cls._player_id = data["id"]
-        return cls
-
     @property
     def player_id(self):
         return self._player_id
@@ -275,9 +266,29 @@ class ChallongeTournament(Tournament):
         await async_http_retry(achallonge.participants.create(self.id, name, seed=seed))
         log.debug(f"Added participant {name} (seed {seed}) to Challonge tournament {self.id}")
 
-    async def add_participants(self, *participants: str):
-        raise NotImplementedError
-        # idk how bulk_add works with seeds
+    async def add_participants(self, participants: List[str]):
+        if not participants:
+            return
+        # remove previous participants
+        await async_http_retry(achallonge.participants.clear(self.id))
+        # make a composite list (to avoid "414 Request-URI Too Large")
+        participants = [participants[x : x + (50)] for x in range(0, len(participants), 50)]
+        # Send to Challonge and assign IDs
+        for chunk_participants in participants:
+            print(chunk_participants)
+            challonge_players = await async_http_retry(
+                achallonge.participants.bulk_add(self.id, chunk_participants)
+            )
+            for player in challonge_players:
+                participant = self.find_participant(discord_name=player["name"])[1]
+                if participant is None:
+                    log.warning(
+                        f"[Guild {self.guild.id}] Challonge player with name {player['name']} "
+                        f"and ID {player['id']} cannot be found in participants after bulk_add. "
+                        "If you start the tournament now, expect DQs."
+                    )
+                    continue
+                participant._player_id = player["id"]
 
     async def destroy_player(self, player_id: str):
         await async_http_retry(achallonge.participants.destroy(self.id, player_id))

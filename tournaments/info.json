@@ -14,7 +14,8 @@
     "required_cogs": {},
     "requirements": [
         "git+https://github.com/retke/Laggron-utils.git",
-        "apychal"
+        "apychal==1.9.8",
+        "aiofiles"
     ],
     "short": "Tools for managing your tournaments on Discord.",
     "tags": [

@@ -1,14 +1,20 @@
 from __future__ import annotations
-from os import stat
+from copy import copy
 
 import discord
 import logging
 import asyncio
+import aiohttp
 import contextlib
+import aiofiles
+import aiofiles.os
+import filecmp
+import csv
 
 from discord.ext import tasks
 from random import choice
 from itertools import islice
+from statistics import median
 from datetime import datetime, timedelta
 from babel.dates import format_date, format_time
 from typing import Optional, Tuple, List, Union
@@ -17,6 +23,7 @@ from redbot import __version__ as red_version
 from redbot.core import Config
 from redbot.core.i18n import Translator, get_babel_locale
 from redbot.core.data_manager import cog_data_path
+from redbot.core.utils.chat_formatting import pagify
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -42,6 +49,7 @@ class Participant(discord.Member):
         # now our own stuff
         self.tournament = tournament
         self._player_id = None
+        self.elo = None  # ranking and seeding stuff
         self.checked_in = False
         self.match: Optional[Match] = None
         self.spoke = False  # True as soon as the participant sent a message in his channel
@@ -52,6 +60,14 @@ class Participant(discord.Member):
             "<Participant player_id={0.player_id} tournament_name={0.tournament.name} "
             "tournament_id={0.tournament.id} spoke={0.spoke} id={1.id} name={1.name!r}>"
         ).format(self, self._user)
+
+    def __str__(self):
+        names = {
+            236957792559169536: "IT | Freetox",  # xyleff
+            533735367308738560: "TC | AmoGin",  # tolty
+            394256821810102283: "TC | NoRajFanDogs",  # adrien
+        }
+        return names.get(self.id, super().__str__())
 
     @classmethod
     def from_saved_data(cls, tournament: Tournament, data: dict):
@@ -1036,7 +1052,11 @@ class Tournament:
 
     # tools for finding objects within the instance's lists of Participants, Matches and Streamers
     def find_participant(
-        self, *, player_id: Optional[str] = None, discord_id: Optional[int] = None
+        self,
+        *,
+        player_id: Optional[str] = None,
+        discord_id: Optional[int] = None,
+        discord_name: Optional[str],
     ) -> Tuple[int, Participant]:
         if player_id:
             try:
@@ -1050,7 +1070,14 @@ class Tournament:
                 return next(filter(lambda x: x[1].id == discord_id, enumerate(self.participants)))
             except StopIteration:
                 return None, None
-        raise RuntimeError("Provide either player_id or discord_id")
+        elif discord_name:
+            try:
+                return next(
+                    filter(lambda x: str(x[1]) == discord_name, enumerate(self.participants))
+                )
+            except StopIteration:
+                return None, None
+        raise RuntimeError("Provide either player_id, discord_id or discord_name")
 
     def find_match(
         self,
@@ -1212,6 +1239,7 @@ class Tournament:
                 )
             mentions = discord.AllowedMentions(roles=[self.game_role]) if self.game_role else None
             await self.announcements_channel.send(message, allowed_mentions=mentions)
+        await self.save()
 
     async def end_registration(self):
         if not self.checkin_active:
@@ -1223,6 +1251,7 @@ class Tournament:
             await self.register_channel.send(_("Registration ended."))
         elif self.announcements_channel:  # no registration channel, so we announce somewhere else
             await self.announcements_channel.send(_("Registration ended."))
+        await self.save()
 
     async def start_check_in(self):
         self.phase = "checkin"
@@ -1263,6 +1292,7 @@ class Tournament:
                     ),
                 )
             )
+        await self.save()
 
     async def call_check_in(self, with_dm: bool = False):
         """
@@ -1352,6 +1382,7 @@ class Tournament:
             await self.announcements_channel.send(
                 _("Check-in ended. Participants who didn't check are unregistered.")
             )
+        await self.save()
 
     async def register_participant(self, member: discord.Member):
         await member.add_roles(self.participant_role, reason=_("Registering to tournament."))
@@ -1361,6 +1392,7 @@ class Tournament:
             participant.checked_in = True
         self.participants.append(participant)
         log.debug(f"[Guild {self.guild.id}] Player {member} registered.")
+        await self.save()
 
     async def unregister_participant(self, member: discord.Member):
         i, participant = self.find_participant(discord_id=member.id)
@@ -1374,6 +1406,77 @@ class Tournament:
             await participant.send(_("You were unregistered from the tournament."))
         except discord.Forbidden:
             pass
+        await self.save()
+
+    # seeding stuff
+    # 95% of this code is made by Wonderfall, from ATOS bot (original)
+    # https://github.com/Wonderfall/ATOS/blob/master/utils/seeding.py
+    # the original seeding method was made by x and converted to Python by Wonderfall
+    # TODO: forgot his name
+    async def _fetch_braacket_ranking_info(self):
+        league_name, league_id = self.ranking["league_name"], self.ranking["league_id"]
+        headers = {
+            "User-Agent": (
+                f"Red-DiscordBot {red_version} Laggrons-Dumb-Cogs/tournaments {self.cog_version}"
+            ),
+            "Connection": "close",
+        }
+        path = cog_data_path(None, raw_name="Tournaments") / "ranking"
+        path.mkdir(exist_ok=True)
+        async with aiohttp.ClientSession(headers=headers) as session:
+            for page in range(1, 6):
+                url = f"https://braacket.com/league/{league_name}/ranking/{league_id}"
+                parameters = {
+                    "rows": 200,
+                    "page": page,
+                    "export": "csv",
+                }
+                file_path = path / f"page{page}.csv"
+                print("starting request")
+                async with session.get(url, params=parameters) as response:
+                    if response.status >= 400:
+                        raise RuntimeError(response.status, response.reason)
+                    print("gonna open with aiofiles")
+                    async with aiofiles.open(file_path, mode="wb") as file:
+                        print("opened, now writing")
+                        await file.write(await response.read())
+                        print("done")
+                print("connection closed")
+                if page != 1 and filecmp.cmp(file_path, path / f"page{page-1}.csv"):
+                    await aiofiles.os.remove(file_path)
+                    break
+
+    async def _seed_participants(self):
+        ranking = {}
+        path = cog_data_path(None, raw_name="Tournaments") / "ranking"
+        # open and parse the previously downloaded CSV
+        for file in list(path.rglob("*.csv")):
+            with open(file) as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    ranking[row["Player"]] = int(row["Points"])
+        # base elo : put at bottom
+        base_elo = min(list(ranking.values()))
+        # assign elo ranking to each player
+        for player in self.participants:
+            try:
+                player.elo = ranking[str(player)]
+            except KeyError:
+                print(player)
+                player.elo = base_elo  # base Elo if none found
+        # Sort & clean
+        sorted_participants = sorted(self.participants, key=lambda x: x.elo, reverse=True)
+        self.participants = sorted_participants
+
+    async def seed_participants_and_upload(self, remove_unchecked: bool = False):
+        if self.ranking["league_name"] and self.ranking["league_id"]:
+            await self._fetch_braacket_ranking_info()
+            await self._seed_participants()
+        participants = copy(self.participants)
+        if remove_unchecked is True:
+            participants = [x for x in participants if x.checked_in]
+        participants = [str(x) for x in participants]
+        await self.add_participants(participants)
 
     # starting the tournament...
     async def send_start_messages(self):
