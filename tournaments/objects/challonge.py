@@ -275,7 +275,6 @@ class ChallongeTournament(Tournament):
         participants = [participants[x : x + (50)] for x in range(0, len(participants), 50)]
         # Send to Challonge and assign IDs
         for chunk_participants in participants:
-            print(chunk_participants)
             challonge_players = await async_http_retry(
                 achallonge.participants.bulk_add(self.id, chunk_participants)
             )

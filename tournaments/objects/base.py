@@ -1432,16 +1432,12 @@ class Tournament:
                     "export": "csv",
                 }
                 file_path = path / f"page{page}.csv"
-                print("starting request")
                 async with session.get(url, params=parameters) as response:
                     if response.status >= 400:
                         raise RuntimeError(response.status, response.reason)
-                    print("gonna open with aiofiles")
                     async with aiofiles.open(file_path, mode="wb") as file:
-                        print("opened, now writing")
                         await file.write(await response.read())
                         print("done")
-                print("connection closed")
                 if page != 1 and filecmp.cmp(file_path, path / f"page{page-1}.csv"):
                     await aiofiles.os.remove(file_path)
                     break
@@ -1462,7 +1458,6 @@ class Tournament:
             try:
                 player.elo = ranking[str(player)]
             except KeyError:
-                print(player)
                 player.elo = base_elo  # base Elo if none found
         # Sort & clean
         sorted_participants = sorted(self.participants, key=lambda x: x.elo, reverse=True)
