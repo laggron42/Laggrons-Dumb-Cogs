@@ -1437,7 +1437,6 @@ class Tournament:
                         raise RuntimeError(response.status, response.reason)
                     async with aiofiles.open(file_path, mode="wb") as file:
                         await file.write(await response.read())
-                        print("done")
                 if page != 1 and filecmp.cmp(file_path, path / f"page{page-1}.csv"):
                     await aiofiles.os.remove(file_path)
                     break
