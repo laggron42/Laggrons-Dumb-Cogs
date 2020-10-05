@@ -1056,7 +1056,7 @@ class Tournament:
         *,
         player_id: Optional[str] = None,
         discord_id: Optional[int] = None,
-        discord_name: Optional[str],
+        discord_name: Optional[str] = None
     ) -> Tuple[int, Participant]:
         if player_id:
             try:
