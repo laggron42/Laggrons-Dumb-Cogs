@@ -324,11 +324,11 @@ class Games(MixinMeta):
         if not tournament.participants:
             await ctx.send(_(":warning: No participant registered."))
             return
-        if tournament.checkin_active:
+        if tournament.checkin_phase == "ongoing":
             message = _(
                 "Check-in is still ongoing. Participants not checked yet won't be uploaded."
             )
-        elif not all([x.checked_in for x in tournament.participants]):
+        elif tournament.checkin_phase == "pending":
             message = _("Check-in was not done. All participants will be uploaded.")
         if message:
             message = await ctx.send(f":warning: {message}\n" + _("Do you want to continue?"))
@@ -344,7 +344,7 @@ class Games(MixinMeta):
                 return
         try:
             async with ctx.typing():
-                await tournament.seed_participants_and_upload(tournament.checkin_active)
+                await tournament.seed_participants_and_upload(tournament.checkin_phase == "done")
         except achallonge.ChallongeException:
             raise
         except Exception as e:
@@ -356,18 +356,25 @@ class Games(MixinMeta):
                 )
             )
         else:
-            await ctx.send(
-                _("{len} participants successfully {seed}uploaded to the bracket!").format(
-                    len=len(
-                        [x.checked_in for x in tournament.participants]
-                        if tournament.checkin_active
-                        else tournament.participants
-                    ),
-                    seed=_("seeded and ")
-                    if tournament.ranking["league_name"] and tournament.ranking["league_id"]
-                    else "",
-                )
+            text = _("{len} participants successfully seeded and uploaded to the bracket!").format(
+                len=len(tournament.participants)
             )
+            if tournament.ranking["league_name"] and tournament.ranking["league_id"]:
+                base_elo = min([x.elo for x in tournament.participants])
+                generator = (
+                    i for i, x in enumerate(tournament.participants, 1) if x.elo == base_elo
+                )
+                try:
+                    position = next(generator)
+                    # check a second time to make sure more than 1 participant are on base elo
+                    next(generator)
+                except StopIteration:
+                    pass
+                else:
+                    text += _("\nParticipants are not seeded starting at position {pos}.").format(
+                        pos=position
+                    )
+            await ctx.send(text)
 
     @only_phase("ongoing")
     @commands.command()

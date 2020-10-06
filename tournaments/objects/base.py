@@ -812,8 +812,8 @@ class Tournament:
         # "awaiting": registration is done, participants are ready, waiting for upload and start
         # "ongoing": tournament started, also called the "high panic and RAM usage moment"
         # "finished": tournament ended. not even sure if it's possible, since tournament is deleted
-        self.registration_active = False
-        self.checkin_active = False
+        self.registration_phase = "pending"  # can be "pending" "ongoing" "done"
+        self.checkin_phase = "pending"  # same as above
         self.register_message: Optional[discord.Message] = None  # message being updated
         # loop task things
         self.task: Optional[asyncio.Task] = None
@@ -1169,7 +1169,7 @@ class Tournament:
 
     async def start_registration(self):
         self.phase = "register"
-        self.registration_active = True
+        self.registration_phase = "ongoing"
         if self.register_channel:
             self.register_message = await self.register_channel.send(
                 self._prepare_register_message()
@@ -1241,9 +1241,9 @@ class Tournament:
         await self.save()
 
     async def end_registration(self):
-        if not self.checkin_active:
+        if self.checkin_phase == "done":
             self.phase = "awaiting"
-        self.registration_active = False
+        self.registration_phase = "done"
         if self.register_channel:
             self.register_message = None
             await self.register_channel.set_permissions(self.game_role, send_messages=False)
@@ -1253,8 +1253,8 @@ class Tournament:
         await self.save()
 
     async def start_check_in(self):
-        self.phase = "checkin"
-        self.checkin_active = True
+        self.phase = "register"
+        self.checkin_phase = "ongoing"
         message = _(
             "{role} The check-in for **{t.name}** has started!\n"
             "You have to confirm your presence by typing `{t.bot_prefix}in` here{end_time}.\n"
@@ -1276,7 +1276,7 @@ class Tournament:
             await self.checkin_channel.set_permissions(self.participant_role, send_messages=True)
         elif self.announcements_channel:
             await self.announcements_channel.send(message, allowed_mentions=mentions)
-        if self.register_channel and self.registration_active:
+        if self.register_channel and self.registration_phase == "ongoing":
             await self.register_channel.send(
                 _(
                     ":information_source: Check-in started{channel}!\n"
@@ -1333,8 +1333,8 @@ class Tournament:
                     pass
 
     async def end_checkin(self):
-        self.checkin_active = False
-        if not self.registration_active:
+        self.checkin_phase = "done"
+        if self.registration_phase == "done":
             self.phase = "awaiting"
         to_remove = []
         failed = []
@@ -1386,7 +1386,7 @@ class Tournament:
     async def register_participant(self, member: discord.Member):
         await member.add_roles(self.participant_role, reason=_("Registering to tournament."))
         participant = self.participant_object(member, self)
-        if self.phase == "checkin":
+        if self.checkin_phase != "pending":
             # registering during check-in, count as already checked
             participant.checked_in = True
         self.participants.append(participant)
@@ -1465,9 +1465,9 @@ class Tournament:
         if self.ranking["league_name"] and self.ranking["league_id"]:
             await self._fetch_braacket_ranking_info()
             await self._seed_participants()
-        participants = copy(self.participants)
         if remove_unchecked is True:
-            participants = [x for x in participants if x.checked_in]
+            self.participants = [x for x in self.participants if x.checked_in]
+        participants = copy(self.participants)
         participants = [str(x) for x in participants]
         await self.add_participants(participants)
 
