@@ -14,7 +14,6 @@ import csv
 from discord.ext import tasks
 from random import choice
 from itertools import islice
-from statistics import median
 from datetime import datetime, timedelta
 from babel.dates import format_date, format_time
 from typing import Optional, Tuple, List, Union
@@ -1056,7 +1055,7 @@ class Tournament:
         *,
         player_id: Optional[str] = None,
         discord_id: Optional[int] = None,
-        discord_name: Optional[str] = None
+        discord_name: Optional[str] = None,
     ) -> Tuple[int, Participant]:
         if player_id:
             try:
