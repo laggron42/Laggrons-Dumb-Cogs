@@ -15,7 +15,7 @@ import shutil
 from discord.ext import tasks
 from random import choice
 from itertools import islice
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from babel.dates import format_date, format_time
 from typing import Optional, Tuple, List, Union
 
@@ -730,7 +730,7 @@ class Tournament:
         self.id = id
         self.limit = limit
         self.status = status
-        self.tournament_start = tournament_start
+        self.tournament_start = tournament_start.replace(tzinfo=timezone.utc)
         self.bot_prefix = bot_prefix
         self.cog_version = cog_version
         self.participants: List[Participant] = []
