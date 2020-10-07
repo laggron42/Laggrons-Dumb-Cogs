@@ -246,7 +246,7 @@ class Games(MixinMeta):
             )
         await ctx.send(message)
         tournament.phase = "pending"
-        tournament.participants = []
+        [x.reset() for x in tournament.participants]
         tournament.streamers = []
         if not tournament.matches:
             return
@@ -254,10 +254,10 @@ class Games(MixinMeta):
             for match in tournament.matches:
                 await match.force_end()
             await tournament._clear_categories()
-        await tournament.save()
         if tournament.matches:
             await ctx.send(_("Channels cleared."))
         tournament.matches = []
+        await tournament.save()
 
     @mod_or_to()
     @commands.command()
