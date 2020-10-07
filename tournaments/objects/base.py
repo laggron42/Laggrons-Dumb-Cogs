@@ -769,6 +769,13 @@ class Tournament:
         self.register: dict = data["register"]
         self.checkin: dict = data["checkin"]
         self.start_bo5: int = data["start_bo5"]
+        self.autostop_register: bool = data["autostop_register"]
+        if data["register"]["second_opening"] != 0:
+            self.register_second_start: datetime = tournament_start - timedelta(
+                hours=data["register"]["second_opening"]
+            )
+        else:
+            self.register_second_start = None
         if data["register"]["opening"] != 0:
             self.register_start: datetime = tournament_start - timedelta(
                 hours=data["register"]["opening"]
@@ -805,8 +812,16 @@ class Tournament:
         # "awaiting": registration is done, participants are ready, waiting for upload and start
         # "ongoing": tournament started, also called the "high panic and RAM usage moment"
         # "finished": tournament ended. not even sure if it's possible, since tournament is deleted
-        self.registration_phase = "pending"  # can be "pending" "ongoing" "done"
-        self.checkin_phase = "pending"  # same as above
+        self.register_phase = "pending" if self.register_start else "manual"  # can be:
+        # "manual": no opening time provided, waiting for user
+        # "pending": awaiting first registration start
+        # "ongoing": active, first or second phase, or even manual
+        # "onhold": done once, but there's still a scheduled opening time (most likely two-stage)
+        # "done": ended, no more opening scheduled
+        self.checkin_phase = "pending" if self.checkin_start else "manual"
+        # same as above (yes "onhold" too, there could be a first manual start)
+        self.ignored_events = []  # list of scheduled events to skip (register_start/checkin_stop)
+        # works with next_scheduled_event, used for manual early starts/stops
         self.register_message: Optional[discord.Message] = None  # message being updated
         # loop task things
         self.task: Optional[asyncio.Task] = None
@@ -854,9 +869,14 @@ class Tournament:
         winner_categories = data["winner_categories"]
         loser_categories = data["loser_categories"]
         phase = data["phase"]
+        register = data["register"]
+        checkin = data["checkin"]
+        ignored_events = data["ignored_events"]
+        register_message_id = data["register_message_id"]
         del data["tournament_start"], data["participants"], data["matches"], data["streamers"]
         del data["winner_categories"], data["loser_categories"], data["phase"]
-        del data["tournament_type"]
+        del data["tournament_type"], data["register"], data["checkin"], data["ignored_events"]
+        del data["register_message_id"]
         tournament = cls(
             guild,
             config,
@@ -914,6 +934,16 @@ class Tournament:
             filter(None, [guild.get_channel(x) for x in loser_categories])
         )
         tournament.phase = phase
+        tournament.register_phase = register
+        tournament.checkin_phase = checkin
+        tournament.ignored_events = ignored_events
+        if register_message_id and tournament.register_channel:
+            try:
+                message = await tournament.register_channel.fetch_message(register_message_id)
+            except discord.NotFound:
+                pass
+            else:
+                tournament.register_message = message
         return tournament
 
     def to_dict(self) -> dict:
@@ -934,12 +964,43 @@ class Tournament:
             "loser_categories": [x.id for x in self.loser_categories],
             "phase": self.phase,
             "tournament_type": self.tournament_type,
+            "register": self.register_phase,
+            "checkin": self.checkin_phase,
+            "ignored_events": self.ignored_events,
+            "register_message_id": self.register_message.id if self.register_message else None,
         }
         return data
 
     async def save(self):
         data = self.to_dict()
         await self.data.guild(self.guild).tournament.set(data)
+
+    @property
+    def next_scheduled_event(self):
+        """
+        Returns the next scheduled event (register/checkin/None) with the corresponding timedelta
+        """
+        now = datetime.utcnow()
+        events = {
+            "register_start": self.register_start,
+            "register_second_start": self.register_second_start,
+            "register_stop": self.register_stop,
+            "checkin_start": self.checkin_start,
+            "checkin_stop": self.checkin_stop,
+        }
+        for name, date in events.items():
+            if date is None:
+                continue
+            if name in self.ignored_events:
+                events[name] = None
+                continue
+            delta = date - now
+            if delta.total_seconds() <= 0:
+                events[name] = None
+            else:
+                events[name] = delta
+        events = dict(filter(lambda x: x[1] is not None, events.items()))
+        return min(events.items(), key=lambda x: x[1], default=None)
 
     @property
     def allowed_roles(self):
@@ -954,11 +1015,11 @@ class Tournament:
     @staticmethod
     def _format_datetime(date: datetime, only_time=False):
         locale = get_babel_locale()
-        date = format_date(date, format="full", locale=locale)
+        _date = format_date(date, format="full", locale=locale)
         time = format_time(date, format="short", locale=locale)
         if only_time:
             return time
-        return _("{date} at {time}").format(date=date, time=time)
+        return _("{date} at {time}").format(date=_date, time=time)
 
     async def _get_available_category(self, dest: str):
         position = self.category.position + 1 if self.category else len(self.guild.categories)
@@ -1166,7 +1227,7 @@ class Tournament:
 
     async def start_registration(self):
         self.phase = "register"
-        self.registration_phase = "ongoing"
+        self.register_phase = "ongoing"
         if self.register_channel:
             self.register_message = await self.register_channel.send(
                 self._prepare_register_message()
@@ -1237,10 +1298,16 @@ class Tournament:
             await self.announcements_channel.send(message, allowed_mentions=mentions)
         await self.save()
 
-    async def end_registration(self):
-        if self.checkin_phase == "done":
-            self.phase = "awaiting"
-        self.registration_phase = "done"
+    async def end_registration(self, background=False):
+        if self.register_second_start and self.register_second_start > datetime.utcnow():
+            self.register_phase = "onhold"
+        else:
+            self.register_phase = "done"
+            if not self.next_scheduled_event:
+                # no more scheduled events, upload and wait for start
+                self.phase = "awaiting"
+                if background:
+                    await self._background_seed_and_upload()
         if self.register_channel:
             self.register_message = None
             await self.register_channel.set_permissions(self.game_role, send_messages=False)
@@ -1250,6 +1317,18 @@ class Tournament:
         await self.save()
 
     async def start_check_in(self):
+        if not self.participants:
+            self.checkin_phase = "done"
+            message = _("Cancelled check-in start since there are currently no participants. ")
+            if not self.next_scheduled_event:
+                # no more scheduled events, upload and wait for start
+                self.phase = "awaiting"
+            else:
+                message += _(
+                    "Registrations are still ongoing, and new participants are pre-checked."
+                )
+            await self.to_channel.send(message)
+            return
         self.phase = "register"
         self.checkin_phase = "ongoing"
         message = _(
@@ -1273,7 +1352,7 @@ class Tournament:
             await self.checkin_channel.set_permissions(self.participant_role, send_messages=True)
         elif self.announcements_channel:
             await self.announcements_channel.send(message, allowed_mentions=mentions)
-        if self.register_channel and self.registration_phase == "ongoing":
+        if self.register_channel and self.register_phase == "ongoing":
             await self.register_channel.send(
                 _(
                     ":information_source: Check-in started{channel}!\n"
@@ -1329,10 +1408,13 @@ class Tournament:
                 except discord.HTTPException:
                     pass
 
-    async def end_checkin(self):
+    async def end_checkin(self, background=False):
         self.checkin_phase = "done"
-        if self.registration_phase == "done":
+        if not self.next_scheduled_event:
+            # no more scheduled events, upload and wait for start
             self.phase = "awaiting"
+            if background:
+                await self._background_seed_and_upload()
         to_remove = []
         failed = []
         for i, member in filter(lambda x: x[1].checked_in is False, enumerate(self.participants)):
@@ -1370,8 +1452,8 @@ class Tournament:
         for page in pagify(text):
             await self.to_channel.send(page)
         if self.checkin_channel:
-            await self.register_channel.set_permissions(self.game_role, send_messages=False)
-            await self.register_channel.send(
+            await self.checkin_channel.set_permissions(self.game_role, send_messages=False)
+            await self.checkin_channel.send(
                 _("Check-in ended. Participants who didn't check are unregistered.")
             )
         elif self.announcements_channel:
@@ -1467,6 +1549,28 @@ class Tournament:
         participants = copy(self.participants)
         participants = [str(x) for x in participants]
         await self.add_participants(participants)
+
+    async def _background_seed_and_upload(self):
+        """
+        Run self.seed_participants_and_upload, but catch and log exceptions to the to channel.
+
+        Used when it needs to be ran in the background (register/checkin automated close, no
+        context), because an issue with this needs to be told.
+        """
+        try:
+            await self.seed_participants_and_upload()
+        except Exception as e:
+            log.error(
+                f"[Guild {self.guild.id}] Can't seed and upload participants (background).",
+                exc_info=e,
+            )
+            await self.to_channel.send(
+                _(
+                    ":warning: An issue occured when trying to seed and upload participants "
+                    "after registration/checkin close. Try running it manually with `{prefix}"
+                    "upload`, and contact admins if the issue persists."
+                ).format(prefix=self.bot_prefix)
+            )
 
     # starting the tournament...
     async def send_start_messages(self):

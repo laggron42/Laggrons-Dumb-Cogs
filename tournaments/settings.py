@@ -1203,7 +1203,7 @@ the start of the tournament, then closing 15 minutes before.
             )
         embed.set_footer(text=_("Time zone: {tz}").format(tz=tournament.tournament_start.tzname()))
         result = await prompt_yes_or_no(
-            _("Is this correct?"), embed=embed, timeout=60, delete_after=False
+            ctx, _("Is this correct?"), embed=embed, timeout=60, delete_after=False
         )
         if result is False:
             return

@@ -112,6 +112,7 @@ async def prompt_yes_or_no(
     embed: Optional[discord.Embed] = None,
     timeout: int = 30,
     delete_after: bool = True,
+    negative_response: bool = True,
 ) -> bool:
     """
     Sends a message and waits for used confirmation, using ReactionPredicate.yes_or_no.
@@ -126,6 +127,8 @@ async def prompt_yes_or_no(
         Time before timeout. Defaults to 30 seconds.
     delete_after: bool
         Should the message be deleted after a positive response/timeout? Defaults to True.
+    negative_response: bool
+        If the bot should send "Cancelled." after a negative response. Defaults to True.
 
     Returns
     -------
@@ -147,7 +150,8 @@ async def prompt_yes_or_no(
         await ctx.send(_("Request timed out."))
         return False
     if pred.result is False:
-        await ctx.send(_("Cancelled."))
+        if negative_response:
+            await ctx.send(_("Cancelled."))
         return False
     if delete_after:
         await message.delete()

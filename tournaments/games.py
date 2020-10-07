@@ -79,7 +79,7 @@ class Games(MixinMeta):
                 )
             )
             return
-        if tournament.registration_phase == "ongoing":
+        if tournament.register_phase == "ongoing":
             await ctx.send(_("Registration is still ongoing, please end it first."))
             return
         if tournament.checkin_phase == "ongoing":

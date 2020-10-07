@@ -127,7 +127,10 @@ setup" on most commands. If your tournament is ongoing, it is your job to tell t
         )
         if result is False:
             return
-        self.tournaments[guild.id].stop_loop_task()
+        try:
+            self.tournaments[guild.id].stop_loop_task()
+        except AttributeError:
+            pass
         del self.tournaments[guild.id]
         await self.data.guild(guild).tournament.set({})
         log.info(f"[Guild {guild.id}] Hard reset of the tournament, requested by {ctx.author}.")

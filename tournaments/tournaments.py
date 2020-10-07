@@ -85,6 +85,10 @@ class Tournaments(
             "winner_categories": [],
             "loser_categories": [],
             "phase": None,
+            "register": None,
+            "checkin": None,
+            "ignored_events": None,
+            "register_message_id": None,
         },
     }
 
@@ -105,6 +109,10 @@ class Tournaments(
         self.data.register_guild(**self.default_guild_settings)
         self.data.init_custom("GAME", 2)  # guild ID > game name
         self.data.register_custom("GAME", **self.default_game_settings)
+
+        # see registration.py
+        self.update_message_loop.start()
+        self.update_message_task_errors = 0
 
     __version__ = "indev"
     __author__ = ["retke (El Laggron)", "Wonderfall"]
@@ -192,10 +200,10 @@ class Tournaments(
                 task.cancel()
 
         tournament: Tournament
-        match: Match
         for tournament in self.tournaments.values():
             cancel(tournament.loop_task)
             cancel(tournament.debug_task)
+        self.update_message_loop.stop()
 
         # remove ranking data
         shutil.rmtree(cog_data_path(self) / "ranking", ignore_errors=True)
