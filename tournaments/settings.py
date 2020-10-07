@@ -810,7 +810,17 @@ corresponding value.
 the opening of the tournament, then closing 10 minutes before.
         """
         guild = ctx.guild
-        await self.data.guild(guild).register.set({"opening": opening, "closing": closing})
+        if closing >= opening * 60:
+            await ctx.send(_("Opening must occur before closing time."))
+            return
+        async with self.data.guild(guild).register() as register:
+            if opening != 0 and register["second_opening"] >= opening * 60:
+                await ctx.send(
+                    _("Opening must occur before second attempt (two-stage registrations).")
+                )
+                return
+            register["opening"] = opening
+            register["closing"] = closing
         if opening == 0 and closing == 0:
             await ctx.send(_("Automatic registration is now disabled."))
         else:
@@ -853,6 +863,39 @@ the opening of the tournament, then closing 10 minutes before.
                     "can't register above the limit, but the channel and commands remains open)."
                 )
             )
+
+    @tournamentset.command(name="twostageregister")
+    async def tournamentset_twostageregister(self, ctx: commands.Context, second_opening: int):
+        """
+        Give a second opening attempt hour for registrations.
+
+        This must be inferior to the base opening hour you have set.
+        Basically, the bot will attempt opening registrations a second time. If they're already \
+opened and ongoing, nothing happens.
+
+        Combine this with the autostop setting (see `[p]help tfix autostopregister`), and you can \
+have registrations that can look like this:
+        - Registrations opened until the cap is reached, then closed
+        - Check-in is done, unchecked participants are removed
+        - **Set up last minute registrations** where members don't have to check and fill your \
+bracket.
+
+        Provide a number of **minutes** before tournament start for this second opening.
+        Set 0 to disable.
+        """
+        guild = ctx.guild
+        async with self.data.guild(guild).register() as register:
+            if second_opening != 0 and second_opening >= register["opening"] * 60:
+                await ctx.send(_("Second opening must occur after first opening."))
+                return
+            if second_opening != 0 and second_opening <= register["closing"]:
+                await ctx.send(_("Second opening must before closing."))
+                return
+            register["second_opening"] = second_opening
+        if second_opening == 0:
+            await ctx.send(_("Two stage registration is now disabled."))
+        else:
+            await ctx.send(_("Two stage registration is now enabled with your second opening."))
 
     @tournamentset.command(name="checkin")
     async def tournamentset_checkin(self, ctx: commands.Context, opening: int, closing: int):
@@ -933,6 +976,12 @@ the start of the tournament, then closing 15 minutes before.
             )
         else:
             register_start = _("manual.")
+        if data["register"]["second_opening"] != 0:
+            register_secondstart = _("{time} minutes before the start of the tournament.").format(
+                time=data["register"]["second_opening"]
+            )
+        else:
+            register_secondstart = _("disabled.")
         if data["register"]["closing"] != 0:
             register_end = _("{time} minutes before the start of the tournament.").format(
                 time=data["register"]["closing"]
@@ -1004,8 +1053,16 @@ the start of the tournament, then closing 15 minutes before.
         )
         embed.add_field(
             name=_("Registration"),
-            value=_("Opening : {opening}\nClosing : {closing}\nAuto-stop : {stop}").format(
-                opening=register_start, closing=register_end, stop=autostop
+            value=_(
+                "Opening : {opening}\n"
+                "Second opening : {secondopening}\n"
+                "Closing : {closing}\n"
+                "Auto-stop : {stop}"
+            ).format(
+                opening=register_start,
+                secondopening=register_secondstart,
+                closing=register_end,
+                stop=autostop,
             ),
         )
         embed.add_field(

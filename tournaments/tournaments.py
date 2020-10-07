@@ -56,7 +56,7 @@ class Tournaments(
             "bo5": (30, 10),  # in minutes
         },
         "autostop_register": False,
-        "register": {"opening": 0, "closing": 10},
+        "register": {"opening": 0, "second_opening": 0, "closing": 10},
         "checkin": {"opening": 60, "closing": 15},
         "start_bo5": 0,
         "channels": {
