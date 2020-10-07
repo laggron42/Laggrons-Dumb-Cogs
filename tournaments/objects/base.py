@@ -143,6 +143,15 @@ class Match:
         with contextlib.suppress(AttributeError):
             player1.match = self
             player2.match = self
+        self.is_top8 = (
+            round >= tournament.top_8["winner"]["top8"]
+            or round <= tournament.top_8["loser"]["top8"]
+        )
+        self.is_bo5 = (
+            round >= tournament.top_8["winner"]["bo5"] or round <= tournament.top_8["loser"]["bo5"]
+        )
+        self.round_name = self._get_name()
+        self.checked_dq = True if self.is_top8 else False
 
     def __repr__(self):
         return (
