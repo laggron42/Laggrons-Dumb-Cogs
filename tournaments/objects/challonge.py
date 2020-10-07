@@ -15,6 +15,15 @@ _ = Translator("Tournaments", __file__)
 
 
 class ChallongeParticipant(Participant):
+    @classmethod
+    def build_from_api(cls, tournament: Tournament, data: dict):
+        member = tournament.guild.get_member_named(data["name"])
+        if member is None:
+            raise RuntimeError("Participant not found in guild.")
+        cls = cls(member, tournament)
+        cls._player_id = data["id"]
+        return cls
+
     @property
     def player_id(self):
         return self._player_id
