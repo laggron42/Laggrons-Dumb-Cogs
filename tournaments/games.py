@@ -2,7 +2,6 @@ import achallonge
 import discord
 import logging
 import re
-import asyncio
 
 from datetime import datetime, timedelta
 from copy import deepcopy
@@ -11,13 +10,11 @@ from redbot.core import commands
 from redbot.core import checks
 from redbot.core.i18n import Translator
 from redbot.core.utils.chat_formatting import pagify
-from redbot.core.utils.menus import start_adding_reactions
-from redbot.core.utils.predicates import ReactionPredicate
 from redbot.core.utils import menus
 
 from .abc import MixinMeta
 from .objects import Tournament, Match, Participant
-from .utils import credentials_check, only_phase, mod_or_to
+from .utils import credentials_check, only_phase, mod_or_to, prompt_yes_or_no
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -82,67 +79,111 @@ class Games(MixinMeta):
                 )
             )
             return
-        # check for register status
+        if tournament.registration_phase == "ongoing":
+            await ctx.send(_("Registration is still ongoing, please end it first."))
+            return
+        if tournament.checkin_phase == "ongoing":
+            await ctx.send(_("Check-in is still ongoing, please end it first."))
+            return
+        need_upload = False
+        if not tournament.participants:
+            result = await prompt_yes_or_no(
+                ctx,
+                _(
+                    ":warning: I don't have any participant internally registered.\n"
+                    "You can still start the tournament, I will fetch the participants "
+                    "from the bracket, if available, but the names must exactly match the "
+                    "names of members in this server! I will disqualify the participants I "
+                    "cannot find.\nKeep in mind you can register all members in a role with "
+                    "`{prefix}tfix registerfromrole`.\nDo you want to continue?"
+                ).format(prefix=ctx.prefix),
+            )
+            if result is False:
+                return
+        else:
+            not_uploaded = len(
+                list(filter(None, [x._player_id is not None for x in tournament.participants]))
+            )
+            if 0 < not_uploaded < len(tournament.participants):
+                need_upload = True
+
+        async def seed_and_upload():
+            await tournament.seed_participants_and_upload()
+
+        async def start():
+            tournament.phase = "ongoing"
+            await tournament.start()
+            await tournament._get_top8()
+
+        async def launch_sets():
+            await tournament.launch_sets()
+            tournament.start_loop_task()
+            await tournament.save()
+
+        tasks = [
+            (_("Start the tournament"), start),
+            (_("Send messages"), tournament.send_start_messages),
+            (_("Launch sets"), launch_sets),
+        ]
+        if need_upload:
+            tasks.insert(0, (_("Seed and upload"), seed_and_upload()))
+        message: discord.Message = None
         embed = discord.Embed(title=_("Starting the tournament..."))
         embed.description = _("Game: {game}\n" "URL: {url}").format(
             game=tournament.game, url=tournament.url
         )
-        embed.add_field(
-            name=_("Progression"),
-            value=_("**Starting...**\n*Sending messages*\n*Launching sets*"),
-            inline=False,
-        )
-        message = await ctx.send(embed=embed)
-        tournament.phase = "ongoing"
-        await tournament.start()
-        embed.set_field_at(
-            0,
-            name=_("Progression"),
-            value=_(
-                ":white_check_mark: Starting\n" "**Sending messages...**\n" "*Launching sets*"
-            ),
-            inline=False,
-        )
-        await message.edit(embed=embed)
-        await tournament.send_start_messages()
-        embed.set_field_at(
-            0,
-            name=_("Progression"),
-            value=_(
-                ":white_check_mark: Starting\n"
-                ":white_check_mark: Sending messages\n"
-                "**Launching sets...**"
-            ),
-            inline=False,
-        )
-        await message.edit(embed=embed)
-        try:
-            await tournament.launch_sets()
-        except Exception as e:
-            log.error(
-                f"[Guild {guild.id}] Can't launch sets when starting tournament!", exc_info=e
-            )
-            await ctx.send(
-                _(
-                    ":warning: Error while launching sets, check your console "
-                    "or logs for more informations."
+
+        async def update_embed(index: int, failed: bool = False):
+            nonlocal message
+            text = ""
+            for i, task in enumerate(tasks):
+                task = task[0]
+                if index > i:
+                    text += f":white_check_mark: {task}\n"
+                elif i == index:
+                    if failed:
+                        text += f":warning: {task}\n"
+                    else:
+                        text += f":arrow_forward: **{task}**\n"
+                else:
+                    text += f"*{task}*\n"
+            if message is not None:
+                embed.set_field_at(
+                    0, name=_("Progression"), value=text, inline=False,
                 )
-            )
-            return
-        embed.set_field_at(
-            0,
-            name=_("Progression"),
-            value=_(
-                ":white_check_mark: Starting\n"
-                ":white_check_mark: Sending messages\n"
-                ":white_check_mark: Launching sets"
-            ),
-            inline=False,
-        )
-        await message.edit(embed=embed)
-        await tournament._get_top8()
-        tournament.start_loop_task()
-        await tournament.save()
+                await message.edit(embed=embed)
+            else:
+                embed.add_field(
+                    name=_("Progression"), value=text, inline=False,
+                )
+                message = await ctx.send(embed=embed)
+
+        await update_embed(0)
+        for i, task in enumerate(tasks):
+            task = task[1]
+            try:
+                await task()
+            except achallonge.ChallongeException:
+                await update_embed(i, True)
+                raise
+            except Exception as e:
+                log.error(
+                    f"[Guild {ctx.guild.id}] Error when starting tournament. Coro: {task}",
+                    exc_info=e,
+                )
+                await update_embed(i, True)
+                # if it was a direct error from challonge, message would be different
+                # we tell them so users don't bother looking into challonge issues
+                # (unless challonge responded with incorrect data we can't handle)
+                await ctx.send(
+                    _(
+                        "An error occured when starting the tournament (most likely not "
+                        "related to Challonge). Check your logs or contact a bot admin."
+                    )
+                )
+                return
+            else:
+                await update_embed(i + 1)
         await ctx.send(_("The tournament has now started!"))
 
     @only_phase("ongoing")
@@ -218,23 +259,16 @@ class Games(MixinMeta):
             await ctx.send(_('I need the "Add reactions" permission.'))
             return
         tournament = self.tournaments[ctx.guild.id]
-        message = await ctx.send(
+        result = await prompt_yes_or_no(
+            ctx,
             _(
                 ":warning: **Warning!**\n"
                 "If you continue, the entire progression will be lost, and the bot will roll "
                 "back to its previous state. Then you will be able to start again with `{prefix}"
                 "start`.\n**The matches __cannot__ be recovered!** Do you want to continue?"
-            ).format(prefix=ctx.clean_prefix)
+            ).format(prefix=ctx.clean_prefix),
         )
-        pred = ReactionPredicate.yes_or_no(message, ctx.author)
-        menus.start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
-        try:
-            await self.bot.wait_for("reaction_add", check=pred, timeout=30)
-        except asyncio.TimeoutError:
-            await ctx.send(_("Timed out."))
-            return
-        if not pred.result:
-            await ctx.send(_("Cancelling."))
+        if result is False:
             return
         tournament.cancel()
         await tournament.reset()
@@ -283,23 +317,16 @@ class Games(MixinMeta):
             )
             return
         if tournament.phase in ("register", "checkin"):
-            message = await ctx.send(
+            result = await prompt_yes_or_no(
+                ctx,
                 _(
                     ":warning: **Warning!**\n"
                     "If you continue, the participants registered will be lost. Then you will be "
                     "able to configure a new tournament with `{prefix}setup`.\n"
                     "**The participants __cannot__ be recovered!** Do you want to continue?"
-                )
+                ),
             )
-            pred = ReactionPredicate.yes_or_no(message, ctx.author)
-            menus.start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
-            try:
-                await self.bot.wait_for("reaction_add", check=pred, timeout=30)
-            except asyncio.TimeoutError:
-                await ctx.send(_("Timed out."))
-                return
-            if not pred.result:
-                await ctx.send(_("Cancelling."))
+            if result is False:
                 return
         tournament.cancel()
         del self.tournaments[guild.id]
@@ -331,16 +358,10 @@ class Games(MixinMeta):
         elif tournament.checkin_phase == "pending":
             message = _("Check-in was not done. All participants will be uploaded.")
         if message:
-            message = await ctx.send(f":warning: {message}\n" + _("Do you want to continue?"))
-            pred = ReactionPredicate.yes_or_no(message, ctx.author)
-            start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
-            try:
-                await self.bot.wait_for("reaction_add", check=pred, timeout=30)
-            except asyncio.TimeoutError:
-                await ctx.send(_("Timed out."))
-                return
-            if pred.result is False:
-                await ctx.send(_("Cancelled."))
+            result = await prompt_yes_or_no(
+                ctx, f":warning: {message}\n" + _("Do you want to continue?")
+            )
+            if result is False:
                 return
         try:
             async with ctx.typing():
@@ -462,19 +483,13 @@ class Games(MixinMeta):
         if player.match is None:
             await ctx.send(_("You don't have any ongoing match."))
             return
-        message = await ctx.send(_("Are you sure you want to forfeit this match?"))
-        pred = ReactionPredicate.yes_or_no(message, ctx.author)
-        menus.start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
-        try:
-            await self.bot.wait_for("reaction_add", check=pred, timeout=20)
-        except asyncio.TimeoutError:
-            await ctx.send(_("Request timed out."))
+        result = await prompt_yes_or_no(
+            ctx, _("Are you sure you want to forfeit this match?"), timeout=20
+        )
+        if result is False:
             return
-        if pred.result is True:
-            await player.match.forfeit(player)
-            await ctx.tick()
-        else:
-            await ctx.send(_("You are continuing this match."))
+        await player.match.forfeit(player)
+        await ctx.tick()
 
     @only_phase("ongoing")
     @commands.command(aliases=["dq"])
@@ -491,21 +506,15 @@ class Games(MixinMeta):
         except StopIteration:
             await ctx.send(_("You are not a member of this tournament."))
             return
-        message = await ctx.send(_("Are you sure you want to stop the tournament?"))
-        pred = ReactionPredicate.yes_or_no(message, ctx.author)
-        menus.start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
-        try:
-            await self.bot.wait_for("reaction_add", check=pred, timeout=20)
-        except asyncio.TimeoutError:
-            await ctx.send(_("Request timed out."))
+        result = await prompt_yes_or_no(
+            ctx, _("Are you sure you want to stop the tournament?"), timeout=20
+        )
+        if result is False:
             return
-        if pred.result is True:
-            await player.destroy()
-            if player.match is not None:
-                await player.match.disqualify(player)
-            await ctx.tick()
-        else:
-            await ctx.send(_("You are continuing this tournament."))
+        await player.destroy()
+        if player.match is not None:
+            await player.match.disqualify(player)
+        await ctx.tick()
 
     @only_phase("ongoing")
     @commands.command()

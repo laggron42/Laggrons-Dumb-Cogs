@@ -10,16 +10,14 @@ from typing import Optional
 from redbot.core import commands
 from redbot.core import checks
 from redbot.core import Config
-from redbot.core.commands import TimedeltaConverter
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
-from redbot.core.utils.menus import start_adding_reactions
-from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
+from redbot.core.utils.predicates import MessagePredicate
 from redbot.core.utils.chat_formatting import pagify
 
 from .abc import MixinMeta
 from .objects import ChallongeTournament
-from .utils import credentials_check, async_http_retry, mod_or_to
+from .utils import credentials_check, async_http_retry, mod_or_to, prompt_yes_or_no
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -320,7 +318,7 @@ enter a command to register or unregister.
         self, ctx: commands.Context, *, channel: discord.TextChannel
     ):
         """
-        Define the set announcement channel. 
+        Define the set announcement channel.
         """
         guild = ctx.guild
         if not channel.permissions_for(guild.me).read_messages:
@@ -446,7 +444,8 @@ moderators and admins.
         guild = ctx.guild
         if role.permissions.kick_members or role.permissions.manage_roles:
             # we consider this role is a mod role
-            message = await ctx.send(
+            result = await prompt_yes_or_no(
+                ctx,
                 _(
                     ":warning: This role seems to have moderator or administrator permissions.\n\n"
                     "It is strongly recommanded to use the Red permissions system with `{prefix}"
@@ -455,22 +454,11 @@ moderators and admins.
                     "bot to your staff.\n"
                     "This setting is recommanded for T.O.s that aren't moderators.\n"
                     "Do you want to continue?"
-                ).format(prefix=ctx.clean_prefix)
+                ).format(prefix=ctx.clean_prefix),
+                timeout=60,
+                delete_after=False,
             )
-            pred = ReactionPredicate.yes_or_no(message, user=ctx.author)
-            start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
-            try:
-                await self.bot.wait_for("reaction_add", check=pred, timeout=60)
-            except asyncio.TimeoutError:
-                await ctx.send(_("Request timed out."))
-                if ctx.channel.permissions_for(guild.me).manage_messages:
-                    try:
-                        await message.clear_reactions()
-                    except discord.HTTPException:
-                        pass
-                return
-            if pred.result is False:
-                await ctx.send(_("Cancelling..."))
+            if result is False:
                 return
         if role.position >= guild.me.top_role.position:
             await ctx.send(_("This role is too high. Place it below my main role."))
@@ -813,7 +801,7 @@ beginning, and the number of **minutes** before the opening of the tournament fo
 the registration.
         First the opening hour, then the closing hour.
 
-        Date and time of the tournament's start is the one defined on Challonge. 
+        Date and time of the tournament's start is the one defined on Challonge.
 
         To disable the automatic opening/closing of the registration, give 0 for its \
 corresponding value.
@@ -841,7 +829,7 @@ the opening of the tournament, then closing 10 minutes before.
         You need to give the number of minutes before the start of the tournament for each value.
         First the opening hour, then the closing hour.
 
-        Date and time of the tournament's start is the one defined on Challonge. 
+        Date and time of the tournament's start is the one defined on Challonge.
 
         To disable the check-in, give 0 for both values.
 
@@ -1042,7 +1030,8 @@ the start of the tournament, then closing 15 minutes before.
             return
         games = await self.data.custom("GAME", guild.id).all()
         if data["game_name"].title() not in games:
-            message = await ctx.send(
+            result = await prompt_yes_or_no(
+                ctx,
                 _(
                     ":warning: **The game {game} isn't registered on this bot !**\n\n"
                     "You can configure the different settings of this game by typing the "
@@ -1056,19 +1045,10 @@ the start of the tournament, then closing 15 minutes before.
                     "- List of starters/counters stages\n"
                     "- Ranking and seeding with Braacket\n\n"
                     "Would you like to continue or cancel?"
-                ).format(game=data["game_name"].title(), prefix=ctx.clean_prefix)
+                ).format(game=data["game_name"].title(), prefix=ctx.clean_prefix),
             )
-            pred = ReactionPredicate.yes_or_no(message, user=ctx.author)
-            start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
-            try:
-                await self.bot.wait_for("reaction_add", check=pred, timeout=30)
-            except asyncio.TimeoutError:
-                await ctx.send(_("Request timed out."))
+            if result is False:
                 return
-            if pred.result is False:
-                await ctx.send(_("Cancelling..."))
-                return
-            await message.delete()
         del games
         config_data.update(
             await self.data.custom("GAME", guild.id, data["game_name"].title()).all()
@@ -1131,16 +1111,10 @@ the start of the tournament, then closing 15 minutes before.
                 value="".join([f"- {x}\n" for x in config_data["counterpicks"]]),
             )
         embed.set_footer(text=_("Time zone: {tz}").format(tz=tournament.tournament_start.tzname()))
-        message = await ctx.send(_("Is this correct?"), embed=embed)
-        pred = ReactionPredicate.yes_or_no(message, user=ctx.author)
-        start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
-        try:
-            await self.bot.wait_for("reaction_add", check=pred, timeout=30)
-        except asyncio.TimeoutError:
-            await ctx.send(_("Request timed out."))
-            return
-        if pred.result is False:
-            await ctx.send(_("Cancelling..."))
+        result = await prompt_yes_or_no(
+            _("Is this correct?"), embed=embed, timeout=60, delete_after=False
+        )
+        if result is False:
             return
         self.tournaments[guild.id] = tournament
         await self.data.guild(guild).tournament.set(tournament.to_dict())

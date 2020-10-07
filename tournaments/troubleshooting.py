@@ -4,12 +4,10 @@ import asyncio
 
 from redbot.core import commands
 from redbot.core.i18n import Translator, cog_i18n
-from redbot.core.utils import menus
-from redbot.core.utils.predicates import ReactionPredicate
 
 from .abc import MixinMeta
 from .objects import ChallongeTournament
-from .utils import only_phase, mod_or_to
+from .utils import only_phase, mod_or_to, prompt_yes_or_no
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -119,22 +117,15 @@ setup if the tournament is ongoing)
 setup" on most commands. If your tournament is ongoing, it is your job to tell them.
         """
         guild = ctx.guild
-        message = await ctx.send(
+        result = await prompt_yes_or_no(
+            ctx,
             _(
                 "This command is dangerous, type `{prefix}help tfix hardreset` for a detailed "
                 "description of what the bot does or not, and the consequences.\n"
                 "Do you want to continue?"
-            ).format(prefix=ctx.clean_prefix)
+            ).format(prefix=ctx.clean_prefix),
         )
-        pred = ReactionPredicate.yes_or_no(message, ctx.author)
-        menus.start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
-        try:
-            await self.bot.wait_for("reaction_add", check=pred, timeout=30)
-        except asyncio.TimeoutError:
-            await ctx.send(_("Timed out."))
-            return
-        if pred.result is False:
-            await ctx.send(_("Cancelled."))
+        if result is False:
             return
         self.tournaments[guild.id].stop_loop_task()
         del self.tournaments[guild.id]

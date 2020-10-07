@@ -1,10 +1,14 @@
 import asyncio
 import logging
+import discord
 
 from achallonge import ChallongeException
+from typing import Optional
 
 from redbot.core import commands
 from redbot.core.i18n import Translator
+from redbot.core.utils.menus import start_adding_reactions
+from redbot.core.utils.predicates import ReactionPredicate
 
 from .objects import Tournament
 
@@ -99,3 +103,52 @@ async def async_http_retry(coro):
             continue
     else:
         raise ChallongeException(f"Tried '{coro.__name__}' several times without success")
+
+
+async def prompt_yes_or_no(
+    ctx: commands.Context,
+    content: Optional[str] = None,
+    *,
+    embed: Optional[discord.Embed] = None,
+    timeout: int = 30,
+    delete_after: bool = True,
+) -> bool:
+    """
+    Sends a message and waits for used confirmation, using ReactionPredicate.yes_or_no.
+
+    Parameters
+    ----------
+    ctx: commands.Context
+        Context of the command
+    content: Union[str, discord.Embed]
+        Either text or an embed to send.
+    timeout: int
+        Time before timeout. Defaults to 30 seconds.
+    delete_after: bool
+        Should the message be deleted after a positive response/timeout? Defaults to True.
+
+    Returns
+    -------
+    bool
+        False if the user declined, if the request timed out, or if there are insufficient
+        permissions, else True.
+    """
+    if not ctx.channel.permissions_for(ctx.guild.me).add_reactions:
+        await ctx.send(_('I need the "Add reactions" permission in this channel to continue.'))
+        return False
+    message = await ctx.send(content, embed=embed)
+    pred = ReactionPredicate.yes_or_no(message, ctx.author)
+    start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
+    try:
+        await ctx.bot.wait_for("reaction_add", check=pred, timeout=timeout)
+    except asyncio.TimeoutError:
+        if delete_after:
+            await message.delete()
+        await ctx.send(_("Request timed out."))
+        return False
+    if pred.result is False:
+        await ctx.send(_("Cancelled."))
+        return False
+    if delete_after:
+        await message.delete()
+    return True
