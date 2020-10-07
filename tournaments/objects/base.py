@@ -60,14 +60,6 @@ class Participant(discord.Member):
             "tournament_id={0.tournament.id} spoke={0.spoke} id={1.id} name={1.name!r}>"
         ).format(self, self._user)
 
-    def __str__(self):
-        names = {
-            236957792559169536: "IT | Freetox",  # xyleff
-            533735367308738560: "TC | AmoGin",  # tolty
-            394256821810102283: "TC | NoRajFanDogs",  # adrien
-        }
-        return names.get(self.id, super().__str__())
-
     @classmethod
     def from_saved_data(cls, tournament: Tournament, data: dict):
         member = tournament.guild.get_member(data["discord_id"])
