@@ -10,6 +10,7 @@ import aiofiles
 import aiofiles.os
 import filecmp
 import csv
+import shutil
 
 from discord.ext import tasks
 from random import choice
@@ -121,19 +122,10 @@ class Match:
         self.underway = underway
         self.player1 = player1
         self.player2 = player2
-        self.is_top8 = (
-            round >= tournament.top_8["winner"]["top8"]
-            or round <= tournament.top_8["loser"]["top8"]
-        )
-        self.is_bo5 = (
-            round >= tournament.top_8["winner"]["bo5"] or round <= tournament.top_8["loser"]["bo5"]
-        )
-        self.round_name = self._get_name()
         self.channel: Optional[discord.TextChannel] = None
         self.start_time: Optional[datetime] = None
         self.end_time: Optional[datetime] = None
         self.status = "pending"  # can be "pending" "ongoing" "finished"
-        self.checked_dq = True if self.is_top8 else False
         self.warned: Optional[Union[datetime, bool]] = None
         # time of the first warn for duration, if any. if a second warn was sent, set to True
         self.streamer: Optional[Streamer] = None
@@ -842,6 +834,10 @@ class Tournament:
             self.debug_task.cancel()
         except AttributeError:
             pass
+        shutil.rmtree(
+            cog_data_path(None, raw_name="Tournaments") / "ranking" / str(self.guild.id),
+            ignore_errors=True,
+        )
 
     def __del__(self):
         self.cancel()
@@ -1421,8 +1417,8 @@ class Tournament:
             ),
             "Connection": "close",
         }
-        path = cog_data_path(None, raw_name="Tournaments") / "ranking"
-        path.mkdir(exist_ok=True)
+        path = cog_data_path(None, raw_name="Tournaments") / "ranking" / str(self.guild.id)
+        path.mkdir(parents=True, exist_ok=True)
         async with aiohttp.ClientSession(headers=headers) as session:
             for page in range(1, 6):
                 url = f"https://braacket.com/league/{league_name}/ranking/{league_id}"
@@ -1446,7 +1442,7 @@ class Tournament:
         path = cog_data_path(None, raw_name="Tournaments") / "ranking"
         # open and parse the previously downloaded CSV
         for file in list(path.rglob("*.csv")):
-            with open(file) as f:
+            with open(file, errors="surrogateescape") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
                     ranking[row["Player"]] = int(row["Points"])

@@ -2,6 +2,7 @@ import logging
 import asyncio
 import achallonge
 import discord
+import shutil
 
 from abc import ABC
 from typing import Mapping
@@ -10,6 +11,7 @@ from laggron_utils.logging import close_logger
 from redbot.core import commands
 from redbot.core import Config
 from redbot.core.bot import Red
+from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import Translator, cog_i18n
 
 from .objects import Tournament, Match, ChallongeTournament
@@ -193,3 +195,6 @@ class Tournaments(
         for tournament in self.tournaments.values():
             cancel(tournament.loop_task)
             cancel(tournament.debug_task)
+
+        # remove ranking data
+        shutil.rmtree(cog_data_path(self) / "ranking", ignore_errors=True)
