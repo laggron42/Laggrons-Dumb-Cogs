@@ -55,6 +55,7 @@ class Tournaments(
             "bo3": (25, 10),  # time until warn in channel, then time until warning the T.O.s
             "bo5": (30, 10),  # in minutes
         },
+        "autostop_register": False,
         "register": {"opening": 0, "closing": 10},
         "checkin": {"opening": 60, "closing": 15},
         "start_bo5": 0,

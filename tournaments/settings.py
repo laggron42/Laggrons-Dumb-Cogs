@@ -821,6 +821,39 @@ the opening of the tournament, then closing 10 minutes before.
                 ).format(opening=opening, closing=closing)
             )
 
+    @tournamentset.command(name="autostopregister")
+    async def tournamentset_autostopregister(self, ctx: commands.Context, enable: bool = None):
+        """
+        End registration when the limit is reached.
+
+        If this is enabled, registrations will be closed as soon as the tournament is completed.
+        This is useful with two-stage registrations (see `[p]help tset twostageregister`).
+        """
+        guild = ctx.guild
+        current = await self.data.guild(guild).autostop_register()
+        if enable is None:
+            await ctx.send(
+                _("The bot currently ends registrations automatically. ")
+                if current
+                else _("The bot currently doesn't end registrations automatically. ")
+                + _(
+                    "If you want to change this, type `{prefix}tset autostopregiser {opposite}`."
+                ).format(prefix=ctx.clean_prefix, opposite=not current)
+            )
+        elif enable:
+            await self.data.guild(guild).autostop_register.set(True)
+            await ctx.send(
+                _("Done. Registrations will now end as soon as your participants cap is reached.")
+            )
+        else:
+            await self.data.guild(guild).autostop_register.set(False)
+            await ctx.send(
+                _(
+                    "Done. Registrations will continue regardless of the limit (someone still "
+                    "can't register above the limit, but the channel and commands remains open)."
+                )
+            )
+
     @tournamentset.command(name="checkin")
     async def tournamentset_checkin(self, ctx: commands.Context, opening: int, closing: int):
         """
@@ -918,6 +951,7 @@ the start of the tournament, then closing 15 minutes before.
             )
         else:
             checkin_end = _("Manual.")
+        autostop = _("enabled") if data["autostop_register"] else _("disabled")
         channels = {}
         for k, v in data["channels"].items():
             if not v:
@@ -970,8 +1004,8 @@ the start of the tournament, then closing 15 minutes before.
         )
         embed.add_field(
             name=_("Registration"),
-            value=_("Opening : {opening}\nClosing : {closing}").format(
-                opening=register_start, closing=register_end
+            value=_("Opening : {opening}\nClosing : {closing}\nAuto-stop : {stop}").format(
+                opening=register_start, closing=register_end, stop=autostop
             ),
         )
         embed.add_field(
