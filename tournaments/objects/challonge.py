@@ -168,6 +168,7 @@ class ChallongeTournament(Tournament):
     async def _update_participants_list(self):
         raw_participants = await self.list_participants()
         participants = []
+        removed = []
         for participant in raw_participants:
             cached: Participant
             # yeah, discord.py tools works with that
@@ -181,15 +182,40 @@ class ChallongeTournament(Tournament):
                     await async_http_retry(
                         achallonge.participants.destroy(self.id, participant["id"])
                     )
-                    await self.to_channel.send(
-                        _(
-                            ':warning: Challonge participant with name "{name}" can\'t be found '
-                            "in this server. This can be due to a name change, or the "
-                            "member left.\nPlayer is disqualified from this tournament."
-                        ).format(name=participant["name"])
-                    )
+                    removed.append(participant["name"])
             else:
                 participants.append(cached)
+        if removed:
+            if len(removed) == 1:
+                await self.to_channel.send(
+                    _(
+                        ':warning: Challonge participant with name "{name}" can\'t be found '
+                        "in this server. This can be due to a name change, or the "
+                        "member left.\nPlayer is disqualified from this tournament."
+                    ).format(name=removed[0])
+                )
+            else:
+                startup = None
+                if not self.participants:
+                    # list is empty, assuming the tournament just started (or mass refresh)
+                    startup = _(
+                        "\nSince this occured when starting the tournament, there may "
+                        "have been an error when uploading participants, or you skipped "
+                        "registration, relied on the existing participants in the bracket, and "
+                        "the names doesn't match the members' names in this server.\n"
+                        "If this is the case, you may want to roll back the tournament's start "
+                        "with the `{prefix}resetbracket` command, and retry.\n"
+                    ).format(prefix=self.bot_prefix)
+                await self.to_channel.send(
+                    _(
+                        ":warning: Multiple Challonge participants can't be found "
+                        "in this server. This can be due to name changes, or the members left.\n"
+                        "{startup}\n"
+                        "The following players are disqualified from this tournament:\n{names}"
+                    ).format(
+                        prefix=self.bot_prefix, startup=startup, names=", ".join(removed),
+                    )
+                )
         self.participants = participants
 
     async def _update_match_list(self):
