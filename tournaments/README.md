@@ -99,6 +99,8 @@ You can also support me on [Patreon](https://patreon.com/retke) or [Github Spons
 
 This cog is based on the [ATOS Discord bot](https://github.com/Wonderfall/ATOS). A huge thanks to [Wonderfall](https://github.com/Wonderfall) for allowing me to convert his bot to a Red cog! The entire goal of this cog and the interface are based on his work.
 
+Thanks to [Xyleff](https://github.com/Xyleff2049) too who also helped me a lot for creating this cog!
+
 ## Contribute
 
 If you're reading this from Github and want to contribute or just understand the source code, I'm gonna stop you right there. Indeed, the cog is a bit complex so let me explain a bit how each file work before source diving.

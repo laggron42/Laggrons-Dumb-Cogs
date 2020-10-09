@@ -115,7 +115,7 @@ class Tournaments(
         self.registration_loop_task_errors = 0
 
     __version__ = "indev"
-    __author__ = ["retke (El Laggron)", "Wonderfall"]
+    __author__ = ["retke (El Laggron)", "Wonderfall", "Xyleff"]
 
     @commands.command(hidden=True)
     async def tournamentsinfo(self, ctx: commands.Context):
@@ -126,7 +126,7 @@ class Tournaments(
             _(
                 "Laggron's Dumb Cogs V3 - tournaments\n\n"
                 "Version: {0.__version__}\n"
-                "Authors: {0.__author__[0]} and {0.__author__[1]}\n\n"
+                "Authors: {0.__author__[0]}, {0.__author__[1]} and {0.__author__[2]}\n\n"
                 "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
                 "Discord server: https://discord.gg/AVzjfpR\n"
                 "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n"
