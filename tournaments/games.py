@@ -519,6 +519,46 @@ class Games(MixinMeta):
     @only_phase("ongoing")
     @commands.command()
     @commands.guild_only()
+    async def lag(self, ctx: commands.Context):
+        """
+        Call TO's for a lag test.
+        """
+        guild = ctx.guild
+        tournament = self.tournaments[guild.id]
+
+        if tournament.tester_role is not None:
+            msg = _(":satellite: **Lag report** : TOs are invited to consult channel {channel}").format(
+                channel=ctx.channel.mention
+            )
+        else:
+            msg = _(":satellite: **Lag report** : {testers} are invited to consult channel {channel}").format(
+                channel=ctx.channel.mention,
+                testers=tournament.tester_role
+            )
+
+        await tournament.to_channel.send(msg)
+
+        await ctx.send(_(
+            "TOs are successfully called"
+        ))
+
+    @commands.command()
+    @commands.guild_only()
+    async def ruleset(self, ctx: commands.Context):
+        """
+        Show the tournament's ruleset.
+        """
+        guild = ctx.guild
+        tournament = self.tournaments[guild.id]
+
+        # Faut que tu me choppes le ruleset dans la config stp
+        # tournament.data[ ...
+
+        ctx.channel.send("The soos")
+
+    @only_phase("ongoing")
+    @commands.command()
+    @commands.guild_only()
     async def bracket(self, ctx: commands.Context):
         """
         Show the tournament's bracket.
