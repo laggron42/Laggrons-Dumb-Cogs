@@ -171,7 +171,7 @@ excluded) by calling the command like this: `[p]tfix resetmatches yes`
             + (_("\n{num} channels couldn't be deleted.").format(num=failed) if failed else "")
         )
 
-    @only_phase("register", "checkin")
+    @only_phase("pending", "register", "awaiting")
     @tournamentfix.command(name="resetparticipants")
     async def tournamentfix_resetparticipants(
         self, ctx: commands.Context, try_remove: bool = False

@@ -324,7 +324,7 @@ class Games(MixinMeta):
                 )
             )
             return
-        if tournament.phase in ("register", "checkin"):
+        if tournament.participants:
             result = await prompt_yes_or_no(
                 ctx,
                 _(
