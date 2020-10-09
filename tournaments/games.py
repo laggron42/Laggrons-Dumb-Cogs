@@ -246,6 +246,14 @@ class Games(MixinMeta):
             message += _("\n\nFailed closing the following channels:\n- ")
             message += "\n- ".join([x.mention for x in failed])
         await ctx.send(message)
+        if tournament.announcements_channel:
+            # TODO: actually show top 8
+            await tournament.announcements_channel.send(
+                _(
+                    "The tournament is now ended, congratulations to all participants!\n"
+                    "Results and ranking: {url}"
+                ).format(url=tournament.url)
+            )
 
     @only_phase("ongoing", "finished")
     @mod_or_to()
