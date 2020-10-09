@@ -551,7 +551,8 @@ class Games(MixinMeta):
         await tournament.to_channel.send(msg, allowed_mentions=mentions)
         await ctx.send(_("TOs were called. Prepare a new arena for them..."))
 
-    @commands.command()
+    @only_phase()
+    @commands.command(aliases=["rules"])
     @commands.guild_only()
     async def ruleset(self, ctx: commands.Context):
         """
@@ -559,11 +560,12 @@ class Games(MixinMeta):
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
-
-        # Faut que tu me choppes le ruleset dans la config stp
-        # tournament.data[ ...
-
-        ctx.channel.send("The soos")
+        if not tournament.ruleset_channel:
+            await ctx.send(_("There's no ruleset channel defined."))
+        else:
+            await ctx.send(
+                _("Ruleset: {channel}").format(channel=tournament.ruleset_channel.mention)
+            )
 
     @only_phase("ongoing")
     @commands.command()
