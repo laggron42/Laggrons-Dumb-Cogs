@@ -526,7 +526,7 @@ class Games(MixinMeta):
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
 
-        if tournament.tester_role is not None:
+        if tournament.tester_role is None:
             msg = _(":satellite: **Lag report** : TOs are invited to consult channel {channel}").format(
                 channel=ctx.channel.mention
             )
