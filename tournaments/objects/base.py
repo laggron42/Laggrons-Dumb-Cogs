@@ -1278,7 +1278,9 @@ class Tournament:
                 self._prepare_register_message()
             )
             await self.register_message.pin()
-            await self.register_channel.set_permissions(self.game_role, send_messages=True)
+            await self.register_channel.set_permissions(
+                self.game_role, read_messages=True, send_messages=True
+            )
         if self.announcements_channel:
             if self.register_channel:
                 message = _(
@@ -1357,7 +1359,9 @@ class Tournament:
             if self.register_message:
                 await self.register_message.edit(content=self._prepare_register_message())
                 self.register_message = None
-            await self.register_channel.set_permissions(self.game_role, send_messages=False)
+            await self.register_channel.set_permissions(
+                self.game_role, read_messages=True, send_messages=False
+            )
             await self.register_channel.send(_("Registration ended."))
         elif self.announcements_channel:  # no registration channel, so we announce somewhere else
             await self.announcements_channel.send(_("Registration ended."))
@@ -1396,7 +1400,9 @@ class Tournament:
         if self.checkin_channel:
             message = await self.checkin_channel.send(message, allowed_mentions=mentions)
             await message.pin()
-            await self.checkin_channel.set_permissions(self.participant_role, send_messages=True)
+            await self.checkin_channel.set_permissions(
+                self.participant_role, read_messages=True, send_messages=True
+            )
         elif self.announcements_channel:
             await self.announcements_channel.send(message, allowed_mentions=mentions)
         if self.register_channel and self.register_phase == "ongoing":
@@ -1499,7 +1505,9 @@ class Tournament:
         for page in pagify(text):
             await self.to_channel.send(page)
         if self.checkin_channel:
-            await self.checkin_channel.set_permissions(self.game_role, send_messages=False)
+            await self.checkin_channel.set_permissions(
+                self.game_role, read_messages=True, send_messages=False
+            )
             await self.checkin_channel.send(
                 _("Check-in ended. Participants who didn't check are unregistered.")
             )
