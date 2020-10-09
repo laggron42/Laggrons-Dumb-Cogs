@@ -1510,6 +1510,8 @@ class Tournament:
         await self.save()
 
     async def register_participant(self, member: discord.Member):
+        if self.limit and len(self.participants) >= self.limit:
+            raise RuntimeError("Limit reached.")
         await member.add_roles(self.participant_role, reason=_("Registering to tournament."))
         participant = self.participant_object(member, self)
         if self.checkin_phase != "pending":
@@ -1517,7 +1519,12 @@ class Tournament:
             participant.checked_in = True
         self.participants.append(participant)
         log.debug(f"[Guild {self.guild.id}] Player {member} registered.")
-        if self.autostop_register and len(self.participants) >= self.limit:
+        if (
+            self.limit
+            and self.autostop_register
+            and self.register_phase == "ongoing"
+            and len(self.participants) >= self.limit
+        ):
             await self.end_registration()
         await self.save()
 

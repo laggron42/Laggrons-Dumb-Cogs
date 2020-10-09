@@ -210,6 +210,81 @@ excluded) by calling the command like this: `[p]tfix resetmatches yes`
             )
         )
 
+    @only_phase("pending", "register", "awaiting")
+    @tournamentfix.command(name="registerfromrole")
+    async def tournamentfix_registerfromrole(self, ctx: commands.Context, *, role: discord.Role):
+        """
+        Registers everyone in a role.
+
+        If there are members already registered in this role, they are ignored.
+        Previous participants are kept, else you might want to run `[p]tfix resetparticipants` \
+before.
+        Running this after a check-in start will pre-check everyone, including already registered \
+members of that role.
+        """
+        guild = ctx.guild
+        if not role.members:
+            await ctx.send(_("That role doesn't have any member."))
+            return
+        tournament = self.tournaments[guild.id]
+        participants = tournament.participants
+        to_register = [x for x in role.members if x not in participants]
+        total = len(participants) + len(to_register)
+        if tournament.limit and total > tournament.limit:
+            await ctx.send(
+                _(
+                    "You want to register {register} members, but you're exceeding "
+                    "the limit of participants ({total}/{limit})."
+                ).format(register=len(to_register), total=total, limit=tournament.limit)
+            )
+            return
+        pre_check = tournament.checkin_phase in ("ongoing", "done")
+        if not to_register:
+            if pre_check is False:
+                await ctx.send(_("No new member to register."))
+            else:
+                for member in role.members:
+                    participant = tournament.find_participant(discord_id=member.id)[1]
+                    if participant is None:
+                        continue
+                    participant.checked_in = True
+                await ctx.send(
+                    _("No new participant. {len} participants from role checked in.").format(
+                        len=len(role.members)
+                    )
+                )
+            return
+        failed = 0
+        checked = 0
+        async with ctx.typing():
+            for member in to_register:
+                try:
+                    await tournament.register_participant(member)
+                except discord.HTTPException:
+                    failed += 1
+        if pre_check:
+            for participant in [
+                tournament.find_participant(discord_id=x.id)[1] for x in role.members
+            ]:
+                if participant is None:
+                    continue
+                participant.checked_in = True
+                checked += 1
+        await ctx.send(
+            _(
+                "Successfully registered {register} participants from role {role}.{failed}{check}"
+            ).format(
+                register=len(to_register) - failed,
+                role=role.name,
+                failed=_("\n{failed} members couldn't be registered.").format(failed=failed)
+                if failed
+                else "",
+                check=_("\n{checked} existing participants checked in.").format(checked=checked)
+                if checked
+                else "",
+            )
+        )
+
     @only_phase()
     @tournamentfix.command(name="refresh")
     async def tournamentfix_refresh(self, ctx: commands.Context):
