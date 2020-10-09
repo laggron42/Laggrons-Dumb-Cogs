@@ -1241,7 +1241,7 @@ the start of the tournament, then closing 15 minutes before.
 
         def get_time(d: datetime):
             if d:
-                return d.strftime("%d/%m/%y %H:%M UTC")
+                return d.strftime("%d/%m/%y %H:%M")
             else:
                 return _("Manual")
 
@@ -1254,85 +1254,7 @@ the start of the tournament, then closing 15 minutes before.
         embed = discord.Embed(title=f"{t.name} • *{t.game}*")
         embed.url = t.url
         embed.description = _("Current phase: {phase}").format(phase=t.phase)
-        if t.phase == "pending":
-            embed.add_field(name=_("Start time"), value=get_time(t.tournament_start), inline=True)
-            embed.add_field(
-                name=_("Limit of participants"),
-                value=t.limit if t.limit else _("Not set."),
-                inline=True,
-            )
-            embed.add_field(
-                name=_("Channels"),
-                value=_("Registration: {register}\nCheck-in: {checkin}").format(
-                    register=get_channel(t.register_channel),
-                    checkin=get_channel(t.checkin_channel),
-                ),
-            )
-            embed.add_field(
-                name=_("Registration"),
-                value=_("Opening: {start}\nClosing: {stop}").format(
-                    start=get_time(t.register_start), stop=get_time(t.register_stop)
-                ),
-                inline=True,
-            )
-            embed.add_field(
-                name=_("Check-in"),
-                value=_("Opening: {start}\nClosing: {stop}").format(
-                    start=get_time(t.checkin_start), stop=get_time(t.checkin_stop)
-                ),
-                inline=True,
-            )
-        elif t.phase == "register":
-            limit = f"/{t.limit}" if t.limit else _(" *(no limit)*")
-            embed.add_field(name=_("Start time"), value=get_time(t.tournament_start), inline=True)
-            embed.add_field(
-                name=_("Participants registered"),
-                value=f"{len(t.participants)}{limit}",
-                inline=True,
-            )
-            embed.add_field(
-                name=_("Registration channel"),
-                value=t.register_channel.mention if t.register_channel else _("Not set"),
-                inline=True,
-            )
-            embed.add_field(
-                name=_("Register end time"), value=get_time(t.register_stop), inline=True,
-            )
-            embed.add_field(
-                name=_("Check-in"),
-                value=_("Opening: {start}\nClosing: {stop}").format(
-                    start=get_time(t.checkin_start), stop=get_time(t.checkin_stop)
-                ),
-                inline=True,
-            )
-        elif t.phase == "checkin":
-            limit = f"/{t.limit}" if t.limit else _(" *(no limit)*")
-            embed.add_field(name=_("Start time"), value=get_time(t.tournament_start), inline=True)
-            embed.add_field(
-                name=_("Participants registered"),
-                value=f"{len(t.participants)}{limit}",
-                inline=True,
-            )
-            embed.add_field(
-                name=_("Channels"),
-                value=_("Registration: {register}\nCheck-in: {checkin}").format(
-                    register=get_channel(t.register_channel),
-                    checkin=get_channel(t.checkin_channel),
-                ),
-            )
-            embed.add_field(
-                name=_("Register end time"), value=get_time(t.register_stop), inline=True,
-            )
-            embed.add_field(
-                name=_("Check-in end time"), value=get_time(t.checkin_stop), inline=True,
-            )
-            checked_in = len([x for x in t.participants if x.checked_in])
-            embed.add_field(
-                name=_("Participants checked-in"),
-                value=f"{checked_in}/{len(t.participants)}",
-                inline=True,
-            )
-        elif t.phase == "ongoing":
+        if t.phase == "ongoing":
             embed.add_field(
                 name=_("Participants"),
                 value=_("Total: {total}\nIn-game: {ingame}").format(
@@ -1366,5 +1288,62 @@ the start of the tournament, then closing 15 minutes before.
                     inline=False,
                 )
         else:
-            raise RuntimeError
+            limit = f"/{t.limit}" if t.limit else _(" *(no limit)*")
+            embed.add_field(name=_("Start time"), value=get_time(t.tournament_start), inline=True)
+            embed.add_field(
+                name=_("Participants registered"),
+                value=f"{len(t.participants)}{limit}",
+                inline=True,
+            )
+            name, time = t.next_scheduled_event()
+            name = {
+                "register_start": _("Registration start"),
+                "register_second_start": _("Second registration start"),
+                "register_stop": _("Registration ending"),
+                "checkin_start": _("Check-in start"),
+                "checkin_stop": _("Check-in stop"),
+            }.get(name)
+            embed.add_field(
+                name=_("Next scheduled event"),
+                value=f"{name}\n{str(time).split('.')[0]}",
+                inline=True,
+            )
+            status = {
+                "manual": _("Manual"),
+                "pending": _("Pending"),
+                "ongoing": _("Ongoing"),
+                "onhold": _("On hold (awaiting second opening)"),
+                "done": _("Done"),
+            }
+            embed.add_field(
+                name=_("Registration"),
+                value=_(
+                    "Current status: **{status}**\n\n"
+                    "Opening : {opening}\n"
+                    "Second opening : {secondopening}\n"
+                    "Closing : {closing}\n"
+                    "Auto-stop : {stop}"
+                ).format(
+                    status=status.get(t.register_phase),
+                    opening=get_time(t.register_start),
+                    secondopening=get_time(t.register_second_start)
+                    if t.register_second_start
+                    else _("Disabled"),
+                    closing=get_time(t.register_stop),
+                    stop=_("Enabled") if t.autostop_register else _("Disabled"),
+                ),
+                inline=True,
+            )
+            embed.add_field(
+                name=_("Check-in"),
+                value=_(
+                    "Current status: **{status}**\n\n" "Opening: {start}\n" "Closing: {stop}"
+                ).format(
+                    status=status.get(t.checkin_phase),
+                    start=get_time(t.checkin_start),
+                    stop=get_time(t.checkin_stop),
+                ),
+                inline=True,
+            )
+            embed.set_footer(text=_("Timezone: {tz}").format(tz=str(t.tz)))
         await ctx.send(embed=embed)
