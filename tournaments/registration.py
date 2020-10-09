@@ -177,7 +177,7 @@ there are spaces).
 
     @only_phase()
     @mod_or_to()
-    @commands.command(aliases=["rm"])
+    @commands.command(name="rm")
     async def remove(self, ctx: commands.Context, *members: discord.Member):
         """
         Unregister members manually.
