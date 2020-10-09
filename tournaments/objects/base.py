@@ -764,6 +764,7 @@ class Tournament:
         self.participant_role: discord.Role = guild.get_role(data["roles"].get("participant"))
         self.streamer_role: discord.Role = guild.get_role(data["roles"].get("streamer"))
         self.to_role: discord.Role = guild.get_role(data["roles"].get("to"))
+        self.tester_role: discord.Role = guild.get_role(data["roles"].get("tester"))
         self.delay: int = data["delay"]
         self.time_until_warn = {
             "bo3": data["time_until_warn"].get("bo3", (25, 10)),
