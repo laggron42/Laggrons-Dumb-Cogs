@@ -519,28 +519,37 @@ class Games(MixinMeta):
     @only_phase("ongoing")
     @commands.command()
     @commands.guild_only()
+    @commands.cooldown(1, 60, commands.BucketType.user)
     async def lag(self, ctx: commands.Context):
         """
         Call TO's for a lag test.
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
-
-        if tournament.tester_role is None:
-            msg = _(":satellite: **Lag report** : TOs are invited to consult channel {channel}").format(
-                channel=ctx.channel.mention
+        player = tournament.find_participant(discord_id=ctx.author.id)[1]
+        if player is None:
+            await ctx.send(_("You are not a participant in this tournament."))
+            return
+        match = player.match
+        if match is None:
+            await ctx.send(_("You don't have any ongoing match."))
+            return
+        if match.channel is None:
+            target = _("check set #{set} between {player1} and {player2} (match in DM)").format(
+                set=match.set, player1=match.player1.mention, player2=match.player2.mention
             )
         else:
-            msg = _(":satellite: **Lag report** : {testers} are invited to consult channel {channel}").format(
-                channel=ctx.channel.mention,
-                testers=tournament.tester_role
-            )
-
-        await tournament.to_channel.send(msg)
-
-        await ctx.send(_(
-            "TOs are successfully called"
-        ))
+            target = _("consult channel {channel}").format(channel=match.channel.mention)
+        msg = _(":satellite: **Lag report** : TOs are invited to {target}.").format(
+            channel=ctx.channel.mention, target=target
+        )
+        if tournament.tester_role:
+            msg = f"{tournament.tester_role.mention} {msg}"
+            mentions = discord.AllowedMentions(roles=[tournament.tester_role])
+        else:
+            mentions = None
+        await tournament.to_channel.send(msg, allowed_mentions=mentions)
+        await ctx.send(_("TOs were called. Prepare a new arena for them..."))
 
     @commands.command()
     @commands.guild_only()
