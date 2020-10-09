@@ -1024,6 +1024,7 @@ class Tournament:
         }
         for name, (date, condition) in events.items():
             if date is None:
+                events[name] = None
                 continue
             if name in self.ignored_events:
                 events[name] = None
