@@ -796,9 +796,7 @@ minutes before the first one instead of 30.
         """
         Set the opening and closing time of the registration.
 
-        You need to give the number of **hours** before the opening of the tournament for the \
-beginning, and the number of **minutes** before the opening of the tournament for the ending of \
-the registration.
+        You need to give the number of minutes before the start of the tournament for each value.
         First the opening hour, then the closing hour.
 
         Date and time of the tournament's start is the one defined on Challonge.
@@ -806,15 +804,15 @@ the registration.
         To disable the automatic opening/closing of the registration, give 0 for its \
 corresponding value.
 
-        Example: `[p]tset register 48 10` = Opening of the registration 48 hours before \
-the opening of the tournament, then closing 10 minutes before.
+        Example: `[p]tset register 2880 10` = Opening of the registration 2880 minutes (2 days) \
+before the opening of the tournament, then closing 10 minutes before.
         """
         guild = ctx.guild
-        if closing >= opening * 60:
+        if closing != 0 and opening != 0 and closing >= opening:
             await ctx.send(_("Opening must occur before closing time."))
             return
         async with self.data.guild(guild).register() as register:
-            if opening != 0 and register["second_opening"] >= opening * 60:
+            if opening != 0 and register["second_opening"] >= opening:
                 await ctx.send(
                     _("Opening must occur before second attempt (two-stage registrations).")
                 )
@@ -826,7 +824,7 @@ the opening of the tournament, then closing 10 minutes before.
         else:
             await ctx.send(
                 _(
-                    "Registration will now open {opening} hours before the start and closed "
+                    "Registration will now open {opening} minutes before the start and close "
                     "{closing} minutes before the start of the tournament."
                 ).format(opening=opening, closing=closing)
             )
@@ -885,7 +883,7 @@ bracket.
         """
         guild = ctx.guild
         async with self.data.guild(guild).register() as register:
-            if second_opening != 0 and second_opening >= register["opening"] * 60:
+            if second_opening != 0 and second_opening >= register["opening"]:
                 await ctx.send(_("Second opening must occur after first opening."))
                 return
             if second_opening != 0 and second_opening <= register["closing"]:
@@ -971,7 +969,7 @@ the start of the tournament, then closing 15 minutes before.
         delay = data["delay"]
         start_bo5 = data["start_bo5"]
         if data["register"]["opening"] != 0:
-            register_start = _("{time} hours before the start of the tournament.").format(
+            register_start = _("{time} minutes before the start of the tournament.").format(
                 time=data["register"]["opening"]
             )
         else:
@@ -1144,7 +1142,7 @@ the start of the tournament, then closing 15 minutes before.
         config_data.update(
             await self.data.custom("GAME", guild.id, data["game_name"].title()).all()
         )
-        tournament = ChallongeTournament.build_from_api(
+        tournament: ChallongeTournament = ChallongeTournament.build_from_api(
             guild=guild,
             config=self.data,
             prefix=ctx.clean_prefix,
@@ -1159,6 +1157,14 @@ the start of the tournament, then closing 15 minutes before.
             else:
                 return _("Manual")
 
+        try:
+            tournament._valid_dates()
+        except RuntimeError as e:
+            text = _("There are conflicts with dates!\n\n") + e.args[0] + "\n"
+            for name, time in e.args[1]:
+                text += f"{name}: {format_datetime(time)}\n"
+            await ctx.send(text)
+            return
         embed = discord.Embed(title=f"{tournament.name} • *{tournament.game}*")
         embed.url = tournament.url
         if tournament.limit is not None:
@@ -1170,8 +1176,17 @@ the start of the tournament, then closing 15 minutes before.
         )
         embed.add_field(
             name=_("Registration"),
-            value=_("Opening: {opening}\nClosing : {closing}").format(
+            value=_(
+                "Opening: {opening}\n"
+                "Second opening: {secondopening}\n"
+                "Close when complete: {autostop}\n"
+                "Closing : {closing}"
+            ).format(
                 opening=format_datetime(tournament.register_start),
+                secondopening=format_datetime(tournament.register_second_start)
+                if tournament.register_second_start
+                else _("Disabled"),
+                autostop=_("Enabled") if tournament.autostop_register else _("Disabled"),
                 closing=format_datetime(tournament.register_stop),
             ),
         )

@@ -18,37 +18,56 @@ MAX_ERRORS = 3
 
 class Registration(MixinMeta):
     def __init__(self):
-        self.update_message_loop.start()
+        self.registration_loop.start()
         self.update_message_task_errors = 0
 
+    # update message, also scheduler for registration/checkin start/stop
     @tasks.loop(seconds=5)
-    async def update_message_loop(self):
-        guilds = filter(lambda x: x.register_phase == "ongoing", self.tournaments.values())
-        for tournament in guilds:
-            if tournament.register_message is not None:
+    async def registration_loop(self):
+        for tournament in self.tournaments.values():
+            if tournament.phase in ("ongoing", "finished"):
+                continue  # Tournament has its own loop for that part
+            if tournament.register_phase == "ongoing" and tournament.register_message:
                 new_content = tournament._prepare_register_message()
-                if new_content == tournament.register_message.content:
-                    continue
-                try:
-                    await tournament.register_message.edit(content=new_content)
-                except discord.NotFound as e:
-                    log.error(
-                        f"[Guild {tournament.guild.id}] Regiser message lost. "
-                        "Removing from memory...",
-                        exc_info=e,
-                    )
-                    tournament.register_message = None
+                if new_content != tournament.register_message.content:
+                    try:
+                        await tournament.register_message.edit(content=new_content)
+                    except discord.NotFound as e:
+                        log.error(
+                            f"[Guild {tournament.guild.id}] Regiser message lost. "
+                            "Removing from memory...",
+                            exc_info=e,
+                        )
+                        tournament.register_message = None
+            try:
+                name, time = tournament.next_scheduled_event()
+            except TypeError:
+                continue
+            if time.total_seconds() <= 0:
+                coro = {
+                    "register_start": tournament.start_registration,
+                    "register_second_start": tournament.start_registration,
+                    "register_stop": tournament.end_registration,
+                    "checkin_start": tournament.start_check_in,
+                    "checkin_stop": tournament.end_checkin,
+                }.get(name)
+                log.debug(f"[Guild {tournament.guild.id}] Scheduler call: {coro}")
+                if name in ("register_stop", "checkin_stop"):
+                    await coro(background=True)
+                else:
+                    await coro()
 
-    @update_message_loop.error
+    @registration_loop.error
     async def on_loop_task_error(self, exception):
-        self.task_errors += 1
-        if self.task_errors >= MAX_ERRORS:
+        self.registration_loop_task_errors += 1
+        if self.registration_loop_task_errors >= MAX_ERRORS:
             log.critical(
                 "Error in loop task. 3rd error, cancelling the task ...", exc_info=exception,
             )
+            self.registration_loop.start()
         else:
             log.error("Error in loop task. Resuming ...", exc_info=exception)
-            self.update_message_loop.start()
+            self.registration_loop.start()
 
     @only_phase("register")
     @commands.command(name="in")
@@ -169,7 +188,7 @@ class Registration(MixinMeta):
         if (
             not tournament.register_second_start
             and tournament.register_stop
-            and tournament.register_stop > datetime.utcnow()
+            and tournament.register_stop > datetime.now(tournament.tz)
         ):
             result = await prompt_yes_or_no(
                 ctx,
@@ -183,9 +202,8 @@ class Registration(MixinMeta):
             )
             if result:
                 tournament.ignored_events.append("register_stop")
-        elif (
-            tournament.register_second_start
-            and tournament.register_second_start > datetime.utcnow()
+        elif tournament.register_second_start and tournament.register_second_start > datetime.now(
+            tournament.tz
         ):
             result = await prompt_yes_or_no(
                 ctx,
@@ -221,7 +239,9 @@ class Registration(MixinMeta):
         if tournament.checkin_phase == "ongoing":
             await ctx.send(_("Check-in is already ongoing."))
             return
-        elif tournament.checkin_phase == "pending" and self.checkin_start > datetime.utcnow():
+        elif tournament.checkin_phase == "pending" and tournament.checkin_start > datetime.now(
+            tournament.tz
+        ):
             result = await prompt_yes_or_no(
                 ctx,
                 _(

@@ -70,6 +70,7 @@ class Participant(discord.Member):
         participant = cls(member, tournament)
         participant._player_id = data["player_id"]
         participant.spoke = data["spoke"]
+        participant.checked_in = data["checked_in"]
         return participant
 
     def to_dict(self) -> dict:
@@ -77,6 +78,7 @@ class Participant(discord.Member):
             "discord_id": self.id,
             "player_id": self.player_id,
             "spoke": self.spoke,
+            "checked_in": self.checked_in,
         }
 
     def reset(self):
@@ -160,7 +162,7 @@ class Match:
     @property
     def duration(self) -> Optional[timedelta]:
         if self.start_time:
-            return datetime.utcnow() - self.start_time
+            return datetime.now(self.tournament.tz) - self.start_time
 
     @classmethod
     def from_saved_data(cls, tournament: Tournament, player1, player2, data: dict) -> Match:
@@ -394,7 +396,7 @@ class Match:
         self.status = "ongoing"
         self.underway = True
         self.checked_dq = False
-        self.start_time = datetime.utcnow()
+        self.start_time = datetime.now(self.tournament.tz)
 
     async def launch(
         self,
@@ -463,7 +465,7 @@ class Match:
                 ).format(player1=self.player1.mention, player2=self.player2.mention)
             )
             self.underway = True
-            self.start_time = datetime.utcnow()
+            self.start_time = datetime.now(self.tournament.tz)
         else:
             await self.launch(restart=True)
 
@@ -534,7 +536,7 @@ class Match:
                 time=self.tournament.time_until_warn["bo5" if self.is_bo5 else "bo3"][1],
             )
         )
-        self.warned = datetime.utcnow()
+        self.warned = datetime.now(self.tournament.tz)
 
     async def warn_to_length(self):
         await self.tournament.to_channel.send(
@@ -671,7 +673,7 @@ class Match:
             self.player1.reset()
             self.player2.reset()
         self.status = "finished"
-        self.end_time = datetime.utcnow()
+        self.end_time = datetime.now(self.tournament.tz)
 
     async def set_scores(
         self, player1_score: int, player2_score: int, winner: Optional[Participant] = None
@@ -730,7 +732,8 @@ class Tournament:
         self.id = id
         self.limit = limit
         self.status = status
-        self.tournament_start = tournament_start.replace(tzinfo=timezone.utc)
+        self.tz = tournament_start.tzinfo
+        self.tournament_start = tournament_start
         self.bot_prefix = bot_prefix
         self.cog_version = cog_version
         self.participants: List[Participant] = []
@@ -770,36 +773,43 @@ class Tournament:
         self.checkin: dict = data["checkin"]
         self.start_bo5: int = data["start_bo5"]
         self.autostop_register: bool = data["autostop_register"]
+        self.ignored_events = []  # list of scheduled events to skip (register_start/checkin_stop)
+        # works with next_scheduled_event, used for manual early starts/stops
         if data["register"]["second_opening"] != 0:
             self.register_second_start: datetime = tournament_start - timedelta(
-                hours=data["register"]["second_opening"]
+                minutes=data["register"]["second_opening"]
             )
         else:
             self.register_second_start = None
+            self.ignored_events.append("register_second_start")
         if data["register"]["opening"] != 0:
             self.register_start: datetime = tournament_start - timedelta(
-                hours=data["register"]["opening"]
+                minutes=data["register"]["opening"]
             )
         else:
             self.register_start = None
+            self.ignored_events.append("register_start")
         if data["register"]["closing"] != 0:
             self.register_stop: datetime = tournament_start - timedelta(
                 minutes=data["register"]["closing"]
             )
         else:
             self.register_stop = None
+            self.ignored_events.append("register_stop")
         if data["checkin"]["opening"] != 0:
             self.checkin_start: datetime = tournament_start - timedelta(
                 minutes=data["checkin"]["opening"]
             )
         else:
             self.checkin_start = None
+            self.ignored_events.append("checkin_start")
         if data["checkin"]["closing"] != 0:
             self.checkin_stop: datetime = tournament_start - timedelta(
                 minutes=data["checkin"]["closing"]
             )
         else:
             self.checkin_stop = None
+            self.ignored_events.append("checkin_stop")
         self.ruleset_channel: discord.TextChannel = guild.get_channel(data["ruleset"])
         self.game_role: discord.Role = guild.get_role(data["role"]) or guild.default_role
         self.baninfo: str = data["baninfo"]
@@ -820,8 +830,6 @@ class Tournament:
         # "done": ended, no more opening scheduled
         self.checkin_phase = "pending" if self.checkin_start else "manual"
         # same as above (yes "onhold" too, there could be a first manual start)
-        self.ignored_events = []  # list of scheduled events to skip (register_start/checkin_stop)
-        # works with next_scheduled_event, used for manual early starts/stops
         self.register_message: Optional[discord.Message] = None  # message being updated
         # loop task things
         self.task: Optional[asyncio.Task] = None
@@ -862,7 +870,10 @@ class Tournament:
     async def from_saved_data(
         cls, guild: discord.Guild, config: Config, cog_version: str, data: dict, config_data: dict,
     ):
-        tournament_start = datetime.utcfromtimestamp(int(data["tournament_start"]))
+        tournament_start = datetime.fromtimestamp(
+            int(data["tournament_start"][0]),
+            tz=timezone(timedelta(seconds=data["tournament_start"][1])),
+        )
         participants = data["participants"]
         matches = data["matches"]
         streamers = data["streamers"]
@@ -955,7 +966,10 @@ class Tournament:
             "id": self.id,
             "limit": self.limit,
             "status": self.status,
-            "tournament_start": int(self.tournament_start.timestamp()),
+            "tournament_start": (
+                int(self.tournament_start.timestamp()),
+                self.tournament_start.utcoffset().total_seconds(),
+            ),
             "bot_prefix": self.bot_prefix,
             "participants": [x.to_dict() for x in self.participants],
             "matches": [x.to_dict() for x in self.matches],
@@ -976,33 +990,6 @@ class Tournament:
         await self.data.guild(self.guild).tournament.set(data)
 
     @property
-    def next_scheduled_event(self):
-        """
-        Returns the next scheduled event (register/checkin/None) with the corresponding timedelta
-        """
-        now = datetime.utcnow()
-        events = {
-            "register_start": self.register_start,
-            "register_second_start": self.register_second_start,
-            "register_stop": self.register_stop,
-            "checkin_start": self.checkin_start,
-            "checkin_stop": self.checkin_stop,
-        }
-        for name, date in events.items():
-            if date is None:
-                continue
-            if name in self.ignored_events:
-                events[name] = None
-                continue
-            delta = date - now
-            if delta.total_seconds() <= 0:
-                events[name] = None
-            else:
-                events[name] = delta
-        events = dict(filter(lambda x: x[1] is not None, events.items()))
-        return min(events.items(), key=lambda x: x[1], default=None)
-
-    @property
     def allowed_roles(self):
         allowed_roles = []
         if self.to_role is not None:
@@ -1020,6 +1007,62 @@ class Tournament:
         if only_time:
             return time
         return _("{date} at {time}").format(date=_date, time=time)
+
+    def next_scheduled_event(self) -> Tuple[str, timedelta]:
+        """
+        Returns the next scheduled event (register/checkin/None) with the corresponding timedelta
+        """
+        now = datetime.now(self.tz)
+        events = {
+            "register_start": (self.register_start, self.register_phase == "pending"),
+            "register_second_start": (self.register_second_start, self.register_phase == "onhold"),
+            "register_stop": (self.register_stop, self.register_phase == "ongoing"),
+            "checkin_start": (self.checkin_start, self.checkin_phase == "pending"),
+            "checkin_stop": (self.checkin_stop, self.checkin_phase == "ongoing"),
+        }
+        for name, (date, condition) in events.items():
+            if date is None:
+                continue
+            if name in self.ignored_events:
+                events[name] = None
+                continue
+            delta = date - now
+            if condition is True:
+                events[name] = delta
+            else:
+                events[name] = None
+        events = dict(filter(lambda x: x[1] is not None, events.items()))
+        return min(events.items(), key=lambda x: x[1], default=None)
+
+    def _valid_dates(self):
+        now = datetime.now(self.tz)
+        if now > self.tournament_start:
+            raise RuntimeError(
+                _("The tournament's date has already passed."),
+                [(_("Start date"), self.tournament_start)],
+            )
+        dates = [
+            (_("Registration start"), self.register_start),
+            (_("Registration second start"), self.register_second_start),
+            (_("Registration stop"), self.register_stop),
+            (_("Check-in start"), self.checkin_start),
+            (_("Check-in stop"), self.checkin_stop),
+        ]
+        passed = {x: y for x, y in dates if y and now > y}
+        if passed:
+            raise RuntimeError(_("Some dates are passed."), dates)
+        if not self.register_start < self.register_stop:
+            dates = [dates[0] + dates[2]]
+            raise RuntimeError(_("Registration start and stop times conflict."), dates)
+        if (
+            self.register_second_start
+            and not self.register_start < self.register_second_start < self.register_stop
+        ):
+            dates = dates[:3]
+            raise RuntimeError(_("Second registration start time conflict."), dates)
+        if not self.checkin_start < self.checkin_stop:
+            dates = dates[3:]
+            raise RuntimeError(_("Check-in start and stop times conflict."), dates)
 
     async def _get_available_category(self, dest: str):
         position = self.category.position + 1 if self.category else len(self.guild.categories)
@@ -1299,17 +1342,19 @@ class Tournament:
         await self.save()
 
     async def end_registration(self, background=False):
-        if self.register_second_start and self.register_second_start > datetime.utcnow():
+        if self.register_second_start and self.register_second_start > datetime.now(self.tz):
             self.register_phase = "onhold"
         else:
             self.register_phase = "done"
-            if not self.next_scheduled_event:
+            if not self.next_scheduled_event():
                 # no more scheduled events, upload and wait for start
                 self.phase = "awaiting"
                 if background:
                     await self._background_seed_and_upload()
         if self.register_channel:
-            self.register_message = None
+            if self.register_message:
+                await self.register_message.edit(content=self._prepare_register_message())
+                self.register_message = None
             await self.register_channel.set_permissions(self.game_role, send_messages=False)
             await self.register_channel.send(_("Registration ended."))
         elif self.announcements_channel:  # no registration channel, so we announce somewhere else
@@ -1400,7 +1445,7 @@ class Tournament:
                             "for checking-in to the tournament **{tournament}**."
                         ).format(
                             time=round(
-                                (self.checkin_stop - datetime.utcnow()).total_seconds() // 60
+                                (self.checkin_stop - datetime.now(self.tz)).total_seconds() // 60
                             ),
                             tournament=self.name,
                         )
@@ -1417,7 +1462,7 @@ class Tournament:
                 await self._background_seed_and_upload()
         to_remove = []
         failed = []
-        for i, member in filter(lambda x: x[1].checked_in is False, enumerate(self.participants)):
+        for member in filter(lambda x: x.checked_in is False, self.participants):
             try:
                 await member.remove_roles(
                     self.participant_role, reason=_("Participant not checked.")
@@ -1438,11 +1483,11 @@ class Tournament:
                 )
             except discord.HTTPException:
                 pass
-            to_remove.append(i)
-        for i in to_remove:
-            del self.participants[i]
+            to_remove.append(member)
+        for member in to_remove:
+            self.participants.remove(member)
         text = _(":information_source: Check-in was ended. {removed}").format(
-            removed=_("{} participants didn't check and were unregistered.").format(to_remove)
+            removed=_("{} participants didn't check and were unregistered.").format(len(to_remove))
             if to_remove
             else _("No participant was unregistered.")
         )
@@ -1470,6 +1515,8 @@ class Tournament:
             participant.checked_in = True
         self.participants.append(participant)
         log.debug(f"[Guild {self.guild.id}] Player {member} registered.")
+        if self.autostop_register and len(self.participants) >= self.limit:
+            await self.end_registration()
         await self.save()
 
     async def unregister_participant(self, member: discord.Member):
@@ -1688,7 +1735,9 @@ class Tournament:
                     log.debug(f"Checking inactivity for match {match.set}")
                     await match.check_inactive()
             elif match.status == "finished":
-                if match.channel and (match.end_time + timedelta(minutes=5)) < datetime.utcnow():
+                if match.channel and (match.end_time + timedelta(minutes=5)) < datetime.now(
+                    self.tz
+                ):
                     log.debug(f"Checking deletion for match {match.set}")
                     await match.channel.delete(reason=_("5 minutes passed after set end."))
                     del self.matches[i]
@@ -1704,7 +1753,7 @@ class Tournament:
             elif match.warned is None:
                 if match.duration > timedelta(minutes=max_length[0]):
                     await match.warn_length()
-            elif datetime.utcnow() > match.warned + timedelta(minutes=max_length[1]):
+            elif datetime.now(self.tz) > match.warned + timedelta(minutes=max_length[1]):
                 await match.warn_to_length()
 
     @tasks.loop(seconds=15)
@@ -1767,17 +1816,29 @@ class Tournament:
     # debug util
     def _debug_dump(self):
         file = open(cog_data_path(raw_name="Tournaments") / "debug.txt", "w+")
-        content = ""
+        s = self
+        content = (
+            f"----- TOURNAMENT {s.name} -----\n"
+            f"url={s.url} id={s.id} status={s.status} phase={s.phase}\n"
+            f"tstart={s.tournament_start}\nrstart={s.register_start} "
+            f"rsecstart={s.register_second_start} rstop={s.register_stop}\n"
+            f"cstart={s.checkin_start} cstop={s.checkin_stop}\n"
+            f"next_event={s.next_scheduled_event()} ignored={s.ignored_events}\n"
+            f"rphase={s.register_phase} participantslen={len(s.participants)}\n"
+            f"cphase={s.register_phase} "
+            f"checkedlen={len([x for x in s.participants if x.checked_in])}"
+        )
+        content += "\n\n\n"
         m: Match
         for i, m in enumerate(self.matches):
             if m.start_time and m.checked_dq is False:
                 time_until_dq_check = (
                     m.start_time + timedelta(minutes=self.delay)
-                ) - datetime.utcnow()
+                ) - datetime.now(self.tz)
             else:
                 time_until_dq_check = None
             if m.end_time:
-                time_until_delete = (m.end_time + timedelta(minutes=5)) - datetime.utcnow()
+                time_until_delete = (m.end_time + timedelta(minutes=5)) - datetime.now(self.tz)
             else:
                 time_until_delete = None
             content += (
@@ -1810,7 +1871,7 @@ class Tournament:
                 f"----- PARTICIPANT {i} -----\n"
                 f"name={p} id={p.id} player_id={p.player_id}\n"
                 f"match_set={p.match.set if p.match else None} match_id="
-                f"{p.match.id if p.match else None} spoke={p.spoke}\n\n"
+                f"{p.match.id if p.match else None} spoke={p.spoke} check={p.checked_in}\n\n"
             )
         file.write(content)
         file.close()

@@ -59,7 +59,7 @@ class Games(MixinMeta):
             elif match.player2.id == message.author.id and match.player2.spoke is False:
                 self.tournaments[guild.id].matches[i].player2.spoke = True
         elif match.status == "finished":
-            match.end_time = datetime.utcnow()
+            match.end_time = datetime.now(tournament.tz)
 
     @credentials_check
     @mod_or_to()
@@ -324,7 +324,7 @@ class Games(MixinMeta):
                     "If you continue, the participants registered will be lost. Then you will be "
                     "able to configure a new tournament with `{prefix}setup`.\n"
                     "**The participants __cannot__ be recovered!** Do you want to continue?"
-                ),
+                ).format(prefix=ctx.clean_prefix),
             )
             if result is False:
                 return
@@ -423,7 +423,7 @@ class Games(MixinMeta):
                 )
             )
             return
-        if (player.match.start_time + timedelta(minutes=5)) > datetime.utcnow():
+        if (player.match.start_time + timedelta(minutes=5)) > datetime.now(tournament.tz):
             await ctx.send(
                 _(
                     "You need to wait for 5 minutes at least after the beginning of your "
@@ -578,7 +578,7 @@ class Games(MixinMeta):
         for match in sorted(
             filter(lambda x: x.status == "ongoing", tournament.matches), key=lambda x: x.start_time
         ):
-            duration = datetime.utcnow() - match.start_time
+            duration = datetime.now(tournament.tz) - match.start_time
             text += _("Set {set} ({time}): {player1} vs {player2}\n").format(
                 set=match.channel.mention
                 if match.channel

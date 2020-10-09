@@ -111,8 +111,8 @@ class Tournaments(
         self.data.register_custom("GAME", **self.default_game_settings)
 
         # see registration.py
-        self.update_message_loop.start()
-        self.update_message_task_errors = 0
+        self.registration_loop.start()
+        self.registration_loop_task_errors = 0
 
     __version__ = "indev"
     __author__ = ["retke (El Laggron)", "Wonderfall"]
@@ -203,7 +203,7 @@ class Tournaments(
         for tournament in self.tournaments.values():
             cancel(tournament.loop_task)
             cancel(tournament.debug_task)
-        self.update_message_loop.stop()
+        self.registration_loop.stop()
 
         # remove ranking data
         shutil.rmtree(cog_data_path(self) / "ranking", ignore_errors=True)
