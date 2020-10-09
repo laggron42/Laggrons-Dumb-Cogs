@@ -129,6 +129,91 @@ class Registration(MixinMeta):
 
     @only_phase("pending", "register", "awaiting")
     @mod_or_to()
+    @commands.command()
+    async def add(self, ctx: commands.Context, *members: discord.Member):
+        """
+        Register members manually.
+
+        You can provide multiple mentions, IDs, or full names (enclosed in quotation marks if \
+there are spaces).
+        Members already registered are ignored.
+        """
+        guild = ctx.guild
+        if not members:
+            await ctx.send_help()
+            return
+        tournament = self.tournaments[guild.id]
+        members = [x for x in members if x not in tournament.participants]
+        if not members:
+            await ctx.send(_("The members you provided are already registered."))
+            return
+        total = len(tournament.participants) + len(members)
+        if tournament.limit and total > tournament.limit:
+            await ctx.send(
+                _(
+                    "You want to register {register} members, but you're exceeding "
+                    "the limit of participants ({total}/{limit})."
+                ).format(register=len(members), total=total, limit=tournament.limit)
+            )
+            return
+        failed = 0
+        async with ctx.typing():
+            for member in members:
+                try:
+                    await tournament.register_participant(member)
+                except discord.HTTPException:
+                    if len(members) == 1:
+                        raise  # single members should raise exceptions
+                    failed += 1
+        await ctx.send(
+            _("Successfully registered {register} participants.{check}{failed}").format(
+                register=len(members) - failed,
+                check=_(" They are pre-checked.") if tournament.checkin_phase != "pending" else "",
+                failed=_("\n{failed} members couldn't be registered.").format(failed=failed)
+                if failed
+                else "",
+            )
+        )
+
+    @only_phase()
+    @mod_or_to()
+    @commands.command(aliases=["rm"])
+    async def remove(self, ctx: commands.Context, *members: discord.Member):
+        """
+        Unregister members manually.
+
+        You can provide multiple mentions, IDs, or full names (enclosed in quotation marks if \
+there are spaces).
+        """
+        guild = ctx.guild
+        if not members:
+            await ctx.send_help()
+            return
+        tournament = self.tournaments[guild.id]
+        members = [x for x in members if x in tournament.participants]
+        if not members:
+            await ctx.send(_("The members you provided aren't registered."))
+            return
+        failed = 0
+        async with ctx.typing():
+            for member in members:
+                try:
+                    await tournament.unregister_participant(member)
+                except discord.HTTPException:
+                    if len(members) == 1:
+                        raise  # single members should raise exceptions
+                    failed += 1
+        await ctx.send(
+            _("Successfully unregistered {register} participants.{failed}").format(
+                register=len(members) - failed,
+                failed=_("\n{failed} members couldn't be unregistered.").format(failed=failed)
+                if failed
+                else "",
+            )
+        )
+
+    @only_phase("pending", "register", "awaiting")
+    @mod_or_to()
     @commands.group()
     async def register(self, ctx: commands.Context):
         """
