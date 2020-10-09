@@ -1545,8 +1545,6 @@ class Tournament:
     # seeding stuff
     # 95% of this code is made by Wonderfall, from ATOS bot (original)
     # https://github.com/Wonderfall/ATOS/blob/master/utils/seeding.py
-    # the original seeding method was made by x and converted to Python by Wonderfall
-    # TODO: forgot his name
     async def _fetch_braacket_ranking_info(self):
         league_name, league_id = self.ranking["league_name"], self.ranking["league_id"]
         headers = {
