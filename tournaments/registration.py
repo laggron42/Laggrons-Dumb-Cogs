@@ -81,7 +81,7 @@ class Registration(MixinMeta):
         if participant is not None:
             # participant checkin-in
             if participant.checked_in:
-                await ctx.send(_("You are alreadu checked in."))
+                await ctx.send(_("You are already checked in."))
                 return
             if tournament.checkin_channel and ctx.channel.id != tournament.checkin_channel.id:
                 await ctx.send(_("You cannot check in this channel."))
