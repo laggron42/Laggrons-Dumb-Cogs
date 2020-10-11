@@ -177,9 +177,15 @@ class Match:
             match.status = data["status"]
             match.checked_dq = data["checked_dq"]
             match.start_time = (
-                datetime.fromtimestamp(data["start_time"]) if data["start_time"] else None
+                datetime.fromtimestamp(data["start_time"], tz=tournament.tz)
+                if data["start_time"]
+                else None
             )
-            match.end_time = datetime.fromtimestamp(data["end_time"]) if data["end_time"] else None
+            match.end_time = (
+                datetime.fromtimestamp(data["end_time"], tz=tournament.tz)
+                if data["end_time"]
+                else None
+            )
         return match
 
     def to_dict(self) -> dict:
