@@ -486,7 +486,12 @@ class Match:
             )
             await self.player1.destroy()
             await self.player2.destroy()
-            await self.channel.delete()
+            try:
+                await self.channel.delete()
+            except discord.HTTPException as e:
+                log.warn(
+                    f"[Guild {self.guild.id}] Can't delete set channel #{self.set}.", exc_info=e
+                )
             await self.tournament.to_channel.send(
                 _(
                     ":information_source: **Automatic DQ** of {player1} and {player2} for "
@@ -609,12 +614,17 @@ class Match:
             except discord.HTTPException:
                 pass
         if self.channel is not None:
-            await self.channel.delete(
-                reason=_(
-                    "Remote returned a different match list, or the bracket was reset. I am "
-                    "therefore clearing the outdated matches. Check the bracket for details."
+            try:
+                await self.channel.delete(
+                    reason=_(
+                        "Remote returned a different match list, or the bracket was reset. I am "
+                        "therefore clearing the outdated matches. Check the bracket for details."
+                    )
                 )
-            )
+            except discord.HTTPException as e:
+                log.warn(
+                    f"[Guild {self.guild.id}] Can't delete set channel #{self.set}.", exc_info=e
+                )
 
     async def disqualify(self, player: Union[Participant, int]):
         """
@@ -924,7 +934,13 @@ class Tournament:
                 if match.channel:
                     await tournament.destroy_player(data["player1"])
                     await tournament.destroy_player(data["player2"])
-                    await match.channel.delete()
+                    try:
+                        await match.channel.delete()
+                    except discord.HTTPException as e:
+                        log.warn(
+                            f"[Guild {guild.id}] Can't delete set channel #{match.set}.",
+                            exc_info=e,
+                        )
                     await tournament.to_channel.send(
                         _(":information_source: Set {match} cancelled, both players left.").format(
                             set=match.set
@@ -1762,7 +1778,13 @@ class Tournament:
                     self.tz
                 ):
                     log.debug(f"Checking deletion for match {match.set}")
-                    await match.channel.delete(reason=_("5 minutes passed after set end."))
+                    try:
+                        await match.channel.delete(reason=_("5 minutes passed after set end."))
+                    except discord.HTTPException as e:
+                        log.warn(
+                            f"[Guild {self.guild.id}] Can't delete set channel #{match.set}.",
+                            exc_info=e,
+                        )
                     del self.matches[i]
 
     async def check_for_too_long_matches(self):
