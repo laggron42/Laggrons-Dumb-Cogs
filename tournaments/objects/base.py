@@ -93,6 +93,7 @@ class Participant(discord.Member):
                 name=self.tournament.name
             )
         )
+        await self.tournament.save()
 
     @property
     def player_id(self):
