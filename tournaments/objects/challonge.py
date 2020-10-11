@@ -234,9 +234,10 @@ class ChallongeTournament(Tournament):
                     loser_score = int(loser_score)
                 except ValueError:
                     winner_score, loser_score = 0, -1
+                else:
+                    if winner_score < loser_score:
+                        winner_score, loser_score = loser_score, winner_score
                 winner = discord.utils.get(self.participants, player_id=match["winner_id"])
-                # Challonge always give the winner score first
-                # need to know the actual player1/2 score, and swap if needed
                 if winner == cached.player1:
                     await cached.end(winner_score, loser_score, upload=False)
                 else:
