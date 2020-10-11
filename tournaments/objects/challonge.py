@@ -230,6 +230,8 @@ class ChallongeTournament(Tournament):
                 # score was set manually
                 try:
                     winner_score, loser_score = match["scores_csv"].split("-")
+                    winner_score = int(winner_score)
+                    loser_score = int(loser_score)
                 except ValueError:
                     winner_score, loser_score = 0, -1
                 winner = discord.utils.get(self.participants, player_id=match["winner_id"])
