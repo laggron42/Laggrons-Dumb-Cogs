@@ -32,15 +32,6 @@ class ChallongeParticipant(Participant):
         await async_http_retry(achallonge.participants.destroy(self.tournament.id, self.player_id))
         log.debug(f"Destroyed player {self.player_id} (tournament {self.tournament.id})")
 
-    async def send(self, content):
-        # THIS IS USED FOR TESTING AND SHOULD BE REMOVED
-        log.info(f"DM {str(self)}: {content}")
-
-    @property
-    def mention(self):
-        # THIS IS USED FOR TESTING AND SHOULD BE REMOVED
-        return str(self)
-
 
 class ChallongeMatch(Match):
     @classmethod

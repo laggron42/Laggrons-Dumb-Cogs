@@ -219,7 +219,7 @@ there are spaces).
         """
         Manually start and stop the registrations for the tournament.
 
-        Automated start and stop can be setup with `[p]tset registration`.
+        Automated start and stop can be setup with `[p]tset register`.
         """
         pass
 
@@ -311,7 +311,7 @@ there are spaces).
         """
         Manually start and stop the check-in for the tournament.
 
-        Automated start and stop can be setup with `[p]tset registration`.
+        Automated start and stop can be setup with `[p]tset checkin`.
         """
         pass
 

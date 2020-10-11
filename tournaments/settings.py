@@ -393,9 +393,8 @@ enter a command to register or unregister.
 
         Give the complete name of the role, or its ID.
 
-        The T.O. role is optional if your T.O. are also moderators of this server. Otherwise, \
-you should rather use the Red permissions system with `[p]set addadminrole` and \
-`[p]set addmodrole`.
+        The T.O. role is optional if your T.O. are also moderators of this server, configured \
+with the `[p]set addadminrole` and `[p]set addmodrole` commands.
         """
         pass
 
