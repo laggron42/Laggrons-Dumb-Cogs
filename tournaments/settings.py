@@ -1296,7 +1296,7 @@ the start of the tournament, then closing 15 minutes before.
             )
             try:
                 name, time = t.next_scheduled_event()
-            except ValueError:
+            except TypeError:
                 embed.add_field(
                     name=_("Next scheduled event"), value=_("None"), inline=True,
                 )
