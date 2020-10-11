@@ -1294,19 +1294,25 @@ the start of the tournament, then closing 15 minutes before.
                 value=f"{len(t.participants)}{limit}",
                 inline=True,
             )
-            name, time = t.next_scheduled_event()
-            name = {
-                "register_start": _("Registration start"),
-                "register_second_start": _("Second registration start"),
-                "register_stop": _("Registration ending"),
-                "checkin_start": _("Check-in start"),
-                "checkin_stop": _("Check-in stop"),
-            }.get(name)
-            embed.add_field(
-                name=_("Next scheduled event"),
-                value=f"{name}\n{str(time).split('.')[0]}",
-                inline=True,
-            )
+            try:
+                name, time = t.next_scheduled_event()
+            except ValueError:
+                embed.add_field(
+                    name=_("Next scheduled event"), value=_("None"), inline=True,
+                )
+            else:
+                name = {
+                    "register_start": _("Registration start"),
+                    "register_second_start": _("Second registration start"),
+                    "register_stop": _("Registration ending"),
+                    "checkin_start": _("Check-in start"),
+                    "checkin_stop": _("Check-in stop"),
+                }.get(name)
+                embed.add_field(
+                    name=_("Next scheduled event"),
+                    value=f"{name}\n{str(time).split('.')[0]}",
+                    inline=True,
+                )
             status = {
                 "manual": _("Manual"),
                 "pending": _("Pending"),
