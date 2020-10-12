@@ -126,7 +126,7 @@ class Games(MixinMeta):
             (_("Launch sets"), launch_sets),
         ]
         if need_upload:
-            tasks.insert(0, (_("Seed and upload"), seed_and_upload()))
+            tasks.insert(0, (_("Seed and upload"), seed_and_upload))
         message: discord.Message = None
         embed = discord.Embed(title=_("Starting the tournament..."))
         embed.description = _("Game: {game}\n" "URL: {url}").format(
