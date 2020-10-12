@@ -1288,10 +1288,16 @@ the start of the tournament, then closing 15 minutes before.
                 )
         else:
             limit = f"/{t.limit}" if t.limit else _(" *(no limit)*")
+            checked = len([x for x in t.participants if x.checked_in])
+            checkin = (
+                _("\n{checked}/{total} checked").format(checked=checked, total=len(t.participants))
+                if 0 < checked < len(t.participants)
+                else ""
+            )
             embed.add_field(name=_("Start time"), value=get_time(t.tournament_start), inline=True)
             embed.add_field(
                 name=_("Participants registered"),
-                value=f"{len(t.participants)}{limit}",
+                value=f"{len(t.participants)}{limit}{checkin}",
                 inline=True,
             )
             try:
