@@ -1818,6 +1818,18 @@ class Tournament:
         if self.task_errors >= MAX_ERRORS:
             log.critical(f"[Guild {self.guild.id}] Reached 5 errors, closing the task...")
             self.stop_loop_task()
+            try:
+                await self.to_channel.send(
+                    _(
+                        ":warning: **Attention**\nMultiple bugs occured within the loop task. "
+                        "It is therefore stopped. The bot will stop refreshing informations "
+                        "and launching matches.\nIf you believe the issue is fixed, resume "
+                        "the tournament with `{prefix}tfix resumetask`, else contact bot "
+                        "administrators."
+                    ).format(prefix=self.bot_prefix)
+                )
+            except Exception as e:
+                log.error(f"[Guild {self.guild.id}] Can't tell TOs of the above bug.", exc_info=e)
         try:
             await self._update_participants_list()
             await self._update_match_list()
@@ -1858,6 +1870,19 @@ class Tournament:
                 f"[Guild {self.guild.id}] Error in loop task. 5th error, cancelling the task",
                 exc_info=exception,
             )
+            self.task_errors = 0
+            try:
+                await self.to_channel.send(
+                    _(
+                        ":warning: **Attention**\nMultiple bugs occured within the loop task. "
+                        "It is therefore stopped. The bot will stop refreshing informations "
+                        "and launching matches.\nIf you believe the issue is fixed, resume "
+                        "the tournament with `{prefix}tfix resumetask`, else contact bot "
+                        "administrators."
+                    ).format(prefix=self.bot_prefix)
+                )
+            except Exception as e:
+                log.error(f"[Guild {self.guild.id}] Can't tell TOs of the above bug.", exc_info=e)
         else:
             log.error(
                 f"[Guild {self.guild.id}] Error in loop task. Resuming...", exc_info=exception

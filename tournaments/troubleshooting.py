@@ -358,6 +358,8 @@ will be disabled for all ongoing matches at the time of the task pause.
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
+        tournament.task_errors = 0
+        failed = False
         try:
             async with ctx.typing():
                 # dpy doesn't allow directly executing the coro, so I looked at the internals
@@ -367,11 +369,14 @@ will be disabled for all ongoing matches at the time of the task pause.
             log.error(
                 f"[Guild {guild.id}] User tried to resume the task, but it failed", exc_info=e
             )
+            failed = True
+        if failed is True or tournament.task_errors > 0:
             await ctx.send(
                 _(
                     "I attempted to run the task once but it failed. The task will not be "
-                    "resumed until the bug is resolved, check your logs or contact a bot admin."
-                )
+                    "resumed until the bug is resolved, check your logs or contact a bot admin.\n"
+                    "You may want to try running `{prefix}tfix reload`."
+                ).format(prefix=ctx.clean_prefix)
             )
         else:
             await asyncio.sleep(2)
