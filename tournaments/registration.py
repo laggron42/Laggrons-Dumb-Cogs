@@ -118,12 +118,11 @@ class Registration(MixinMeta):
         If the tournament has started, use `[p]dq` instead.
         """
         tournament = self.tournaments[ctx.guild.id]
-        i, participant = tournament.find_participant(discord_id=ctx.author.id)
-        if participant is None:
+        try:
+            await tournament.unregister_participant(ctx.member)
+        except KeyError:
             await ctx.send(_("You are not registered for this tournament."))
             return
-        del self.tournaments[ctx.guild.id].participants[i]
-        del participant  # not truely deleted until the last reference is removed
         log.debug(f"[Guild {ctx.guild.id}] Player {ctx.author} unregistered.")
         await ctx.tick()
 

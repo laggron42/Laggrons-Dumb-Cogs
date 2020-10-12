@@ -642,7 +642,7 @@ class Match:
         if self.channel is not None:
             await self.channel.send(
                 _(
-                    "{player} was disqualified from the tournament.\n"
+                    "{player} disqualified from the tournament.\n"
                     "{winner.mention} is winning this set!"
                 ).format(player=player, winner=winner)
             )
@@ -1564,6 +1564,10 @@ class Tournament:
         i, participant = self.find_participant(discord_id=member.id)
         if i is None:
             raise KeyError("Participant not found.")
+        if participant.player_id is not None:
+            await participant.destroy()
+            if participant.match is not None:
+                await participant.match.disqualify(participant)
         await participant.remove_roles(
             self.participant_role, reason=_("Unregistering from tournament.")
         )
