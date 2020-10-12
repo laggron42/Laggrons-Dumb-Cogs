@@ -535,19 +535,24 @@ class Match:
 
     async def warn_length(self):
         target = self.channel or self._dm_players
-        await target.send(
-            _(
-                ":warning: This match is taking a lot of time!\n"
-                "As soon as this is finished, set your score with `{prefix}win`{channel}.\n"
-                "T.O.s will be warned if this match is still ongoing in {time} minutes."
-            ).format(
-                prefix=self.tournament.bot_prefix,
-                channel=_(" in {channel}").format(channel=self.tournament.scores_channel.mention)
-                if self.tournament.scores_channel
-                else "",
-                time=self.tournament.time_until_warn["bo5" if self.is_bo5 else "bo3"][1],
+        try:
+            await target.send(
+                _(
+                    ":warning: This match is taking a lot of time!\n"
+                    "As soon as this is finished, set your score with `{prefix}win`{channel}.\n"
+                    "T.O.s will be warned if this match is still ongoing in {time} minutes."
+                ).format(
+                    prefix=self.tournament.bot_prefix,
+                    channel=_(" in {channel}").format(
+                        channel=self.tournament.scores_channel.mention
+                    )
+                    if self.tournament.scores_channel
+                    else "",
+                    time=self.tournament.time_until_warn["bo5" if self.is_bo5 else "bo3"][1],
+                )
             )
-        )
+        except discord.NotFound:
+            self.channel = None
         self.warned = datetime.now(self.tournament.tz)
 
     async def warn_to_length(self):
