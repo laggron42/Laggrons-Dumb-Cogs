@@ -13,7 +13,7 @@ import csv
 import shutil
 
 from discord.ext import tasks
-from random import choice
+from random import choice, randint, shuffle
 from itertools import islice
 from datetime import datetime, timedelta, timezone
 from babel.dates import format_date, format_time
@@ -1616,15 +1616,20 @@ class Tournament:
                     ranking[row["Player"]] = int(row["Points"])
         # base elo : put at bottom
         base_elo = min(list(ranking.values()))
+        ranked = []
+        not_ranked = []
         # assign elo ranking to each player
         for player in self.participants:
             try:
                 player.elo = ranking[str(player)]
+                ranked.append(player)
             except KeyError:
                 player.elo = base_elo  # base Elo if none found
+                not_ranked.append(player)
         # Sort & clean
-        sorted_participants = sorted(self.participants, key=lambda x: x.elo, reverse=True)
-        self.participants = sorted_participants
+        shuffle(not_ranked)
+        sorted_participants = sorted(ranked, key=lambda x: x.elo, reverse=True)
+        self.participants = sorted_participants + not_ranked
 
     async def seed_participants_and_upload(self, remove_unchecked: bool = False):
         if self.ranking["league_name"] and self.ranking["league_id"]:
