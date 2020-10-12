@@ -1101,13 +1101,10 @@ class Tournament:
             categories = self.winner_categories
         else:
             categories = self.loser_categories
+        position += len(categories)
         try:
             return next(filter(lambda x: len(x.channels) < 50, categories))
         except StopIteration:
-            if categories:
-                position = categories[-1].position + 1
-            else:
-                position += 1
             if dest == "winner":
                 name = "Winner bracket"
             else:
@@ -1115,6 +1112,7 @@ class Tournament:
             channel = await self.guild.create_category(
                 name, reason=_("New category of sets."), position=position
             )
+            await channel.edit(position=position)  # discord won't let me place it on first try
             if dest == "winner":
                 self.winner_categories.append(channel)
             else:
