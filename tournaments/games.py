@@ -642,7 +642,7 @@ class Games(MixinMeta):
                 set=match.channel.mention
                 if match.channel
                 else _("#{set} *in DM*").format(set=match.set),
-                time=duration,
+                time=str(duration).split(".")[0],
                 player1=match.player1.mention,
                 player2=match.player2.mention,
             )
