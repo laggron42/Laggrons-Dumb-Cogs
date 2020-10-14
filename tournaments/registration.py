@@ -119,7 +119,7 @@ class Registration(MixinMeta):
         """
         tournament = self.tournaments[ctx.guild.id]
         try:
-            await tournament.unregister_participant(ctx.member)
+            await tournament.unregister_participant(ctx.author)
         except KeyError:
             await ctx.send(_("You are not registered for this tournament."))
             return
