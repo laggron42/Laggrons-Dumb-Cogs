@@ -862,7 +862,7 @@ class Tournament:
             "winner": {"top8": None, "bo5": None},
             "loser": {"top8": None, "bo5": None},
         }
-        self.debug_task = asyncio.get_event_loop().create_task(self.debug_loop_task())
+        # self.debug_task = asyncio.get_event_loop().create_task(self.debug_loop_task())
 
     def __repr__(self):
         return (
@@ -877,10 +877,10 @@ class Tournament:
     def cancel(self):
         if self.task:
             self.stop_loop_task()
-        try:
-            self.debug_task.cancel()
-        except AttributeError:
-            pass
+        # try:
+        #     self.debug_task.cancel()
+        # except AttributeError:
+        #     pass
         shutil.rmtree(
             cog_data_path(None, raw_name="Tournaments") / "ranking" / str(self.guild.id),
             ignore_errors=True,
@@ -1896,73 +1896,73 @@ class Tournament:
         self.task.cancel()
 
     # debug util
-    def _debug_dump(self):
-        file = open(cog_data_path(raw_name="Tournaments") / "debug.txt", "w+")
-        s = self
-        content = (
-            f"----- TOURNAMENT {s.name} -----\n"
-            f"url={s.url} id={s.id} status={s.status} phase={s.phase}\n"
-            f"tstart={s.tournament_start}\nrstart={s.register_start} "
-            f"rsecstart={s.register_second_start} rstop={s.register_stop}\n"
-            f"cstart={s.checkin_start} cstop={s.checkin_stop}\n"
-            f"next_event={s.next_scheduled_event()} ignored={s.ignored_events}\n"
-            f"rphase={s.register_phase} participantslen={len(s.participants)}\n"
-            f"cphase={s.register_phase} "
-            f"checkedlen={len([x for x in s.participants if x.checked_in])}"
-        )
-        content += "\n\n\n"
-        m: Match
-        for i, m in enumerate(self.matches):
-            if m.start_time and m.checked_dq is False:
-                time_until_dq_check = (
-                    m.start_time + timedelta(minutes=self.delay)
-                ) - datetime.now(self.tz)
-            else:
-                time_until_dq_check = None
-            if m.end_time:
-                time_until_delete = (m.end_time + timedelta(minutes=5)) - datetime.now(self.tz)
-            else:
-                time_until_delete = None
-            content += (
-                f"----- MATCH {i} -----\n"
-                f"status={m.status} round={m.round} set={m.set} id={m.id}\n"
-                f"start_time={m.start_time.strftime('%H:%M:%S') if m.start_time else None} "
-                f"end_time={m.end_time.strftime('%H:%M:%S') if m.end_time else None} "
-                f"underway={m.underway} channel={m.channel.id if m.channel else None}\n"
-                f"checked_dq={m.checked_dq} time_until_dq_check={time_until_dq_check} "
-                f"time_until_delete={time_until_delete}\n"
-                f"player1= name={m.player1} player_id={m.player1.player_id} spoke="
-                f"{m.player1.spoke} discord_id={m.player1.id}\n"
-                f"player1= name={m.player2} player_id={m.player2.player_id} spoke="
-                f"{m.player2.spoke} discord_id={m.player2.id}\n\n"
-            )
-        content += "\n\n\n"
-        s: Streamer
-        for i, s in enumerate(self.streamers):
-            content += (
-                f"----- STREAMER {i} -----\n"
-                f"link={s.link} room_id={s.room_id} room_code={s.room_code}\n"
-                f"member={s.member}\n"
-                f"current_match={s.current_match}\n"
-                f"matches={s.matches}\n\n"
-            )
-        content += "\n\n\n"
-        p: Participant
-        for i, p in enumerate(self.participants):
-            content += (
-                f"----- PARTICIPANT {i} -----\n"
-                f"name={p} id={p.id} player_id={p.player_id}\n"
-                f"match_set={p.match.set if p.match else None} match_id="
-                f"{p.match.id if p.match else None} spoke={p.spoke} check={p.checked_in}\n\n"
-            )
-        file.write(content)
-        file.close()
+    # def _debug_dump(self):
+    #     file = open(cog_data_path(raw_name="Tournaments") / "debug.txt", "w+")
+    #     s = self
+    #     content = (
+    #         f"----- TOURNAMENT {s.name} -----\n"
+    #         f"url={s.url} id={s.id} status={s.status} phase={s.phase}\n"
+    #         f"tstart={s.tournament_start}\nrstart={s.register_start} "
+    #         f"rsecstart={s.register_second_start} rstop={s.register_stop}\n"
+    #         f"cstart={s.checkin_start} cstop={s.checkin_stop}\n"
+    #         f"next_event={s.next_scheduled_event()} ignored={s.ignored_events}\n"
+    #         f"rphase={s.register_phase} participantslen={len(s.participants)}\n"
+    #         f"cphase={s.register_phase} "
+    #         f"checkedlen={len([x for x in s.participants if x.checked_in])}"
+    #     )
+    #     content += "\n\n\n"
+    #     m: Match
+    #     for i, m in enumerate(self.matches):
+    #         if m.start_time and m.checked_dq is False:
+    #             time_until_dq_check = (
+    #                 m.start_time + timedelta(minutes=self.delay)
+    #             ) - datetime.now(self.tz)
+    #         else:
+    #             time_until_dq_check = None
+    #         if m.end_time:
+    #             time_until_delete = (m.end_time + timedelta(minutes=5)) - datetime.now(self.tz)
+    #         else:
+    #             time_until_delete = None
+    #         content += (
+    #             f"----- MATCH {i} -----\n"
+    #             f"status={m.status} round={m.round} set={m.set} id={m.id}\n"
+    #             f"start_time={m.start_time.strftime('%H:%M:%S') if m.start_time else None} "
+    #             f"end_time={m.end_time.strftime('%H:%M:%S') if m.end_time else None} "
+    #             f"underway={m.underway} channel={m.channel.id if m.channel else None}\n"
+    #             f"checked_dq={m.checked_dq} time_until_dq_check={time_until_dq_check} "
+    #             f"time_until_delete={time_until_delete}\n"
+    #             f"player1= name={m.player1} player_id={m.player1.player_id} spoke="
+    #             f"{m.player1.spoke} discord_id={m.player1.id}\n"
+    #             f"player1= name={m.player2} player_id={m.player2.player_id} spoke="
+    #             f"{m.player2.spoke} discord_id={m.player2.id}\n\n"
+    #         )
+    #     content += "\n\n\n"
+    #     s: Streamer
+    #     for i, s in enumerate(self.streamers):
+    #         content += (
+    #             f"----- STREAMER {i} -----\n"
+    #             f"link={s.link} room_id={s.room_id} room_code={s.room_code}\n"
+    #             f"member={s.member}\n"
+    #             f"current_match={s.current_match}\n"
+    #             f"matches={s.matches}\n\n"
+    #         )
+    #     content += "\n\n\n"
+    #     p: Participant
+    #     for i, p in enumerate(self.participants):
+    #         content += (
+    #             f"----- PARTICIPANT {i} -----\n"
+    #             f"name={p} id={p.id} player_id={p.player_id}\n"
+    #             f"match_set={p.match.set if p.match else None} match_id="
+    #             f"{p.match.id if p.match else None} spoke={p.spoke} check={p.checked_in}\n\n"
+    #         )
+    #     file.write(content)
+    #     file.close()
 
-    async def debug_loop_task(self):
+    # async def debug_loop_task(self):
 
-        while True:
-            self._debug_dump()
-            await asyncio.sleep(1)
+    #     while True:
+    #         self._debug_dump()
+    #         await asyncio.sleep(1)
 
     # abstract methods that will have to be overwritten by the class that inherits from this
     # represents the API calls done to the remote bracket

@@ -202,7 +202,7 @@ class Tournaments(
         tournament: Tournament
         for tournament in self.tournaments.values():
             cancel(tournament.loop_task)
-            cancel(tournament.debug_task)
+            # cancel(tournament.debug_task)
         self.registration_loop.stop()
 
         # remove ranking data
