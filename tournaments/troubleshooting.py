@@ -16,7 +16,7 @@ _ = Translator("Tournaments", __file__)
 @cog_i18n(_)
 class Troubleshooting(MixinMeta):
     @mod_or_to()
-    @commands.group(aliases=["tfix"])
+    @commands.group(name="tfix", aliases=["tournamentfix"])
     @commands.guild_only()
     async def tournamentfix(self, ctx: commands.Context):
         """

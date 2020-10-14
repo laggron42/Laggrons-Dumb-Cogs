@@ -103,7 +103,7 @@ class Settings(MixinMeta):
             )
         text += _(
             "Please configure the missing settings with the "
-            "`{prefix}tournamentset channels` and `{prefix}tournamentset roles` commands."
+            "`{prefix}tset channels` and `{prefix}tset roles` commands."
         ).format(prefix=ctx.clean_prefix)
         return text
 
@@ -185,7 +185,7 @@ it directly.
         await self.data.guild(guild).credentials.username.set(username)
         await ctx.send(_("The username was successfully set."))
 
-    @commands.group(aliases=["tset"])
+    @commands.group(name="tset", aliases=["tournamentset"])
     @commands.guild_only()
     @checks.admin_or_permissions(administrator=True)
     async def tournamentset(self, ctx: commands.Context):
@@ -657,7 +657,7 @@ other commands.
             await ctx.send(
                 _(
                     "This text is too long (>256 characters). "
-                    "Type `{prefix}help tournamentset games baninfo` for details."
+                    "Type `{prefix}help tset games baninfo` for details."
                 ).format(prefix=ctx.clean_prefix)
             )
             return
@@ -774,6 +774,7 @@ other commands.
 then the delay until warning the T.O.s about this match, both in minutes.
         The second delay is in addition to the first one.
         You also have to set the mode, either "bo3" or "bo5". Defaults to "bo3" if not set.
+        Put 0 to one of the values (or both) to disable that warn.
 
         Examples:
         `[p]tset warntime 30 10`: will warn the players 30 minutes after the start of their \
@@ -948,15 +949,16 @@ the start of the tournament, then closing 15 minutes before.
         data = await self.data.guild(guild).all()
 
         def get_warn_time(mode):
-            return _(
-                "__{mode}__\n"
-                "First warn: after {first} minutes\n"
-                "T.O. warn: {second} minutes after first warn"
-            ).format(
-                mode=mode.upper(),
-                first=data["time_until_warn"][mode][0],
-                second=data["time_until_warn"][mode][1],
-            )
+            _data = data["time_until_warn"][mode]
+            text = "__{mode}__\n".format(mode=mode.upper())
+            if not _data[0]:
+                return text + _("Disabled")
+            text += _("First warn: after {} minutes\n").format(_data[0])
+            if _data[1]:
+                text += _("T.O. warn: {} minutes after first warn").format(_data[1])
+            else:
+                text += _("T.O. warn: disabled")
+            return text
 
         no_games = len(await self.data.custom("GAME", guild.id).all())
         if data["credentials"]["api"]:
@@ -1040,7 +1042,7 @@ the start of the tournament, then closing 15 minutes before.
             "Challonge credentials : {challonge}\n"
             "Number of configured games : {games}\n"
             "Delay before DQ : {delay} minutes\n"
-            "Begin of BO5 : {bo5} *(use `{prefix}help tournamentset delay`)*"
+            "Begin of BO5 : {bo5} *(see `{prefix}help tset startbo5`)*"
         ).format(
             challonge=challonge,
             games=no_games,
@@ -1068,10 +1070,12 @@ the start of the tournament, then closing 15 minutes before.
                 opening=checkin_start, closing=checkin_end
             ),
         )
+        if any(x[0] for x in data["time_until_warn"].values()):
+            warn_time = get_warn_time("bo3") + "\n\n" + get_warn_time("bo5")
+        else:
+            warn_time = _("Fully disabled.")
         embed.add_field(
-            name=_("Warn long matches"),
-            value=get_warn_time("bo3") + "\n\n" + get_warn_time("bo5"),
-            inline=False,
+            name=_("Warn long matches"), value=warn_time, inline=False,
         )
         embeds.append(embed)
         embed = discord.Embed(title=_("Settings"))
@@ -1226,7 +1230,7 @@ the start of the tournament, then closing 15 minutes before.
         await ctx.send(_("The tournament is now set!"))
 
     @mod_or_to()
-    @commands.command(aliases=["tinfo"])
+    @commands.command(name="tinfo", aliases=["tournamentinfo"])
     @commands.guild_only()
     async def tournamentinfo(self, ctx: commands.Context):
         """

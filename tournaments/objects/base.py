@@ -1,5 +1,6 @@
 from __future__ import annotations
 from copy import copy
+import re
 
 import discord
 import logging
@@ -535,22 +536,22 @@ class Match:
 
     async def warn_length(self):
         target = self.channel or self._dm_players
+        message = _(
+            ":warning: This match is taking a lot of time!\n"
+            "As soon as this is finished, set your score with `{prefix}win`{channel}."
+        ).format(
+            prefix=self.tournament.bot_prefix,
+            channel=_(" in {channel}").format(channel=self.tournament.scores_channel.mention)
+            if self.tournament.scores_channel
+            else "",
+        )
+        time = self.tournament.time_until_warn["bo5" if self.is_bo5 else "bo3"][1]
+        if time:
+            message += _(
+                "\nT.O.s will be warned if this match is still ongoing in {time} minutes."
+            ).format(time=time)
         try:
-            await target.send(
-                _(
-                    ":warning: This match is taking a lot of time!\n"
-                    "As soon as this is finished, set your score with `{prefix}win`{channel}.\n"
-                    "T.O.s will be warned if this match is still ongoing in {time} minutes."
-                ).format(
-                    prefix=self.tournament.bot_prefix,
-                    channel=_(" in {channel}").format(
-                        channel=self.tournament.scores_channel.mention
-                    )
-                    if self.tournament.scores_channel
-                    else "",
-                    time=self.tournament.time_until_warn["bo5" if self.is_bo5 else "bo3"][1],
-                )
-            )
+            await target.send(message)
         except discord.NotFound:
             self.channel = None
         self.warned = datetime.now(self.tournament.tz)
@@ -1806,18 +1807,21 @@ class Tournament:
         ):
             max_length = self.time_until_warn["bo5" if match.is_bo5 else "bo3"]
             if match.warned is True:
-                pass
-            elif match.warned is None:
+                continue
+            if not max_length[0]:
+                continue
+            if match.warned is None:
                 if match.duration > timedelta(minutes=max_length[0]):
                     await match.warn_length()
-            elif datetime.now(self.tz) > match.warned + timedelta(minutes=max_length[1]):
+            elif max_length[1] and datetime.now(self.tz) > match.warned + timedelta(
+                minutes=max_length[1]
+            ):
                 await match.warn_to_length()
 
     @tasks.loop(seconds=15)
     async def loop_task(self):
         if self.task_errors >= MAX_ERRORS:
             log.critical(f"[Guild {self.guild.id}] Reached 5 errors, closing the task...")
-            self.stop_loop_task()
             try:
                 await self.to_channel.send(
                     _(
@@ -1830,6 +1834,9 @@ class Tournament:
                 )
             except Exception as e:
                 log.error(f"[Guild {self.guild.id}] Can't tell TOs of the above bug.", exc_info=e)
+            finally:
+                self.stop_loop_task()
+            return  # shouldn't be reached but to make sure
         try:
             await self._update_participants_list()
             await self._update_match_list()
