@@ -114,7 +114,7 @@ class Tournaments(
         self.registration_loop.start()
         self.registration_loop_task_errors = 0
 
-    __version__ = "1.0.0b3"
+    __version__ = "1.0.0b4"
     __author__ = ["retke (El Laggron)", "Wonderfall", "Xyleff"]
 
     @commands.command(hidden=True)
@@ -144,7 +144,6 @@ class Tournaments(
                 raise RuntimeError(
                     _("The challonge credentials were lost. Can't resume tournament.")
                 )
-            achallonge.set_credentials(data["credentials"]["username"], data["credentials"]["api"])
             data.update(game_data)
             tournament = await ChallongeTournament.from_saved_data(
                 guild, self.data, self.__version__, data["tournament"], data

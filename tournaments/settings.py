@@ -6,6 +6,7 @@ import achallonge
 
 from datetime import datetime
 from typing import Optional
+from copy import copy
 
 from redbot.core import commands
 from redbot.core import checks
@@ -1112,11 +1113,13 @@ the start of the tournament, then closing 15 minutes before.
             )
             return
         config_data = await self.data.guild(guild).all()
-        achallonge.set_credentials(
-            config_data["credentials"]["username"], config_data["credentials"]["api"]
-        )
+        credentials = copy(config_data["credentials"])
+        credentials["login"] = credentials.pop("username")
+        credentials["password"] = credentials.pop("api")
         async with ctx.typing():
-            data = await async_http_retry(achallonge.tournaments.show(url))
+            data = await async_http_retry(
+                achallonge.tournaments.show(url, credentials=credentials)
+            )
         if data is None:
             await ctx.send(_("Tournament not found. Check your URL."))
             return

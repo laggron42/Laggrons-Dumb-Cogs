@@ -789,6 +789,10 @@ class Tournament:
         self.to_role: discord.Role = guild.get_role(data["roles"].get("to"))
         # self.tester_role: discord.Role = guild.get_role(data["roles"].get("tester"))
         self.tester_role = None
+        self.credentials = data["credentials"]
+        # fitting to achallonge's requirements
+        self.credentials["login"] = self.credentials.pop("username")
+        self.credentials["password"] = self.credentials.pop("api")
         self.delay: int = data["delay"]
         self.time_until_warn = {
             "bo3": data["time_until_warn"].get("bo3", (25, 10)),

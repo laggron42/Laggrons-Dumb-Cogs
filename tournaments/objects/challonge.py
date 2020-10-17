@@ -29,7 +29,9 @@ class ChallongeParticipant(Participant):
         return self._player_id
 
     async def destroy(self):
-        await async_http_retry(achallonge.participants.destroy(self.tournament.id, self.player_id))
+        await self.tournament.request(
+            achallonge.participants.destroy, self.tournament.id, self.player_id
+        )
         log.debug(f"Destroyed player {self.player_id} (tournament {self.tournament.id})")
 
 
@@ -51,13 +53,12 @@ class ChallongeMatch(Match):
                 else:
                     i = 1
                     score = "0--1"
-                await async_http_retry(
-                    achallonge.matches.update(
-                        tournament.id,
-                        data["id"],
-                        scores_csv=score,
-                        winner_id=data[f"player{i}_id"],
-                    )
+                await cls.tournament.request(
+                    achallonge.matches.update,
+                    tournament.id,
+                    data["id"],
+                    scores_csv=score,
+                    winner_id=data[f"player{i}_id"],
                 )
                 log.info(
                     f"[Guild {tournament.guild.id}] Forced Challonge player with ID "
@@ -99,21 +100,27 @@ class ChallongeMatch(Match):
                 winner = self.player1
             else:
                 winner = self.player2
-        await async_http_retry(
-            achallonge.matches.update(
-                self.tournament.id, self.id, scores_csv=score, winner_id=winner.player_id
-            )
+        await self.tournament.request(
+            achallonge.matches.update,
+            self.tournament.id,
+            self.id,
+            scores_csv=score,
+            winner_id=winner.player_id,
         )
         log.debug(f"Set scores of match {self.id} (tournament {self.tournament.id} to {score}")
 
     async def mark_as_underway(self):
-        await async_http_retry(achallonge.matches.mark_as_underway(self.tournament.id, self.id))
+        await self.tournament.request(
+            achallonge.matches.mark_as_underway, self.tournament.id, self.id
+        )
         self.status = "ongoing"
         self.underway = True
         log.debug(f"Marked match {self.id} (tournament {self.tournament.id} as underway")
 
     async def unmark_as_underway(self):
-        await async_http_retry(achallonge.matches.unmark_as_underway(self.tournament.id, self.id))
+        await self.tournament.request(
+            achallonge.matches.unmark_as_underway, self.tournament.id, self.id
+        )
         self.status = "pending"
         self.underway = False
         log.debug(f"Unmarked match {self.id} (tournament {self.tournament.id} as underway")
@@ -153,6 +160,10 @@ class ChallongeTournament(Tournament):
     def from_saved_data(cls, guild, config, cog_version, data, config_data):
         return super().from_saved_data(guild, config, cog_version, data, config_data)
 
+    async def request(self, method, *args, **kwargs):
+        kwargs.update(credentials=self.credentials)
+        return await async_http_retry(method(*args, **kwargs))
+
     async def _get_all_rounds(self):
         return [x["round"] for x in await self.list_matches()]
 
@@ -170,9 +181,7 @@ class ChallongeTournament(Tournament):
                 try:
                     participants.append(self.participant_object.build_from_api(self, participant))
                 except RuntimeError:
-                    await async_http_retry(
-                        achallonge.participants.destroy(self.id, participant["id"])
-                    )
+                    await self.request(achallonge.participants.destroy, self.id, participant["id"])
                     removed.append(participant["name"])
             else:
                 participants.append(cached)
@@ -283,29 +292,29 @@ class ChallongeTournament(Tournament):
 
     async def start(self):
         self.phase = "ongoing"
-        await async_http_retry(achallonge.tournaments.start(self.id))
+        await self.request(achallonge.tournaments.start, self.id)
         log.debug(f"Started Challonge tournament {self.id}")
 
     async def stop(self):
         self.phase = "finished"
-        await async_http_retry(achallonge.tournaments.finalize(self.id))
+        await self.request(achallonge.tournaments.finalize, self.id)
         log.debug(f"Ended Challonge tournament {self.id}")
 
     async def add_participant(self, name: str, seed: int):
-        await async_http_retry(achallonge.participants.create(self.id, name, seed=seed))
+        await self.request(achallonge.participants.create, self.id, name, seed=seed)
         log.debug(f"Added participant {name} (seed {seed}) to Challonge tournament {self.id}")
 
     async def add_participants(self, participants: List[str]):
         if not participants:
             return
         # remove previous participants
-        await async_http_retry(achallonge.participants.clear(self.id))
+        await self.request(achallonge.participants.clear, self.id)
         # make a composite list (to avoid "414 Request-URI Too Large")
         participants = [participants[x : x + (50)] for x in range(0, len(participants), 50)]
         # Send to Challonge and assign IDs
         for chunk_participants in participants:
-            challonge_players = await async_http_retry(
-                achallonge.participants.bulk_add(self.id, chunk_participants)
+            challonge_players = await self.request(
+                achallonge.participants.bulk_add, self.id, chunk_participants
             )
             for player in challonge_players:
                 participant = self.find_participant(discord_name=player["name"])[1]
@@ -319,21 +328,21 @@ class ChallongeTournament(Tournament):
                 participant._player_id = player["id"]
 
     async def destroy_player(self, player_id: str):
-        await async_http_retry(achallonge.participants.destroy(self.id, player_id))
+        await self.request(achallonge.participants.destroy, self.id, player_id)
         log.debug(f"Destroyed player {player_id} (tournament {self.id})")
 
     async def list_participants(self):
-        return await async_http_retry(achallonge.participants.index(self.id))
+        return await self.request(achallonge.participants.index, self.id)
 
     async def list_matches(self):
-        return await async_http_retry(achallonge.matches.index(self.id))
+        return await self.request(achallonge.matches.index, self.id)
 
     async def reset(self):
-        await async_http_retry(achallonge.tournaments.reset(self.id))
+        await self.request(achallonge.tournaments.reset, self.id)
 
     @staticmethod
     async def show(_id):
-        result = await async_http_retry(achallonge.tournaments.show(_id))
+        result = await self.request(achallonge.tournaments.show, _id)
         return {
             "name": result["name"],
             "game": result["game_name"].title(),
