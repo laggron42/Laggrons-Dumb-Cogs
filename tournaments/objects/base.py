@@ -1094,9 +1094,8 @@ class Tournament:
         ):
             dates = [dates[0] + dates[2]]
             raise RuntimeError(_("Registration start and stop times conflict."), dates)
-        if (
-            self.register_second_start
-            and (self.register_start and not self.register_start < self.register_second_start)
+        if self.register_second_start and (
+            (self.register_start and not self.register_start < self.register_second_start)
             or (self.register_stop and not self.register_second_start < self.register_stop)
         ):
             dates = dates[:3]
