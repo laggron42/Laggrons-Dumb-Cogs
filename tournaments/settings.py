@@ -29,6 +29,8 @@ CHALLONGE_URL_RE = re.compile(r"(?:https?://challonge\.com/)(\S{1,2}/)?(?P<id>\S
 class ChallongeURLConverter(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str):
         result = CHALLONGE_URL_RE.match(argument)
+        if result is None:
+            raise commands.BadArgument(_("Invalid Challonge URL."))
         link_id = result.group("id")
         if not link_id:
             raise commands.BadArgument(_("Invalid Challonge URL."))
