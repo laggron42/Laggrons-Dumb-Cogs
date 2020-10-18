@@ -1149,6 +1149,9 @@ the start of the tournament, then closing 15 minutes before.
         config_data.update(
             await self.data.custom("GAME", guild.id, data["game_name"].title()).all()
         )
+        if data["start_at"] is None:
+            await ctx.send(_("You need to define a start date and time on your tournament."))
+            return
         tournament: ChallongeTournament = ChallongeTournament.build_from_api(
             guild=guild,
             config=self.data,
