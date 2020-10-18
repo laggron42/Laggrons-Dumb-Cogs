@@ -1113,7 +1113,7 @@ the start of the tournament, then closing 15 minutes before.
             )
             return
         config_data = await self.data.guild(guild).all()
-        credentials = copy(config_data["credentials"])
+        credentials = await self.data.guild(guild).credentials.all()
         credentials["login"] = credentials.pop("username")
         credentials["password"] = credentials.pop("api")
         async with ctx.typing():
