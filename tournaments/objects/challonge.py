@@ -291,13 +291,13 @@ class ChallongeTournament(Tournament):
             await self.warn_bracket_change(*remote_changes)
 
     async def start(self):
-        self.phase = "ongoing"
         await self.request(achallonge.tournaments.start, self.id)
+        self.phase = "ongoing"
         log.debug(f"Started Challonge tournament {self.id}")
 
     async def stop(self):
-        self.phase = "finished"
         await self.request(achallonge.tournaments.finalize, self.id)
+        self.phase = "finished"
         log.debug(f"Ended Challonge tournament {self.id}")
 
     async def add_participant(self, name: str, seed: int):
