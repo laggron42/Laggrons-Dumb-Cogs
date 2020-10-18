@@ -111,8 +111,8 @@ class Games(MixinMeta):
             await tournament.seed_participants_and_upload()
 
         async def start():
-            tournament.phase = "ongoing"
             await tournament.start()
+            tournament.phase = "ongoing"
             await tournament._get_top8()
 
         async def launch_sets():
