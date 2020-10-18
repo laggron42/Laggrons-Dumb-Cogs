@@ -1141,6 +1141,7 @@ the start of the tournament, then closing 15 minutes before.
                     "- Ranking and seeding with Braacket\n\n"
                     "Would you like to continue or cancel?"
                 ).format(game=data["game_name"].title(), prefix=ctx.clean_prefix),
+                timeout=120,
             )
             if result is False:
                 return
