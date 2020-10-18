@@ -1087,16 +1087,21 @@ class Tournament:
         passed = {x: y for x, y in dates if y and now > y}
         if passed:
             raise RuntimeError(_("Some dates are passed."), dates)
-        if not self.register_start < self.register_stop:
+        if (
+            self.register_start
+            and self.register_stop
+            and not self.register_start < self.register_stop
+        ):
             dates = [dates[0] + dates[2]]
             raise RuntimeError(_("Registration start and stop times conflict."), dates)
         if (
             self.register_second_start
-            and not self.register_start < self.register_second_start < self.register_stop
+            and (self.register_start and not self.register_start < self.register_second_start)
+            or (self.register_stop and not self.register_second_start < self.register_stop)
         ):
             dates = dates[:3]
             raise RuntimeError(_("Second registration start time conflict."), dates)
-        if not self.checkin_start < self.checkin_stop:
+        if self.checkin_start and self.checkin_stop and not self.checkin_start < self.checkin_stop:
             dates = dates[3:]
             raise RuntimeError(_("Check-in start and stop times conflict."), dates)
 
