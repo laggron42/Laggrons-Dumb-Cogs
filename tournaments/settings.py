@@ -147,7 +147,7 @@ it directly.
                     await ctx.message.delete()
                 except Exception:
                     pass
-            await self.data.guild(guild).credentials.username.set(api_key)
+            await self.data.guild(guild).credentials.api.set(api_key)
             await ctx.send(_("The API key was successfully set."))
             return
         try:
