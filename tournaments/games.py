@@ -575,7 +575,7 @@ class Games(MixinMeta):
                 _("Ruleset: {channel}").format(channel=tournament.ruleset_channel.mention)
             )
 
-    @only_phase("ongoing")
+    @only_phase()
     @commands.command()
     @commands.guild_only()
     async def bracket(self, ctx: commands.Context):
@@ -586,7 +586,7 @@ class Games(MixinMeta):
         tournament = self.tournaments[guild.id]
         await ctx.send(_("Bracket: **{url}**").format(url=tournament.url))
 
-    @only_phase("ongoing")
+    @only_phase()
     @commands.command()
     @commands.guild_only()
     async def stages(self, ctx: commands.Context):
@@ -602,7 +602,7 @@ class Games(MixinMeta):
             for page in pagify(text):
                 await ctx.send(page)
 
-    @only_phase("ongoing")
+    @only_phase()
     @commands.command(aliases=["counters"])
     @commands.guild_only()
     async def counterpicks(self, ctx: commands.Context):
