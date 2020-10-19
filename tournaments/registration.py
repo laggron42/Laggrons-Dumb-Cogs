@@ -364,7 +364,7 @@ there are spaces).
         if tournament.checkin_phase != "ongoing":
             await ctx.send(_("Check-in is not active."))
             return
-        if tournament.checkin_stop and tournament.checkin_stop > datetime.utcnow():
+        if tournament.checkin_stop and tournament.checkin_stop > datetime.now(tournament.tz):
             result = await prompt_yes_or_no(
                 ctx,
                 _(
