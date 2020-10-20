@@ -373,6 +373,30 @@ enter a command to register or unregister.
             await self.data.guild(guild).channels.to.set(channel.id)
             await ctx.send(_("The channel was successfully set."))
 
+    @tournamentset_channels.command(name="vipregister", hidden=True)
+    async def tournamentset_channels_vipregister(
+        self, ctx: commands.Context, *, channel: Optional[discord.TextChannel]
+    ):
+        """
+        Set the VIP registration channel.
+
+        This is a hidden setting that defines a channel where anyone able to send messages \
+there is able to use `[p]in` as soon as the tournament is setup, regardless of the current state \
+of the other registrations channel.
+        """
+        guild = ctx.guild
+        if channel is None:
+            await self.data.guild(guild).channels.vipregister.set(None)
+            await ctx.send(_("VIP registration channel removed."))
+            return
+        if not channel.permissions_for(guild.me).read_messages:
+            await ctx.send(_("I don't have the permission to read messages in this channel."))
+        elif not channel.permissions_for(guild.me).send_messages:
+            await ctx.send(_("I don't have the permission to send messages in this channel."))
+        else:
+            await self.data.guild(guild).channels.vipregister.set(channel.id)
+            await ctx.send(_("The channel was successfully set."))
+
     @tournamentset_channels.command(name="category")
     async def tournamentset_channels_category(
         self, ctx: commands.Context, *, category: discord.CategoryChannel
@@ -1025,7 +1049,8 @@ the start of the tournament, then closing 15 minutes before.
             "Queue : {queue}\n"
             "Scores : {scores}\n"
             "Stream : {stream}\n"
-            "T.O. : {to}"
+            "T.O. : {to}\n"
+            "VIP Registration : {vipregister}"
         ).format(**channels)
         roles = {}
         for k, v in data["roles"].items():

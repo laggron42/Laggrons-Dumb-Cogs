@@ -68,6 +68,7 @@ class Tournaments(
             "scores": None,
             "stream": None,
             "to": None,
+            "vipregister": None,
         },
         "roles": {"participant": None, "streamer": None, "to": None},
         "tournament": {

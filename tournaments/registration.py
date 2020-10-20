@@ -69,7 +69,7 @@ class Registration(MixinMeta):
             log.error("Error in loop task. Resuming ...", exc_info=exception)
             self.registration_loop.start()
 
-    @only_phase("register")
+    @only_phase("pending", "register", "awaiting")
     @commands.command(name="in")
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def _in(self, ctx: commands.Context):
@@ -92,11 +92,28 @@ class Registration(MixinMeta):
             await participant.check()
         else:
             # participant registering
-            if tournament.register_channel and ctx.channel.id != tournament.register_channel.id:
+            if tournament.register_channel and (
+                ctx.channel.id != tournament.register_channel.id
+                and (
+                    tournament.vip_register_channel
+                    and ctx.channel.id != tournament.vip_register_channel.id
+                )
+            ):
                 await ctx.send(_("You cannot register in this channel."))
                 return
             if tournament.limit and len(tournament.participants) + 1 > tournament.limit:
                 await ctx.send(_("No more places for this tournament."))
+                return
+            if (
+                tournament.vip_register_channel
+                and ctx.channel.id == tournament.vip_register_channel.id
+            ):
+                # VIP registrations are valid as long as registrations aren't explicitly closed
+                if tournament.register_phase == "done":
+                    await ctx.send(_("Registrations aren't active."))
+                    return
+            elif tournament.register_phase != "ongoing":
+                await ctx.send(_("Registrations aren't active."))
                 return
             try:
                 await tournament.register_participant(ctx.author)
@@ -109,7 +126,7 @@ class Registration(MixinMeta):
                 return
         await ctx.tick()
 
-    @only_phase("register", "awaiting")
+    @only_phase("pending", "register", "awaiting")
     @commands.command(name="out")
     async def _out(self, ctx: commands.Context):
         """

@@ -784,6 +784,9 @@ class Tournament:
             data["channels"].get("stream")
         )
         self.to_channel: discord.TextChannel = guild.get_channel(data["channels"].get("to"))
+        self.vip_register_channel: discord.TextChannel = guild.get_channel(
+            data["channels"].get("vipregister")
+        )
         self.participant_role: discord.Role = guild.get_role(data["roles"].get("participant"))
         self.streamer_role: discord.Role = guild.get_role(data["roles"].get("streamer"))
         self.to_role: discord.Role = guild.get_role(data["roles"].get("to"))
