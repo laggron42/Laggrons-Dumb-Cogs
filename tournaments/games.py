@@ -1,3 +1,4 @@
+import asyncio
 import achallonge
 import discord
 import logging
@@ -199,53 +200,189 @@ class Games(MixinMeta):
         if any(x.status == "ongoing" for x in tournament.matches):
             await ctx.send(_("There are still ongoing matches."))
             return
-        async with ctx.typing():
-            tournament.cancel()
-            await tournament.stop()
-            categories = tournament.winner_categories + tournament.loser_categories
-            failed_category = False
-            try:
-                for category in categories:
-                    for channel in category.text_channels:
-                        await channel.delete()
-                    await category.delete()
-            except discord.HTTPException as e:
-                log.warning(
-                    f"[Guild {ctx.guild.id}] Failed to remove some channels/categories.\n"
-                    f"Last channel: {channel} Last category: {category}",
-                    exc_info=e,
-                )
-                failed_category = True
-            failed = []
-            if tournament.participant_role:
-                channels = [
+        i = 0
+        channels = list(
+            filter(
+                None,
+                [
                     tournament.checkin_channel,
                     tournament.queue_channel,
                     tournament.register_channel,
                     tournament.scores_channel,
-                ]
-                for channel in channels:
+                ],
+            )
+        )
+        categories = tournament.winner_categories + tournament.loser_categories
+        temp_channels = [x for x in [y.text_channels for y in categories]]
+        members = tournament.participants
+        failed = {
+            "categories": [],
+            "temp_channels": [],
+            "channels": [],
+            "members": [],
+        }
+
+        async def stop_tournament():
+            tournament.cancel()
+            # await tournament.stop()
+
+        async def clear_channels():
+            nonlocal failed, i
+            # This isn't actually two weeks ago to allow some wiggle room on API limits
+            two_weeks_ago = datetime.utcnow() - timedelta(days=14, minutes=-5)
+            for channel in channels:
+                try:
+                    messages = await channel.history(limit=None, after=two_weeks_ago).flatten()
+                    if messages:
+                        await channel.delete_messages(messages)
+                    if tournament.game_role:
+                        await channel.set_permissions(tournament.game_role, send_messages=False)
+                    await channel.set_permissions(tournament.participant_role, send_messages=False)
+                except discord.HTTPException as e:
+                    log.warning(
+                        f"[Guild {ctx.guild.id}] Failed editing channel "
+                        f"{channel.name} with ID {channel.id}. (tournament ending)",
+                        exc_info=e,
+                    )
+                    failed["channels"].append(channel)
+                else:
+                    i += 1
+
+        async def delete_channels():
+            nonlocal failed, i
+            for category in categories:
+                for channel in category.text_channels:
                     try:
-                        await channel.set_permissions(
-                            tournament.participant_role, send_messages=False
-                        )
+                        await channel.delete(reason=_("Tournament ending"))
                     except discord.HTTPException as e:
-                        log.warning(
-                            f"[Guild {ctx.guild.id}] Failed to edit channel {channel.id}",
+                        log.warn(
+                            f"[Guild {guild.id}] Failed deleting channel "
+                            f"{channel.name} with ID {channel.id}. (tournament ending)",
                             exc_info=e,
                         )
-                        failed.append(channel)
-        await self.data.guild(guild).tournament.set({})
-        del self.tournaments[guild.id]
+                        failed["temp_channels"].append(channel)
+                    else:
+                        i += 1
+                try:
+                    await category.delete(reason=_("Tournament ending"))
+                except discord.HTTPException as e:
+                    log.warn(
+                        f"[Guild {guild.id}] Failed deleting category "
+                        f"{category.name} with ID {category.id}. (tournament ending)",
+                        exc_info=e,
+                    )
+                    failed["categories"].append(category)
+                else:
+                    i += 1
+
+        async def remove_roles():
+            nonlocal i
+            for member in members:
+                try:
+                    await member.remove_roles(
+                        tournament.participant_role, reason=_("Tournament ending")
+                    )
+                except discord.HTTPException as e:
+                    log.warn(
+                        f"[Guild {guild.id}] Failed removing participant role from "
+                        f"{str(member)} with ID {member.id}. (tournament ending)",
+                        exc_info=e,
+                    )
+                    failed["members"].append(member)
+                else:
+                    i += 1
+
+        tasks = [
+            (_("Stopping the tournament"), stop_tournament, None),
+            (_("Clearing and closing channels"), clear_channels, len(channels)),
+            (_("Deleting channels"), delete_channels, len(temp_channels) + len(categories)),
+            (_("Removing roles"), remove_roles, len(members)),
+        ]
+        message: discord.Message = None
+        embed = discord.Embed(title=_("Ending the tournament..."))
+        embed.description = _(
+            "{participants} participants\nLasted for {time} *(based on expected start time)*"
+        ).format(
+            participants=len(tournament.participants),
+            time=str(datetime.now(tournament.tz) - tournament.tournament_start).split(".")[0],
+        )
+
+        async def update_message(errored=False):
+            nonlocal message
+            await asyncio.sleep(0.5)
+            text = ""
+            for i, task in enumerate(tasks):
+                total = task[2]
+                task = task[0]
+                if index > i:
+                    text += f":white_check_mark: {task}\n"
+                elif i == index:
+                    if total:
+                        task += f" ({i}/{total})"
+                    if errored:
+                        text += f":warning: {task}\n"
+                    else:
+                        text += f":arrow_forward: **{task}**\n"
+                else:
+                    text += f"*{task}*\n"
+            if message is not None:
+                embed.set_field_at(
+                    0, name=_("Progression"), value=text, inline=False,
+                )
+                await message.edit(embed=embed)
+            else:
+                embed.add_field(
+                    name=_("Progression"), value=text, inline=False,
+                )
+                message = await ctx.send(embed=embed)
+
+        index = 0
+        update_message_task = self.bot.loop.create_task(update_message())
+        for index, task in enumerate(tasks):
+            try:
+                await task[1]()
+            except achallonge.ChallongeException:
+                update_message_task.cancel()
+                await update_message(True)
+                raise
+            except Exception as e:
+                log.error(
+                    f"[Guild {ctx.guild.id}] Error when ending tournament. Coro: {task}",
+                    exc_info=e,
+                )
+                update_message_task.cancel()
+                await update_message(True)
+                await ctx.send(_("An error occured when ending the tournament."))
+                return
+            else:
+                i = 0
+                await asyncio.sleep(0.5)
+                await update_message()
+        # await self.data.guild(guild).tournament.set({})
+        # del self.tournaments[guild.id]
+        index += 1
+        await update_message()
+        update_message_task.cancel()
         message = _("Tournament ended.")
-        if failed_category:
-            message += _(
-                "\n\nFailed when clearing the channels and categories. See logs for details."
-            )
-        if failed:
-            message += _("\n\nFailed closing the following channels:\n- ")
-            message += "\n- ".join([x.mention for x in failed])
-        await ctx.send(message)
+        messages = {
+            "categories": _("Failed deleting the following categories:"),
+            "temp_channels": _("Failed deleting the following channels:"),
+            "channels": _("Failed clearing and closing the following channels:"),
+            "members": _("Failed removing roles to the following members:"),
+        }
+        errored = False
+        for kind, objects in failed.items():
+            if not objects:
+                continue
+            if isinstance(objects[0], discord.CategoryChannel):
+                text = ", ".join(x.mention for x in objects)
+            else:
+                text = ", ".join(x.mention for x in objects)
+            message += _(f"\n\n{messages[kind]}\n{text}")
+            errored = True
+        if errored:
+            message += _("\n\nCheck your console or logs for more informations.")
+        await ctx.send_interactive(pagify(message))
         if tournament.announcements_channel:
             # TODO: actually show top 8
             await tournament.announcements_channel.send(
