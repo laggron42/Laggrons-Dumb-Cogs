@@ -1051,12 +1051,15 @@ class Tournament:
         Returns the next scheduled event (register/checkin/None) with the corresponding timedelta
         """
         now = datetime.now(self.tz)
+        # the order here is important, as max() return the first highest value
+        # it's pretty common to have some events with the same datetime, and the loop only runs
+        # one event per iteration, so we place them in a logical order here
         events = {
             "register_start": (self.register_start, self.register_phase == "pending"),
+            "checkin_stop": (self.checkin_stop, self.checkin_phase == "ongoing"),
+            "checkin_start": (self.checkin_start, self.checkin_phase == "pending"),
             "register_second_start": (self.register_second_start, self.register_phase == "onhold"),
             "register_stop": (self.register_stop, self.register_phase == "ongoing"),
-            "checkin_start": (self.checkin_start, self.checkin_phase == "pending"),
-            "checkin_stop": (self.checkin_stop, self.checkin_phase == "ongoing"),
         }
         for name, (date, condition) in events.items():
             if date is None:
