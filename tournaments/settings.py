@@ -1056,6 +1056,7 @@ the start of the tournament, then closing 15 minutes before.
         for k, v in data["roles"].items():
             if not v:
                 roles[k] = _("Not set")
+                continue
             role = guild.get_role(v)
             if not role:
                 roles[k] = _("Lost")
