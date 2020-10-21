@@ -90,6 +90,7 @@ class Tournaments(
             "checkin": None,
             "ignored_events": None,
             "register_message_id": None,
+            "checkin_reminders": [],
         },
     }
 
