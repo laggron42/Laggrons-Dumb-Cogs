@@ -39,6 +39,17 @@ class Registration(MixinMeta):
                             exc_info=e,
                         )
                         tournament.register_message = None
+            if (
+                tournament.checkin_phase == "ongoing"
+                and tournament.checkin_stop
+                and tournament.checkin_reminders
+            ):
+                duration = (tournament.checkin_stop - datetime.now(tournament.tz)).total_seconds()
+                duration //= 60  # only minutes
+                next_call, should_dm = data = max(tournament.checkin_reminders, key=lambda x: x[0])
+                if next_call >= duration + 1:
+                    await tournament.call_check_in(should_dm)
+                    tournament.checkin_reminders.remove(data)
             try:
                 name, time = tournament.next_scheduled_event()
             except TypeError:
@@ -52,10 +63,13 @@ class Registration(MixinMeta):
                     "checkin_stop": tournament.end_checkin,
                 }.get(name)
                 log.debug(f"[Guild {tournament.guild.id}] Scheduler call: {coro}")
-                if name in ("register_stop", "checkin_stop"):
+                if name == "register_second_start":
+                    await coro(second=True)
+                elif name in ("register_stop", "checkin_stop"):
                     await coro(background=True)
                 else:
                     await coro()
+            await tournament.save()
 
     @registration_loop.error
     async def on_loop_task_error(self, exception):
@@ -94,9 +108,9 @@ class Registration(MixinMeta):
             # participant registering
             if tournament.register_channel and (
                 ctx.channel.id != tournament.register_channel.id
-                and (
+                and not (
                     tournament.vip_register_channel
-                    and ctx.channel.id != tournament.vip_register_channel.id
+                    and ctx.channel.id == tournament.vip_register_channel.id
                 )
             ):
                 await ctx.send(_("You cannot register in this channel."))
@@ -176,7 +190,7 @@ there are spaces).
         async with ctx.typing():
             for member in members:
                 try:
-                    await tournament.register_participant(member)
+                    await tournament.register_participant(member, send_dm=False)
                 except discord.HTTPException:
                     if len(members) == 1:
                         raise  # single members should raise exceptions
@@ -396,3 +410,32 @@ there are spaces).
                 tournament.ignored_events.append("checkin_stop")
         await tournament.end_checkin(background=False)
         await ctx.tick()
+
+    @checkin.command(name="call")
+    async def checkin_call(self, ctx: commands.Context, should_dm: bool = False):
+        """
+        Send a message in the check-in channel pinging all members not checked yet.
+
+        You need a check-in channel and an end date configured before using this.
+        If you want the bot to also DM members, type `[p]checkin call yes`
+        """
+        tournament = self.tournaments[ctx.guild.id]
+        if tournament.checkin_phase != "ongoing":
+            await ctx.send(_("Check-in is not active."))
+            return
+        if not tournament.checkin_channel:
+            await ctx.send(_("There is no check-in channel currently configured."))
+            return
+        if not tournament.checkin_stop:
+            await ctx.send(_("This feature is only available with a configured stop time."))
+            return
+        if tournament.checkin_stop < datetime.now(tournament.tz):
+            await ctx.send(_("The configured check-in end time has already passed."))
+            return
+        if should_dm is True:
+            async with ctx.typing():
+                await tournament.call_check_in(True)
+            await ctx.send(_("Successfully called and DMed the unchecked members."))
+        else:
+            await tournament.call_check_in()
+            await ctx.tick()

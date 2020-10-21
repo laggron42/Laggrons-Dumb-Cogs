@@ -259,7 +259,7 @@ members of that role.
         async with ctx.typing():
             for member in to_register:
                 try:
-                    await tournament.register_participant(member)
+                    await tournament.register_participant(member, send_dm=False)
                 except discord.HTTPException:
                     failed += 1
         if pre_check:
