@@ -98,6 +98,24 @@ class Games(MixinMeta):
                     "cannot find.\nKeep in mind you can register all members in a role with "
                     "`{prefix}tfix registerfromrole`.\nDo you want to continue?"
                 ).format(prefix=ctx.prefix),
+                timeout=60,
+                delete_after=False,
+            )
+            if result is False:
+                return
+        if len(tournament.participants) > len([x for x in tournament.participants if x.player_id]):
+            result = await prompt_yes_or_no(
+                ctx,
+                _(
+                    ":warning: Some participants do not have a player ID assigned.\n"
+                    "This may be because the bot failed seeding/uploading after the end of "
+                    "registrations or check-in, or this is manual and you forgot to upload the "
+                    "participants with `{prefix}upload`.\nYou should try the previous command "
+                    "again before continuing, or some participants will be lost.\n"
+                    "Do you want to continue?"
+                ).format(prefix=ctx.prefix),
+                timeout=60,
+                delete_after=False,
             )
             if result is False:
                 return
@@ -164,8 +182,18 @@ class Games(MixinMeta):
             task = task[1]
             try:
                 await task()
-            except achallonge.ChallongeException:
+            except achallonge.ChallongeException as e:
                 await update_embed(i, True)
+                if e.args[0].startswith("422"):
+                    await ctx.send(
+                        _(
+                            "Error from Challonge: {error}\n"
+                            ":information_source: A 422 error usually means there aren't enough "
+                            "participants registered. Did you forget to use `{prefix}upload`?\n"
+                            "If this problem persists, contact T.O.s or an admin of the bot."
+                        ).format(error=e.original.args[0])
+                    )
+                    return
                 raise
             except Exception as e:
                 log.error(
