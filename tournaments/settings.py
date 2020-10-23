@@ -872,7 +872,7 @@ before the opening of the tournament, then closing 10 minutes before.
                 if current
                 else _("The bot currently doesn't end registrations automatically. ")
                 + _(
-                    "If you want to change this, type `{prefix}tset autostopregisetr {opposite}`."
+                    "If you want to change this, type `{prefix}tset autostopregister {opposite}`."
                 ).format(prefix=ctx.clean_prefix, opposite=not current)
             )
         elif enable:
