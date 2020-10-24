@@ -341,7 +341,7 @@ will be disabled for all ongoing matches at the time of the task pause.
         if tournament.task is None:
             await ctx.send(_("The task isn't active right now."))
             return
-        tournament.stop_loop_task()
+        tournament.loop_task.cancel()
         await ctx.send(
             _("Loop task stopped. Resume it with `{prefix}tfix resumetask`").format(
                 prefix=ctx.clean_prefix
