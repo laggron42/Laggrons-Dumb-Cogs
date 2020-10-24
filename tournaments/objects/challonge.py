@@ -222,6 +222,7 @@ class ChallongeTournament(Tournament):
         raw_matches = await self.list_matches()
         matches = []
         remote_changes = []
+        critical_point_reached = False
         for match in raw_matches:
             cached: Match
             # yeah, discord.py tools works with that
@@ -247,15 +248,22 @@ class ChallongeTournament(Tournament):
                     if winner_score < loser_score:
                         winner_score, loser_score = loser_score, winner_score
                 winner = discord.utils.get(self.participants, player_id=match["winner_id"])
-                if winner == cached.player1:
-                    await cached.end(winner_score, loser_score, upload=False)
-                else:
-                    await cached.end(loser_score, winner_score, upload=False)
+                # if winner == cached.player1:
+                #     await cached.end(winner_score, loser_score, upload=False)
+                # else:
+                #     await cached.end(loser_score, winner_score, upload=False)
                 log.info(
                     f"[Guild {self.guild.id}] Ended set {cached.set} because of remote score "
                     f"update (score {match['scores_csv']} winner {str(winner)})"
                 )
-                remote_changes.append(cached.set)
+                log.debug(
+                    f"[Guild {self.guild.id}] Critical point reached, this is not fine and "
+                    "Challonge is probably drunk again, so we're logging everything!\n"
+                    f"{cached=}\n"
+                    f"{match=}"
+                )
+                critical_point_reached = True
+                # remote_changes.append(cached.set)
             elif cached.status == "ongoing" and match["state"] == "pending":
                 # the previously open match is now pending, this means the bracket changed
                 # mostl likely due to a score change on a parent match
@@ -280,6 +288,8 @@ class ChallongeTournament(Tournament):
             # sets will be automatically created when the time comes. we'll just leave the timer
             # do its job and delete the channel.
             matches.append(cached)
+            if critical_point_reached:
+                log.debug(f"[Guild {self.guild.id}] Challonge raw data: ", raw_matches)
         difference = list(set(self.matches).difference(matches))
         if difference:
             log.debug(
