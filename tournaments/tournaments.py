@@ -195,15 +195,9 @@ class Tournaments(
         # multiple times the same handler if the cog gets reloaded
         close_logger(log)
 
-        # cancel all pending tasks
-        def cancel(task: asyncio.Task):
-            if task is not None:
-                task.cancel()
-
         tournament: Tournament
         for tournament in self.tournaments.values():
-            cancel(tournament.loop_task)
-            # cancel(tournament.debug_task)
+            tournament.stop_loop_task()
         self.registration_loop.stop()
 
         # remove ranking data

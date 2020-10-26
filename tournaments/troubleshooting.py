@@ -46,6 +46,7 @@ more "violent", options.
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
         await tournament.save()
+        tournament.stop_loop_task()
         del self.tournaments[guild.id]
         try:
             self.tournaments[guild.id] = await self._restore_tournament(guild)

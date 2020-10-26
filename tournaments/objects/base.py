@@ -1,6 +1,5 @@
 from __future__ import annotations
 from copy import copy
-import re
 
 import discord
 import logging
@@ -173,15 +172,13 @@ class Match:
         )
         match.channel = tournament.guild.get_channel(data["channel"])
         warned = data["warned"]
-        if isinstance(warned, int):
-            match.warned = datetime.fromtimestamp(warned, tz=tournament.tz)
-        else:
+        if isinstance(warned, bool) or warned is None:
             match.warned = warned
-        match.on_hold = data["on_hold"]
-        if match.channel is None:
-            match.status = "pending"
         else:
-            match.status = data["status"]
+            match.warned = datetime.fromtimestamp(warned, tz=tournament.tz)
+        match.on_hold = data["on_hold"]
+        match.status = data["status"]
+        if match.channel:
             match.checked_dq = data["checked_dq"]
             match.start_time = (
                 datetime.fromtimestamp(data["start_time"], tz=tournament.tz)
@@ -588,6 +585,7 @@ class Match:
         """
         if upload is True:
             await self.set_scores(player1_score, player2_score)
+        self.cancel()
         winner = self.player1 if player1_score > player2_score else self.player2
         score = (
             f"{player1_score}-{player2_score}"
@@ -608,7 +606,6 @@ class Match:
                     else "",
                 )
             )
-        self.cancel()
 
     async def force_end(self):
         """
