@@ -386,8 +386,8 @@ class Games(MixinMeta):
                 i = 0
                 await asyncio.sleep(0.5)
                 await update_message()
-        # await self.data.guild(guild).tournament.set({})
-        # del self.tournaments[guild.id]
+        await self.data.guild(guild).tournament.set({})
+        del self.tournaments[guild.id]
         index += 1
         await update_message()
         update_message_task.cancel()
