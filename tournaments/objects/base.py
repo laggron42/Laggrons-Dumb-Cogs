@@ -408,7 +408,28 @@ class Match:
         )
 
     async def _start(self):
-        await self.mark_as_underway()
+        target = self.channel.send if self.channel else self._dm_players
+        try:
+            await self.mark_as_underway()
+        except Exception as e:
+            log.warning(
+                f"[Guild {self.guild.id}] Can't mark set {self.set} as underway.", exc_info=e
+            )
+            await self.tournament.to_channel.send(
+                _(
+                    "There was an issue marking set {set} as underway. The bracket may not "
+                    "display correct informations, but this isn't critical at all.\n"
+                    "Players may have issues setting their score, "
+                    "you can set that manually on the bracket."
+                ).format(set=self.channel.mention if self.channel else f"#{self.set}")
+            )
+            await target(
+                _(
+                    "There was an issue marking your set as underway. The bracket may not "
+                    "display correct informations, but you can play as usual for now.\n"
+                    "If you encounter an issue setting your score, contact a T.O."
+                )
+            )
         self.status = "ongoing"
         self.underway = True
         self.checked_dq = False
@@ -1956,7 +1977,15 @@ class Tournament:
             self.start_loop_task()
 
     def start_loop_task(self):
+        task_name = f"Tournament {self.id}"
+        old_tasks = [x for x in asyncio.all_tasks() if x.get_name() == task_name]
+        if old_tasks:
+            log.warning(f"[Guild {self.guild.id}] Found old tasks, cancelling")
+            for old_task in old_tasks:
+                if not old_task.done():
+                    old_task.cancel()
         self.task = self.loop_task.start()
+        self.task.set_name(task_name)
 
     def stop_loop_task(self):
         if self.task and not self.task.done():
