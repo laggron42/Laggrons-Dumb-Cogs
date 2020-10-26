@@ -116,7 +116,7 @@ class Tournaments(
         self.registration_loop.start()
         self.registration_loop_task_errors = 0
 
-    __version__ = "1.0.0b4"
+    __version__ = "1.0.0b5"
     __author__ = ["retke (El Laggron)", "Wonderfall", "Xyleff"]
 
     @commands.command(hidden=True)
