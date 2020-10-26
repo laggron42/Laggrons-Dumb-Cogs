@@ -1959,7 +1959,8 @@ class Tournament:
         self.task = self.loop_task.start()
 
     def stop_loop_task(self):
-        self.task.cancel()
+        if self.task and not self.task.done():
+            self.task.cancel()
 
     # debug util
     # def _debug_dump(self):
