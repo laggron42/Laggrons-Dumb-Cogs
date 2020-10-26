@@ -1814,13 +1814,14 @@ class Tournament:
         match: Match
         coros = []
         # islice will limit the output to 20. see this as list[:20] but with a generator
-        for match in islice(
-            filter(lambda x: x.status == "pending" and x.channel is None, self.matches), 20
+        for i, match in enumerate(
+            islice(filter(lambda x: x.status == "pending" and x.channel is None, self.matches), 20)
         ):
             # we get the category in the iteration instead of the gather
             # because if all functions call _get_available_category at the same time,
             # a new category will be returned for each
-            category = await self._get_available_category("winner" if match.round > 0 else "loser")
+            bracket = "winner" if match.round > 0 else "loser"
+            category = await self._get_available_category(bracket, i)
             coros.append(match.launch(category=category))
         results = await asyncio.gather(*coros, return_exceptions=True)
         for result in filter(None, results):
