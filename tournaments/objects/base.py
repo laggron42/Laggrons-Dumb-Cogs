@@ -1124,7 +1124,7 @@ class Tournament:
             dates = dates[3:]
             raise RuntimeError(_("Check-in start and stop times conflict."), dates)
 
-    async def _get_available_category(self, dest: str):
+    async def _get_available_category(self, dest: str, inc: int = 0):
         position = self.category.position + 1 if self.category else len(self.guild.categories)
         if dest == "winner":
             categories = self.winner_categories
@@ -1132,7 +1132,7 @@ class Tournament:
             categories = self.loser_categories
         position += len(categories)
         try:
-            return next(filter(lambda x: len(x.channels) < 50, categories))
+            return next(filter(lambda x: len(x.channels) + inc < 50, categories))
         except StopIteration:
             if dest == "winner":
                 name = "Winner bracket"
