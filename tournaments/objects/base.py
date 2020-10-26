@@ -176,7 +176,7 @@ class Match:
             match.warned = warned
         else:
             match.warned = datetime.fromtimestamp(warned, tz=tournament.tz)
-        match.on_hold = data["on_hold"]
+        match.on_hold = bool(data["on_hold"])
         match.status = data["status"]
         if match.channel:
             match.checked_dq = data["checked_dq"]
@@ -1861,7 +1861,8 @@ class Tournament:
     async def check_for_too_long_matches(self):
         match: Match
         for match in filter(
-            lambda x: x.status == "ongoing" and not x.on_hold and x.streamer is None, self.matches,
+            lambda x: x.status == "ongoing" and x.channel and not x.on_hold and x.streamer is None,
+            self.matches,
         ):
             max_length = self.time_until_warn["bo5" if match.is_bo5 else "bo3"]
             if match.warned is True:

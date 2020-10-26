@@ -596,7 +596,9 @@ class Games(MixinMeta):
                 )
             )
             return
-        if (player.match.start_time + timedelta(minutes=5)) > datetime.now(tournament.tz):
+        if player.match.channel and (
+            player.match.start_time + timedelta(minutes=5)
+        ) > datetime.now(tournament.tz):
             await ctx.send(
                 _(
                     "You need to wait for 5 minutes at least after the beginning of your "
