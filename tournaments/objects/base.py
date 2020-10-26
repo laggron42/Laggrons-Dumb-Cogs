@@ -321,7 +321,7 @@ class Match:
             if self.tournament.queue_channel is not None:
                 await self.tournament.queue_channel.send(
                     _("{player1} {player2} Play your set in DM").format(
-                        player1=self.player1.mention, player2=self.player2.mention
+                        player1=self.player1, player2=self.player2
                     )
                 )
 
@@ -346,8 +346,8 @@ class Match:
                     ).format(
                         name=self.round_name,
                         bo_type=_("BO5") if self.is_bo5 else _("BO3"),
-                        player1=self.player1.mention,
-                        player2=self.player2.mention,
+                        player1=self.player1,
+                        player2=self.player2,
                         on_stream=_(" **on stream!**") if self.streamer else "",
                         top8=top8,
                         channel=self.channel.mention,
