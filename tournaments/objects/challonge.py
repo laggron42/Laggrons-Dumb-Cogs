@@ -227,7 +227,7 @@ class ChallongeTournament(Tournament):
             # yeah, discord.py tools works with that
             cached = discord.utils.get(self.matches, id=match["id"])
             if cached is None:
-                if match["state"] != "open":
+                if match["state"] != "open" or match["winner_id"]:
                     # still empty, or finished (and we don't want to load finished sets into cache)
                     continue
                 match_object = await self.match_object.build_from_api(self, match)
