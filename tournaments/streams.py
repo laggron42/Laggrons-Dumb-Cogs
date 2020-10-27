@@ -139,7 +139,7 @@ class Streams(MixinMeta):
                 )
                 return
         else:
-            streamer = tournament.find_streamer(link=channel)[1]
+            streamer = tournament.find_streamer(channel=channel)[1]
             if streamer is None:
                 await ctx.send(
                     _(
@@ -183,7 +183,7 @@ any streamer/T.O. can edit anyone's stream.
                 )
                 return
         else:
-            streamer = tournament.find_streamer(link=channel)[1]
+            streamer = tournament.find_streamer(channel=channel)[1]
             if streamer is None:
                 await ctx.send(
                     _(
@@ -228,7 +228,7 @@ any streamer/T.O. can edit anyone's stream.
                 )
                 return
         else:
-            streamer = tournament.find_streamer(link=channel)[1]
+            streamer = tournament.find_streamer(channel=channel)[1]
             if streamer is None:
                 await ctx.send(
                     _(
@@ -279,7 +279,7 @@ any streamer/T.O. can edit anyone's stream.
                 )
                 return
         else:
-            streamer = tournament.find_streamer(link=channel)[1]
+            streamer = tournament.find_streamer(channel=channel)[1]
             if streamer is None:
                 await ctx.send(
                     _(
@@ -329,7 +329,7 @@ any streamer/T.O. can edit anyone's stream.
                 )
                 return
         else:
-            streamer = tournament.find_streamer(link=channel)[1]
+            streamer = tournament.find_streamer(channel=channel)[1]
             if streamer is None:
                 await ctx.send(
                     _(
@@ -368,7 +368,7 @@ any streamer/T.O. can edit anyone's stream.
                 )
                 return
         else:
-            streamer = tournament.find_streamer(link=channel)[1]
+            streamer = tournament.find_streamer(channel=channel)[1]
             if streamer is None:
                 await ctx.send(
                     _(
@@ -437,7 +437,7 @@ any streamer/T.O. can edit anyone's stream.
                 )
                 return
         else:
-            i, streamer = tournament.find_streamer(link=channel)
+            i, streamer = tournament.find_streamer(channel=channel)
             if streamer is None:
                 await ctx.send(
                     _(
