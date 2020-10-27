@@ -310,7 +310,7 @@ to check if this changes, depending on the current phase)
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
-        data = await ChallongeTournament.show(tournament.id)
+        data = await tournament.show(tournament.id)
         tournament.name = data["name"]
         tournament.limit = data["limit"]
         await ctx.send(_("Tournament name and limit of participants updated."))

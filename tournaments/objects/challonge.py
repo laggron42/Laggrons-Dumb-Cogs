@@ -340,8 +340,7 @@ class ChallongeTournament(Tournament):
     async def reset(self):
         await self.request(achallonge.tournaments.reset, self.id)
 
-    @staticmethod
-    async def show(_id):
+    async def show(self, _id):
         result = await self.request(achallonge.tournaments.show, _id)
         return {
             "name": result["name"],
