@@ -371,11 +371,11 @@ class Match:
         )
 
     async def cancel_stream(self):
-        destination = self.channel or self._dm_players
+        destination = self.channel.send or self._dm_players
         self.streamer = None
         self.on_hold = False
         await self._start()
-        await destination.send(
+        await destination(
             _(
                 "{player1} {player2} The stream was cancelled. You can start you match normally.\n"
                 ":warning: AFK checks are re-enabled."
@@ -564,7 +564,7 @@ class Match:
                 break
 
     async def warn_length(self):
-        target = self.channel or self._dm_players
+        target = self.channel.send or self._dm_players
         message = _(
             ":warning: This match is taking a lot of time!\n"
             "As soon as this is finished, set your score with `{prefix}win`{channel}."
@@ -580,7 +580,7 @@ class Match:
                 "\nT.O.s will be warned if this match is still ongoing in {time} minutes."
             ).format(time=time)
         try:
-            await target.send(message)
+            await target(message)
         except discord.NotFound:
             self.channel = None
         self.warned = datetime.now(self.tournament.tz)
@@ -597,8 +597,8 @@ class Match:
             )
         )
         self.warned = True
-        target = self.channel or self._dm_players
-        await target.send(_("Your match is taking too much time, T.O.s were warned."))
+        target = self.channel.send or self._dm_players
+        await target(_("Your match is taking too much time, T.O.s were warned."))
 
     async def end(self, player1_score: int, player2_score: int, upload: bool = True):
         """
