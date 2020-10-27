@@ -1977,6 +1977,15 @@ class Tournament:
             self.start_loop_task()
 
     def start_loop_task(self):
+        # We had some issues with duplicated tasks, this isn't even supposed to be possible, but
+        # it somehow happened, and more than once. Having duplicated tasks is the worst scenario,
+        # all channels and messages are duplicated, and most commands won't work,
+        # ruining a tournament (R.I.P. DashDances #36 and Super Smash Bronol #46)
+        #
+        # To prevent this from happening, we're giving a name to our task (based on ID) and
+        # check if there are tasks with the same name within the current asyncio loop
+        # If we find tasks with matching names, we cancel them
+        #
         task_name = f"Tournament {self.id}"
         old_tasks = [x for x in asyncio.all_tasks() if x.get_name() == task_name]
         if old_tasks:
