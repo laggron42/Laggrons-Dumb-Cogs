@@ -2233,7 +2233,8 @@ class Streamer:
             filter(None, [tournament.find_match(match_set=x)[1] or x for x in data["matches"]])
         )
         for match in cls.matches:
-            match.streamer = cls
+            if not isinstance(match, int):
+                match.streamer = cls
         if data["current_match"]:
             cls.current_match = tournament.find_match(match_set=data["current_match"])[1]
         return cls
