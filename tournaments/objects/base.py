@@ -1851,7 +1851,7 @@ class Tournament:
     async def launch_streams(self):
         match: Match
         for match in filter(lambda x: x.streamer and x.on_hold, self.matches):
-            if match.streamer.current_match.id == match.id:
+            if match.streamer.current_match and match.streamer.current_match.id == match.id:
                 await match.start_stream()
 
     async def check_for_channel_timeout(self):
