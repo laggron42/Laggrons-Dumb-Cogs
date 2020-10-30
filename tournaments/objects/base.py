@@ -208,7 +208,6 @@ class Match:
             "warned": self.warned.timestamp()
             if isinstance(self.warned, datetime)
             else self.warned,
-            "streamer": self.streamer,
             "on_hold": self.on_hold,
         }
 
