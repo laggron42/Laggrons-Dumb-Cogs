@@ -338,8 +338,12 @@ any streamer/T.O. can edit anyone's stream.
                     )
                 )
                 return
-        streamer.swap_match(set1, set2)
-        await ctx.tick()
+        try:
+            streamer.swap_match(set1, set2)
+        except KeyError:
+            await ctx.send(_("One of the provided sets cannot be found."))
+        else:
+            await ctx.tick()
 
     @stream.command(name="info")
     @commands.check(mod_or_streamer)
