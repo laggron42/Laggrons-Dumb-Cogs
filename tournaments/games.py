@@ -338,32 +338,33 @@ class Games(MixinMeta):
 
         async def update_message(errored=False):
             nonlocal message
-            await asyncio.sleep(0.5)
-            text = ""
-            for i, task in enumerate(tasks):
-                total = task[2]
-                task = task[0]
-                if index > i:
-                    text += f":white_check_mark: {task}\n"
-                elif i == index:
-                    if total:
-                        task += f" ({i}/{total})"
-                    if errored:
-                        text += f":warning: {task}\n"
+            while True:
+                await asyncio.sleep(0.5)
+                text = ""
+                for i, task in enumerate(tasks):
+                    total = task[2]
+                    task = task[0]
+                    if index > i:
+                        text += f":white_check_mark: {task}\n"
+                    elif i == index:
+                        if total:
+                            task += f" ({i}/{total})"
+                        if errored:
+                            text += f":warning: {task}\n"
+                        else:
+                            text += f":arrow_forward: **{task}**\n"
                     else:
-                        text += f":arrow_forward: **{task}**\n"
+                        text += f"*{task}*\n"
+                if message is not None:
+                    embed.set_field_at(
+                        0, name=_("Progression"), value=text, inline=False,
+                    )
+                    await message.edit(embed=embed)
                 else:
-                    text += f"*{task}*\n"
-            if message is not None:
-                embed.set_field_at(
-                    0, name=_("Progression"), value=text, inline=False,
-                )
-                await message.edit(embed=embed)
-            else:
-                embed.add_field(
-                    name=_("Progression"), value=text, inline=False,
-                )
-                message = await ctx.send(embed=embed)
+                    embed.add_field(
+                        name=_("Progression"), value=text, inline=False,
+                    )
+                    message = await ctx.send(embed=embed)
 
         index = 0
         update_message_task = self.bot.loop.create_task(update_message())
