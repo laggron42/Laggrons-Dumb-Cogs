@@ -53,7 +53,7 @@ class ChallongeMatch(Match):
                 else:
                     i = 1
                     score = "0--1"
-                await cls.tournament.request(
+                await tournament.request(
                     achallonge.matches.update,
                     tournament.id,
                     data["id"],
@@ -230,6 +230,10 @@ class ChallongeTournament(Tournament):
                 if match["state"] != "open" or match["winner_id"]:
                     # still empty, or finished (and we don't want to load finished sets into cache)
                     continue
+                if match["suggested_play_order"] is None:
+                    # the last set, corresponding to a bracket reset (LB winner won in grand final)
+                    # somehow returns null for its number, so we assign it ourselves
+                    match["suggested_play_order"] = len(raw_matches)
                 match_object = await self.match_object.build_from_api(self, match)
                 if match_object:
                     matches.append(match_object)
