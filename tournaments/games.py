@@ -10,8 +10,9 @@ from copy import deepcopy
 from redbot.core import commands
 from redbot.core import checks
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import pagify
 from redbot.core.utils import menus
+from redbot.core.utils.mod import mass_purge
+from redbot.core.utils.chat_formatting import pagify
 
 from .abc import MixinMeta
 from .objects import Tournament, Match, Participant
@@ -262,7 +263,7 @@ class Games(MixinMeta):
                 try:
                     messages = await channel.history(limit=None, after=two_weeks_ago).flatten()
                     if messages:
-                        await channel.delete_messages(messages)
+                        await mass_purge(messages, channel)
                     if tournament.game_role:
                         await channel.set_permissions(tournament.game_role, send_messages=False)
                     await channel.set_permissions(tournament.participant_role, send_messages=False)
