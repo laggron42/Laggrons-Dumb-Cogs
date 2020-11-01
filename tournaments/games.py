@@ -221,7 +221,6 @@ class Games(MixinMeta):
     @only_phase("ongoing")
     @mod_or_to()
     @commands.command()
-    @commands.max_concurrency(1, commands.BucketType.guild)
     @commands.guild_only()
     async def end(self, ctx: commands.Context):
         """
