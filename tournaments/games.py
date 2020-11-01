@@ -218,7 +218,7 @@ class Games(MixinMeta):
                 await update_embed(i + 1)
         await ctx.send(_("The tournament has now started!"))
 
-    @only_phase("ongoing")
+    @only_phase("ongoing", "finished")
     @mod_or_to()
     @commands.command()
     @commands.guild_only()
@@ -343,45 +343,47 @@ class Games(MixinMeta):
 
         async def update_message(errored=False):
             nonlocal message
-            while True:
-                await asyncio.sleep(0.5)
-                text = ""
-                for i, task in enumerate(tasks):
-                    total = task[2]
-                    task = task[0]
-                    if index > i:
-                        text += f":white_check_mark: {task}\n"
-                    elif i == index:
-                        if total:
-                            task += f" ({i}/{total})"
-                        if errored:
-                            text += f":warning: {task}\n"
-                        else:
-                            text += f":arrow_forward: **{task}**\n"
+            text = ""
+            for i, task in enumerate(tasks):
+                total = task[2]
+                task = task[0]
+                if index > i:
+                    text += f":white_check_mark: {task}\n"
+                elif i == index:
+                    if total:
+                        task += f" ({i}/{total})"
+                    if errored:
+                        text += f":warning: {task}\n"
                     else:
-                        text += f"*{task}*\n"
-                if message is not None:
-                    embed.set_field_at(
-                        0, name=_("Progression"), value=text, inline=False,
-                    )
-                    await message.edit(embed=embed)
+                        text += f":arrow_forward: **{task}**\n"
                 else:
-                    embed.add_field(
-                        name=_("Progression"), value=text, inline=False,
-                    )
-                    message = await ctx.send(embed=embed)
+                    text += f"*{task}*\n"
+            if message is not None:
+                embed.set_field_at(
+                    0, name=_("Progression"), value=text, inline=False,
+                )
+                await message.edit(embed=embed)
+            else:
+                embed.add_field(
+                    name=_("Progression"), value=text, inline=False,
+                )
+                message = await ctx.send(embed=embed)
+
+        async def _update_message():
+            while True:
+                await update_message()
+                await asyncio.sleep(0.5)
 
         index = 0
-        cancelling = False  # prevents sending a cancel signal twice to the loop
         try:
             # this task will keep updating the content of a message
-            update_message_task = self.bot.loop.create_task(update_message())
+            update_message_task = self.bot.loop.create_task(_update_message())
             for index, task in enumerate(tasks):
+                await asyncio.sleep(0.5)
                 try:
                     await task[1]()
                 except achallonge.ChallongeException:
                     update_message_task.cancel()
-                    cancelling = True
                     await update_message(True)
                     raise
                 except Exception as e:
@@ -390,20 +392,17 @@ class Games(MixinMeta):
                         exc_info=e,
                     )
                     update_message_task.cancel()
-                    cancelling = True
                     await update_message(True)
                     await ctx.send(_("An error occured when ending the tournament."))
                     return
                 else:
                     i = 0
-                    await asyncio.sleep(1)
             await self.data.guild(guild).tournament.set({})
             del self.tournaments[guild.id]
             index += 1
             await update_message()
         finally:
-            if cancelling is False:
-                update_message_task.cancel()
+            update_message_task.cancel()
         message = _("Tournament ended.")
         messages = {
             "categories": _("Failed deleting the following categories:"),
