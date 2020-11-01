@@ -405,3 +405,28 @@ will be disabled for all ongoing matches at the time of the task pause.
             await ctx.send(_("An error occured. Check your logs or contact a bot admin."))
         else:
             await ctx.tick()
+
+    @only_phase("ongoing")
+    @tournamentfix.command(name="unlock")
+    async def tournamentfix_unlock(self, ctx: commands.Context):
+        """
+        A command that may unblock unresponding commands.
+
+        The bot has an internal lock that prevents important commands such as `[p]win` or `[p]dq` \
+from being run while the bot is updating the informations from Challonge, preventing conflicts.
+
+        This is a task that is generally light, and that should time out after 10 seconds anyway.
+        If you notice the bot simply doesn't respond for a while with some commands, try this \
+command as the lock could have been left locked due to a bug.
+        """
+        guild = ctx.guild
+        tournament = self.tournaments[guild.id]
+        try:
+            tournament.lock.release()
+        except RuntimeError:
+            await ctx.send(_("The lock is currently released."))
+        else:
+            await ctx.send(
+                _("Interlal lock released. There may be an issue somewhere, pay attention.")
+            )
+

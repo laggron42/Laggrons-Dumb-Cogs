@@ -895,6 +895,7 @@ class Tournament:
         # timedeltas are substracted from checkin_end (ex: 10 min before checkin ending)
         self.checkin_reminders: List[Tuple[int, bool]] = []
         # loop task things
+        self.lock = asyncio.Lock()
         self.task: Optional[asyncio.Task] = None
         self.task_errors = 0
         self.top_8 = {
@@ -1897,8 +1898,7 @@ class Tournament:
             ):
                 await match.warn_to_length()
 
-    @tasks.loop(seconds=15)
-    async def loop_task(self):
+    async def _loop_task(self):
         if self.task_errors >= MAX_ERRORS:
             log.critical(f"[Guild {self.guild.id}] Reached 5 errors, closing the task...")
             try:
@@ -1947,6 +1947,14 @@ class Tournament:
             self.task_errors += 1
         # saving is done after all of our jobs, so the data shouldn't move too much
         await self.save()
+
+    @tasks.loop(seconds=15)
+    async def loop_task(self):
+        # we're using a lock to prevent actions such as score setting of DQs being done while we're
+        # updating the match list, which can make the bot think there were manual bracket changes
+        async with self.lock:
+            # since this will block other commands, we put an uncatched timeout
+            await asyncio.wait_for(self._loop_task(), 10)
 
     @loop_task.error
     async def on_loop_task_error(self, exception):

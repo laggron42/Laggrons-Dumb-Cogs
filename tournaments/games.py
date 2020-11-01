@@ -152,6 +152,8 @@ class Games(MixinMeta):
         embed.description = _("Game: {game}\n" "URL: {url}").format(
             game=tournament.game, url=tournament.url
         )
+        async with tournament.lock:
+            pass  # don't update scores while cache is being updated
 
         async def update_embed(index: int, failed: bool = False):
             nonlocal message
@@ -335,6 +337,8 @@ class Games(MixinMeta):
             participants=len(tournament.participants),
             time=str(datetime.now(tournament.tz) - tournament.tournament_start).split(".")[0],
         )
+        async with tournament.lock:
+            pass  # don't update scores while cache is being updated
 
         async def update_message(errored=False):
             nonlocal message
@@ -637,6 +641,8 @@ class Games(MixinMeta):
         #     return
         if ctx.author.id == player.match.player2.id:
             score = score[::-1]  # player1-player2 format
+        async with tournament.lock:
+            pass  # don't update scores while cache is being updated
         await player.match.end(*score)
         await ctx.tick()
 
@@ -665,6 +671,8 @@ class Games(MixinMeta):
         )
         if result is False:
             return
+        async with tournament.lock:
+            pass  # don't update scores while cache is being updated
         await player.match.forfeit(player)
         await ctx.tick()
 
@@ -688,6 +696,8 @@ class Games(MixinMeta):
         )
         if result is False:
             return
+        async with tournament.lock:
+            pass  # don't update scores while cache is being updated
         await player.destroy()
         if player.match is not None:
             await player.match.disqualify(player)
