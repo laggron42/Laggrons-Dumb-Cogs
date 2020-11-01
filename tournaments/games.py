@@ -221,6 +221,7 @@ class Games(MixinMeta):
     @only_phase("ongoing")
     @mod_or_to()
     @commands.command()
+    @commands.max_concurrency(1, commands.BucketType.guild)
     @commands.guild_only()
     async def end(self, ctx: commands.Context):
         """
@@ -255,7 +256,8 @@ class Games(MixinMeta):
 
         async def stop_tournament():
             tournament.cancel()
-            # await tournament.stop()
+            if tournament.phase != "finished":
+                await tournament.stop()
 
         async def clear_channels():
             nonlocal failed, i
@@ -371,32 +373,33 @@ class Games(MixinMeta):
                     message = await ctx.send(embed=embed)
 
         index = 0
-        update_message_task = self.bot.loop.create_task(update_message())
-        for index, task in enumerate(tasks):
-            try:
-                await task[1]()
-            except achallonge.ChallongeException:
-                update_message_task.cancel()
-                await update_message(True)
-                raise
-            except Exception as e:
-                log.error(
-                    f"[Guild {ctx.guild.id}] Error when ending tournament. Coro: {task}",
-                    exc_info=e,
-                )
-                update_message_task.cancel()
-                await update_message(True)
-                await ctx.send(_("An error occured when ending the tournament."))
-                return
-            else:
-                i = 0
-                await asyncio.sleep(0.5)
-                await update_message()
-        await self.data.guild(guild).tournament.set({})
-        del self.tournaments[guild.id]
-        index += 1
-        await update_message()
-        update_message_task.cancel()
+        try:
+            update_message_task = self.bot.loop.create_task(update_message())
+            for index, task in enumerate(tasks):
+                try:
+                    await task[1]()
+                except achallonge.ChallongeException:
+                    update_message_task.cancel()
+                    await update_message(True)
+                    raise
+                except Exception as e:
+                    log.error(
+                        f"[Guild {ctx.guild.id}] Error when ending tournament. Coro: {task}",
+                        exc_info=e,
+                    )
+                    update_message_task.cancel()
+                    await update_message(True)
+                    await ctx.send(_("An error occured when ending the tournament."))
+                    return
+                else:
+                    i = 0
+                    await asyncio.sleep(1)
+            await self.data.guild(guild).tournament.set({})
+            del self.tournaments[guild.id]
+            index += 1
+            await update_message()
+        finally:
+            update_message_task.cancel()
         message = _("Tournament ended.")
         messages = {
             "categories": _("Failed deleting the following categories:"),
