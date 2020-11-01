@@ -1981,9 +1981,37 @@ class Tournament:
             log.error(
                 f"[Guild {self.guild.id}] Error in loop task. Resuming...", exc_info=exception
             )
-            self.start_loop_task()
+            await self.start_loop_task()
 
-    def start_loop_task(self):
+    async def cancel_timeouts(self):
+        """
+        Sometimes relaunching the bot after too long will result in a lot of DQs due to AFK checks
+        So we cancel all AFK checks for the matches that are going to have players DQed.
+        """
+        to_timeout = [
+            x
+            for x in self.matches
+            if not x.checked_dq
+            and x.duration > timedelta(minutes=self.delay)
+            and (x.player1.spoke is False or x.player2.spoke is False)
+        ]
+        if not to_timeout:
+            return
+        log.warning(
+            f"[Guild {self.guild.id}] Cancelling DQ checks for {len(to_timeout)} "
+            "matches due to loop task being resumed."
+        )
+        for match in to_timeout:
+            match.checked_dq = True
+        await self.to_channel.send(
+            _(
+                ":information_source: Task is being resumed after some time. To prevent "
+                "participants being incorrectly marked as AFK, {len} matches' AFK check are "
+                "disabled."
+            ).format(len=len(to_timeout))
+        )
+
+    async def start_loop_task(self):
         # We had some issues with duplicated tasks, this isn't even supposed to be possible, but
         # it somehow happened, and more than once. Having duplicated tasks is the worst scenario,
         # all channels and messages are duplicated, and most commands won't work,
@@ -2000,6 +2028,14 @@ class Tournament:
             for old_task in old_tasks:
                 if not old_task.done():
                     old_task.cancel()
+        try:
+            await self.cancel_timeouts()
+        except Exception as e:
+            log.error(
+                f"[Guild {self.guild.id}] Failed cancelling timeouts. "
+                "Loop task will still be resumed.",
+                exc_info=e,
+            )
         self.task = self.loop_task.start()
         self.task.set_name(task_name)
 
@@ -2259,7 +2295,7 @@ class Streamer:
         }
 
     def get_set(self, x):
-        return x.set if hasattr(x, "set") else x
+        return int(x.set) if hasattr(x, "set") else x
 
     def __str__(self):
         return self.link
@@ -2299,7 +2335,7 @@ class Streamer:
         else:
             self.matches = new_list
 
-    def swap_match(self, set1: str, set2: str):
+    def swap_match(self, set1: int, set2: int):
         try:
             i1, match1 = next(enumerate(filter(lambda x: set1 == self.get_set(x), self.matches)))
             i2, match2 = next(enumerate(filter(lambda x: set2 == self.get_set(x), self.matches)))

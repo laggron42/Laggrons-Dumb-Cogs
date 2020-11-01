@@ -137,7 +137,7 @@ class Games(MixinMeta):
 
         async def launch_sets():
             await tournament.launch_sets()
-            tournament.start_loop_task()
+            await tournament.start_loop_task()
             await tournament.save()
 
         tasks = [

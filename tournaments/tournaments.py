@@ -151,7 +151,7 @@ class Tournaments(
                 guild, self.data, self.__version__, data["tournament"], data
             )
             if tournament.phase == "ongoing":
-                tournament.start_loop_task()
+                await tournament.start_loop_task()
             return tournament
 
     async def restore_tournaments(self):

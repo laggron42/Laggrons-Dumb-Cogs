@@ -356,6 +356,7 @@ will be disabled for all ongoing matches at the time of the task pause.
         Resume the background task, after a bug or a manual pause.
 
         See `[p]help tfix pausetask` for details about the task.
+        Note that this may disable AFK checks for some matches to prevent seeing everyone removed.
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
@@ -363,6 +364,7 @@ will be disabled for all ongoing matches at the time of the task pause.
         failed = False
         try:
             async with ctx.typing():
+                await tournament.cancel_timeouts()
                 # dpy doesn't allow directly executing the coro, so I looked at the internals
                 # Loop._injected contains Tournament, aka self, not including this will fail
                 await tournament.loop_task.coro(tournament.loop_task._injected)
@@ -381,7 +383,7 @@ will be disabled for all ongoing matches at the time of the task pause.
             )
         else:
             await asyncio.sleep(2)
-            tournament.start_loop_task()
+            await tournament.start_loop_task()
             await ctx.send(_("The loop task was successfully resumed."))
 
     @only_phase("ongoing")
@@ -391,13 +393,16 @@ will be disabled for all ongoing matches at the time of the task pause.
         Run the background task only once.
 
         See `[p]help tfix pausetask` for details about the task.
+        Note that this may disable AFK checks for some matches to prevent seeing everyone removed.
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
         try:
-            # dpy doesn't allow directly executing the coro, so I looked at the internals
-            # Loop._injected contains Tournament, aka self, not including this will fail
-            await tournament.loop_task.coro(tournament.loop_task._injected)
+            async with ctx.typing():
+                await tournament.cancel_timeouts()
+                # dpy doesn't allow directly executing the coro, so I looked at the internals
+                # Loop._injected contains Tournament, aka self, not including this will fail
+                await tournament.loop_task.coro(tournament.loop_task._injected)
         except Exception as e:
             log.error(
                 f"[Guild {guild.id}] User tried to run the task once, but it failed", exc_info=e
