@@ -373,13 +373,16 @@ class Games(MixinMeta):
                     message = await ctx.send(embed=embed)
 
         index = 0
+        cancelling = False  # prevents sending a cancel signal twice to the loop
         try:
+            # this task will keep updating the content of a message
             update_message_task = self.bot.loop.create_task(update_message())
             for index, task in enumerate(tasks):
                 try:
                     await task[1]()
                 except achallonge.ChallongeException:
                     update_message_task.cancel()
+                    cancelling = True
                     await update_message(True)
                     raise
                 except Exception as e:
@@ -388,6 +391,7 @@ class Games(MixinMeta):
                         exc_info=e,
                     )
                     update_message_task.cancel()
+                    cancelling = True
                     await update_message(True)
                     await ctx.send(_("An error occured when ending the tournament."))
                     return
@@ -399,7 +403,8 @@ class Games(MixinMeta):
             index += 1
             await update_message()
         finally:
-            update_message_task.cancel()
+            if cancelling is False:
+                update_message_task.cancel()
         message = _("Tournament ended.")
         messages = {
             "categories": _("Failed deleting the following categories:"),
