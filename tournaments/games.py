@@ -1,4 +1,7 @@
 import asyncio
+from tournaments.objects.challonge import ChallongeMatch
+from random import randint
+from typing import List, Mapping
 import achallonge
 import discord
 import logging
@@ -813,29 +816,66 @@ class Games(MixinMeta):
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
+        # sort by suggested play order first
+        matches = sorted(
+            filter(lambda x: x.status == "ongoing", tournament.matches), key=lambda m: m.set
+        )
+        if not matches:
+            await ctx.send(_("No match currently ongoing."))
+            return
+        # then chunk them per round
+        rounds: Mapping[int, List[Match]] = {}
+        for match in matches:
+            try:
+                rounds[match.round].append(match)
+            except KeyError:
+                rounds[match.round] = [match]
+        del matches
+        # sort the matches within a round by time
+        rounds: List[List[Match]] = [
+            sorted(x, key=lambda m: m.start_time) for x in rounds.values()
+        ]
+        # convert to strings
+        rounds_str = {}
+        for matches in rounds:
+            text = ""
+            for match in matches:
+                text += _("Set {set} ({time}): {player1} vs {player2}\n").format(
+                    set=match.channel.mention
+                    if match.channel
+                    else _("#{set} *in DM*").format(set=match.set),
+                    time=str(match.duration).split(".")[0],
+                    player1=match.player1.mention,
+                    player2=match.player2.mention,
+                )
+            name = matches[0]._get_name()
+            rounds_str[name] = text
+        del rounds
+        # format as embed fields, chunked as blocks with < 1500 characters
+        # yes embeds can go further, but let's make things pretty okay?
+        fields = [[]]
+        total_char = 0
+        for name, value in rounds_str.items():
+            for i, page in enumerate(pagify(value, page_length=1024)):
+                if i == 1:
+                    name += _(" (continued)")
+                text_len = len(name) + len(value)
+                total_char += text_len
+                if total_char >= 1500:
+                    fields.append([{"name": name, "value": page}])
+                    total_char = text_len
+                else:
+                    fields[-1].append({"name": name, "value": page})
+        del rounds_str
+        embeds = []
         embed = discord.Embed(
-            title=_("List of ongoing matches"), description=_("Sorted by duration")
+            title=_("List of ongoing matches"), description=_("Sorted by play order and duration")
         )
         embed.url = tournament.url
-        text = ""
-        match: Match
-        for match in sorted(
-            filter(lambda x: x.status == "ongoing", tournament.matches), key=lambda x: x.start_time
-        ):
-            duration = datetime.now(tournament.tz) - match.start_time
-            text += _("Set {set} ({time}): {player1} vs {player2}\n").format(
-                set=match.channel.mention
-                if match.channel
-                else _("#{set} *in DM*").format(set=match.set),
-                time=str(duration).split(".")[0],
-                player1=match.player1.mention,
-                player2=match.player2.mention,
-            )
-        pages = list(pagify(text, page_length=1024))
-        embeds = []
-        for i, page in enumerate(pages):
+        for i, field_chunk in enumerate(fields, start=1):
             _embed = deepcopy(embed)
-            _embed.add_field(name="\u200B", value=page, inline=False)
-            _embed.set_footer(text=_("Page {i}/{total}").format(i=i, total=len(pages)))
+            for field in field_chunk:
+                _embed.add_field(**field, inline=False)
+            _embed.set_footer(text=_("Page {len}/{total}").format(len=i, total=len(fields)))
             embeds.append(_embed)
         await menus.menu(ctx, embeds, controls=menus.DEFAULT_CONTROLS)
