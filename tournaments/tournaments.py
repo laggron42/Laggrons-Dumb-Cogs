@@ -148,7 +148,7 @@ class Tournaments(
                 )
             data.update(game_data)
             tournament = await ChallongeTournament.from_saved_data(
-                guild, self.data, self.__version__, data["tournament"], data
+                self.bot, guild, self.data, self.__version__, data["tournament"], data
             )
             if tournament.phase == "ongoing":
                 await tournament.start_loop_task()

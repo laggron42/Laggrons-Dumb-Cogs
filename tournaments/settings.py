@@ -1181,6 +1181,7 @@ the start of the tournament, then closing 15 minutes before.
             await ctx.send(_("You need to define a start date and time on your tournament."))
             return
         tournament: ChallongeTournament = ChallongeTournament.build_from_api(
+            bot=self.bot,
             guild=guild,
             config=self.data,
             prefix=ctx.clean_prefix,

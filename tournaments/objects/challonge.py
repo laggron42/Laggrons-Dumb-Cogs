@@ -5,6 +5,7 @@ import logging
 from typing import List, Optional
 
 from redbot.core import Config
+from redbot.core.bot import Red
 from redbot.core.i18n import Translator
 
 from ..utils import async_http_retry
@@ -130,6 +131,7 @@ class ChallongeTournament(Tournament):
     @classmethod
     def build_from_api(
         cls,
+        bot: Red,
         guild: discord.Guild,
         config: Config,
         prefix: str,
@@ -138,6 +140,7 @@ class ChallongeTournament(Tournament):
         config_data: dict,
     ):
         return cls(
+            bot=bot,
             guild=guild,
             config=config,
             name=data["name"],
@@ -157,8 +160,8 @@ class ChallongeTournament(Tournament):
     tournament_type = "challonge"
 
     @classmethod
-    def from_saved_data(cls, guild, config, cog_version, data, config_data):
-        return super().from_saved_data(guild, config, cog_version, data, config_data)
+    def from_saved_data(cls, bot, guild, config, cog_version, data, config_data):
+        return super().from_saved_data(bot, guild, config, cog_version, data, config_data)
 
     async def request(self, method, *args, **kwargs):
         kwargs.update(credentials=self.credentials)

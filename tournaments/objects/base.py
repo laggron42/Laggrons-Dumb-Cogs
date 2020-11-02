@@ -21,7 +21,8 @@ from typing import Optional, Tuple, List, Union
 
 from redbot import __version__ as red_version
 from redbot.core import Config
-from redbot.core.i18n import Translator, get_babel_locale
+from redbot.core.bot import Red
+from redbot.core.i18n import Translator, get_babel_locale, set_contextual_locales_from_guild
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.chat_formatting import pagify
 
@@ -762,6 +763,7 @@ class Match:
 class Tournament:
     def __init__(
         self,
+        bot: Red,
         guild: discord.Guild,
         config: Config,
         name: str,
@@ -775,6 +777,7 @@ class Tournament:
         cog_version: str,
         data: dict,
     ):
+        self.bot = bot
         self.guild = guild
         self.data = config
         self.name = name
@@ -932,7 +935,13 @@ class Tournament:
     # Config-related stuff
     @classmethod
     async def from_saved_data(
-        cls, guild: discord.Guild, config: Config, cog_version: str, data: dict, config_data: dict,
+        cls,
+        bot: Red,
+        guild: discord.Guild,
+        config: Config,
+        cog_version: str,
+        data: dict,
+        config_data: dict,
     ):
         tournament_start = datetime.fromtimestamp(
             int(data["tournament_start"][0]),
@@ -951,6 +960,7 @@ class Tournament:
         checkin_reminders = data.pop("checkin_reminders")
         del data["tournament_start"], data["tournament_type"]
         tournament = cls(
+            bot,
             guild,
             config,
             **data,
@@ -2036,6 +2046,7 @@ class Tournament:
                 "Loop task will still be resumed.",
                 exc_info=e,
             )
+        await set_contextual_locales_from_guild(self.bot, self.guild)
         self.task = self.loop_task.start()
         self.task.set_name(task_name)
 
