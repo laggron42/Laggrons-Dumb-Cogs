@@ -197,7 +197,7 @@ class Games(MixinMeta):
                             ":information_source: A 422 error usually means there aren't enough "
                             "participants registered. Did you forget to use `{prefix}upload`?\n"
                             "If this problem persists, contact T.O.s or an admin of the bot."
-                        ).format(error=e.original.args[0])
+                        ).format(error=e.args[0])
                     )
                     return
                 raise
