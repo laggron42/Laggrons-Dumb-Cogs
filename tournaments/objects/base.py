@@ -409,8 +409,12 @@ class Match:
 
     async def _start(self):
         target = self.channel.send if self.channel else self._dm_players
+        self.status = "ongoing"
+        self.underway = True
+        self.checked_dq = False
+        self.start_time = datetime.now(self.tournament.tz)
         try:
-            await self.mark_as_underway()
+            await asyncio.wait_for(self.mark_as_underway(), timeout=60)
         except Exception as e:
             log.warning(
                 f"[Guild {self.guild.id}] Can't mark set {self.set} as underway.", exc_info=e
@@ -430,10 +434,6 @@ class Match:
                     "If you encounter an issue setting your score, contact a T.O."
                 )
             )
-        self.status = "ongoing"
-        self.underway = True
-        self.checked_dq = False
-        self.start_time = datetime.now(self.tournament.tz)
 
     async def launch(
         self,
