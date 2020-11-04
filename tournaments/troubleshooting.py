@@ -434,4 +434,3 @@ command as the lock could have been left locked due to a bug.
             await ctx.send(
                 _("Interlal lock released. There may be an issue somewhere, pay attention.")
             )
-
