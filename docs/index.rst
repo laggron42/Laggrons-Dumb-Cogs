@@ -66,6 +66,7 @@ Welcome to Laggron's Dumb Cogs's official documentation!
     :caption: API Reference
 
     roleinvite-api
+    tournaments-api
     warnsystem-api
 
 Indices and tables

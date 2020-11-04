@@ -18,6 +18,16 @@ _ = Translator("Tournaments", __file__)
 class ChallongeParticipant(Participant):
     @classmethod
     def build_from_api(cls, tournament: Tournament, data: dict):
+        """
+        Builds a new member from Challonge raw data.
+
+        Parameters
+        ----------
+        tournament: Tournament
+            The current tournament
+        data: dict
+            Data as provided by the API.
+        """
         member = tournament.guild.get_member_named(data["name"])
         if member is None:
             raise RuntimeError("Participant not found in guild.")
@@ -27,9 +37,16 @@ class ChallongeParticipant(Participant):
 
     @property
     def player_id(self):
+        """
+        Challonge player ID.
+        """
         return self._player_id
 
     async def destroy(self):
+        """
+        If the tournament has started, disqualifies a player on the bracket, else he's removed
+        from the list of participants.
+        """
         await self.tournament.request(
             achallonge.participants.destroy, self.tournament.id, self.player_id
         )
@@ -39,6 +56,18 @@ class ChallongeParticipant(Participant):
 class ChallongeMatch(Match):
     @classmethod
     async def build_from_api(cls, tournament: Tournament, data: dict):
+        """
+        Builds a new member from Challonge raw data.
+
+        This will also disqualify participants from the match not found in the server.
+
+        Parameters
+        ----------
+        tournament: Tournament
+            The current tournament
+        data: dict
+            Data as provided by the API.
+        """
         player1 = tournament.find_participant(player_id=data["player1_id"])[1]
         player2 = tournament.find_participant(player_id=data["player2_id"])[1]
         # here we will be looking for a very special case where the match and
@@ -139,6 +168,27 @@ class ChallongeTournament(Tournament):
         data: dict,
         config_data: dict,
     ):
+        """
+        Builds a new Tournament from Challonge raw data.
+
+        Parameters
+        ----------
+        bot: redbot.core.bot.Red
+            The bot object
+        guild: discord.Guild
+            The current guild for the tournament
+        config: redbot.core.Config
+            The cog's Config object
+        prefix: str
+            A prefix to use for displaying commands without context.
+        cog_version: str
+            Current version of Tournaments
+        data: dict
+            Data as provided by the API.
+        config_data: dict
+            A dict with all the config required for the tournament (combines guild and
+            game settings)
+        """
         return cls(
             bot=bot,
             guild=guild,
@@ -164,6 +214,11 @@ class ChallongeTournament(Tournament):
         return super().from_saved_data(bot, guild, config, cog_version, data, config_data)
 
     async def request(self, method, *args, **kwargs):
+        """
+        An util adding the credentials to the args before sending an API call.
+
+        Also wraps the request in a retry loop (max 3 then raise).
+        """
         kwargs.update(credentials=self.credentials)
         return await async_http_retry(method(*args, **kwargs))
 

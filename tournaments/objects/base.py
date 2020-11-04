@@ -35,6 +35,34 @@ TIME_UNTIL_TIMEOUT_DQ = 300
 
 
 class Participant(discord.Member):
+    """
+    Defines a participant in the tournament.
+
+    This inherits from `discord.Member` and adds the necessary additional methods.
+
+    Parameters
+    ----------
+    member: discord.Member
+        The member participating to the tournament
+    tournament: Tournament
+        The current tournament
+
+    Attributes
+    ----------
+    member: discord.Member
+        The member participating to the tournament
+    tournament: Tournament
+        The current tournament
+    elo: int
+        An integer representing the player's elo (seeding from braacket)
+    checked_in: bool
+        Defines if the member checked in
+    match: Optional[Match]
+        The player's current match. `None` if not in game.
+    spoke: bool
+        Defines if the member spoke once in his channel (used for AFK check)
+    """
+
     def __init__(self, member: discord.Member, tournament: Tournament):
         # code from discord.Member._copy
         self._roles = discord.utils.SnowflakeList(member._roles, is_sorted=True)
@@ -83,10 +111,19 @@ class Participant(discord.Member):
         }
 
     def reset(self):
+        """
+        Resets the `match` attribute to `None` and `spoke` to `False` (match ended).
+        """
         self.match = None
         self.spoke = False
 
     async def check(self):
+        """
+        Checks the member in.
+
+        In addition to changing the `checked_in` attribute, it also DMs the member
+        and saves the config.
+        """
         self.checked_in = True
         log.debug(f"[Guild {self.guild.id}] Player {self} registered.")
         await self.send(
@@ -98,16 +135,100 @@ class Participant(discord.Member):
 
     @property
     def player_id(self):
+        """
+        Returns an identifier for the player, specific to the bracket.
+
+        This should be overwritten.
+        """
         raise NotImplementedError
 
     async def destroy(self):
         """
         Removes the participant from the tournament.
+
+        Represents an API call and should be overwritten.
         """
         raise NotImplementedError
 
 
 class Match:
+    """
+    Defines a match in the tournament, with two players facing each other.
+
+    This should only be created when convenient, aka when a match needs to be started. Matches
+    with no players yet or finished are not builded.
+
+    Parameters
+    ----------
+    tournament: Tournament
+        The match's tournament.
+    round: str
+        The round of this match in the bracket (e.g. 1 for first round of winner bracket, -1 for
+        first round of loser bracket).
+    set: str
+        The number of the match. Challonge calls this the suggested play order (goes from 1 to N,
+        the number of matches in the bracket).
+    id: int
+        A unique identifier for the API
+    underway: bool
+        If the match is underway (provided by API)
+    player1: Participant
+        The first player of this match.
+    player2: Participant
+        The second player of this match.
+
+    Attributes
+    ----------
+    tournament: Tournament
+        The match's tournament.
+    round: str
+        The round of this match in the bracket (e.g. 1 for first round of winner bracket, -1 for
+        first round of loser bracket).
+    set: str
+        The number of the match. Challonge calls this the suggested play order (goes from 1 to N,
+        the number of matches in the bracket).
+    id: int
+        A unique identifier for the API
+    player1: Participant
+        The first player of this match.
+    player2: Participant
+        The second player of this match.
+    channel: Optional[discord.TextChannel]
+        The channel for this match. May be `None` if the match hasn't started yet, or if it
+        couldn't be created and is therefore in DM.
+    start_time: Optional[datetime]
+        Start time of this match. `None` if it hasn't started yet.
+    end_time: Optional[datetime]
+        End time of this match, or time of the latest message. `None` if it hasn't started or
+        ended yet. This is updated as soon as a message is sent in the channel. Used for knowing
+        when to delete the channel (5 min after last message).
+    status: str
+        Defines the current state of the match.
+
+        *   ``"pending"``: Waiting to be launched (no channel or stream pending)
+        *   ``"ongoing"``: Match started
+        *   ``"finished"``: Score set, awaiting channel deletion
+    warned: Optional[Union[datetime, bool]]
+        Defines if there was a warn for duration. `None` if no warn was sent, `datetime.datetime`
+        if there was one first warn sent (correspond to the time when it was send, we rely on that
+        to know when to send the second warn), and finally `True` when the second warn is sent
+        (to the T.O.s).
+    streamer: Optional[Streamer]
+        The streamer assigned to this match, if any.
+    on_hold: bool
+        `True` if the match is not started but on hold, awaiting something (most likely inside a
+        stream queue, waiting for its turn)
+    is_top8: bool
+        `True` if the match is in the top 8 of the tournament
+    is_bo5: bool
+        `True` if the match is in BO5 format instead of BO3
+    round_name: str
+        Name of the round (ex: Winner semi-finals, Loser round -2)
+    checked_dq: bool
+        If we performed AFK checks. Setting this to `True` is possible and will disable further
+        AFK checks for this match.
+    """
+
     def __init__(
         self,
         tournament: Tournament,
@@ -163,6 +284,9 @@ class Match:
 
     @property
     def duration(self) -> Optional[timedelta]:
+        """
+        Returns the duration of this match, or `None` if it hasn't started.
+        """
         if self.start_time:
             return datetime.now(self.tournament.tz) - self.start_time
 
@@ -353,6 +477,9 @@ class Match:
             return True
 
     async def start_stream(self):
+        """
+        Send a pending set, awaiting for its turn, on stream. Only call this if there's a streamer.
+        """
         destination = self.channel or self._dm_players
         if self.streamer.room_id:
             access = _("\n\nHere are the access codes:\nID: {id}\nPasscode: {passcode}").format(
@@ -371,6 +498,12 @@ class Match:
         )
 
     async def cancel_stream(self):
+        """
+        Call if the stream is cancelled (streamer left of match removed from queue).
+
+        A message will be sent, telling players to start playing, and AFK checks will be
+        re-enabled.
+        """
         destination = self.channel.send or self._dm_players
         self.streamer = None
         self.on_hold = False
@@ -507,6 +640,13 @@ class Match:
             await self.launch(restart=True)
 
     async def check_inactive(self):
+        """
+        Checks for inactive players (reads `Participant.spoke` only), and DQ them if required.
+
+        .. warning:: This doesn't check durations and assumes it's been done already.
+
+        Will set `checked_dq` to `True`.
+        """
         self.checked_dq = True
         players = (self.player1, self.player2)
         if all((x.spoke is False for x in players)):
@@ -564,6 +704,9 @@ class Match:
                 break
 
     async def warn_length(self):
+        """
+        Warn players in their channels because of the duration of their match.
+        """
         target = self.channel.send or self._dm_players
         message = _(
             ":warning: This match is taking a lot of time!\n"
@@ -586,6 +729,9 @@ class Match:
         self.warned = datetime.now(self.tournament.tz)
 
     async def warn_to_length(self):
+        """
+        Warn T.O.s because of the duration of this match. Also tell the players
+        """
         await self.tournament.to_channel.send(
             _(
                 ":warning: The set {set} is taking a lot of time (now open since {time} minutes)."
@@ -603,6 +749,18 @@ class Match:
     async def end(self, player1_score: int, player2_score: int, upload: bool = True):
         """
         Set the score and end the match.
+
+        The winner is determined by comparing the two scores (defaults to player 1 if equal).
+
+        Parameters
+        ----------
+        player1_score: int
+            First player's score.
+        player2_score: int
+            Second player's score.
+        upload: bool
+            If the score should be uploaded to the bracket. Set `False` to only send the message
+            with a note "score set on bracket" added. Defaults to `True`.
         """
         if upload is True:
             await self.set_scores(player1_score, player2_score)
@@ -666,6 +824,9 @@ class Match:
         Called when a player in the set is destroyed.
 
         There is no API call, just messages sent to the players.
+
+        player: Union[Participant, int]
+            The disqualified player. Provide an `int` if the member left.
         """
         self.cancel()
         if isinstance(player, int):
@@ -700,6 +861,11 @@ class Match:
         loser bracker.
 
         Sets a score of -1 0
+
+        Parameters
+        ----------
+        player: Participant
+            The player that forfeits.
         """
         if player.id == self.player1.id:
             score = (-1, 0)
@@ -721,6 +887,9 @@ class Match:
                 pass
 
     def cancel(self):
+        """
+        Mark a match as finished (updated `status` and `end_time` + calls `Participant.reset`)
+        """
         with contextlib.suppress(AttributeError):
             self.player1.reset()
             self.player2.reset()
@@ -761,6 +930,219 @@ class Match:
 
 
 class Tournament:
+    """
+    Represents a tournament in a guild.
+
+    This object is created as soon as the tournament is setup, and destroyed only once it ends.
+
+    The config is loaded inside and will not be updated unless reloaded.
+
+    This contains all of the methods useful for the tournament, a list of `Participant` and a list
+    of `Match`, and a `discord.ext.tasks.Loop` task updating the infos from the bracket.
+
+    This contains the base structure, but no interface with a bracket, this has to be implemented
+    later by inheriting from this class and overwriting the abstract methods, allowing multiple
+    providers to work with the same structure.
+
+    If you're implementing this for a new provider, the following methods need to be implemented:
+
+    *   `_get_all_rounds`
+    *   `_update_match_list`
+    *   `_update_participants_list`
+    *   `start`
+    *   `stop`
+    *   `add_participant`
+    *   `add_participants`
+    *   `destroy_player`
+    *   `list_participants`
+    *   `list_matches`
+    *   `reset`
+
+    And set the following class vars with your other inherited objects for `Participant` and
+    `Match` :
+
+    *   `match_object`
+    *   `participant_object`
+
+    See ``challonge.py`` for an example.
+
+    Parameters
+    ----------
+    bot: redbot.core.bot.Red
+        The bot object
+    guild: discord.Guild
+        The current guild for the tournament
+    config: redbot.core.Config
+        The cog's Config object
+    name: str
+        Name of the tournament
+    game: str
+        Name of the game
+    url: str
+        Link of the bracket
+    id: str
+        Internal ID for the tournament
+    limit: Optional[int]
+        An optional limit of participants
+    status: str
+        The status provided by the API
+    tournament_start: datetime.datetime
+        Expected start time for this tournament. Planned events are based on this.
+    bot_prefix: str
+        A prefix to use for displaying commands without context.
+    cog_version: str
+        Current version of Tournaments
+    data: dict
+        A dict with all the config required for the tournament (combines guild and game settings)
+
+    Attributes
+    ----------
+    bot: redbot.core.bot.Red
+        The bot object
+    guild: discord.Guild
+        The current guild for the tournament
+    config: redbot.core.Config
+        The cog's Config object
+    name: str
+        Name of the tournament
+    game: str
+        Name of the game
+    url: str
+        Link of the bracket
+    id: str
+        Internal ID for the tournament
+    limit: Optional[int]
+        An optional limit of participants
+    status: str
+        The status provided by the API
+    tournament_start: datetime.datetime
+        Expected start time for this tournament. Planned events are based on this.
+    tz: datetime.tzinfo
+        The timezone of the tournament. You need to use this when creating datetime objects.
+
+        .. code-block:: python
+
+            from datetime import datetime
+            now = datetime.now(tz=tournament.tz)
+    bot_prefix: str
+        A prefix to use for displaying commands without context.
+    cog_version: str
+        Current version of Tournaments
+    participants: List[Participant]
+        List of participants in the tournament
+    matches: List[Match]
+        List of open matches in the tournament
+    streamers: List[Streamer]
+        List of streamers in the tournament
+    winner_categories: List[discord.CategoryChannel]
+        List of categories created for the winner bracket
+    loser_categories: List[discord.CategoryChannel]
+        List of categories created for the loser bracket
+    category: Optional[discord.CategoryChannel]
+        The category defined (our categories will be created below)
+    announcements_channel: Optional[discord.TextChannel]
+        The channel for announcements
+    checkin_channel: Optional[discord.TextChannel]
+        The channel for check-in
+    queue_channel: Optional[discord.TextChannel]
+        The channel for match queue
+    register_channel: Optional[discord.TextChannel]
+        The channel for registrations
+    scores_channel: Optional[discord.TextChannel]
+        The channel for score setting
+    stream_channel: Optional[discord.TextChannel]
+        The channel for announcing matches on stream
+    to_channel: discord.TextChanne]
+        The channel for tournament organizers. Send warnings there.
+    vip_register_channel: Optional[discord.TextChannel]
+        A channel where registrations are always open
+    participant_role: discord.Role
+        The role given to participants
+    streamer_role: Optional[discord.Role]
+        Role giving access to stream commands
+    to_role: Optional[discord.Role]
+        Role giving access to T.O. commands
+    credentials: dict
+        Credentials for connecting to the bracket
+    delay: int
+        Time in minutes until disqualifying a participant for AFK
+    time_until_warn: dict
+        Represents the different warn times for duration
+    autostop_register: bool
+        Should the bot close registrations when it's full?
+    ignored_events: list
+        A list of events to ignore (checkin/register start/stop)
+    register_start: Optional[datetime.datetime]
+        When we should open the registrations automatically
+    register_second_start: Optional[datetime.datetime]
+        When we should open the registrations a second time automatically
+    register_stop: Optional[datetime.datetime]
+        When we should close the registrations automatically
+    checkin_start: Optional[datetime.datetime]
+        When we should open the checkin automatically
+    checkin_stop: Optional[datetime.datetime]
+        When we should close the checkin automatically
+    ruleset_channel: Optional[discord.TextChannel]
+        Channel for the rules
+    game_role: Optional[discord.Role]
+        Role targeted at players for this game. Basically we use that role when opening the
+        registrations, for opening the channel and pinging.
+    baninfo: Optional[str]
+        Baninfo set (ex: 3-4-2)
+    ranking: dict
+        Data for braacket ranking
+    stages: List[str]
+        List of allowed stages
+    counterpicks: List[str]
+        List of allowed counterpicks
+    phase: str
+        Something very important! Used for knowing what is the current phase of the tournament.
+        It is also used by commands to know if it is allowed to run.
+
+        Can be the following values:
+
+        *   ``"pending"``: Tournament just setup, nothing open yet
+        *   ``"register"``: Registrations or check-in started and are not finished
+        *   ``"awaiting"``: Registrations and check-in done, awaiting upload and start
+        *   ``"ongoing"``: Tournament is started and ongoing
+        *   ``"finished"``: Tournament done. Should be immediatly deleted unless there's an issue
+    register_phase: str
+        Defines the current status of registration.
+
+        Can be the following values:
+
+        *   ``"manual"``: No start date setup, waiting for manual start
+        *   ``"pending"``: Start date setup, awaiting automatic start
+        *   ``"ongoing"``: Registrations active
+        *   ``"onhold"``: Registrations started and ended once, but awaiting a second start
+        *   ``"done"``: Registrations ended
+    checkin_phase: str
+        Defines the current status of check-in.
+
+        Can be the following values:
+
+        *   ``"manual"``: No start date setup, waiting for manual start
+        *   ``"pending"``: Start date setup, awaiting automatic start
+        *   ``"ongoing"``: Check-in active
+        *   ``"onhold"``: Check-in started and ended once, but awaiting a second start
+        *   ``"done"``: Check-in ended
+    register_message: Optional[discord.Message]
+        The pinned message in the registrations channel
+    checkin_reminders: List[Tuple[int, bool]]
+        A list of reminders to send for the check-in. Contains tuples of two items: when to send
+        the reminder (minutes before check-in end date), and if the bot should DM members. This is
+        calculated on check-in start.
+    lock: asyncio.Lock
+        A lock acquired when the tournament is being refreshed by the loop task, to prevent
+        commands like win or dq from being run at the same time.
+    task: asyncio.Task
+        The task for the `loop_task` function (`discord.ext.tasks.Loop` object)
+    task_errors: int
+        Number of errors that occured within the loop task. If it reaches 5, task is cancelled.
+    top_8: dict
+        Represents when the top 8 and bo5 begins in the bracket.
+    """
+
     def __init__(
         self,
         bot: Red,
@@ -918,6 +1300,9 @@ class Tournament:
     tournament_type = "base"  # should be "challonge", or "smash.gg"...
 
     def cancel(self):
+        """
+        Correctly clears the object, stopping the task and removing ranking data.
+        """
         if self.task:
             self.stop_loop_task()
         # try:
@@ -943,6 +1328,12 @@ class Tournament:
         data: dict,
         config_data: dict,
     ):
+        """
+        Loads a tournament from Config.
+
+        Due to Python's weird behaviour, this method must be reimplemented and simply called back
+        without changes.
+        """
         tournament_start = datetime.fromtimestamp(
             int(data["tournament_start"][0]),
             tz=timezone(timedelta(seconds=data["tournament_start"][1])),
@@ -1066,11 +1457,18 @@ class Tournament:
         return data
 
     async def save(self):
+        """
+        Saves data with Config. This is done with the loop task during a tournament but must be
+        called while it's not ongoing.
+        """
         data = self.to_dict()
         await self.data.guild(self.guild).tournament.set(data)
 
     @property
     def allowed_roles(self):
+        """
+        Return a list of roles that should have access to the temporary channels.
+        """
         allowed_roles = []
         if self.to_role is not None:
             allowed_roles.append(self.to_role)
@@ -1228,6 +1626,14 @@ class Tournament:
             top8["loser"]["bo5"] = -1
 
     async def warn_bracket_change(self, *sets):
+        """
+        Warn T.O.s of a bracket change.
+
+        Parameters
+        ----------
+        *sets: str
+            The list of affected sets.
+        """
         await self.to_channel.send(
             _(
                 ":information_source: Changes were detected on the upstream bracket.\n"
@@ -1244,6 +1650,31 @@ class Tournament:
         discord_id: Optional[int] = None,
         discord_name: Optional[str] = None,
     ) -> Tuple[int, Participant]:
+        """
+        Find a participant in the internal cache, and returns its object and position in the list.
+
+        You need to provide only one of the parameters.
+
+        Parameters
+        ----------
+        player_id: Optional[str]
+            Player's ID on the bracket, as returned by `Participant.player_id`
+        discord_id: Optional[int]
+            Player's Discord ID
+        discord_name: Optional[str], as returned by `discord.Member.id`
+            Player's full Discord name, as returned by ``str(discord.Member)``
+
+        Returns
+        -------
+        Tuple[int, Participant]
+            The index of the participant in the list (useful for deletion or deplacement) and
+            its `Participant` object
+
+        Raises
+        ------
+        RuntimeError
+            No parameter was provided
+        """
         if player_id:
             try:
                 return next(
@@ -1272,6 +1703,33 @@ class Tournament:
         match_set: Optional[int] = None,
         channel_id: Optional[int] = None,
     ) -> Tuple[int, Match]:
+        """
+        Find a match in the internal cache, and returns its object and position in the list.
+
+        You need to provide only one of the parameters.
+
+        Parameters
+        ----------
+        match_id: Optional[int]
+            Match's ID on the bracket, as returned by `Match.id`
+        match_set: Optional[int]
+            Match's number, or suggested play order, on the bracket, as returned by `Match.set`
+        channel_id: Optional[id]
+            Discord channel's ID, as returned by `discord.TextChannel.id`
+
+            .. warning:: A match may not have a channel assigned
+
+        Returns
+        -------
+        Tuple[int, Match]
+            The index of the match in the list (useful for deletion or deplacement) and
+            its `Match` object
+
+        Raises
+        ------
+        RuntimeError
+            No parameter was provided
+        """
         if match_id:
             try:
                 return next(filter(lambda x: x[1].id == match_id, enumerate(self.matches)))
@@ -1297,6 +1755,30 @@ class Tournament:
     def find_streamer(
         self, *, channel: Optional[str] = None, discord_id: Optional[int] = None
     ) -> Tuple[int, Streamer]:
+        """
+        Find a streamer in the internal cache, and returns its object and position in the list.
+
+        You need to provide only one of the parameters.
+
+        Parameters
+        ----------
+        channel: Optional[str]
+            The streamer's channel, as returned by `Streamer.channel` (not full URL, only last
+            part). Example for https://twitch.tv/dreekius, use ``channel="dreekius"``.
+        discord_id: Optional[int]
+            Streamer's Discord ID
+
+        Returns
+        -------
+        Tuple[int, Streamer]
+            The index of the streamer in the list (useful for deletion or deplacement) and
+            its `Streamer` object
+
+        Raises
+        ------
+        RuntimeError
+            No parameter was provided
+        """
         if channel:
             try:
                 return next(filter(lambda x: x[1].channel == channel, enumerate(self.streamers)))
@@ -1355,6 +1837,15 @@ class Tournament:
         )
 
     async def start_registration(self, second=False):
+        """
+        Open the registrations and save.
+
+        Parameters
+        ----------
+        second: bool
+            If this is the second time registrations are started (will not annouce the same
+            message, and keep updating the same pinned message). Defaults to `False`.
+        """
         self.phase = "register"
         self.register_phase = "ongoing"
         if self.register_channel:
@@ -1445,6 +1936,18 @@ class Tournament:
         await self.save()
 
     async def end_registration(self, background=False):
+        """
+        Close the registrations and save.
+
+        If the check-in is also done, participants will be seeded and uploaded.
+
+        Parameters
+        ----------
+        background: bool
+            If the function is called in a background loop. If `True`, the bot will do actions
+            knowing there's no context command (for now, means a background seed and upload).
+            Defaults to `False`.
+        """
         if self.register_second_start and self.register_second_start > datetime.now(self.tz):
             self.register_phase = "onhold"
         else:
@@ -1467,6 +1970,11 @@ class Tournament:
         await self.save()
 
     async def start_check_in(self):
+        """
+        Open the check-in and save.
+
+        This will also calculate and fill the `checkin_reminders` list.
+        """
         if not self.participants:
             self.checkin_phase = "done"
             message = _("Cancelled check-in start since there are currently no participants. ")
@@ -1535,6 +2043,14 @@ class Tournament:
         Pings participants that have not checked in yet.
 
         Only works with a check-in channel setup and a stop time.
+
+        Parameters
+        ----------
+        with_dm: bool
+            If the bot should DM unchecked members too. Defaults to `False`.
+
+            .. caution:: Prevent using this if there are too many unchecked members, as Discord
+                started to ban bots sending too many DMs.
         """
         if not self.checkin_channel:
             return
@@ -1570,6 +2086,18 @@ class Tournament:
                     pass
 
     async def end_checkin(self, background=False):
+        """
+        Close the check-in, unregister unchecked members (attempts to DM) and save.
+
+        If the registrations are also done, participants will be seeded and uploaded.
+
+        Parameters
+        ----------
+        background: bool
+            If the function is called in a background loop. If `True`, the bot will do actions
+            knowing there's no context command (for now, means a background seed and upload).
+            Defaults to `False`.
+        """
         self.checkin_phase = "done"
         to_remove = []
         failed = []
@@ -1626,6 +2154,23 @@ class Tournament:
         await self.save()
 
     async def register_participant(self, member: discord.Member, send_dm: bool = True):
+        """
+        Register a new participant to the tournament (add role) and save.
+
+        If the check-in has started, participant will be pre-checked.
+
+        If there is a limit of participants, the auto-stop setting for registrations is enabled and
+        the limit is reached, registrations will be closed.
+
+        The `Participant` object is not returned and directly added to the list.
+
+        Parameters
+        ----------
+        member: discord.Member
+            The member to register. He must be in the server.
+        send_dm: bool
+            If the bot should DM the new participant for his registrations. Defaults to `True`.
+        """
         if self.limit and len(self.participants) >= self.limit:
             raise RuntimeError("Limit reached.")
         await member.add_roles(self.participant_role, reason=_("Registering to tournament."))
@@ -1653,6 +2198,24 @@ class Tournament:
             pass
 
     async def unregister_participant(self, member: discord.Member):
+        """
+        Remove a participant.
+
+        If the player is uploaded on the bracket, he will also be removed from there. If the
+        tournament has started, member will be disqualified instead.
+
+        This removes roles and DMs the participant.
+
+        Parameters
+        ----------
+        member: discord.Member
+            The member to disqualify
+
+        Raise
+        -----
+        KeyError
+            The member is not registered
+        """
         i, participant = self.find_participant(discord_id=member.id)
         if i is None:
             raise KeyError("Participant not found.")
@@ -1728,6 +2291,17 @@ class Tournament:
         self.participants = sorted_participants + not_ranked
 
     async def seed_participants_and_upload(self, remove_unchecked: bool = False):
+        """
+        Seed the participants if ranking info is configured, then upload the list to the bracket.
+
+        .. warning:: This will clear the previous list of participants on the bracket.
+
+        Parameters
+        ----------
+        remove_unchecked: bool
+            If unchecked members should be removed from the internal list and the upload. Defaults
+            to `False`
+        """
         if self.ranking["league_name"] and self.ranking["league_id"]:
             await self._fetch_braacket_ranking_info()
             await self._seed_participants()
@@ -1761,6 +2335,15 @@ class Tournament:
 
     # starting the tournament...
     async def send_start_messages(self):
+        """
+        Send the required messages when starting the tournament.
+
+        Depending on the configured channels, announcements will be sent in:
+
+        *   The announcements channel
+        *   The scores channel
+        *   The queue channel
+        """
         scores_channel = (
             _(" in {channel}").format(channel=self.scores_channel.mention)
             if self.scores_channel
@@ -1839,6 +2422,13 @@ class Tournament:
 
     # now this is the loop task stuff, the one that runs during the tournament (not other phases)
     async def launch_sets(self):
+        """
+        Launch pending matches, creating a channel and marking the match as ongoing.
+
+        This only launches 20 matches max.
+
+        This is wrapped inside `asyncio.gather`, so errors will not propagate.
+        """
         match: Match
         coros = []
         # islice will limit the output to 20. see this as list[:20] but with a generator
@@ -1856,16 +2446,28 @@ class Tournament:
             log.error(f"[Guild {self.guild.id}] Can't launch a set.", exc_info=result)
 
     def update_streamer_list(self):
+        """
+        Update the internal streamer's list (next stream attr)
+        """
         for streamer in self.streamers:
             streamer._update_list()
 
     async def launch_streams(self):
+        """
+        Launch the streams (call the next matches in the streamer's queue).
+
+        You must call `update_streamer_list` first.
+        """
         match: Match
         for match in filter(lambda x: x.streamer and x.on_hold, self.matches):
             if match.streamer.current_match and match.streamer.current_match.id == match.id:
                 await match.start_stream()
 
     async def check_for_channel_timeout(self):
+        """
+        Look through the ongoing/finished matches and compare durations to see if AFK check or
+        channel deletion is required, and proceed.
+        """
         match: Match
         for i, match in filter(
             lambda x: x[1].status != "pending" and x[1].channel is not None,
@@ -1890,6 +2492,9 @@ class Tournament:
                     del self.matches[i]
 
     async def check_for_too_long_matches(self):
+        """
+        Look through the ongoing matches and verifies the duration. Warn if necessary.
+        """
         match: Match
         for match in filter(
             lambda x: x.status == "ongoing" and x.channel and not x.on_hold and x.streamer is None,
@@ -1960,6 +2565,24 @@ class Tournament:
 
     @tasks.loop(seconds=15)
     async def loop_task(self):
+        """
+        A `discord.ext.tasks.Loop` object, started with the tournament's start and running each 15
+        seconds.
+
+        Does the required background stuff, such as updating the matches list, launch new matches,
+        update streamers, check for AFK...
+
+        Running this will acquire our `lock`.
+
+        See the documentation on a Loop object for more details.
+
+        .. warning:: Use `start_loop_task` for starting the task, not `Loop.start`.
+
+        Raises
+        ------
+        asyncio.TimeoutError
+            Running the task took more than 10 seconds
+        """
         # we're using a lock to prevent actions such as score setting of DQs being done while we're
         # updating the match list, which can make the bot think there were manual bracket changes
         async with self.lock:
@@ -1995,8 +2618,9 @@ class Tournament:
 
     async def cancel_timeouts(self):
         """
-        Sometimes relaunching the bot after too long will result in a lot of DQs due to AFK checks
-        So we cancel all AFK checks for the matches that are going to have players DQed.
+        Sometimes relaunching the bot after too long will result in a lot of DQs due to AFK checks,
+        so this function will cancel all AFK checks for the matches that are going to have
+        players DQed.
         """
         to_timeout = [
             x
@@ -2022,10 +2646,23 @@ class Tournament:
         )
 
     async def start_loop_task(self):
+        """
+        Starts the internal loop task.
+
+        This will check for possible leftovers and cancel any previous task matching our name
+        within the current asyncio loop. We **do not** want duplicated tasks, as this will result
+        in the worst nightmare (RIP DashDances #36 and Super Smash Bronol #46).
+
+        Then we try to prevent abusive disqualifications with `cancel_timeouts`. Oh and we also
+        set a contextual locale for i18n, see
+        `redbot.core.i18n.set_contextual_locales_from_guild`.
+
+        Finally, the task is started and given the name "Tournament {tournamet_id}"
+        """
         # We had some issues with duplicated tasks, this isn't even supposed to be possible, but
         # it somehow happened, and more than once. Having duplicated tasks is the worst scenario,
         # all channels and messages are duplicated, and most commands won't work,
-        # ruining a tournament (R.I.P. DashDances #36 and Super Smash Bronol #46)
+        # ruining a tournament
         #
         # To prevent this from happening, we're giving a name to our task (based on ID) and
         # check if there are tasks with the same name within the current asyncio loop
@@ -2051,6 +2688,9 @@ class Tournament:
         self.task.set_name(task_name)
 
     def stop_loop_task(self):
+        """
+        Stops the loop task. This is preferred over `discord.ext.tasks.Loop.cancel`.
+        """
         if self.task and not self.task.done():
             self.task.cancel()
 
@@ -2222,6 +2862,7 @@ class Tournament:
         player_id: str
             The player to remove.
         """
+        raise NotImplementedError
 
     async def list_participants(self) -> List[Participant]:
         """
@@ -2256,6 +2897,39 @@ class Streamer:
     """
     Represents a streamer in the tournament. Will be assigned to matches. Does not necessarily
     exists on remote depending on the provider.
+
+    There is no API call in this class *for now*.
+
+    Parameters
+    ----------
+    tournament: Tournament
+        The current tournament
+    member: discord.Member
+        The streamer on Discord. Must be in the tournament's guild.
+    channel: str
+        The streamer's channel. Must only be the last part of the URL, not full. (e.g. for
+        https://twitch.tv/el_laggron use ``channel="el laggron"``)
+
+    Attributes
+    ----------
+    tournament: Tournament
+        The current tournament
+    member: discord.Member
+        The streamer on Discord. Must be in the tournament's guild.
+    channel: str
+        The streamer's channel. Must only be the last part of the URL, not full. (e.g. for
+        https://twitch.tv/el_laggron use ``channel="el laggron"``)
+    link: str
+        The streamer's full channel URL
+    room_id: str
+        Streamer's room ID, specific to Smash Bros.
+    room_code: str
+        Streamer's room code, specific to Smash Bros.
+    matches: List[Union[Match, int]]
+        The list of matches in the streamer's queue. Can be `Match` if it exists (both players
+        available, on hold) or `int`, representing the set.
+    current_match: Optional[Match]
+        The streamer's current match.
     """
 
     def __init__(
@@ -2306,16 +2980,48 @@ class Streamer:
         }
 
     def get_set(self, x):
+        """
+        Return the set number of a match in the streamer's queue. Accepts `Match` or `int`.
+
+        Parameters
+        ----------
+        x: Union[Match, int]
+            The match you need
+        """
         return int(x.set) if hasattr(x, "set") else x
 
     def __str__(self):
         return self.link
 
     def set_room(self, room_id: str, code: Optional[str] = None):
+        """
+        Set streamer's room info (specific to Smash Bros.)
+
+        Parameters
+        ----------
+        room_id: str
+            Streamer's room ID
+        code: Optional[str]
+            Streamer's room code
+        """
         self.room_id = room_id
         self.room_code = code
 
     def add_matches(self, *sets: int):
+        """
+        Add a list of matches to the streamer's queue.
+
+        Parameters
+        ----------
+        *sets: int
+            The list of sets you want to add. Only `int`, no `Match` instance.
+
+        Returns
+        -------
+        dict
+            A dictionnary of the errors that occured (set -> translated error msg). If this is
+            empty, it's all good.
+        """
         errors = {}
         for _set in sets:
             if _set in [self.get_set(x) for x in self.matches]:
@@ -2340,6 +3046,19 @@ class Streamer:
         return errors
 
     def remove_matches(self, *sets: int):
+        """
+        Remove a list of matches from the streamer's queue.
+
+        Parameters
+        ----------
+        *sets: int
+            The list of sets you want to remove. Only `int`, no `Match` instance.
+
+        Raises
+        ------
+        KeyError
+            The list was unchanged.
+        """
         new_list = [x for x in self.matches if self.get_set(x) not in sets]
         if len(new_list) == len(self.matches):
             raise KeyError("None of the given sets found.")
@@ -2347,6 +3066,21 @@ class Streamer:
             self.matches = new_list
 
     def swap_match(self, set1: int, set2: int):
+        """
+        Swap the position of two matches in the streamer's queue.
+
+        Parameters
+        ----------
+        set1: int
+            The first set.
+        set2: int
+            The second set.
+
+        Raises
+        ------
+        KeyError
+            One or more sets not found
+        """
         try:
             i1, match1 = next(enumerate(filter(lambda x: set1 == self.get_set(x), self.matches)))
             i2, match2 = next(enumerate(filter(lambda x: set2 == self.get_set(x), self.matches)))
@@ -2356,6 +3090,11 @@ class Streamer:
         self.matches[i2] = match1
 
     async def end(self):
+        """
+        Cancels all streams for the streamer's queue, telling the players.
+
+        Basically calls `Match.cancel_stream` for existing matches.
+        """
         for match in filter(lambda x: isinstance(x, Match), self.matches):
             await match.cancel_stream()
 
