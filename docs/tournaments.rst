@@ -6,6 +6,10 @@ This is the guide for the ``tournaments`` cog. Everything you need is here.
 
 ``[p]`` is considered as your prefix.
 
+.. tip:: If you're a french user, you should check the website of my public
+    Red instance : `https//atos.laggron.red/`_, the documentation for
+    Tournaments is way more detailed towards end users.
+
 ------------
 Installation
 ------------
@@ -168,11 +172,19 @@ Some additional settings you can set:
 *   ``[p]tset start_bo5`` defines at what point you want to move from BO3
     format to BO5.
 
+*   ``[p]tset warntime`` customize the warnings sent for match duration.
+
 *   ``[p]tset register`` defines when the registration should start and stop.
-    See details in the commands section.
+    See details in the :ref:`registrations section <register-checkin>`.
 
 *   ``[p]tset checkin`` defines when the check-in should start and stop.
-    See details in the commands section.
+    See details in the :ref:`registrations section <register-checkin>`.
+
+*   ``[p]tset autostopregister`` if registrations should be closed when filled.
+    See details in the :ref:`registrations section <register-checkin>`.
+
+*   ``[p]tset twostageregister`` defines a second start for registrations.
+    See details in the :ref:`registrations section <register-checkin>`.
 
 ----
 
@@ -190,16 +202,117 @@ You will be able to define the legal stage list, list of counters, channel of
 rules, role allowed to register (also pinged on registration start), info on
 the mode of bans (like 3-4-1), and even braacket informations for seeding.
 
+.. _register-checkin:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Registration and check-in phases
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The cog handles registrations and check-in, automatic or manual.
+
+Type ``[p]register start`` to start registrations. An announcement will be
+sent, and the command ``[p]in`` will be available.
+
+*   If you configured a registrations channel, the bot will open that channel
+    to your game role and the ``[p]in`` command will be locked to the channel.
+    There is also a message pinned with the number of participants.
+
+Then type ``[p]register stop`` to end this phase. You can resume it later.
+
+----
+
+It's pretty much the same thing for check-in, but you have to keep some things
+in mind:
+
+*   The check-in requires all registered participants to confirm their presence
+    by typing ``[p]in`` again.
+
+*   When ending the check-in, all unchecked participants will be removed.
+
+*   If you configured a closing date, the bot may send reminders, pinging
+    and/or DMing remaining members. This can be done manually with ``[p]checkin
+    call``.
+
+"""""""""""""""""""""""""
+Automatic opening/closing
+"""""""""""""""""""""""""
+
+You can configure opening and closing dates for both, based on tournament's
+start date.
+
+You have to calculate the number of minutes before the scheduled start time.
+
+Here's an example situation:
+
+*   Your tournament starts on **Saturday at 3:00 PM**
+*   You want registrations to start on **Friday at 7:00 PM**
+*   You need a check-in on **Saturday betweeen 2:00 and 2:40 PM**
+*   Registrations should end on **Saturday at 2:45 PM**
+
+You will have to run the following commands:
+
+*   ``[p]tset register 1200 15``: opens 1200 minutes (20 hours) and closes 15
+    minutes before tournament's start time.
+
+*   ``[p]tset checkin 60 20``: opens 60 minutes (1 hour) and closes 20
+    minutes before tournament's start time.
+
+.. tip:: If you're unsure, the bot will give you the exact date and time
+    calculated for both phases when setting up a tournament, asking for
+    confirmation.
+
+Even with this configured, you can still use the commands to manually start
+and stop.
+
+"""""""""""""""""""
+Close when complete
+"""""""""""""""""""
+
+For large scale tournaments, you may not want to keep the registrations ongoing
+forever with everyone spamming for a place.
+
+You can make the bot automatically close registrations when the limit of
+participants (defined on Challonge) is reached by enabling the setting with
+``[p]tset autostopregister``.
+
+"""""""""""""""""""""""
+Two-stage registrations
+"""""""""""""""""""""""
+
+Once again useful for big tournaments that uses the previous setting, you can
+give a second opening time for registrations.
+
+The bot will try opening registrations if they're closed, else nothing
+happens.
+
+Configure that second time with ``[p]tset twostageregister``.
+
+Let's use our previous example. Registrations end very soon due to the
+number of participants, but you want to have last-minute registrations for
+the places left by check-in. So, as soon as the check-in ends, registrations
+are re-opened. Then type this :
+
+*   ``[p]tset twostageregister 20`` reopens 20 minutes before tournament
+    start.
+
+The configured closing time is still applied.
+
 ----
 
 All good! We went across all settings, you can check those with the
 ``[p]tset settings`` and ``[p]tset games show`` commands.
 
-You can now start your first tournament with ``[p]setup``.
+^^^^^^^^^^^^^^^^
+Add a tournament
+^^^^^^^^^^^^^^^^
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Registration and check-in phases
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+You can then create a tournament on Challonge.
+
+Make sure the format is correct (single/double elimination), game name set,
+and start time configured.
+
+Then you can run ``[p]setup`` with the link of your tournament. Check that
+all informations are correct then confirm.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Start and manage the tournament
@@ -207,6 +320,9 @@ Start and manage the tournament
 
 Once you consider everything is good (check the bracket online to make sure),
 start the tournament with ``[p]start``.
+
+You may want to make sure participants are uploaded to the bracket with
+``[p]upload`` before (clears previous list and seeding).
 
 Multiple things will occur: first the tournament will be marked as started on
 Challonge, then the bot will send all the initial messages in the defined
@@ -230,7 +346,8 @@ Players are able to use the ``[p]lag`` command, asking for a lag test. A
 message will then be sent in the T.O. channel.
 
 If a set takes too much time, the players will be warned first, then if it is
-still not done, a message is sent in the T.O. channel.
+still not done, a message is sent in the T.O. channel (customizable with
+``[p]tset warntime``).
 
 You can edit things in the bracket yourself, such as setting a score or even
 resetting a match. The bot should handle all changes, resulting in matches
