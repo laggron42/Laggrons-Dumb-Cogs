@@ -604,6 +604,15 @@ class Games(MixinMeta):
         if player.match is None:
             await ctx.send(_("You don't have any ongoing match."))
             return
+        if player.match.status != "ongoing":
+            await ctx.send(
+                _(
+                    "Your match has not started yet.\n"
+                    "You're either awaiting for a stream, or an error occured internally. "
+                    "You can ask a T.O. for a manual score setting."
+                )
+            )
+            return
         if scores_channel is not None and scores_channel.id != ctx.channel.id:
             await ctx.send(
                 _("You have to use this command in {channel}.").format(
