@@ -2407,10 +2407,16 @@ class Tournament:
                 "announced here, and in your channel.\n"
                 ":white_small_square: Any BO5 set will be precised here and in your channel.\n"
                 ":white_small_square: The player beginning the bans is picked and "
-                "annonced in your channel (you can also use `{prefix}flip`).\n\n"
-                ":timer: **You will be disqualified if you were not active in your channel** "
-                "within the {delay} first minutes after the set launch."
-            ).format(delay=self.delay, prefix=self.bot_prefix),
+                "annonced in your channel (you can also use `{prefix}flip`).\n\n{dq}"
+            ).format(
+                prefix=self.bot_prefix,
+                dq=_(
+                    ":timer: **You will be disqualified if you were not active in your channel** "
+                    "within the {delay} first minutes after the set launch."
+                ).format(delay=self.delay)
+                if self.delay > 0
+                else "",
+            ),
         }
         for channel, message in messages.items():
             if channel is None:
@@ -2473,7 +2479,7 @@ class Tournament:
             lambda x: x[1].status != "pending" and x[1].channel is not None,
             enumerate(self.matches),
         ):
-            if match.status == "ongoing":
+            if self.delay > 0 and match.status == "ongoing":
                 if not match.checked_dq and match.duration > timedelta(minutes=self.delay):
                     log.debug(f"Checking inactivity for match {match.set}")
                     await match.check_inactive()
@@ -2622,6 +2628,8 @@ class Tournament:
         so this function will cancel all AFK checks for the matches that are going to have
         players DQed.
         """
+        if self.delay == 0:
+            return
         to_timeout = [
             x
             for x in self.matches
