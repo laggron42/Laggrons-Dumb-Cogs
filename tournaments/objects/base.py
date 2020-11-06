@@ -2582,7 +2582,8 @@ class Tournament:
 
         See the documentation on a Loop object for more details.
 
-        .. warning:: Use `start_loop_task` for starting the task, not `Loop.start`.
+        .. warning:: Use `start_loop_task` for starting the task, not `Loop.start
+            <discord.ext.tasks.Loop.start>`.
 
         Raises
         ------
@@ -2594,6 +2595,8 @@ class Tournament:
         async with self.lock:
             # since this will block other commands, we put an uncatched timeout
             await asyncio.wait_for(self._loop_task(), 10)
+
+    loop_task.__doc__ = loop_task.coro.__doc__
 
     @loop_task.error
     async def on_loop_task_error(self, exception):
