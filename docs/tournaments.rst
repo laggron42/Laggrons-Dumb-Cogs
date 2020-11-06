@@ -7,7 +7,7 @@ This is the guide for the ``tournaments`` cog. Everything you need is here.
 ``[p]`` is considered as your prefix.
 
 .. tip:: If you're a french user, you should check the website of my public
-    Red instance : `https//atos.laggron.red/`_, the documentation for
+    Red instance : `<https://atos.laggron.red/>`_, the documentation for
     Tournaments is way more detailed towards end users.
 
 ------------
