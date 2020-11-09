@@ -385,7 +385,15 @@ class Games(MixinMeta):
                 await asyncio.sleep(0.5)
                 try:
                     await task[1]()
-                except achallonge.ChallongeException:
+                except achallonge.ChallongeException as e:
+                    if index == 0:
+                        log.warning(
+                            f"[Guild {ctx.guild.id}] Can't end tournament. Someone probably ended "
+                            "the tournament manually. Others functions will still "
+                            "be executed for clearing the server.",
+                            exc_info=e,
+                        )
+                        continue
                     update_message_task.cancel()
                     await update_message(True)
                     raise
