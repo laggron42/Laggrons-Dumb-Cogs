@@ -40,6 +40,11 @@ class Participant(discord.Member):
 
     This inherits from `discord.Member` and adds the necessary additional methods.
 
+    If you're implementing this for a new provider, the following methods need to be implemented:
+
+    *   `player_id` (may be a var or a property)
+    *   `destroy`
+
     Parameters
     ----------
     member: discord.Member
@@ -157,6 +162,12 @@ class Match:
 
     This should only be created when convenient, aka when a match needs to be started. Matches
     with no players yet or finished are not builded.
+
+    If you're implementing this for a new provider, the following methods need to be implemented:
+
+    *   `set_scores`
+    *   `mark_as_underway`
+    *   `unmark_as_underway` (unused for now)
 
     Parameters
     ----------
