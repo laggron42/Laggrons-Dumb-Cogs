@@ -268,21 +268,19 @@ there are spaces).
         success = len(members) - failed
         if failed:
             if failed == 1:
-                failed = _("\nA member couldn't be unregistered.").format(failed=failed)
+                failed = _("\nA member couldn't be unregistered.")
             else:
                 failed = _("\n{failed} members couldn't be unregistered.").format(failed=failed)
         else:
             failed = ""
         if success == 1:
             await ctx.send(
-                _("Successfully unregistered a participant.{failed}").format(
-                    register=len(members) - failed, failed=failed,
-                )
+                _("Successfully unregistered a participant.{failed}").format(failed=failed)
             )
         else:
             await ctx.send(
                 _("Successfully unregistered {register} participants.{failed}").format(
-                    register=len(members) - failed, failed=failed,
+                    register=success, failed=failed,
                 )
             )
 
