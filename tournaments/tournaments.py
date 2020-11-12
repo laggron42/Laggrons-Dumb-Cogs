@@ -117,7 +117,7 @@ class Tournaments(
         self.registration_loop.start()
         self.registration_loop_task_errors = 0
 
-    __version__ = "1.0.0b8"
+    __version__ = "1.0.0b9"
     __author__ = ["retke (El Laggron)", "Wonderfall", "Xyleff"]
 
     @commands.command(hidden=True)
@@ -218,7 +218,7 @@ class Tournaments(
         This command exists because of an unresolved bug and should not stay for long, hopefully.
         """
         tournament = self.tournaments[ctx.guild.id]
-        async with tournament.lock():
+        async with tournament.lock:
             # we don't want to start the matches twice
             # *or maybe the lock is the source of the bug*
             pass
