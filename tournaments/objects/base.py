@@ -3104,8 +3104,12 @@ class Streamer:
             One or more sets not found
         """
         try:
-            i1, match1 = next(enumerate(filter(lambda x: set1 == self.get_set(x), self.matches)))
-            i2, match2 = next(enumerate(filter(lambda x: set2 == self.get_set(x), self.matches)))
+            i1, match1 = next(
+                filter(lambda x: set1 == self.get_set(x[1]), enumerate(self.matches))
+            )
+            i2, match2 = next(
+                filter(lambda x: set2 == self.get_set(x[1]), enumerate(self.matches))
+            )
         except StopIteration as e:
             raise KeyError("One set not found.") from e
         self.matches[i1] = match2
