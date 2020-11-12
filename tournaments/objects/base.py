@@ -542,11 +542,11 @@ class Match:
                 read_messages=True, send_messages=True, manage_channels=True
             ),
             self.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            self.player1: discord.PermissionOverwrite(read_messages=True),
-            self.player2: discord.PermissionOverwrite(read_messages=True),
+            self.player1: discord.PermissionOverwrite(read_messages=True, send_messages=True),
+            self.player2: discord.PermissionOverwrite(read_messages=True, send_messages=True),
         }
         for role in allowed_roles:
-            overwrites[role] = discord.PermissionOverwrite(read_messages=True)
+            overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
         return await self.guild.create_text_channel(
             self.set, category=category, overwrites=overwrites, reason=_("Set launch")
         )
