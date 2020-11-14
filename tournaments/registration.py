@@ -206,7 +206,7 @@ there are spaces).
                     if len(members) == 1:
                         raise  # single members should raise exceptions
                     failed += 1
-        succeed = len(len(members) - failed)
+        succeed = len(members) - failed
         if tournament.checkin_phase != "pending":
             if succeed == 1:
                 check = _(" He is pre-checked.")
