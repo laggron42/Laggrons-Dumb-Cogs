@@ -6,6 +6,7 @@ import shutil
 
 from abc import ABC
 from typing import Mapping
+from datetime import datetime, timedelta
 from laggron_utils.logging import close_logger
 
 from redbot.core import commands
@@ -235,7 +236,7 @@ class Tournaments(
             for match in pending_matches:
                 await match._start()
                 match.checked_dq = True
-                match.start_time = match.channel.created_at.astimezone(tournament.tz)
+                match.start_time = datetime.now(tournament.tz) - timedelta(minutes=5)
         await ctx.send(
             f"Patched {len(pending_matches)} matches (AFK check disabled):\n"
             f"{' '.join(x.channel.mention for x in pending_matches)}"
