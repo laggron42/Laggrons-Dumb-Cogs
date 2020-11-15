@@ -6,7 +6,6 @@ from redbot.core import commands
 from redbot.core.i18n import Translator, cog_i18n
 
 from .abc import MixinMeta
-from .objects import ChallongeTournament
 from .utils import only_phase, mod_or_to, prompt_yes_or_no
 
 log = logging.getLogger("red.laggron.tournaments")

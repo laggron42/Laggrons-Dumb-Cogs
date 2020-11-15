@@ -6,7 +6,6 @@ import achallonge
 
 from datetime import datetime
 from typing import Optional
-from copy import copy
 
 from redbot.core import commands
 from redbot.core import checks

@@ -1,7 +1,4 @@
 import asyncio
-from tournaments.objects.challonge import ChallongeMatch
-from random import randint
-from typing import List, Mapping
 import achallonge
 import discord
 import logging
@@ -9,6 +6,7 @@ import re
 
 from datetime import datetime, timedelta
 from copy import deepcopy
+from typing import List, Mapping
 
 from redbot.core import commands
 from redbot.core import checks

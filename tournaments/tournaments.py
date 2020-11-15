@@ -1,5 +1,4 @@
 import logging
-import asyncio
 import achallonge
 import discord
 import shutil
@@ -15,7 +14,7 @@ from redbot.core.bot import Red
 from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import Translator, cog_i18n
 
-from .objects import Tournament, Match, ChallongeTournament
+from .objects import Tournament, ChallongeTournament
 from .games import Games
 from .registration import Registration
 from .settings import Settings
