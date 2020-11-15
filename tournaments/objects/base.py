@@ -501,6 +501,20 @@ class Match:
                 channel=self.streamer.link, access=access
             )
         )
+        if self.tournament.stream_channel:
+            await self.tournament.stream_channel.send(
+                _(
+                    ":arrow_forward: Sending set {set} ({name}) on stream "
+                    "with **{streamer}**: {player1} vs {player2}"
+                ).format(
+                    set=self.set,
+                    name=self._get_name(),
+                    streamer=self.streamer.channel,
+                    player1=self.player1.mention,
+                    player2=self.player2.mention,
+                ),
+                allowed_mentions=discord.AllowedMentions(users=False),
+            )
 
     async def cancel_stream(self):
         """
