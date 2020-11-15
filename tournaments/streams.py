@@ -246,7 +246,7 @@ any streamer/T.O. can edit anyone's stream.
         else:
             await ctx.tick()
 
-    @stream.command(name="remove", aliases=["del", "delete"])
+    @stream.command(name="remove", aliases=["del", "delete", "rm"])
     @commands.check(mod_or_streamer)
     async def stream_remove(
         self, ctx: commands.Context, channel: Optional[TwitchChannelConverter], *sets: int,
