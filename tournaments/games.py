@@ -133,6 +133,16 @@ class Games(MixinMeta):
         async def seed_and_upload():
             await tournament.seed_participants_and_upload()
 
+        async def open_channels():
+            channels = list(filter(None, [tournament.queue_channel, tournament.scores_channel]))
+            for channel in channels:
+                await channel.set_permissions(
+                    tournament.participant_role,
+                    read_messages=True,
+                    send_messages=True,
+                    reason=_("Tournament starting..."),
+                )
+
         async def start():
             await tournament.start()
             tournament.phase = "ongoing"
@@ -145,6 +155,7 @@ class Games(MixinMeta):
 
         tasks = [
             (_("Start the tournament"), start),
+            (_("Open text channels"), open_channels),
             (_("Send messages"), tournament.send_start_messages),
             (_("Launch sets"), launch_sets),
         ]
