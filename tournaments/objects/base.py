@@ -1235,7 +1235,7 @@ class Tournament:
         Number of errors that occured within the loop task. If it reaches 5, task is cancelled.
     top_8: dict
         Represents when the top 8 and bo5 begins in the bracket.
-    matches_to_annouce: List[str]
+    matches_to_announce: List[str]
         A list of strings to announce in the defined queue channel. This is done to prevent sending
         too many messages at once and hitting ratelimits, so we wrap messages together.
     """
