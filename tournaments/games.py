@@ -596,9 +596,8 @@ class Games(MixinMeta):
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
         scores_channel = tournament.scores_channel
-        try:
-            player = next(filter(lambda x: x.id == ctx.author.id, tournament.participants))
-        except StopIteration:
+        player = tournament.find_participant(discord_id=ctx.author.id)[1]
+        if player is None:
             await ctx.send(_("You are not a member of this tournament."))
             return
         if player.match is None:
@@ -654,6 +653,19 @@ class Games(MixinMeta):
             pass  # don't update scores while cache is being updated
         await player.match.end(*score)
         await ctx.tick()
+
+    @only_phase("ongoing")
+    @commands.command()
+    @commands.guild_only()
+    @commands.cooldown(1, 1, commands.BucketType.user)
+    async def setscore(self, ctx: commands.Context, match: Optional[int], score: ScoreConverter):
+        """
+        Set the score of a set. To be used by a TO.
+        """
+        guild = ctx.guild
+        tournament = self.tournaments[guild.id]
+        match = tournament.find_match()
+
 
     @only_phase("ongoing")
     @commands.command(aliases=["ff"])
