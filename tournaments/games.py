@@ -347,12 +347,12 @@ class Games(MixinMeta):
         async def update_message(errored=False):
             nonlocal message
             text = ""
-            for i, task in enumerate(tasks):
+            for local_index, task in enumerate(tasks):
                 total = task[2]
                 task = task[0]
-                if index > i:
+                if index > local_index:
                     text += f":white_check_mark: {task}\n"
-                elif i == index:
+                elif local_index == index:
                     if total:
                         task += f" ({i}/{total})"
                     if errored:
