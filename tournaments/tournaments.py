@@ -209,7 +209,7 @@ class Tournaments(
     # made this command for the tournaments that run until then
     @only_phase("ongoing")
     @mod_or_to()
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.guild_only()
     async def fixmatches(self, ctx: commands.Context):
         """
