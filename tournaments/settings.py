@@ -6,7 +6,6 @@ import achallonge
 
 from datetime import datetime
 from typing import Optional
-from copy import copy
 
 from redbot.core import commands
 from redbot.core import checks
@@ -616,7 +615,7 @@ other commands.
             embed.add_field(name=_("Stages"), value="\n".join([f"- {x}" for x in data["stages"]]))
         if data["counterpicks"]:
             embed.add_field(
-                name=_("Counters"), value="\n".join([f"- {x}" for x in data["counters"]])
+                name=_("Counters"), value="\n".join([f"- {x}" for x in data["counterpicks"]])
             )
         if data["ranking"]["league_name"]:
             embed.add_field(

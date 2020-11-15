@@ -1,7 +1,4 @@
 import asyncio
-from tournaments.objects.challonge import ChallongeMatch
-from random import randint
-from typing import List, Mapping
 import achallonge
 import discord
 import logging
@@ -9,6 +6,7 @@ import re
 
 from datetime import datetime, timedelta
 from copy import deepcopy
+from typing import List, Mapping
 
 from redbot.core import commands
 from redbot.core import checks
@@ -133,6 +131,16 @@ class Games(MixinMeta):
         async def seed_and_upload():
             await tournament.seed_participants_and_upload()
 
+        async def open_channels():
+            channels = list(filter(None, [tournament.queue_channel, tournament.scores_channel]))
+            for channel in channels:
+                await channel.set_permissions(
+                    tournament.participant_role,
+                    read_messages=True,
+                    send_messages=True,
+                    reason=_("Tournament starting..."),
+                )
+
         async def start():
             await tournament.start()
             tournament.phase = "ongoing"
@@ -145,6 +153,7 @@ class Games(MixinMeta):
 
         tasks = [
             (_("Start the tournament"), start),
+            (_("Open text channels"), open_channels),
             (_("Send messages"), tournament.send_start_messages),
             (_("Launch sets"), launch_sets),
         ]
@@ -347,12 +356,12 @@ class Games(MixinMeta):
         async def update_message(errored=False):
             nonlocal message
             text = ""
-            for i, task in enumerate(tasks):
+            for local_index, task in enumerate(tasks):
                 total = task[2]
                 task = task[0]
-                if index > i:
+                if index > local_index:
                     text += f":white_check_mark: {task}\n"
-                elif i == index:
+                elif local_index == index:
                     if total:
                         task += f" ({i}/{total})"
                     if errored:
@@ -385,7 +394,15 @@ class Games(MixinMeta):
                 await asyncio.sleep(0.5)
                 try:
                     await task[1]()
-                except achallonge.ChallongeException:
+                except achallonge.ChallongeException as e:
+                    if index == 0:
+                        log.warning(
+                            f"[Guild {ctx.guild.id}] Can't end tournament. Someone probably ended "
+                            "the tournament manually. Others functions will still "
+                            "be executed for clearing the server.",
+                            exc_info=e,
+                        )
+                        continue
                     update_message_task.cancel()
                     await update_message(True)
                     raise
@@ -602,6 +619,15 @@ class Games(MixinMeta):
             return
         if player.match is None:
             await ctx.send(_("You don't have any ongoing match."))
+            return
+        if player.match.status != "ongoing":
+            await ctx.send(
+                _(
+                    "Your match has not started yet.\n"
+                    "You're either awaiting for a stream, or an error occured internally. "
+                    "You can ask a T.O. for a manual score setting."
+                )
+            )
             return
         if scores_channel is not None and scores_channel.id != ctx.channel.id:
             await ctx.send(

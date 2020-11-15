@@ -40,6 +40,11 @@ class Participant(discord.Member):
 
     This inherits from `discord.Member` and adds the necessary additional methods.
 
+    If you're implementing this for a new provider, the following methods need to be implemented:
+
+    *   `player_id` (may be a var or a property)
+    *   `destroy`
+
     Parameters
     ----------
     member: discord.Member
@@ -157,6 +162,12 @@ class Match:
 
     This should only be created when convenient, aka when a match needs to be started. Matches
     with no players yet or finished are not builded.
+
+    If you're implementing this for a new provider, the following methods need to be implemented:
+
+    *   `set_scores`
+    *   `mark_as_underway`
+    *   `unmark_as_underway` (unused for now)
 
     Parameters
     ----------
@@ -421,15 +432,12 @@ class Match:
             message += _(
                 ":game_die: **{player}** was picked to begin the bans *({baninfo})*.\n"
             ).format(player=chosen_player.mention, baninfo=self.tournament.baninfo)
-        if self.streamer is not None:
-            message += _("**\nYou will be on stream on {streamer}!**\n").format(
-                streamer=self.streamer.link
-            )
-            if self.on_hold is True:
-                message += _(
-                    ":warning: **Do not play your set for now and wait for your turn.** "
-                    "I will send a message once it is your turn with instructions."
-                )
+        if self.streamer is not None and self.on_hold is True:
+            message += _(
+                "**\nYou will be on stream on {streamer}!**\n"
+                ":warning: **Do not play your set for now and wait for your turn.** "
+                "I will send a message once it is your turn with instructions."
+            ).format(streamer=self.streamer.link)
             # else, we're about to send another message with instructions
 
         async def send_in_dm():
@@ -439,16 +447,10 @@ class Match:
                 "Do your set in DM and come back to set the result.**"
             )
             await self._dm_players(message)
-            if self.tournament.queue_channel is not None:
-                await self.tournament.queue_channel.send(
-                    _("{player1} {player2} Play your set in DM").format(
-                        player1=self.player1, player2=self.player2
-                    )
-                )
 
         if self.channel is None:
             await send_in_dm()
-            return False
+            result = False
         try:
             await self.channel.send(message)
         except discord.HTTPException as e:
@@ -457,24 +459,26 @@ class Match:
                 exc_info=e,
             )
             await send_in_dm()
-            return False
+            result = False
         else:
-            if self.tournament.queue_channel is not None:
-                await self.tournament.queue_channel.send(
-                    _(
-                        ":arrow_forward: **{name}** ({bo_type}): {player1} vs {player2}"
-                        "{on_stream} {top8} in {channel}"
-                    ).format(
-                        name=self.round_name,
-                        bo_type=_("BO5") if self.is_bo5 else _("BO3"),
-                        player1=self.player1,
-                        player2=self.player2,
-                        on_stream=_(" **on stream!**") if self.streamer else "",
-                        top8=top8,
-                        channel=self.channel.mention,
-                    )
-                )
-            return True
+            result = True
+        self.tournament.matches_to_announce.append(
+            _(
+                ":arrow_forward: **{name}** ({bo_type}): {player1} vs {player2}"
+                "{on_stream} {top8} {channel}."
+            ).format(
+                name=self.round_name,
+                bo_type=_("BO5") if self.is_bo5 else _("BO3"),
+                player1=self.player1.mention,
+                player2=self.player2.mention,
+                on_stream=_(" **on stream!**") if self.streamer else "",
+                top8=top8,
+                channel=_("in {channel}").format(channel=self.channel.mention)
+                if result is True
+                else _("in DM"),
+            )
+        )
+        return result
 
     async def start_stream(self):
         """
@@ -496,6 +500,96 @@ class Match:
                 channel=self.streamer.link, access=access
             )
         )
+        if self.tournament.stream_channel:
+            await self.tournament.stream_channel.send(
+                _(
+                    ":arrow_forward: Sending set {set} ({name}) on stream "
+                    "with **{streamer}**: {player1} vs {player2}"
+                ).format(
+                    set=self.set,
+                    name=self._get_name(),
+                    streamer=self.streamer.channel,
+                    player1=self.player1.mention,
+                    player2=self.player2.mention,
+                ),
+                allowed_mentions=discord.AllowedMentions(users=False),
+            )
+
+    async def stream_queue_add(self):
+        """
+        Modify the status of an ongoing match to tell that it is now on stream.
+
+        This is called when a streamer adds an ongoing match to its queue, then the following
+        things are done:
+
+        *   AFK checks are cancelled
+
+        *   **If the match is the first one in the stream queue:** Nothing is cancelled, we just
+            ping the players with the stream informations.
+
+        *   **If the match is not the first one in the stream queue:** We mark the match as not
+            underway, change the status to pending, and tell the players.
+        """
+        destination = self.channel.send or self._dm_players
+        self.checked_dq = True
+        if self.on_hold is True:
+            self.status = "pending"
+            self.start_time = None
+            self.underway = False
+            await destination(
+                _(
+                    "{player1} {player2}\n"
+                    ":warning: Your match was just added to {channel}'s stream queue ({link})\n"
+                    "**You must stop playing now and wait for your turn.** "
+                    "Sorry for this sudden change, please contact a T.O. if you have a question."
+                ).format(
+                    player1=self.player1.mention,
+                    player2=self.player2.mention,
+                    channel=self.streamer.channel,
+                    link=self.streamer.link,
+                )
+            )
+            try:
+                await asyncio.wait_for(self.unmark_as_underway(), timeout=60)
+            except Exception as e:
+                log.warning(
+                    f"[Guild {self.guild.id}] Can't unmark set {self.set} as underway.", exc_info=e
+                )
+                await self.tournament.to_channel.send(
+                    _(
+                        "There was an issue unmarking set {set} as underway. The bracket may not "
+                        "display correct informations, but this isn't critical at all.\n"
+                        "Players may have issues setting their score, "
+                        "you can set that manually on the bracket."
+                    ).format(set=self.channel.mention if self.channel else f"#{self.set}")
+                )
+                await destination(
+                    _(
+                        "There was an issue unmarking your set as underway. The bracket may not "
+                        "display correct informations, but this isn't critical.\n"
+                        "If you encounter an issue setting your score, contact a T.O."
+                    )
+                )
+        else:
+            if self.streamer.room_id:
+                access = _(
+                    "\n\nHere are the access codes:\nID: {id}\nPasscode: {passcode}"
+                ).format(id=self.streamer.room_id, passcode=self.streamer.room_code)
+            else:
+                access = ""
+            await destination(
+                _(
+                    "{player1} {player2}\n"
+                    ":warning: Your match was just added to {channel}'s stream ({link}).\n"
+                    "**You must now play on stream!**{access}"
+                ).format(
+                    player1=self.player1.mention,
+                    player2=self.player2.mention,
+                    channel=self.streamer.channel,
+                    link=self.streamer.link,
+                    access=access,
+                )
+            )
 
     async def cancel_stream(self):
         """
@@ -510,8 +604,8 @@ class Match:
         await self._start()
         await destination(
             _(
-                "{player1} {player2} The stream was cancelled. You can start you match normally.\n"
-                ":warning: AFK checks are re-enabled."
+                "{player1} {player2} The stream was cancelled. You can start/continue "
+                "your match normally.\n:warning: AFK checks are re-enabled."
             ).format(player1=self.player1.mention, player2=self.player2.mention)
         )
 
@@ -1141,6 +1235,9 @@ class Tournament:
         Number of errors that occured within the loop task. If it reaches 5, task is cancelled.
     top_8: dict
         Represents when the top 8 and bo5 begins in the bracket.
+    matches_to_announce: List[str]
+        A list of strings to announce in the defined queue channel. This is done to prevent sending
+        too many messages at once and hitting ratelimits, so we wrap messages together.
     """
 
     def __init__(
@@ -1288,6 +1385,7 @@ class Tournament:
             "loser": {"top8": None, "bo5": None},
         }
         # self.debug_task = asyncio.get_event_loop().create_task(self.debug_loop_task())
+        self.matches_to_announce: List[str] = []  # matches to announce in the queue channel
 
     def __repr__(self):
         return (
@@ -2407,10 +2505,16 @@ class Tournament:
                 "announced here, and in your channel.\n"
                 ":white_small_square: Any BO5 set will be precised here and in your channel.\n"
                 ":white_small_square: The player beginning the bans is picked and "
-                "annonced in your channel (you can also use `{prefix}flip`).\n\n"
-                ":timer: **You will be disqualified if you were not active in your channel** "
-                "within the {delay} first minutes after the set launch."
-            ).format(delay=self.delay, prefix=self.bot_prefix),
+                "annonced in your channel (you can also use `{prefix}flip`).\n\n{dq}"
+            ).format(
+                prefix=self.bot_prefix,
+                dq=_(
+                    ":timer: **You will be disqualified if you were not active in your channel** "
+                    "within the {delay} first minutes after the set launch."
+                ).format(delay=self.delay)
+                if self.delay > 0
+                else "",
+            ),
         }
         for channel, message in messages.items():
             if channel is None:
@@ -2421,6 +2525,21 @@ class Tournament:
                 log.error(f"[Guild {self.guild.id}] Can't send message in {channel}.", exc_info=e)
 
     # now this is the loop task stuff, the one that runs during the tournament (not other phases)
+    async def announce_sets(self):
+        """
+        Wraps the messages stored in `matches_to_announce` and sends them in the `queue_channel`.
+        """
+        if not self.queue_channel:
+            return
+        message = ""
+        for match in self.matches_to_announce:
+            message += match + "\n"
+        self.matches_to_announce = []
+        for page in pagify(message):
+            await self.queue_channel.send(
+                page, allowed_mentions=discord.AllowedMentions(users=False)
+            )
+
     async def launch_sets(self):
         """
         Launch pending matches, creating a channel and marking the match as ongoing.
@@ -2441,9 +2560,12 @@ class Tournament:
             bracket = "winner" if match.round > 0 else "loser"
             category = await self._get_available_category(bracket, i)
             coros.append(match.launch(category=category))
+        if not coros:
+            return
         results = await asyncio.gather(*coros, return_exceptions=True)
         for result in filter(None, results):
             log.error(f"[Guild {self.guild.id}] Can't launch a set.", exc_info=result)
+        await self.announce_sets()
 
     def update_streamer_list(self):
         """
@@ -2473,7 +2595,7 @@ class Tournament:
             lambda x: x[1].status != "pending" and x[1].channel is not None,
             enumerate(self.matches),
         ):
-            if match.status == "ongoing":
+            if self.delay > 0 and match.status == "ongoing":
                 if not match.checked_dq and match.duration > timedelta(minutes=self.delay):
                     log.debug(f"Checking inactivity for match {match.set}")
                     await match.check_inactive()
@@ -2576,7 +2698,8 @@ class Tournament:
 
         See the documentation on a Loop object for more details.
 
-        .. warning:: Use `start_loop_task` for starting the task, not `Loop.start`.
+        .. warning:: Use `start_loop_task` for starting the task, not `Loop.start
+            <discord.ext.tasks.Loop.start>`.
 
         Raises
         ------
@@ -2588,6 +2711,8 @@ class Tournament:
         async with self.lock:
             # since this will block other commands, we put an uncatched timeout
             await asyncio.wait_for(self._loop_task(), 10)
+
+    loop_task.__doc__ = loop_task.coro.__doc__
 
     @loop_task.error
     async def on_loop_task_error(self, exception):
@@ -2622,6 +2747,8 @@ class Tournament:
         so this function will cancel all AFK checks for the matches that are going to have
         players DQed.
         """
+        if self.delay == 0:
+            return
         to_timeout = [
             x
             for x in self.matches
@@ -2959,7 +3086,9 @@ class Streamer:
         cls.room_id = data["room_id"]
         cls.room_code = data["room_code"]
         cls.matches = list(
-            filter(None, [tournament.find_match(match_set=x)[1] or x for x in data["matches"]])
+            filter(
+                None, [tournament.find_match(match_set=str(x))[1] or x for x in data["matches"]]
+            )
         )
         for match in cls.matches:
             if not isinstance(match, int):
@@ -3007,7 +3136,7 @@ class Streamer:
         self.room_id = room_id
         self.room_code = code
 
-    def add_matches(self, *sets: int):
+    async def add_matches(self, *sets: int):
         """
         Add a list of matches to the streamer's queue.
 
@@ -3035,17 +3164,23 @@ class Streamer:
                     continue
             match = self.tournament.find_match(match_set=str(_set))[1]
             if match:
-                if match.status == "ongoing":
-                    errors[_set] = _("That match is already ongoing.")
-                    continue
-                elif match.status == "finished":
+                if match.status == "finished":
                     errors[_set] = _("That match is finished.")
                     continue
                 match.streamer = self
+                if match.status == "ongoing":
+                    # match is ongoing, we have to tell players
+                    if not self.matches:
+                        # first match in the list, no need to interrupt, just send info
+                        match.on_hold = False
+                    else:
+                        # match has to be paused
+                        match.on_hold = True
+                    await match.stream_queue_add()
             self.matches.append(match or _set)
         return errors
 
-    def remove_matches(self, *sets: int):
+    async def remove_matches(self, *sets: int):
         """
         Remove a list of matches from the streamer's queue.
 
@@ -3059,11 +3194,20 @@ class Streamer:
         KeyError
             The list was unchanged.
         """
-        new_list = [x for x in self.matches if self.get_set(x) not in sets]
-        if len(new_list) == len(self.matches):
+        new_list = []
+        to_remove = []
+        for match in self.matches:
+            if self.get_set(match) in sets:
+                to_remove.append(match)
+            else:
+                new_list.append(match)
+        if not to_remove:
             raise KeyError("None of the given sets found.")
         else:
             self.matches = new_list
+        for match in to_remove:
+            if isinstance(match, Match):
+                await match.cancel_stream()
 
     def swap_match(self, set1: int, set2: int):
         """
@@ -3082,12 +3226,54 @@ class Streamer:
             One or more sets not found
         """
         try:
-            i1, match1 = next(enumerate(filter(lambda x: set1 == self.get_set(x), self.matches)))
-            i2, match2 = next(enumerate(filter(lambda x: set2 == self.get_set(x), self.matches)))
+            i1, match1 = next(
+                filter(lambda x: set1 == self.get_set(x[1]), enumerate(self.matches))
+            )
+            i2, match2 = next(
+                filter(lambda x: set2 == self.get_set(x[1]), enumerate(self.matches))
+            )
         except StopIteration as e:
             raise KeyError("One set not found.") from e
         self.matches[i1] = match2
         self.matches[i2] = match1
+
+    def insert_match(self, set: int, *, set2: int = None, position: int = None):
+        """
+        Insert a match in the list. The match must already exist in the list.
+
+        Provide either ``set2`` or ``position`` as keyword argument.
+
+        Parameters
+        ----------
+        set: int
+            The set you want to move. Only `int` type, not `Match`.
+        set2: int
+            The set you want to use to define the position. Only `int` type, not `Match`.
+        position: int
+            The new position in the list. 0 = first ; 1 = second ...
+
+            Providing a number out of bounds will move the item at the limit, it's just *Python's
+            magic*. (eg: -5 moves to first place)
+
+        Raises
+        ------
+        KeyError
+            The given set was not found
+        RuntimeError
+            Neither ``set2`` or ``position`` was provided.
+        """
+        if set2 is None and position is None:
+            raise RuntimeError("Provide set2 or position.")
+        try:
+            i, match = next(filter(lambda x: set == self.get_set(x[1]), enumerate(self.matches)))
+            if set2:
+                position = next(
+                    filter(lambda x: set2 == self.get_set(x[1]), enumerate(self.matches))
+                )[0]
+        except StopIteration as e:
+            raise KeyError("One set not found.") from e
+        del self.matches[i]
+        self.matches.insert(position, match)
 
     async def end(self):
         """

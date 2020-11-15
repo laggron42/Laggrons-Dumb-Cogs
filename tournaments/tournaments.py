@@ -1,11 +1,11 @@
 import logging
-import asyncio
 import achallonge
 import discord
 import shutil
 
 from abc import ABC
 from typing import Mapping
+from datetime import datetime, timedelta
 from laggron_utils.logging import close_logger
 
 from redbot.core import commands
@@ -14,12 +14,13 @@ from redbot.core.bot import Red
 from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import Translator, cog_i18n
 
-from .objects import Tournament, Match, ChallongeTournament
+from .objects import Tournament, ChallongeTournament
 from .games import Games
 from .registration import Registration
 from .settings import Settings
 from .streams import Streams
 from .troubleshooting import Troubleshooting
+from .utils import mod_or_to, only_phase
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -116,7 +117,7 @@ class Tournaments(
         self.registration_loop.start()
         self.registration_loop_task_errors = 0
 
-    __version__ = "1.0.0b8"
+    __version__ = "1.0.0b11"
     __author__ = ["retke (El Laggron)", "Wonderfall", "Xyleff"]
 
     @commands.command(hidden=True)
@@ -202,3 +203,40 @@ class Tournaments(
 
         # remove ranking data
         shutil.rmtree(cog_data_path(self) / "ranking", ignore_errors=True)
+
+    # this is a temporary command existing because of an annoying bug I still can't find
+    # working hard on this, looking for a fix as fast as possible
+    # made this command for the tournaments that run until then
+    @only_phase("ongoing")
+    @mod_or_to()
+    @commands.command(hidden=True)
+    @commands.guild_only()
+    async def fixmatches(self, ctx: commands.Context):
+        """
+        Find and patch some potentially broken matches.
+
+        This command exists because of an unresolved bug and should not stay for long, hopefully.
+        """
+        tournament = self.tournaments[ctx.guild.id]
+        async with tournament.lock:
+            # we don't want to start the matches twice
+            # *or maybe the lock is the source of the bug*
+            pass
+        # potentially broken matches
+        pending_matches = [
+            x
+            for x in tournament.matches
+            if x.status == "pending" and x.channel and x.on_hold is False
+        ]
+        if not pending_matches:
+            await ctx.send("No broken match found.")
+            return
+        async with ctx.typing():
+            for match in pending_matches:
+                await match._start()
+                match.checked_dq = True
+                match.start_time = datetime.now(tournament.tz) - timedelta(minutes=5)
+        await ctx.send(
+            f"Patched {len(pending_matches)} matches (AFK check disabled):\n"
+            f"{' '.join(x.channel.mention for x in pending_matches)}"
+        )

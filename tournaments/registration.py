@@ -1,7 +1,7 @@
-from datetime import datetime
 import discord
 import logging
 
+from datetime import datetime
 from discord.ext import tasks
 
 from redbot.core import commands
@@ -175,16 +175,27 @@ there are spaces).
         tournament = self.tournaments[guild.id]
         members = [x for x in members if x not in tournament.participants]
         if not members:
-            await ctx.send(_("The members you provided are already registered."))
+            if len(members) == 1:
+                await ctx.send(_("The member you provided is already registered."))
+            else:
+                await ctx.send(_("The members you provided are already registered."))
             return
         total = len(tournament.participants) + len(members)
         if tournament.limit and total > tournament.limit:
-            await ctx.send(
-                _(
-                    "You want to register {register} members, but you're exceeding "
-                    "the limit of participants ({total}/{limit})."
-                ).format(register=len(members), total=total, limit=tournament.limit)
-            )
+            if len(members) == 1:
+                await ctx.send(
+                    _(
+                        "You want to register a member, but you're exceeding "
+                        "the limit of participants ({total}/{limit})."
+                    ).format(total=total, limit=tournament.limit)
+                )
+            else:
+                await ctx.send(
+                    _(
+                        "You want to register {register} members, but you're exceeding "
+                        "the limit of participants ({total}/{limit})."
+                    ).format(register=len(members), total=total, limit=tournament.limit)
+                )
             return
         failed = 0
         async with ctx.typing():
@@ -195,15 +206,33 @@ there are spaces).
                     if len(members) == 1:
                         raise  # single members should raise exceptions
                     failed += 1
-        await ctx.send(
-            _("Successfully registered {register} participants.{check}{failed}").format(
-                register=len(members) - failed,
-                check=_(" They are pre-checked.") if tournament.checkin_phase != "pending" else "",
-                failed=_("\n{failed} members couldn't be registered.").format(failed=failed)
-                if failed
-                else "",
+        succeed = len(members) - failed
+        if tournament.checkin_phase != "pending":
+            if succeed == 1:
+                check = _(" He is pre-checked.")
+            else:
+                check = _(" They are pre-checked.")
+        else:
+            check = ""
+        if failed:
+            if failed == 1:
+                failed = _("\nA member couldn't be registered.").format(failed=failed)
+            else:
+                failed = _("\n{failed} members couldn't be registered.").format(failed=failed)
+        else:
+            failed = ""
+        if succeed == 1:
+            await ctx.send(
+                _("Successfully registered a participant.{check}{failed}").format(
+                    check=check, failed=failed,
+                )
             )
-        )
+        else:
+            await ctx.send(
+                _("Successfully registered {register} participants.{check}{failed}").format(
+                    register=succeed, check=check, failed=failed,
+                )
+            )
 
     @only_phase()
     @mod_or_to()
@@ -222,7 +251,10 @@ there are spaces).
         tournament = self.tournaments[guild.id]
         members = [x for x in members if x in tournament.participants]
         if not members:
-            await ctx.send(_("The members you provided aren't registered."))
+            if len(members) == 1:
+                await ctx.send(_("The member you provided isn't registered."))
+            else:
+                await ctx.send(_("The members you provided aren't registered."))
             return
         failed = 0
         async with ctx.typing():
@@ -233,14 +265,24 @@ there are spaces).
                     if len(members) == 1:
                         raise  # single members should raise exceptions
                     failed += 1
-        await ctx.send(
-            _("Successfully unregistered {register} participants.{failed}").format(
-                register=len(members) - failed,
-                failed=_("\n{failed} members couldn't be unregistered.").format(failed=failed)
-                if failed
-                else "",
+        success = len(members) - failed
+        if failed:
+            if failed == 1:
+                failed = _("\nA member couldn't be unregistered.")
+            else:
+                failed = _("\n{failed} members couldn't be unregistered.").format(failed=failed)
+        else:
+            failed = ""
+        if success == 1:
+            await ctx.send(
+                _("Successfully unregistered a participant.{failed}").format(failed=failed)
             )
-        )
+        else:
+            await ctx.send(
+                _("Successfully unregistered {register} participants.{failed}").format(
+                    register=success, failed=failed,
+                )
+            )
 
     @only_phase("pending", "register", "awaiting")
     @mod_or_to()

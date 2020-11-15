@@ -237,7 +237,7 @@ any streamer/T.O. can edit anyone's stream.
                     )
                 )
                 return
-        errors = streamer.add_matches(*sets)
+        errors = await streamer.add_matches(*sets)
         if errors:
             await ctx.send(
                 _("Some errors occured:\n\n")
@@ -246,7 +246,7 @@ any streamer/T.O. can edit anyone's stream.
         else:
             await ctx.tick()
 
-    @stream.command(name="remove", aliases=["del", "delete"])
+    @stream.command(name="remove", aliases=["del", "delete", "rm"])
     @commands.check(mod_or_streamer)
     async def stream_remove(
         self, ctx: commands.Context, channel: Optional[TwitchChannelConverter], *sets: int,
@@ -289,7 +289,7 @@ any streamer/T.O. can edit anyone's stream.
                 )
                 return
         try:
-            streamer.remove_matches(*sets)
+            await streamer.remove_matches(*sets)
         except KeyError:
             await ctx.send(_("None of the sets you sent were listed in the stream."))
         else:
@@ -305,7 +305,7 @@ any streamer/T.O. can edit anyone's stream.
         set2: int,
     ):
         """
-        Swap two streams in your list.
+        Swap two matches in your list.
 
         If the stream strictly respects order, then this can be useful for modifying the order.
         Else this doesn't marrer.
@@ -340,6 +340,59 @@ any streamer/T.O. can edit anyone's stream.
                 return
         try:
             streamer.swap_match(set1, set2)
+        except KeyError:
+            await ctx.send(_("One of the provided sets cannot be found."))
+        else:
+            await ctx.tick()
+
+    @stream.command(name="insert")
+    @commands.check(mod_or_streamer)
+    async def stream_insert(
+        self,
+        ctx: commands.Context,
+        channel: Optional[TwitchChannelConverter],
+        set1: int,
+        set2: int,
+    ):
+        """
+        Insert a match in your list.
+
+        This is similar to `[p]stream swap` as this modifies the order of your stream queue, \
+but instead of swapping two matches position, you insert a match before another. The match must
+already be in your stream queue.
+
+        The first set given is the one you want to move, the second is the position you want.
+
+        If you want to edit someone else's stream, give its channel as the first argument.
+
+        Examples:
+        - `[p]stream insert 252 254`
+        - `[p]stream insert https://twitch.tv/el_laggron 252 254`
+        """
+        tournament = self.tournaments[ctx.guild.id]
+        if channel is None:
+            streamer = tournament.find_streamer(discord_id=ctx.author.id)[1]
+            if streamer is None:
+                await ctx.send(
+                    _(
+                        "You don't have any stream. If you want to edit someone else's stream, "
+                        "put its channel link as the first argument "
+                        "(see `{prefix}help stream set`)."
+                    ).format(prefix=ctx.clean_prefix)
+                )
+                return
+        else:
+            streamer = tournament.find_streamer(channel=channel)[1]
+            if streamer is None:
+                await ctx.send(
+                    _(
+                        "I can't find any existing stream with that link. "
+                        "Please check the list with `{prefix}stream list`."
+                    )
+                )
+                return
+        try:
+            streamer.insert_match(set1, set2=set2)
         except KeyError:
             await ctx.send(_("One of the provided sets cannot be found."))
         else:
