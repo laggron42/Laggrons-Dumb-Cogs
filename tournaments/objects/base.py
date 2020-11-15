@@ -2534,6 +2534,7 @@ class Tournament:
         message = ""
         for match in self.matches_to_announce:
             message += match + "\n"
+        self.matches_to_announce = []
         for page in pagify(message):
             await self.queue_channel.send(
                 page, allowed_mentions=discord.AllowedMentions(users=False)
