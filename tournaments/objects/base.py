@@ -1,5 +1,6 @@
 from __future__ import annotations
 from copy import copy
+from operator import pos
 
 import discord
 import logging
@@ -432,15 +433,12 @@ class Match:
             message += _(
                 ":game_die: **{player}** was picked to begin the bans *({baninfo})*.\n"
             ).format(player=chosen_player.mention, baninfo=self.tournament.baninfo)
-        if self.streamer is not None:
-            message += _("**\nYou will be on stream on {streamer}!**\n").format(
-                streamer=self.streamer.link
-            )
-            if self.on_hold is True:
-                message += _(
-                    ":warning: **Do not play your set for now and wait for your turn.** "
-                    "I will send a message once it is your turn with instructions."
-                )
+        if self.streamer is not None and self.on_hold is True:
+            message += _(
+                "**\nYou will be on stream on {streamer}!**\n"
+                ":warning: **Do not play your set for now and wait for your turn.** "
+                "I will send a message once it is your turn with instructions."
+            ).format(streamer=self.streamer.link)
             # else, we're about to send another message with instructions
 
         async def send_in_dm():
@@ -450,16 +448,10 @@ class Match:
                 "Do your set in DM and come back to set the result.**"
             )
             await self._dm_players(message)
-            if self.tournament.queue_channel is not None:
-                await self.tournament.queue_channel.send(
-                    _("{player1} {player2} Play your set in DM").format(
-                        player1=self.player1, player2=self.player2
-                    )
-                )
 
         if self.channel is None:
             await send_in_dm()
-            return False
+            result = False
         try:
             await self.channel.send(message)
         except discord.HTTPException as e:
@@ -468,24 +460,26 @@ class Match:
                 exc_info=e,
             )
             await send_in_dm()
-            return False
+            result = False
         else:
-            if self.tournament.queue_channel is not None:
-                await self.tournament.queue_channel.send(
-                    _(
-                        ":arrow_forward: **{name}** ({bo_type}): {player1} vs {player2}"
-                        "{on_stream} {top8} in {channel}"
-                    ).format(
-                        name=self.round_name,
-                        bo_type=_("BO5") if self.is_bo5 else _("BO3"),
-                        player1=self.player1,
-                        player2=self.player2,
-                        on_stream=_(" **on stream!**") if self.streamer else "",
-                        top8=top8,
-                        channel=self.channel.mention,
-                    )
-                )
-            return True
+            result = True
+        self.tournament.matches_to_announce.append(
+            _(
+                ":arrow_forward: **{name}** ({bo_type}): {player1} vs {player2}"
+                "{on_stream} {top8} {channel}."
+            ).format(
+                name=self.round_name,
+                bo_type=_("BO5") if self.is_bo5 else _("BO3"),
+                player1=self.player1.mention,
+                player2=self.player2.mention,
+                on_stream=_(" **on stream!**") if self.streamer else "",
+                top8=top8,
+                channel=_("in {channel}").format(channel=self.channel.mention)
+                if result is True
+                else _("in DM"),
+            )
+        )
+        return result
 
     async def start_stream(self):
         """
@@ -1152,6 +1146,9 @@ class Tournament:
         Number of errors that occured within the loop task. If it reaches 5, task is cancelled.
     top_8: dict
         Represents when the top 8 and bo5 begins in the bracket.
+    matches_to_annouce: List[str]
+        A list of strings to announce in the defined queue channel. This is done to prevent sending
+        too many messages at once and hitting ratelimits, so we wrap messages together.
     """
 
     def __init__(
@@ -1299,6 +1296,7 @@ class Tournament:
             "loser": {"top8": None, "bo5": None},
         }
         # self.debug_task = asyncio.get_event_loop().create_task(self.debug_loop_task())
+        self.matches_to_announce: List[str] = []  # matches to announce in the queue channel
 
     def __repr__(self):
         return (
@@ -2438,6 +2436,20 @@ class Tournament:
                 log.error(f"[Guild {self.guild.id}] Can't send message in {channel}.", exc_info=e)
 
     # now this is the loop task stuff, the one that runs during the tournament (not other phases)
+    async def announce_sets(self):
+        """
+        Wraps the messages stored in `matches_to_announce` and sends them in the `queue_channel`.
+        """
+        if not self.queue_channel:
+            return
+        message = ""
+        for match in self.matches_to_announce:
+            message += match + "\n"
+        for page in pagify(message):
+            await self.queue_channel.send(
+                page, allowed_mentions=discord.AllowedMentions(users=False)
+            )
+
     async def launch_sets(self):
         """
         Launch pending matches, creating a channel and marking the match as ongoing.
@@ -2458,9 +2470,12 @@ class Tournament:
             bracket = "winner" if match.round > 0 else "loser"
             category = await self._get_available_category(bracket, i)
             coros.append(match.launch(category=category))
+        if not coros:
+            return
         results = await asyncio.gather(*coros, return_exceptions=True)
         for result in filter(None, results):
             log.error(f"[Guild {self.guild.id}] Can't launch a set.", exc_info=result)
+        await self.announce_sets()
 
     def update_streamer_list(self):
         """
@@ -3114,6 +3129,44 @@ class Streamer:
             raise KeyError("One set not found.") from e
         self.matches[i1] = match2
         self.matches[i2] = match1
+
+    def insert_match(self, set: int, *, set2: int = None, position: int = None):
+        """
+        Insert a match in the list. The match must already exist in the list.
+
+        Provide either ``set2`` or ``position`` as keyword argument.
+
+        Parameters
+        ----------
+        set: int
+            The set you want to move. Only `int` type, not `Match`.
+        set2: int
+            The set you want to use to define the position. Only `int` type, not `Match`.
+        position: int
+            The new position in the list. 0 = first ; 1 = second ...
+
+            Providing a number out of bounds will move the item at the limit, it's just *Python's
+            magic*. (eg: -5 moves to first place)
+
+        Raises
+        ------
+        KeyError
+            The given set was not found
+        RuntimeError
+            Neither ``set2`` or ``position`` was provided.
+        """
+        if set2 is None and position is None:
+            raise RuntimeError("Provide set2 or position.")
+        try:
+            i, match = next(filter(lambda x: set == self.get_set(x[1]), enumerate(self.matches)))
+            if set2:
+                position = next(
+                    filter(lambda x: set2 == self.get_set(x[1]), enumerate(self.matches))
+                )[0]
+        except StopIteration as e:
+            raise KeyError("One set not found.") from e
+        del self.matches[i]
+        self.matches.insert(position, match)
 
     async def end(self):
         """
