@@ -237,7 +237,7 @@ any streamer/T.O. can edit anyone's stream.
                     )
                 )
                 return
-        errors = streamer.add_matches(*sets)
+        errors = await streamer.add_matches(*sets)
         if errors:
             await ctx.send(
                 _("Some errors occured:\n\n")
@@ -289,7 +289,7 @@ any streamer/T.O. can edit anyone's stream.
                 )
                 return
         try:
-            streamer.remove_matches(*sets)
+            await streamer.remove_matches(*sets)
         except KeyError:
             await ctx.send(_("None of the sets you sent were listed in the stream."))
         else:

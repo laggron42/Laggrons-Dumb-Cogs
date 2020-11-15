@@ -516,6 +516,82 @@ class Match:
                 allowed_mentions=discord.AllowedMentions(users=False),
             )
 
+    async def stream_queue_add(self):
+        """
+        Modify the status of an ongoing match to tell that it is now on stream.
+
+        This is called when a streamer adds an ongoing match to its queue, then the following
+        things are done:
+
+        *   AFK checks are cancelled
+
+        *   **If the match is the first one in the stream queue:** Nothing is cancelled, we just
+            ping the players with the stream informations.
+
+        *   **If the match is not the first one in the stream queue:** We mark the match as not
+            underway, change the status to pending, and tell the players.
+        """
+        destination = self.channel.send or self._dm_players
+        self.checked_dq = True
+        if self.on_hold is True:
+            self.status = "pending"
+            self.start_time = None
+            self.underway = False
+            await destination(
+                _(
+                    "{player1} {player2}\n"
+                    ":warning: Your match was just added to {channel}'s stream queue ({link})\n"
+                    "**You must stop playing now and wait for your turn.** "
+                    "Sorry for this sudden change, please contact a T.O. if you have a question."
+                ).format(
+                    player1=self.player1.mention,
+                    player2=self.player2.mention,
+                    channel=self.streamer.channel,
+                    link=self.streamer.link,
+                )
+            )
+            try:
+                await asyncio.wait_for(self.unmark_as_underway(), timeout=60)
+            except Exception as e:
+                log.warning(
+                    f"[Guild {self.guild.id}] Can't unmark set {self.set} as underway.", exc_info=e
+                )
+                await self.tournament.to_channel.send(
+                    _(
+                        "There was an issue unmarking set {set} as underway. The bracket may not "
+                        "display correct informations, but this isn't critical at all.\n"
+                        "Players may have issues setting their score, "
+                        "you can set that manually on the bracket."
+                    ).format(set=self.channel.mention if self.channel else f"#{self.set}")
+                )
+                await destination(
+                    _(
+                        "There was an issue unmarking your set as underway. The bracket may not "
+                        "display correct informations, but this isn't critical.\n"
+                        "If you encounter an issue setting your score, contact a T.O."
+                    )
+                )
+        else:
+            if self.streamer.room_id:
+                access = _(
+                    "\n\nHere are the access codes:\nID: {id}\nPasscode: {passcode}"
+                ).format(id=self.streamer.room_id, passcode=self.streamer.room_code)
+            else:
+                access = ""
+            await destination(
+                _(
+                    "{player1} {player2}\n"
+                    ":warning: Your match was just added to {channel}'s stream ({link}).\n"
+                    "**You must now play on stream!**{access}"
+                ).format(
+                    player1=self.player1.mention,
+                    player2=self.player2.mention,
+                    channel=self.streamer.channel,
+                    link=self.streamer.link,
+                    access=access,
+                )
+            )
+
     async def cancel_stream(self):
         """
         Call if the stream is cancelled (streamer left of match removed from queue).
@@ -529,8 +605,8 @@ class Match:
         await self._start()
         await destination(
             _(
-                "{player1} {player2} The stream was cancelled. You can start you match normally.\n"
-                ":warning: AFK checks are re-enabled."
+                "{player1} {player2} The stream was cancelled. You can start/continue "
+                "your match normally.\n:warning: AFK checks are re-enabled."
             ).format(player1=self.player1.mention, player2=self.player2.mention)
         )
 
@@ -3010,7 +3086,9 @@ class Streamer:
         cls.room_id = data["room_id"]
         cls.room_code = data["room_code"]
         cls.matches = list(
-            filter(None, [tournament.find_match(match_set=x)[1] or x for x in data["matches"]])
+            filter(
+                None, [tournament.find_match(match_set=str(x))[1] or x for x in data["matches"]]
+            )
         )
         for match in cls.matches:
             if not isinstance(match, int):
@@ -3058,7 +3136,7 @@ class Streamer:
         self.room_id = room_id
         self.room_code = code
 
-    def add_matches(self, *sets: int):
+    async def add_matches(self, *sets: int):
         """
         Add a list of matches to the streamer's queue.
 
@@ -3086,17 +3164,23 @@ class Streamer:
                     continue
             match = self.tournament.find_match(match_set=str(_set))[1]
             if match:
-                if match.status == "ongoing":
-                    errors[_set] = _("That match is already ongoing.")
-                    continue
-                elif match.status == "finished":
+                if match.status == "finished":
                     errors[_set] = _("That match is finished.")
                     continue
                 match.streamer = self
+                if match.status == "ongoing":
+                    # match is ongoing, we have to tell players
+                    if not self.matches:
+                        # first match in the list, no need to interrupt, just send info
+                        match.on_hold = False
+                    else:
+                        # match has to be paused
+                        match.on_hold = True
+                    await match.stream_queue_add()
             self.matches.append(match or _set)
         return errors
 
-    def remove_matches(self, *sets: int):
+    async def remove_matches(self, *sets: int):
         """
         Remove a list of matches from the streamer's queue.
 
@@ -3110,11 +3194,20 @@ class Streamer:
         KeyError
             The list was unchanged.
         """
-        new_list = [x for x in self.matches if self.get_set(x) not in sets]
-        if len(new_list) == len(self.matches):
+        new_list = []
+        to_remove = []
+        for match in self.matches:
+            if self.get_set(match) in sets:
+                to_remove.append(match)
+            else:
+                new_list.append(match)
+        if not to_remove:
             raise KeyError("None of the given sets found.")
         else:
             self.matches = new_list
+        for match in to_remove:
+            if isinstance(match, Match):
+                await match.cancel_stream()
 
     def swap_match(self, set1: int, set2: int):
         """
