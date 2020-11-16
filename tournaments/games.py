@@ -6,7 +6,7 @@ import re
 
 from datetime import datetime, timedelta
 from copy import deepcopy
-from typing import List, Mapping
+from typing import List, Mapping, Optional
 
 from redbot.core import commands
 from redbot.core import checks
@@ -684,14 +684,31 @@ class Games(MixinMeta):
     @commands.command()
     @commands.guild_only()
     @commands.cooldown(1, 1, commands.BucketType.user)
-    async def setscore(self, ctx: commands.Context, match: Optional[int], score: ScoreConverter):
+    async def setscore(self, ctx: commands.Context,
+                       nbmatch: Optional[int], winner: discord.member, score: ScoreConverter):
         """
         Set the score of a set. To be used by a TO.
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
-        match = tournament.find_match()
-
+        if nbmatch is not None:
+            match = tournament.find_match(match_set=nbmatch)[1]
+        else:
+            match = tournament.find_match(channel_id=ctx.channel.id)[1]
+        player = tournament.find_participant(discord_id=winner.id)[1]
+        if player is None:
+            await ctx.send(_("The winner is not a member of this tournament."))
+            return
+        if match is None:
+            await ctx.send(_("I don't see any match, here ..."))
+            return
+        if match.status != "ongoing":
+            await ctx.send(_("This match has not started yet."))
+            return
+        if winner.id == match.player2.id:
+            score = score[::-1]  # player1-player2 format
+        await match.end(*score)
+        await ctx.tick()
 
     @only_phase("ongoing")
     @commands.command(aliases=["ff"])
