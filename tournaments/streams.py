@@ -2,9 +2,10 @@ import discord
 import logging
 import re
 
-from typing import Optional
+from typing import Optional, Union
 from copy import deepcopy
 
+from discord.ext.commands import Greedy
 from redbot.core import commands
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
@@ -249,13 +250,14 @@ any streamer/T.O. can edit anyone's stream.
     @stream.command(name="remove", aliases=["del", "delete", "rm"])
     @commands.check(mod_or_streamer)
     async def stream_remove(
-        self, ctx: commands.Context, channel: Optional[TwitchChannelConverter], *sets: int,
+        self, ctx: commands.Context, channel: Optional[TwitchChannelConverter], sets: Union[str, Greedy[int]],
     ):
         """
         Remove sets from your stream.
 
         You can remove multiple sets at once.
         The set numbers are listed with `[p]stream info`.
+        Type **all** instead of the list to remove all the sets.
 
         If you want to edit someone else's stream, give its channel as the first argument.
 
@@ -288,12 +290,17 @@ any streamer/T.O. can edit anyone's stream.
                     )
                 )
                 return
-        try:
-            await streamer.remove_matches(*sets)
-        except KeyError:
-            await ctx.send(_("None of the sets you sent were listed in the stream."))
-        else:
+        if sets == "all":
+            await streamer.end()
+            streamer.matches = []
             await ctx.tick()
+        else:
+            try:
+                await streamer.remove_matches(sets)
+            except KeyError:
+                await ctx.send(_("None of the sets you sent were listed in the stream."))
+            else:
+                await ctx.tick()
 
     @stream.command(name="swap")
     @commands.check(mod_or_streamer)
