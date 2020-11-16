@@ -60,7 +60,12 @@ class Client:
     """
 
     def __init__(
-        self, version: str, game: str, username: str, password: str, cookies: dict = {},
+        self,
+        version: str,
+        game: str,
+        username: str,
+        password: str,
+        cookies: dict = {},
     ):
         self.game = game
         self.credentials = {"username": username, "password": password}

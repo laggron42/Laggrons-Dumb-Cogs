@@ -199,7 +199,10 @@ any streamer/T.O. can edit anyone's stream.
     @stream.command(name="add")
     @commands.check(mod_or_streamer)
     async def stream_add(
-        self, ctx: commands.Context, channel: Optional[TwitchChannelConverter], *sets: int,
+        self,
+        ctx: commands.Context,
+        channel: Optional[TwitchChannelConverter],
+        *sets: int,
     ):
         """
         Add sets to a stream.
@@ -250,7 +253,10 @@ any streamer/T.O. can edit anyone's stream.
     @stream.command(name="remove", aliases=["del", "delete", "rm"])
     @commands.check(mod_or_streamer)
     async def stream_remove(
-        self, ctx: commands.Context, channel: Optional[TwitchChannelConverter], sets: Union[str, Greedy[int]],
+        self,
+        ctx: commands.Context,
+        channel: Optional[TwitchChannelConverter],
+        sets: Union[str, Greedy[int]],
     ):
         """
         Remove sets from your stream.
@@ -305,7 +311,10 @@ any streamer/T.O. can edit anyone's stream.
     @stream.command(name="replace")
     @commands.check(mod_or_streamer)
     async def stream_replace(
-        self, ctx: commands.Context, channel: Optional[TwitchChannelConverter], *sets: int,
+        self,
+        ctx: commands.Context,
+        channel: Optional[TwitchChannelConverter],
+        *sets: int,
     ):
         """
         Replace the set list of your stream.
@@ -352,7 +361,6 @@ any streamer/T.O. can edit anyone's stream.
             )
         else:
             await ctx.tick()
-
 
     @stream.command(name="swap")
     @commands.check(mod_or_streamer)
@@ -460,7 +468,9 @@ already be in your stream queue.
     @stream.command(name="info")
     @commands.check(mod_or_streamer)
     async def stream_info(
-        self, ctx: commands.Context, channel: Optional[TwitchChannelConverter],
+        self,
+        ctx: commands.Context,
+        channel: Optional[TwitchChannelConverter],
     ):
         """
         Shows infos about a stream.
@@ -513,7 +523,9 @@ already be in your stream queue.
         )
         if len(sets) < 1024:
             embed.add_field(
-                name=_("List of sets"), value=sets or _("Nothing set."), inline=False,
+                name=_("List of sets"),
+                value=sets or _("Nothing set."),
+                inline=False,
             )
             await ctx.send(embed=embed)
         else:
@@ -521,7 +533,9 @@ already be in your stream queue.
             for page in pagify(sets):
                 _embed = deepcopy(embed)
                 _embed.add_field(
-                    name=_("List of sets"), value=page, inline=False,
+                    name=_("List of sets"),
+                    value=page,
+                    inline=False,
                 )
                 embeds.append(_embed)
             await menus.menu(ctx, embeds, controls=menus.DEFAULT_CONTROLS)
@@ -529,7 +543,9 @@ already be in your stream queue.
     @stream.command(name="end")
     @commands.check(mod_or_streamer)
     async def stream_end(
-        self, ctx: commands.Context, channel: Optional[TwitchChannelConverter],
+        self,
+        ctx: commands.Context,
+        channel: Optional[TwitchChannelConverter],
     ):
         """
         Closes a stream.

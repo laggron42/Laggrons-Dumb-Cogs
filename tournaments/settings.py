@@ -1103,7 +1103,9 @@ the start of the tournament, then closing 15 minutes before.
         else:
             warn_time = _("Fully disabled.")
         embed.add_field(
-            name=_("Warn long matches"), value=warn_time, inline=False,
+            name=_("Warn long matches"),
+            value=warn_time,
+            inline=False,
         )
         embeds.append(embed)
         embed = discord.Embed(title=_("Settings"))
@@ -1242,7 +1244,9 @@ the start of the tournament, then closing 15 minutes before.
         embed.add_field(
             name=_("Game options"),
             value=_("Rules: {rules}\nPlayer role: {role}\nBan mode: {ban}").format(
-                rules=ruleset, role=role, ban=baninfo,
+                rules=ruleset,
+                role=role,
+                ban=baninfo,
             ),
         )
         if config_data["stages"]:
@@ -1343,7 +1347,9 @@ the start of the tournament, then closing 15 minutes before.
                 name, time = t.next_scheduled_event()
             except TypeError:
                 embed.add_field(
-                    name=_("Next scheduled event"), value=_("None"), inline=True,
+                    name=_("Next scheduled event"),
+                    value=_("None"),
+                    inline=True,
                 )
             else:
                 name = {

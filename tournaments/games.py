@@ -183,12 +183,17 @@ class Games(MixinMeta):
                     text += f"*{task}*\n"
             if message is not None:
                 embed.set_field_at(
-                    0, name=_("Progression"), value=text, inline=False,
+                    0,
+                    name=_("Progression"),
+                    value=text,
+                    inline=False,
                 )
                 await message.edit(embed=embed)
             else:
                 embed.add_field(
-                    name=_("Progression"), value=text, inline=False,
+                    name=_("Progression"),
+                    value=text,
+                    inline=False,
                 )
                 message = await ctx.send(embed=embed)
 
@@ -372,12 +377,17 @@ class Games(MixinMeta):
                     text += f"*{task}*\n"
             if message is not None:
                 embed.set_field_at(
-                    0, name=_("Progression"), value=text, inline=False,
+                    0,
+                    name=_("Progression"),
+                    value=text,
+                    inline=False,
                 )
                 await message.edit(embed=embed)
             else:
                 embed.add_field(
-                    name=_("Progression"), value=text, inline=False,
+                    name=_("Progression"),
+                    value=text,
+                    inline=False,
                 )
                 message = await ctx.send(embed=embed)
 
@@ -684,8 +694,13 @@ class Games(MixinMeta):
     @commands.command()
     @commands.guild_only()
     @commands.cooldown(1, 1, commands.BucketType.user)
-    async def setscore(self, ctx: commands.Context,
-                       nbmatch: Optional[int], winner: discord.member, score: ScoreConverter):
+    async def setscore(
+        self,
+        ctx: commands.Context,
+        nbmatch: Optional[int],
+        winner: discord.member,
+        score: ScoreConverter,
+    ):
         """
         Set the score of a set. To be used by a TO.
         """

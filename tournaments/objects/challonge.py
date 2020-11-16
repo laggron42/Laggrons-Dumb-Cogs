@@ -271,7 +271,9 @@ class ChallongeTournament(Tournament):
                         "{startup}\n"
                         "The following players are disqualified from this tournament:\n{names}"
                     ).format(
-                        prefix=self.bot_prefix, startup=startup, names=", ".join(removed),
+                        prefix=self.bot_prefix,
+                        startup=startup,
+                        names=", ".join(removed),
                     )
                 )
         self.participants = participants

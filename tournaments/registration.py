@@ -76,7 +76,8 @@ class Registration(MixinMeta):
         self.registration_loop_task_errors += 1
         if self.registration_loop_task_errors >= MAX_ERRORS:
             log.critical(
-                "Error in loop task. 3rd error, cancelling the task ...", exc_info=exception,
+                "Error in loop task. 3rd error, cancelling the task ...",
+                exc_info=exception,
             )
             self.registration_loop.start()
         else:
@@ -224,13 +225,16 @@ there are spaces).
         if succeed == 1:
             await ctx.send(
                 _("Successfully registered a participant.{check}{failed}").format(
-                    check=check, failed=failed,
+                    check=check,
+                    failed=failed,
                 )
             )
         else:
             await ctx.send(
                 _("Successfully registered {register} participants.{check}{failed}").format(
-                    register=succeed, check=check, failed=failed,
+                    register=succeed,
+                    check=check,
+                    failed=failed,
                 )
             )
 
@@ -280,7 +284,8 @@ there are spaces).
         else:
             await ctx.send(
                 _("Successfully unregistered {register} participants.{failed}").format(
-                    register=success, failed=failed,
+                    register=success,
+                    failed=failed,
                 )
             )
 
