@@ -232,9 +232,7 @@ class AutomodMixin(MixinMeta):
         embed = discord.Embed(title=_("Regex trigger: {name}").format(name=name))
         embed.description = _("Regex trigger details.")
         embed.add_field(
-            name=_("Regular expression"),
-            value=box(automod_regex["regex"].pattern),
-            inline=False,
+            name=_("Regular expression"), value=box(automod_regex["regex"].pattern), inline=False
         )
         embed.add_field(
             name=_("Warning"),
@@ -254,9 +252,9 @@ class AutomodMixin(MixinMeta):
         """
                 Trigger actions when a member get x warnings within the specified time.
 
-                For example, if a member gets 3 warnings within a day, you can make the bot automatically
-        set him a level 3 warning with the given reason.
-                It is also possible to only include warnings given by the bot when counting.
+        For example, if a member gets 3 warnings within a day, you can make the bot automatically \
+set him a level 3 warning with the given reason.
+        It is also possible to only include warnings given by the bot when counting.
         """
         pass
 
@@ -298,11 +296,7 @@ class AutomodMixin(MixinMeta):
                 else:
                     await ctx.send(_("Level must be between 1 and 5."))
             warn_reason = await self._ask_for_value(
-                ctx,
-                msg,
-                embed,
-                _("What's the reason of the automod's warning?"),
-                optional=True,
+                ctx, msg, embed, _("What's the reason of the automod's warning?"), optional=True
             )
             time: timedelta = await self._ask_for_value(
                 ctx,
@@ -464,9 +458,7 @@ class AutomodMixin(MixinMeta):
         text = ""
         for index, data in enumerate(autowarns):
             text += _("{index}. level {level} warn (need {number} warns to trigger)\n").format(
-                index=index,
-                level=data["warn"]["level"],
-                number=data["number"],
+                index=index, level=data["warn"]["level"], number=data["number"]
             )
         text = list(pagify(text, page_length=1900))
         pages = []

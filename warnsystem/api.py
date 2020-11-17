@@ -1001,15 +1001,7 @@ class API:
             else:
                 modlog_message = None
             data = await self._create_case(
-                guild,
-                member,
-                author,
-                level,
-                date,
-                reason,
-                time,
-                roles,
-                modlog_message,
+                guild, member, author, level, date, reason, time, roles, modlog_message
             )
             # start timer if there is a temporary warning
             if time and (level == 2 or level == 5):
