@@ -256,7 +256,7 @@ any streamer/T.O. can edit anyone's stream.
         self,
         ctx: commands.Context,
         channel: Optional[TwitchChannelConverter],
-        sets: Union[str, Greedy[int]],
+        *sets: Union[str, int],
     ):
         """
         Remove sets from your stream.
@@ -296,11 +296,14 @@ any streamer/T.O. can edit anyone's stream.
                     )
                 )
                 return
-        if sets == "all":
+        if len(sets) == 0 and sets[0] == "all":
             await streamer.end()
             streamer.matches = []
             await ctx.tick()
         else:
+            if not all(isinstance(x, int) for x in sets):
+                await ctx.send_help()
+                return
             try:
                 await streamer.remove_matches(sets)
             except KeyError:
