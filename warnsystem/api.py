@@ -1001,7 +1001,7 @@ class API:
             else:
                 modlog_message = None
             data = await self._create_case(
-                guild, member, author, level, date, reason, time, roles, modlog_message,
+                guild, member, author, level, date, reason, time, roles, modlog_message
             )
             # start timer if there is a temporary warning
             if time and (level == 2 or level == 5):
@@ -1306,7 +1306,14 @@ class API:
                 reason = regex["reason"].format(
                     guild=guild, channel=message.channel, member=member
                 )
-                fail = await self.warn(guild, [member], guild.me, level, reason, time,)
+                fail = await self.warn(
+                    guild,
+                    [member],
+                    guild.me,
+                    level,
+                    reason,
+                    time,
+                )
                 if fail:
                     log.warn(
                         f"[Guild {guild.id}] Regex automod warn on member {member} ({member.id})\n"
