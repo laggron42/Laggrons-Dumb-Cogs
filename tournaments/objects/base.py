@@ -122,7 +122,7 @@ class Participant(discord.Member):
         self.match = None
         self.spoke = False
 
-    async def check(self):
+    async def check(self, send_dm: bool = True):
         """
         Checks the member in.
 
@@ -131,12 +131,17 @@ class Participant(discord.Member):
         """
         self.checked_in = True
         log.debug(f"[Guild {self.guild.id}] Player {self} registered.")
-        await self.send(
-            _("You successfully checked in for the tournament **{name}**!").format(
-                name=self.tournament.name
-            )
-        )
         await self.tournament.save()
+        if not send_dm:
+            return
+        try:
+            await self.send(
+                _("You successfully checked in for the tournament **{name}**!").format(
+                    name=self.tournament.name
+                )
+            )
+        except discord.Forbidden:
+            pass
 
     @property
     def player_id(self):
@@ -291,7 +296,10 @@ class Match:
     def __del__(self):
         if self.streamer is not None:
             self.streamer.current_match = None
-            self.streamer.matches.remove(self)
+            try:
+                self.streamer.matches.remove(self)
+            except ValueError:
+                pass
 
     @property
     def duration(self) -> Optional[timedelta]:
@@ -314,18 +322,17 @@ class Match:
             match.warned = datetime.fromtimestamp(warned, tz=tournament.tz)
         match.on_hold = bool(data["on_hold"])
         match.status = data["status"]
-        if match.channel:
-            match.checked_dq = data["checked_dq"]
-            match.start_time = (
-                datetime.fromtimestamp(data["start_time"], tz=tournament.tz)
-                if data["start_time"]
-                else None
-            )
-            match.end_time = (
-                datetime.fromtimestamp(data["end_time"], tz=tournament.tz)
-                if data["end_time"]
-                else None
-            )
+        match.checked_dq = data["checked_dq"]
+        match.start_time = (
+            datetime.fromtimestamp(data["start_time"], tz=tournament.tz)
+            if data["start_time"]
+            else None
+        )
+        match.end_time = (
+            datetime.fromtimestamp(data["end_time"], tz=tournament.tz)
+            if data["end_time"]
+            else None
+        )
         return match
 
     def to_dict(self) -> dict:
@@ -451,17 +458,18 @@ class Match:
         if self.channel is None:
             await send_in_dm()
             result = False
-        try:
-            await self.channel.send(message)
-        except discord.HTTPException as e:
-            log.error(
-                f"[Guild {self.guild.id}] Can't create a channel for the set {self.set}",
-                exc_info=e,
-            )
-            await send_in_dm()
-            result = False
         else:
-            result = True
+            try:
+                await self.channel.send(message)
+            except discord.HTTPException as e:
+                log.error(
+                    f"[Guild {self.guild.id}] Can't create a channel for the set {self.set}",
+                    exc_info=e,
+                )
+                await send_in_dm()
+                result = False
+            else:
+                result = True
         self.tournament.matches_to_announce.append(
             _(
                 ":arrow_forward: **{name}** ({bo_type}): {player1} vs {player2}"
@@ -484,7 +492,7 @@ class Match:
         """
         Send a pending set, awaiting for its turn, on stream. Only call this if there's a streamer.
         """
-        destination = self.channel or self._dm_players
+        destination = self.channel.send if self.channel else self._dm_players
         if self.streamer.room_id:
             access = _("\n\nHere are the access codes:\nID: {id}\nPasscode: {passcode}").format(
                 id=self.streamer.room_id, passcode=self.streamer.room_code
@@ -495,7 +503,7 @@ class Match:
             await self._start()
         self.on_hold = False
         self.checked_dq = True
-        await destination.send(
+        await destination(
             _("You can go on stream on {channel} !{access}").format(
                 channel=self.streamer.link, access=access
             )
@@ -530,7 +538,7 @@ class Match:
         *   **If the match is not the first one in the stream queue:** We mark the match as not
             underway, change the status to pending, and tell the players.
         """
-        destination = self.channel.send or self._dm_players
+        destination = self.channel.send if self.channel else self._dm_players
         self.checked_dq = True
         if self.on_hold is True:
             self.status = "pending"
@@ -598,7 +606,7 @@ class Match:
         A message will be sent, telling players to start playing, and AFK checks will be
         re-enabled.
         """
-        destination = self.channel.send or self._dm_players
+        destination = self.channel.send if self.channel else self._dm_players
         self.streamer = None
         self.on_hold = False
         await self._start()
@@ -1527,6 +1535,11 @@ class Tournament:
 
     def to_dict(self) -> dict:
         """Returns a dict ready for Config."""
+        offset = self.tournament_start.utcoffset()
+        if offset:
+            offset = offset.total_seconds()
+        else:
+            offset = 0
         data = {
             "name": self.name,
             "game": self.game,
@@ -1534,10 +1547,7 @@ class Tournament:
             "id": self.id,
             "limit": self.limit,
             "status": self.status,
-            "tournament_start": (
-                int(self.tournament_start.timestamp()),
-                self.tournament_start.utcoffset().total_seconds(),
-            ),
+            "tournament_start": (int(self.tournament_start.timestamp()), offset),
             "bot_prefix": self.bot_prefix,
             "participants": [x.to_dict() for x in self.participants],
             "matches": [x.to_dict() for x in self.matches],
@@ -2024,6 +2034,7 @@ class Tournament:
                     if self.game_role != self.guild.default_role
                     else "",
                     date=self._format_datetime(self.tournament_start),
+                    time=self._format_datetime(self.register_stop or self.tournament_start, True),
                     register=self._format_datetime(self.register_start or self.tournament_start),
                     checkin=checkin,
                     limit=limit,
@@ -2295,7 +2306,7 @@ class Tournament:
         except discord.HTTPException:
             pass
 
-    async def unregister_participant(self, member: discord.Member):
+    async def unregister_participant(self, member: discord.Member, send_dm: bool = True):
         """
         Remove a participant.
 
@@ -2325,11 +2336,13 @@ class Tournament:
             self.participant_role, reason=_("Unregistering from tournament.")
         )
         del self.participants[i]
+        await self.save()
+        if not send_dm:
+            return
         try:
             await participant.send(_("You were unregistered from the tournament."))
         except discord.Forbidden:
             pass
-        await self.save()
 
     # seeding stuff
     # 95% of this code is made by Wonderfall, from ATOS bot (original)
@@ -3094,7 +3107,7 @@ class Streamer:
             if not isinstance(match, int):
                 match.streamer = cls
         if data["current_match"]:
-            cls.current_match = tournament.find_match(match_set=data["current_match"])[1]
+            cls.current_match = tournament.find_match(match_set=str(data["current_match"]))[1]
         return cls
 
     def to_dict(self) -> dict:
@@ -3105,7 +3118,7 @@ class Streamer:
             "room_id": self.room_id,
             "room_code": self.room_code,
             "matches": [self.get_set(x) for x in self.matches],
-            "current_match": self.current_match.id if self.current_match else None,
+            "current_match": self.get_set(self.current_match) if self.current_match else None,
         }
 
     def get_set(self, x):
