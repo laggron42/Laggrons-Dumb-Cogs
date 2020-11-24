@@ -41,6 +41,9 @@ download_translations:
 compile:
 	python3 -m compileall .
 
+test:
+	python3 -m pytest -vv --capture=no .
+
 docs:
 	sphinx-build -b $(BUILD) $(SOURCE) $(OUTPUT)
 
