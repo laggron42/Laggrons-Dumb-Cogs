@@ -50,6 +50,8 @@ jobs:
           python -m pip install Red-DiscordBot
           python -m pip install git+https://github.com/retke/laggron-utils
           python -m pip install python-dateutil==2.8.1
+          python -m pip install apychal==1.10.0
+          python -m pip install aiofiles
           python -m pip install -r tests/requirements.txt
       - name: Compile all
         run: |
