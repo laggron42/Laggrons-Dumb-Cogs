@@ -5,7 +5,6 @@ import re
 from typing import Optional, Union
 from copy import deepcopy
 
-from discord.ext.commands import Greedy
 from redbot.core import commands
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
@@ -256,7 +255,7 @@ any streamer/T.O. can edit anyone's stream.
         self,
         ctx: commands.Context,
         channel: Optional[TwitchChannelConverter],
-        *sets: Union[str, int],
+        *sets: Union[int, str],
     ):
         """
         Remove sets from your stream.
@@ -296,16 +295,17 @@ any streamer/T.O. can edit anyone's stream.
                     )
                 )
                 return
-        if len(sets) == 0 and sets[0] == "all":
+        if len(sets) == 1 and sets[0] == "all":
             await streamer.end()
             streamer.matches = []
+            streamer.current_match = None
             await ctx.tick()
         else:
             if not all(isinstance(x, int) for x in sets):
                 await ctx.send_help()
                 return
             try:
-                await streamer.remove_matches(sets)
+                await streamer.remove_matches(*sets)
             except KeyError:
                 await ctx.send(_("None of the sets you sent were listed in the stream."))
             else:
