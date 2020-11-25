@@ -311,60 +311,6 @@ any streamer/T.O. can edit anyone's stream.
             else:
                 await ctx.tick()
 
-    @stream.command(name="replace")
-    @commands.check(mod_or_streamer)
-    async def stream_replace(
-        self,
-        ctx: commands.Context,
-        channel: Optional[TwitchChannelConverter],
-        *sets: int,
-    ):
-        """
-        Replace the set list of your stream.
-
-        The set numbers are listed with `[p]stream info`.
-
-        If you want to edit someone else's stream, give its channel as the first argument.
-
-        Examples:
-        - `[p]stream replace 252 253 254 255`
-        - `[p]stream replace https://twitch.tv/el_laggron 252 253 254 255`
-        """
-        if not sets:
-            await ctx.send_help()
-            return
-        tournament = self.tournaments[ctx.guild.id]
-        if channel is None:
-            streamer = tournament.find_streamer(discord_id=ctx.author.id)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "You don't have any stream. If you want to edit someone else's stream, "
-                        "put its channel name or link as the first argument "
-                        "(see `{prefix}help stream set`)."
-                    ).format(prefix=ctx.clean_prefix)
-                )
-                return
-        else:
-            streamer = tournament.find_streamer(channel=channel)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "I can't find any existing stream with that channel. "
-                        "Please check the list with `{prefix}stream list`."
-                    )
-                )
-                return
-        await streamer.remove_matches()
-        errors = await streamer.add_matches(*sets)
-        if errors:
-            await ctx.send(
-                _("Some errors occured:\n\n")
-                + "\n".join([f"#{x}: {y}" for x, y in errors.items()])
-            )
-        else:
-            await ctx.tick()
-
     @stream.command(name="swap")
     @commands.check(mod_or_streamer)
     async def stream_swap(
