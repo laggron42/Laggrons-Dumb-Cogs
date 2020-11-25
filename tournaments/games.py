@@ -197,6 +197,15 @@ class Games(MixinMeta):
                 )
                 message = await ctx.send(embed=embed)
 
+        error_mapping = {
+            "422": _(
+                ":information_source: A 422 error can mean multiple things:\n"
+                "- There are not enough participants on Challonge. Check the bracket, and "
+                "use `{prefix}upload` to try sending the participants again (seeding reset).\n"
+                "- You enabled the check-in on Challonge. Check the participants on "
+                "Challonge, or disable this option."
+            ).format(prefix=ctx.clean_prefix),
+        }
         await update_embed(0)
         for i, task in enumerate(tasks):
             task = task[1]
@@ -204,14 +213,13 @@ class Games(MixinMeta):
                 await task()
             except achallonge.ChallongeException as e:
                 await update_embed(i, True)
-                if e.args[0].startswith("422"):
+                error = error_mapping.get(e.args[0].split()[0])
+                if error:
                     await ctx.send(
                         _(
-                            "Error from Challonge: {error}\n"
-                            ":information_source: A 422 error usually means there aren't enough "
-                            "participants registered. Did you forget to use `{prefix}upload`?\n"
+                            "__Error from Challonge: {error}__\n{error_msg}\n\n"
                             "If this problem persists, contact T.O.s or an admin of the bot."
-                        ).format(error=e.args[0])
+                        ).format(error=e.args[0], error_msg=error, prefix=ctx.clean_prefix)
                     )
                     return
                 raise

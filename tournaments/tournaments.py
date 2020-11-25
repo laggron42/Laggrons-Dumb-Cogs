@@ -177,14 +177,32 @@ class Tournaments(
             log.info("No tournament had to be resumed.")
 
     async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
+        error_mapping = {
+            "401": _(
+                ":information_source: A 401 error probably means the Challonge user setup on "
+                "this server does not have the permission to access the "
+                "tournament, or the username and API key are now invalid.\n"
+                "Share admin access to this user, or setup another one with "
+                "`{prefix}challongeset` (and `{prefix}tfix reload` for reloading the config).\n\n"
+            ).format(prefix=ctx.clean_prefix),
+            "404": _(
+                ":information_source: A 404 error probably means the tournament "
+                "was deleted or moved (URL or host change).\n"
+            ),
+            "502": _(
+                ":information_source: Challonge is being unstable, try again later. "
+                "This error is (sadly) very common, so no need to worry.\n"
+            ),
+        }
         if hasattr(error, "original") and isinstance(
             error.original, achallonge.ChallongeException
         ):
+            error_msg = error_mapping.get(error.original.args[0].split()[0]) or ""
             await ctx.send(
                 _(
-                    "Error from Challonge: {error}\n"
+                    "__Error from Challonge: {error}__\n{error_msg}"
                     "If this problem persists, contact T.O.s or an admin of the bot."
-                ).format(error=error.original.args[0])
+                ).format(error=error.original.args[0], error_msg=error_msg)
             )
         else:
             await self.bot.on_command_error(ctx, error, unhandled_by_cog=True)

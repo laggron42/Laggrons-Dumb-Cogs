@@ -1145,10 +1145,37 @@ the start of the tournament, then closing 15 minutes before.
         credentials = await self.data.guild(guild).credentials.all()
         credentials["login"] = credentials.pop("username")
         credentials["password"] = credentials.pop("api")
+        error_mapping = {
+            "401": _(
+                ":information_source: A 401 error at this step means your Challonge username "
+                "and/or API key are invalid. Please configure new ones with "
+                "the `{prefix}challongeset` command while making sure everything is correct."
+            ).format(prefix=ctx.clean_prefix),
+            "404": _(
+                ":information_source: A 404 error either means the link you've provided is "
+                "invalid, or the tournament is hosted by a community instead of a user.\n"
+                "For obscure reasons, the Challonge API does not support communitites, so if "
+                "this is the case, move the tournament to a standalone user (Settings > Basic "
+                "info > Host).\nYou will be able to move the tournament back "
+                "to your community once it is ended."
+            ),
+        }
         async with ctx.typing():
-            data = await async_http_retry(
-                achallonge.tournaments.show(url, credentials=credentials)
-            )
+            try:
+                data = await async_http_retry(
+                    achallonge.tournaments.show(url, credentials=credentials)
+                )
+            except achallonge.ChallongeException as e:
+                error = error_mapping.get(e.args[0].split()[0])
+                if error:
+                    await ctx.send(
+                        _(
+                            "__Error from Challonge: {error}__\n{error_msg}\n\n"
+                            "If this problem persists, contact T.O.s or an admin of the bot."
+                        ).format(error=e.args[0], error_msg=error, prefix=ctx.clean_prefix)
+                    )
+                    return
+                raise
         if data is None:
             await ctx.send(_("Tournament not found. Check your URL."))
             return
