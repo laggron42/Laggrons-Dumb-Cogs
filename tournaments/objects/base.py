@@ -3149,14 +3149,16 @@ class Streamer:
         self.room_id = room_id
         self.room_code = code
 
-    async def add_matches(self, *sets: int):
+    async def check_integrity(self, sets: int, *, add: bool = False):
         """
-        Add a list of matches to the streamer's queue.
+        Verify if the list of sets provided is valid before adding them to the list.
 
         Parameters
         ----------
-        *sets: int
-            The list of sets you want to add. Only `int`, no `Match` instance.
+        sets: int
+            The list of sets you want to check (and add). Only `int`, no `Match` instance.
+        add: bool
+            If you want to add the valid sets to the queue at the same time.
 
         Returns
         -------
@@ -3180,6 +3182,8 @@ class Streamer:
                 if match.status == "finished":
                     errors[_set] = _("That match is finished.")
                     continue
+                if add is False:
+                    continue
                 match.streamer = self
                 if match.status == "ongoing":
                     # match is ongoing, we have to tell players
@@ -3190,8 +3194,20 @@ class Streamer:
                         # match has to be paused
                         match.on_hold = True
                     await match.stream_queue_add()
-            self.matches.append(match or _set)
+            if add:
+                self.matches.append(match or _set)
         return errors
+
+    async def add_matches(self, *sets):
+        """
+        Add matches to the streamer's queue.
+
+        Parameters
+        ----------
+        *sets: Union[Match, int]
+            The matches you want to add.
+        """
+        self.matches.extend(*sets)
 
     async def remove_matches(self, *sets: int):
         """
