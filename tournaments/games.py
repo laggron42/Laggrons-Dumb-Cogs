@@ -702,7 +702,16 @@ class Games(MixinMeta):
         score: ScoreConverter,
     ):
         """
-        Set the score of a set. To be used by a TO.
+        Set the score of a set. To be used by a T.O.
+
+        You need to give the winner of the set, followed by its score.
+
+        If the command is used in a channel for a set, this will be the set used by default. \
+Else you can specify the set you want to update as the first argument.
+
+        Examples:
+        - `[p]setscore @Blite 2-1`
+        - `[p]setscore 147 @Lorinato 3-1`
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
@@ -715,7 +724,12 @@ class Games(MixinMeta):
             await ctx.send(_("The winner is not a member of this tournament."))
             return
         if match is None:
-            await ctx.send(_("I don't see any match, here ..."))
+            await ctx.send(
+                _(
+                    "I don't see any match here. Provide the set number as the first argument, "
+                    "or use this command inside a channel for a set (see `{prefix}help setscore`)."
+                ).format(prefix=ctx.clean_prefix)
+            )
             return
         if match.status == "finished":
             await ctx.send(_("This match is already finished."))
