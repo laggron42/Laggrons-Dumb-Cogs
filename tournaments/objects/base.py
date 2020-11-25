@@ -3221,6 +3221,8 @@ class Streamer:
         for match in to_remove:
             if isinstance(match, Match):
                 await match.cancel_stream()
+                if match == self.current_match:
+                    self.current_match = None
 
     def swap_match(self, set1: int, set2: int):
         """
@@ -3316,7 +3318,10 @@ class Streamer:
         if self.current_match:
             if self.current_match.status != "finished":
                 return  # wait for it to end
-            self.matches.remove(self.current_match)
+            try:
+                self.matches.remove(self.current_match)
+            except ValueError:
+                pass
         self.current_match = None
         try:
             next_match = self.matches[0]
