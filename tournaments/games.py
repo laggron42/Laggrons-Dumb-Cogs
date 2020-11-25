@@ -697,8 +697,8 @@ class Games(MixinMeta):
     async def setscore(
         self,
         ctx: commands.Context,
-        nbmatch: Optional[int],
-        winner: discord.member,
+        set: Optional[int],
+        winner: discord.Member,
         score: ScoreConverter,
     ):
         """
@@ -706,8 +706,8 @@ class Games(MixinMeta):
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
-        if nbmatch is not None:
-            match = tournament.find_match(match_set=nbmatch)[1]
+        if set is not None:
+            match = tournament.find_match(match_set=str(set))[1]
         else:
             match = tournament.find_match(channel_id=ctx.channel.id)[1]
         player = tournament.find_participant(discord_id=winner.id)[1]
@@ -717,8 +717,15 @@ class Games(MixinMeta):
         if match is None:
             await ctx.send(_("I don't see any match, here ..."))
             return
-        if match.status != "ongoing":
-            await ctx.send(_("This match has not started yet."))
+        if match.status == "finished":
+            await ctx.send(_("This match is already finished."))
+            return
+        if player.id not in (match.player1.id, match.player2.id):
+            await ctx.send(
+                _("The winner isn't part of the match {set}.").format(
+                    set=match.channel.mention if match.channel else f"#{match.set}"
+                )
+            )
             return
         if winner.id == match.player2.id:
             score = score[::-1]  # player1-player2 format
