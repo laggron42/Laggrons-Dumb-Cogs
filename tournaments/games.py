@@ -448,7 +448,7 @@ class Games(MixinMeta):
                 text = ", ".join(x.mention for x in objects)
             else:
                 text = ", ".join(x.mention for x in objects)
-            message += _(f"\n\n{messages[kind]}\n{text}")
+            message += f"\n\n{messages[kind]}\n{text}"
             errored = True
         if errored:
             message += _("\n\nCheck your console or logs for more informations.")
