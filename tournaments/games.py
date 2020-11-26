@@ -586,10 +586,26 @@ class Games(MixinMeta):
             )
             if result is False:
                 return
+        error_mapping = {
+            "422": _(
+                ":information_source: A 422 error when uploading participants probably means "
+                "the limit of participants was hit.\nDid the bot register too many participants? "
+                "Or did someone edit the limit? Check the settings on Challonge."
+            ),
+        }
         try:
             async with ctx.typing():
                 await tournament.seed_participants_and_upload(tournament.checkin_phase == "done")
-        except achallonge.ChallongeException:
+        except achallonge.ChallongeException as e:
+            error = error_mapping.get(e.args[0].split()[0])
+            if error:
+                await ctx.send(
+                    _(
+                        "__Error from Challonge: {error}__\n{error_msg}\n\n"
+                        "If this problem persists, contact T.O.s or an admin of the bot."
+                    ).format(error=e.args[0], error_msg=error, prefix=ctx.clean_prefix)
+                )
+                return
             raise
         except Exception as e:
             log.error(f"[Guild {ctx.guild.id}] Failed seeding/uploading participants.", exc_info=e)
