@@ -39,16 +39,34 @@ class TwitchChannelConverter(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str):
         result = TWITCH_CHANNEL_RE.match(argument)
         if not result or not result.group("channel_name"):
-            raise commands.BadArgument(
-                _("This is not a valid Twitch channel. Example: <https://twitch.tv/firedragon>")
-            )
-        return result.group("channel_name")
+            raise commands.BadArgument
+        result = result.group("channel_name")
+        if ctx.command.name == "init":
+            return result
+        tournament = ctx.bot.get_cog("Tournaments").tournaments[ctx.guild.id]
+        streamer = tournament.find_streamer(channel=result)[1]
+        if streamer is None:
+            raise commands.BadArgument
+        return streamer
 
 
-# You'll notice there are way too many repetitions in the code of these commands.
-# I'm nearly at the end of the project while writing this, and I'm *tired*
-# I'll use a better solution if I'm not too lazy and need to edit this part
 class Streams(MixinMeta):
+    async def _get_streamer_from_ctx(self, ctx: commands.Context, streamer) -> Optional[Streamer]:
+        if streamer is not None:
+            return streamer
+        tournament = self.tournaments[ctx.guild.id]
+        streamer = tournament.find_streamer(discord_id=ctx.author.id)[1]
+        if streamer is None:
+            await ctx.send(
+                _(
+                    "You don't have any stream. If you want to edit someone else's stream, "
+                    "put its channel link as the first argument "
+                    "(see `{prefix}help stream set`)."
+                ).format(prefix=ctx.clean_prefix)
+            )
+            return
+        return streamer
+
     @only_phase("ongoing")
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
@@ -66,6 +84,7 @@ class Streams(MixinMeta):
             else:
                 await ctx.send("\n".join([x.link for x in tournament.streamers]))
 
+    @only_phase("ongoing")
     @stream.command(name="init")
     @commands.check(mod_or_streamer)
     async def stream_init(self, ctx: commands.Context, url: TwitchChannelConverter):
@@ -81,6 +100,7 @@ class Streams(MixinMeta):
         tournament.streamers.append(streamer)
         await ctx.tick()
 
+    @only_phase("ongoing")
     @stream.command(name="list")
     @commands.check(mod_or_streamer)
     async def stream_list(self, ctx: commands.Context):
@@ -106,12 +126,13 @@ class Streams(MixinMeta):
         for page in pagify(text):
             await ctx.send(page)
 
+    @only_phase("ongoing")
     @stream.command(name="set")
     @commands.check(mod_or_streamer)
     async def stream_set(
         self,
         ctx: commands.Context,
-        channel: Optional[TwitchChannelConverter],
+        streamer: Optional[TwitchChannelConverter],
         room_id: str,
         room_code: str,
     ):
@@ -126,37 +147,19 @@ class Streams(MixinMeta):
         - `[p]stream set 5RF7G 260`
         - `[p]stream set https://twitch.tv/el_laggron 5RF7G 260`
         """
-        tournament = self.tournaments[ctx.guild.id]
-        if channel is None:
-            streamer = tournament.find_streamer(discord_id=ctx.author.id)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "You don't have any stream. If you want to edit someone else's stream, "
-                        "put its channel link as the first argument "
-                        "(see `{prefix}help stream set`)."
-                    ).format(prefix=ctx.clean_prefix)
-                )
-                return
-        else:
-            streamer = tournament.find_streamer(channel=channel)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "I can't find any existing stream with that link. "
-                        "Please check the list with `{prefix}stream list`."
-                    )
-                )
-                return
+        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        if not streamer:
+            return
         streamer.set_room(room_id, room_code)
         await ctx.tick()
 
+    @only_phase("ongoing")
     @stream.command(name="transfer")
     @commands.check(mod_or_streamer)
     async def stream_transfer(
         self,
         ctx: commands.Context,
-        channel: Optional[TwitchChannelConverter],
+        streamer: Optional[TwitchChannelConverter],
         member: discord.Member = None,
     ):
         """
@@ -170,37 +173,19 @@ any streamer/T.O. can edit anyone's stream.
 
         If you want to edit someone else's stream, give its channel as the first argument.
         """
-        tournament = self.tournaments[ctx.guild.id]
-        if channel is None:
-            streamer = tournament.find_streamer(discord_id=ctx.author.id)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "You don't have any stream. If you want to edit someone else's stream, "
-                        "put its channel link as the first argument "
-                        "(see `{prefix}help stream set`)."
-                    ).format(prefix=ctx.clean_prefix)
-                )
-                return
-        else:
-            streamer = tournament.find_streamer(channel=channel)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "I can't find any existing stream with that link. "
-                        "Please check the list with `{prefix}stream list`."
-                    )
-                )
-                return
+        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        if not streamer:
+            return
         streamer.member = member or ctx.author
         await ctx.tick()
 
+    @only_phase("ongoing")
     @stream.command(name="add")
     @commands.check(mod_or_streamer)
     async def stream_add(
         self,
         ctx: commands.Context,
-        channel: Optional[TwitchChannelConverter],
+        streamer: Optional[TwitchChannelConverter],
         *sets: int,
     ):
         """
@@ -218,28 +203,9 @@ any streamer/T.O. can edit anyone's stream.
         if not sets:
             await ctx.send_help()
             return
-        tournament = self.tournaments[ctx.guild.id]
-        if channel is None:
-            streamer = tournament.find_streamer(discord_id=ctx.author.id)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "You don't have any stream. If you want to edit someone else's stream, "
-                        "put its channel link as the first argument "
-                        "(see `{prefix}help stream set`)."
-                    ).format(prefix=ctx.clean_prefix)
-                )
-                return
-        else:
-            streamer = tournament.find_streamer(channel=channel)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "I can't find any existing stream with that link. "
-                        "Please check the list with `{prefix}stream list`."
-                    )
-                )
-                return
+        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        if not streamer:
+            return
         errors = await streamer.check_integrity(sets, add=True)
         if errors:
             await ctx.send(
@@ -249,12 +215,13 @@ any streamer/T.O. can edit anyone's stream.
         else:
             await ctx.tick()
 
+    @only_phase("ongoing")
     @stream.command(name="remove", aliases=["del", "delete", "rm"])
     @commands.check(mod_or_streamer)
     async def stream_remove(
         self,
         ctx: commands.Context,
-        channel: Optional[TwitchChannelConverter],
+        streamer: Optional[TwitchChannelConverter],
         *sets: Union[int, str],
     ):
         """
@@ -273,28 +240,9 @@ any streamer/T.O. can edit anyone's stream.
         if not sets:
             await ctx.send_help()
             return
-        tournament = self.tournaments[ctx.guild.id]
-        if channel is None:
-            streamer = tournament.find_streamer(discord_id=ctx.author.id)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "You don't have any stream. If you want to edit someone else's stream, "
-                        "put its channel link as the first argument "
-                        "(see `{prefix}help stream set`)."
-                    ).format(prefix=ctx.clean_prefix)
-                )
-                return
-        else:
-            streamer = tournament.find_streamer(channel=channel)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "I can't find any existing stream with that link. "
-                        "Please check the list with `{prefix}stream list`."
-                    )
-                )
-                return
+        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        if not streamer:
+            return
         if len(sets) == 1 and sets[0] == "all":
             await streamer.end()
             streamer.matches = []
@@ -311,12 +259,13 @@ any streamer/T.O. can edit anyone's stream.
             else:
                 await ctx.tick()
 
+    @only_phase("ongoing")
     @stream.command(name="replace")
     @commands.check(mod_or_streamer)
     async def stream_replace(
         self,
         ctx: commands.Context,
-        channel: Optional[TwitchChannelConverter],
+        streamer: Optional[TwitchChannelConverter],
         *sets: int,
     ):
         """
@@ -333,28 +282,10 @@ any streamer/T.O. can edit anyone's stream.
         if not sets:
             await ctx.send_help()
             return
+        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        if not streamer:
+            return
         tournament = self.tournaments[ctx.guild.id]
-        if channel is None:
-            streamer = tournament.find_streamer(discord_id=ctx.author.id)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "You don't have any stream. If you want to edit someone else's stream, "
-                        "put its channel name or link as the first argument "
-                        "(see `{prefix}help stream set`)."
-                    ).format(prefix=ctx.clean_prefix)
-                )
-                return
-        else:
-            streamer = tournament.find_streamer(channel=channel)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "I can't find any existing stream with that channel. "
-                        "Please check the list with `{prefix}stream list`."
-                    )
-                )
-                return
         if not streamer.matches:
             await ctx.send(
                 _(
@@ -442,12 +373,13 @@ any streamer/T.O. can edit anyone's stream.
             streamer.matches = new_list
         await ctx.send(_("Stream queue successfully modified."))
 
+    @only_phase("ongoing")
     @stream.command(name="swap")
     @commands.check(mod_or_streamer)
     async def stream_swap(
         self,
         ctx: commands.Context,
-        channel: Optional[TwitchChannelConverter],
+        streamer: Optional[TwitchChannelConverter],
         set1: int,
         set2: int,
     ):
@@ -463,28 +395,9 @@ any streamer/T.O. can edit anyone's stream.
         - `[p]stream swap 252 254`
         - `[p]stream swap https://twitch.tv/el_laggron 252 254`
         """
-        tournament = self.tournaments[ctx.guild.id]
-        if channel is None:
-            streamer = tournament.find_streamer(discord_id=ctx.author.id)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "You don't have any stream. If you want to edit someone else's stream, "
-                        "put its channel link as the first argument "
-                        "(see `{prefix}help stream set`)."
-                    ).format(prefix=ctx.clean_prefix)
-                )
-                return
-        else:
-            streamer = tournament.find_streamer(channel=channel)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "I can't find any existing stream with that link. "
-                        "Please check the list with `{prefix}stream list`."
-                    )
-                )
-                return
+        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        if not streamer:
+            return
         try:
             streamer.swap_match(set1, set2)
         except KeyError:
@@ -492,12 +405,13 @@ any streamer/T.O. can edit anyone's stream.
         else:
             await ctx.tick()
 
+    @only_phase("ongoing")
     @stream.command(name="insert")
     @commands.check(mod_or_streamer)
     async def stream_insert(
         self,
         ctx: commands.Context,
-        channel: Optional[TwitchChannelConverter],
+        streamer: Optional[TwitchChannelConverter],
         set1: int,
         set2: int,
     ):
@@ -516,28 +430,9 @@ already be in your stream queue.
         - `[p]stream insert 252 254`
         - `[p]stream insert https://twitch.tv/el_laggron 252 254`
         """
-        tournament = self.tournaments[ctx.guild.id]
-        if channel is None:
-            streamer = tournament.find_streamer(discord_id=ctx.author.id)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "You don't have any stream. If you want to edit someone else's stream, "
-                        "put its channel link as the first argument "
-                        "(see `{prefix}help stream set`)."
-                    ).format(prefix=ctx.clean_prefix)
-                )
-                return
-        else:
-            streamer = tournament.find_streamer(channel=channel)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "I can't find any existing stream with that link. "
-                        "Please check the list with `{prefix}stream list`."
-                    )
-                )
-                return
+        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        if not streamer:
+            return
         try:
             streamer.insert_match(set1, set2=set2)
         except KeyError:
@@ -545,12 +440,13 @@ already be in your stream queue.
         else:
             await ctx.tick()
 
+    @only_phase("ongoing")
     @stream.command(name="info")
     @commands.check(mod_or_streamer)
     async def stream_info(
         self,
         ctx: commands.Context,
-        channel: Optional[TwitchChannelConverter],
+        streamer: Optional[TwitchChannelConverter],
     ):
         """
         Shows infos about a stream.
@@ -561,28 +457,9 @@ already be in your stream queue.
         - `[p]stream info`
         - `[p]stream info https://twitch.tv/el_laggron`
         """
-        tournament = self.tournaments[ctx.guild.id]
-        if channel is None:
-            streamer = tournament.find_streamer(discord_id=ctx.author.id)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "You don't have any stream. If you want to edit someone else's stream, "
-                        "put its channel link as the first argument "
-                        "(see `{prefix}help stream set`)."
-                    ).format(prefix=ctx.clean_prefix)
-                )
-                return
-        else:
-            streamer = tournament.find_streamer(channel=channel)[1]
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "I can't find any existing stream with that link. "
-                        "Please check the list with `{prefix}stream list`."
-                    )
-                )
-                return
+        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        if not streamer:
+            return
         sets = ""
         for match in streamer.matches:
             if isinstance(match, int):
@@ -620,12 +497,13 @@ already be in your stream queue.
                 embeds.append(_embed)
             await menus.menu(ctx, embeds, controls=menus.DEFAULT_CONTROLS)
 
+    @only_phase("ongoing")
     @stream.command(name="end")
     @commands.check(mod_or_streamer)
     async def stream_end(
         self,
         ctx: commands.Context,
-        channel: Optional[TwitchChannelConverter],
+        streamer: Optional[TwitchChannelConverter],
     ):
         """
         Closes a stream.
@@ -636,28 +514,10 @@ already be in your stream queue.
         - `[p]stream end`
         - `[p]stream end https://twitch.tv/el_laggron`
         """
+        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        if not streamer:
+            return
         tournament = self.tournaments[ctx.guild.id]
-        if channel is None:
-            i, streamer = tournament.find_streamer(discord_id=ctx.author.id)
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "You don't have any stream. If you want to edit someone else's stream, "
-                        "put its channel link as the first argument "
-                        "(see `{prefix}help stream set`)."
-                    ).format(prefix=ctx.clean_prefix)
-                )
-                return
-        else:
-            i, streamer = tournament.find_streamer(channel=channel)
-            if streamer is None:
-                await ctx.send(
-                    _(
-                        "I can't find any existing stream with that link. "
-                        "Please check the list with `{prefix}stream list`."
-                    )
-                )
-                return
         await streamer.end()
-        del tournament.streamers[i]
+        tournament.streamers.remove(streamer)
         await ctx.tick()
