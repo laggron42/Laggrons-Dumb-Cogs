@@ -79,7 +79,6 @@ class Registration(MixinMeta):
                 "Error in loop task. 3rd error, cancelling the task ...",
                 exc_info=exception,
             )
-            self.registration_loop.start()
         else:
             log.error("Error in loop task. Resuming ...", exc_info=exception)
             self.registration_loop.start()
@@ -130,15 +129,18 @@ class Registration(MixinMeta):
             elif tournament.register_phase != "ongoing":
                 await ctx.send(_("Registrations aren't active."))
                 return
-            try:
-                await tournament.register_participant(ctx.author)
-            except discord.HTTPException as e:
-                log.error(
-                    f"[Guild {ctx.guild.id}] Can't register participant {ctx.author.id}",
-                    exc_info=e,
-                )
-                await ctx.send(_("I can't give you the role."))
-                return
+            async with tournament.lock:
+                try:
+                    await tournament.register_participant(ctx.author)
+                except RuntimeError:
+                    return
+                except discord.HTTPException as e:
+                    log.error(
+                        f"[Guild {ctx.guild.id}] Can't register participant {ctx.author.id}",
+                        exc_info=e,
+                    )
+                    await ctx.send(_("I can't give you the role."))
+                    return
         await ctx.tick()
 
     @only_phase("pending", "register", "awaiting")
