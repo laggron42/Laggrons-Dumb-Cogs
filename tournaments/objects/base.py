@@ -1238,7 +1238,7 @@ class Tournament:
         A lock acquired when the tournament is being refreshed by the loop task, to prevent
         commands like win or dq from being run at the same time.
 
-        *New since beta 13:* The lock is also acquired with the `[p]in` command to prevent too
+        *New since beta 13:* The lock is also acquired with the ``[p]in`` command to prevent too
         many concurrent tasks, breaking the limit.
     task: asyncio.Task
         The task for the `loop_task` function (`discord.ext.tasks.Loop` object)
