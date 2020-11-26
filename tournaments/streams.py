@@ -17,7 +17,7 @@ from .objects import Streamer
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
 
-TWITCH_CHANNEL_RE = re.compile(r"(https://(www\.)?twitch.tv/)(?P<channel_name>\S[^/]+)(/.*)?")
+TWITCH_CHANNEL_RE = re.compile(r"(https://(www\.)?twitch.tv/)?(?P<channel_name>\S[^/]+)(/.*)?")
 
 
 async def mod_or_streamer(ctx: commands.Context):
@@ -38,7 +38,7 @@ async def mod_or_streamer(ctx: commands.Context):
 class TwitchChannelConverter(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str):
         result = TWITCH_CHANNEL_RE.match(argument)
-        if not result.group("channel_name"):
+        if not result or not result.group("channel_name"):
             raise commands.BadArgument(
                 _("This is not a valid Twitch channel. Example: <https://twitch.tv/firedragon>")
             )
