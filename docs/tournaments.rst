@@ -375,9 +375,118 @@ Channels will be deleted, and the tournament will fall back to its previous
 state. You can then either start again with ``[p]start`` or just remove it
 with ``[p]reset``.
 
+^^^^^^^^^^^^^^
+Manage streams
+^^^^^^^^^^^^^^
+
+The cog comes with streaming support, aka managing a stream queue for streamers
+who want to share and comment a match. The ``[p]stream`` command is accessible
+to anyone, displaying the links of the current streamers. However, the sub
+commands are only accessible to mods, T.O.s and streamers (role defined with
+``[p]tset roles streamer``).
+
+Here are the steps for adding a streamer to the tournament (only accessible
+once the tournament has started):
+
+1.  Initialize your stream with ``[p]stream init <link>``, where ``<link>`` is
+    the URL of your Twitch channel.
+
+2.  (Optional) Smash Bros. Ultimate streamers can setup the info of their room
+    (ID + code) that will be shared to the players once it is their turn with
+    ``[p]stream set <id> <code>``.
+
+3.  Add matches to your stream queue with ``[p]stream add``. You can add sets
+    that will start in the future, or even sets that already started (the bot
+    will ping them, either for telling them to go on stream or to stop playing
+    and wait for their turn). You can add multiple sets at once. Example for
+    scheduling the top 4 of a 128 players tournament: ``[p]stream add 251 252
+    253 254 255`` (the number of the sets can be found on Challonge).
+
+4.  Remove scheduled matches with ``[p]stream remove`` followed by the sets.
+    You can clear your queue with ``[p]stream remove all``.
+
+5.  See the infos about your stream (such as the queue) with ``[p]stream
+    info``.
+
+6.  Reorder your stream queue with the following commands:
+
+    *   ``[p]stream swap <set1> <set2>`` for swapping the position of two sets
+        in your queue.
+    
+    *   ``[p]stream insert <set1> <set2>`` for inserting set 1 right before
+        set 2 in the queue.
+    
+    *   ``[p]stream reorder`` for giving the entire order. This will add or
+        remove sets if they're different from the previous stream queue.
+
+7.  End your stream with ``[p]stream end``, cancelling your queue and sending
+    players back to the game.
+
+You can type ``[p]stream list`` for seeing all streamers. Note that a set
+going on stream will be announced in the channel defined with ``[p]tset
+channels stream``.
+
+.. tip:: Any T.O. or streamer can edit anyone's stream by providing their
+    channel as the first argument of the command. Examples:
+
+    *   ``[p]stream add https://twitch.tv/el_laggron 254``
+    *   ``[p]stream info el_laggron``
+
+    This allows you to setup a stream for someone yourself, then transferring
+    the ownership of this stream with ``[p]stream transfer``, making things
+    easier for them.
+
 --------------------
 Additional resources
 --------------------
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Common Challonge error codes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The bot will usually provide an explaination for the most frequeunt error
+codes from Challonge. Here's a table in case of:
+
++-------+------------------------------------------------------------------+
+| Error | Explaination                                                     |
++=======+==================================================================+
+| 401   | * The credentials are invalid                                    |
+|       | * The user setup does not have access on that tournament         |
++-------+------------------------------------------------------------------+
+| 404   | * The URL given is invalid                                       |
+|       | * The tournament is hosted by a community (not supported by API) |
+|       | * The tournament was deleted                                     |
+|       | * The tournament's URL or host changed                           |
++-------+------------------------------------------------------------------+
+| 422   | Can mean multiple things...                                      |
+|       |                                                                  |
+|       | * When uploading participants                                    |
+|       |                                                                  |
+|       |   * The limit was probably hit.                                  |
+|       |     The bot could have registered too many                       |
+|       |     participants, or the limit changed on Challonge.             |
+|       |                                                                  |
+|       | * When starting the tournament                                   |
+|       |                                                                  |
+|       |   * There are not enough participants on                         |
+|       |     Challonge. Did the upload fail?                              |
+|       |     Try ``[p]upload`` and try again.                             |
+|       |                                                                  |
+|       |   * You enabled the check-in via Challonge.                      |
+|       |     Check members there or disable this.                         |
+|       |                                                                  |
+|       | * When closing the tournament (supressed)                        |
+|       |                                                                  |
+|       |   * The tournament was already closed by someone manually        |
+|       |                                                                  |
+|       | If there's a case I didn't mention, error means                  |
+|       | "Unprocessable entity", so you're trying to do something         |
+|       | inconsistant for Challonge. Check directly what                  |
+|       | could be wrong on the bracket.                                   |
++-------+------------------------------------------------------------------+
+| 502   | A sadly very common error, meaning Challonge is                  |
+|       | being unstable again. Just try again later.                      |
++-------+------------------------------------------------------------------+
 
 ^^^^^^^^^^^^^^^
 Troubleshooting
