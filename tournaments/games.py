@@ -929,6 +929,40 @@ Else you can specify the set you want to update as the first argument.
         await lag_channel.send(msg, allowed_mentions=mentions)
         await ctx.send(_("TOs were called. Prepare a new arena for them..."))
 
+    @only_phase("ongoing")
+    @commands.command()
+    @commands.guild_only()
+    async def getset(self, ctx: commands.Context, set: Optional[int]):
+        """
+        Returns a set.
+        Without a set number, to be used in a set channel.
+        """
+        guild = ctx.guild
+        tournament = self.tournaments[guild.id]
+        if set is None:
+            match = tournament.find_match(channel_id=ctx.channel.id)[1]
+        else:
+            match = tournament.find_match(match_set=set)[1]
+        return match
+
+    @only_phase("ongoing")
+    @commands.command()
+    @commands.guild_only()
+    async def rmset(self, ctx: commands.Context, set: Optional[int]):
+        """
+        Delete the set and his channel.
+        Without a set number, to be used in a set channel.
+        """
+        guild = ctx.guild
+        tournament = self.tournaments[guild.id]
+        if set is None:
+            match = tournament.find_match(channel_id=ctx.channel.id)[1]
+        else:
+            match = tournament.find_match(match_set=set)[1]
+        if match is not None:
+            tournament.matches.remove(match)
+        await ctx.channel.delete()
+
     @only_phase()
     @commands.command(aliases=["rules"])
     @commands.guild_only()
