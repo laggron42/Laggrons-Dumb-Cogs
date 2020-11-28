@@ -950,7 +950,7 @@ Else you can specify the set you want to update as the first argument.
     @commands.guild_only()
     async def rmset(self, ctx: commands.Context, set: Optional[int]):
         """
-        Delete the set in the bot's memory and his channel. It will be recreated if always ongoing on Challonge.
+        Delete the set in the bot's memory and his channel. It will be recreated if still ongoing on Challonge.
         Without a set number, to be used in a set channel.
         """
         guild = ctx.guild
