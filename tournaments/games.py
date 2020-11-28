@@ -942,7 +942,7 @@ Else you can specify the set you want to update as the first argument.
         if set is None:
             match = tournament.find_match(channel_id=ctx.channel.id)[1]
         else:
-            match = tournament.find_match(match_set=set)[1]
+            match = tournament.find_match(match_set=str(set))[1]
         await ctx.channel.send("```py\n{match}\n```".format(match=match))
 
     @only_phase("ongoing")
@@ -958,7 +958,7 @@ Else you can specify the set you want to update as the first argument.
         if set is None:
             match = tournament.find_match(channel_id=ctx.channel.id)[1]
         else:
-            match = tournament.find_match(match_set=set)[1]
+            match = tournament.find_match(match_set=str(set))[1]
         if match is not None:
             tournament.matches.remove(match)
         await ctx.channel.delete()
