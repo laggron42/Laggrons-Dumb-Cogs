@@ -943,14 +943,14 @@ Else you can specify the set you want to update as the first argument.
             match = tournament.find_match(channel_id=ctx.channel.id)[1]
         else:
             match = tournament.find_match(match_set=set)[1]
-        return match
+        await ctx.channel.send("```py\n{match}\n```".format(match=match))
 
     @only_phase("ongoing")
     @commands.command()
     @commands.guild_only()
     async def rmset(self, ctx: commands.Context, set: Optional[int]):
         """
-        Delete the set and his channel.
+        Delete the set in the bot's memory and his channel. It will be recreated if always ongoing on Challonge.
         Without a set number, to be used in a set channel.
         """
         guild = ctx.guild
