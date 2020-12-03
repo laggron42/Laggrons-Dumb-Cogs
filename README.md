@@ -45,9 +45,9 @@ You can contact me on my [Discord server](https://discord.gg/AVzjfpR) or [Red ma
 
 You can also contact be by email: `laggron42@gmail.com`.
 
-## Comissions
+## Commissions
 
-I am open to comissions. If you need a cog, you can suggest it on [Red's cog board](https://cogboard.red), our new forum, where you will just need to log in with your Discord account to create a post.
+I am open to commissions. If you need a cog, you can suggest it on [Red's cog board](https://cogboard.red), our new forum, where you will just need to log in with your Discord account to create a post.
 
 If you want me to make your cog, you can check [my profile](https://cogboard.red/u/El_Laggron) and send me a DM or mention me in your post.
 
