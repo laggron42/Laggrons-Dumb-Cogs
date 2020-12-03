@@ -2404,11 +2404,12 @@ class Tournament:
         sorted_participants = sorted(ranked, key=lambda x: x.elo, reverse=True)
         self.participants = sorted_participants + not_ranked
 
-    async def seed_participants_and_upload(self, remove_unchecked: bool = False):
+    async def seed_participants(self, remove_unchecked: bool = False):
         """
-        Seed the participants if ranking info is configured, then upload the list to the bracket.
+        Seed the participants if ranking info is configured.
 
-        .. warning:: This will clear the previous list of participants on the bracket.
+        .. info:: If an exception occurs, the list of participants will be rolled back to its
+            previous state, then the error propagates.
 
         Parameters
         ----------
@@ -2416,14 +2417,17 @@ class Tournament:
             If unchecked members should be removed from the internal list and the upload. Defaults
             to `False`
         """
-        if self.ranking["league_name"] and self.ranking["league_id"]:
-            await self._fetch_braacket_ranking_info()
-            await self._seed_participants()
-        if remove_unchecked is True:
-            self.participants = [x for x in self.participants if x.checked_in]
-        participants = copy(self.participants)
-        participants = [str(x) for x in participants]
-        await self.add_participants(participants)
+        prev_participants = copy(self.participants)
+        try:
+            if self.ranking["league_name"] and self.ranking["league_id"]:
+                await self._fetch_braacket_ranking_info()
+                await self._seed_participants()
+            if remove_unchecked is True:
+                self.participants = [x for x in self.participants if x.checked_in]
+        except Exception:
+            # roll back to a previous state
+            self.participants = prev_participants
+            raise
 
     async def _background_seed_and_upload(self):
         """
@@ -2433,7 +2437,8 @@ class Tournament:
         context), because an issue with this needs to be told.
         """
         try:
-            await self.seed_participants_and_upload()
+            await self.seed_participants()
+            await self.add_participants()
         except Exception as e:
             log.error(
                 f"[Guild {self.guild.id}] Can't seed and upload participants (background).",

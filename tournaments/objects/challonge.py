@@ -2,6 +2,7 @@ import achallonge
 import discord
 import logging
 
+from copy import copy
 from typing import List, Optional
 
 from redbot.core import Config
@@ -368,7 +369,9 @@ class ChallongeTournament(Tournament):
         await self.request(achallonge.participants.create, self.id, name, seed=seed)
         log.debug(f"Added participant {name} (seed {seed}) to Challonge tournament {self.id}")
 
-    async def add_participants(self, participants: List[str]):
+    async def add_participants(self, participants: Optional[List[ChallongeParticipant]] = None):
+        participants = copy(participants or self.participants)
+        participants = [str(x) for x in participants]
         if not participants:
             return
         # remove previous participants

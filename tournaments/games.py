@@ -129,7 +129,8 @@ class Games(MixinMeta):
                 need_upload = True
 
         async def seed_and_upload():
-            await tournament.seed_participants_and_upload()
+            await tournament.seed_participants()
+            await tournament.add_participants()
 
         async def open_channels():
             channels = list(filter(None, [tournament.queue_channel, tournament.scores_channel]))
@@ -595,7 +596,23 @@ class Games(MixinMeta):
         }
         try:
             async with ctx.typing():
-                await tournament.seed_participants_and_upload(tournament.checkin_phase == "done")
+                await tournament.seed_participants(tournament.checkin_phase == "done")
+        except Exception as e:
+            log.error(f"[Guild {ctx.guild.id}] Failed seeding participants.", exc_info=e)
+            result = await prompt_yes_or_no(
+                ctx,
+                _(
+                    "An error occured while seeding participants. "
+                    "Check your logs or contact an admin of the bot.\n"
+                    "Would you like to continue without seeding?"
+                ),
+                delete_after=False,
+            )
+            if result is False:
+                return
+        try:
+            async with ctx.typing():
+                await tournament.add_participants()
         except achallonge.ChallongeException as e:
             error = error_mapping.get(e.args[0].split()[0])
             if error:
@@ -608,18 +625,23 @@ class Games(MixinMeta):
                 return
             raise
         except Exception as e:
-            log.error(f"[Guild {ctx.guild.id}] Failed seeding/uploading participants.", exc_info=e)
+            log.error(f"[Guild {ctx.guild.id}] Failed uploading participants.", exc_info=e)
             await ctx.send(
                 _(
-                    "An error occured while seeding/uploading. "
-                    "Check your logs or contact an admin of the bot."
+                    "Uploading the participants to the bracket failed. This issue is not due "
+                    "to seeding or Challonge. Contact an admin of the bot for details.\n"
+                    ":information_source: You can manually add participants on the bracket "
+                    "as long as the names matches their exact Discord name (Username#1234), "
+                    "and the bot will fetch everyone back when you start the tournament (but "
+                    "will disqualify the ones with an invalid name)."
                 )
             )
         else:
-            text = _("{len} participants successfully seeded and uploaded to the bracket!").format(
-                len=len(tournament.participants)
+            seeded = tournament.ranking["league_name"] and tournament.ranking["league_id"]
+            text = _("{len} participants successfully seeded{upload} to the bracket!").format(
+                len=len(tournament.participants), upload=_(" and uploaded") if seeded else ""
             )
-            if tournament.ranking["league_name"] and tournament.ranking["league_id"]:
+            if seeded:
                 base_elo = min([x.elo for x in tournament.participants])
                 generator = (
                     i for i, x in enumerate(tournament.participants, 1) if x.elo == base_elo
