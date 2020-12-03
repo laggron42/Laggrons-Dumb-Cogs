@@ -369,15 +369,27 @@ class ChallongeTournament(Tournament):
         await self.request(achallonge.participants.create, self.id, name, seed=seed)
         log.debug(f"Added participant {name} (seed {seed}) to Challonge tournament {self.id}")
 
-    async def add_participants(self, participants: Optional[List[ChallongeParticipant]] = None):
+    async def add_participants(
+        self, participants: Optional[List[ChallongeParticipant]] = None, force: bool = False
+    ):
         participants = copy(participants or self.participants)
-        participants = [str(x) for x in participants]
         if not participants:
-            return
-        # remove previous participants
-        await self.request(achallonge.participants.clear, self.id)
+            raise RuntimeError("No participant provided")
+        if force is True:
+            # remove previous participants
+            await self.request(achallonge.participants.clear, self.id)
+        else:
+            # only upload what's missing
+            raw_participants = await self.list_participants()
+            if raw_participants:
+                raw_ids = [x.get("id") for x in raw_participants]
+                participants = [x for x in participants if x.player_id not in raw_ids]
+            if not participants:
+                raise RuntimeError("No new participant to add")
+        participants = [str(x) for x in participants]
+        size = len(participants)
         # make a composite list (to avoid "414 Request-URI Too Large")
-        participants = [participants[x : x + (50)] for x in range(0, len(participants), 50)]
+        participants = [participants[x : x + (50)] for x in range(0, size, 50)]
         # Send to Challonge and assign IDs
         for chunk_participants in participants:
             challonge_players = await self.request(
@@ -393,6 +405,7 @@ class ChallongeTournament(Tournament):
                     )
                     continue
                 participant._player_id = player["id"]
+        return size
 
     async def destroy_player(self, player_id: str):
         await self.request(achallonge.participants.destroy, self.id, player_id)

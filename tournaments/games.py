@@ -562,15 +562,18 @@ class Games(MixinMeta):
     @commands.command()
     @commands.guild_only()
     @commands.cooldown(1, 10, commands.BucketType.guild)
-    async def upload(self, ctx: commands.Context):
+    async def upload(self, ctx: commands.Context, force: str = None):
         """
         Upload the participants to the bracket, and seed if possible.
 
         If you set braacket informations, the bot will seed participants based on this.
-        Previously added participants in the bracket will be overwritten.
+
+        Previously added participants in the bracket will be kept with their seeding. However, if \
+you want the bot to override the previous list of participants, type `[p]upload --force`
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
+        force = force == "--force"
         message = None
         if not tournament.participants:
             await ctx.send(_(":warning: No participant registered."))
@@ -581,6 +584,11 @@ class Games(MixinMeta):
             )
         elif tournament.checkin_phase == "pending":
             message = _("Check-in was not done. All participants will be uploaded.")
+        elif force:
+            message = _(
+                "Using `--force` will clear the previous list of participants and replace "
+                "it with the bot's internal list. Any seeding done on the bracket will be lost."
+            )
         if message:
             result = await prompt_yes_or_no(
                 ctx, f":warning: {message}\n" + _("Do you want to continue?")
@@ -612,7 +620,7 @@ class Games(MixinMeta):
                 return
         try:
             async with ctx.typing():
-                await tournament.add_participants()
+                added = await tournament.add_participants(force=force)
         except achallonge.ChallongeException as e:
             error = error_mapping.get(e.args[0].split()[0])
             if error:
@@ -624,6 +632,13 @@ class Games(MixinMeta):
                 )
                 return
             raise
+        except RuntimeError:
+            await ctx.send(
+                _(
+                    "There was no new participant to upload. If you want to "
+                    "enforce a new seeding, type `{prefix}upload --force`."
+                ).format(prefix=ctx.clean_prefix)
+            )
         except Exception as e:
             log.error(f"[Guild {ctx.guild.id}] Failed uploading participants.", exc_info=e)
             await ctx.send(
@@ -639,23 +654,32 @@ class Games(MixinMeta):
         else:
             seeded = tournament.ranking["league_name"] and tournament.ranking["league_id"]
             text = _("{len} participants successfully seeded{upload} to the bracket!").format(
-                len=len(tournament.participants), upload=_(" and uploaded") if seeded else ""
+                len=added, upload=_(" and uploaded") if seeded else ""
             )
-            if seeded:
-                base_elo = min([x.elo for x in tournament.participants])
-                generator = (
-                    i for i, x in enumerate(tournament.participants, 1) if x.elo == base_elo
-                )
-                try:
-                    position = next(generator)
-                    # check a second time to make sure more than 1 participant are on base elo
-                    next(generator)
-                except StopIteration:
-                    pass
-                else:
-                    text += _("\nParticipants are not seeded starting at position {pos}.").format(
-                        pos=position
+            if added == len(tournament.participants):
+                if seeded:
+                    # looks like it was the initial upload (or forced),
+                    # so we display infos for a full seeding
+                    base_elo = min([x.elo for x in tournament.participants])
+                    generator = (
+                        i for i, x in enumerate(tournament.participants, 1) if x.elo == base_elo
                     )
+                    try:
+                        position = next(generator)
+                        # check a second time to make sure more than 1 participant are on base elo
+                        next(generator)
+                    except StopIteration:
+                        pass
+                    else:
+                        text += _(
+                            "\nParticipants are not seeded starting at position {pos}."
+                        ).format(pos=position)
+            else:
+                text += _(
+                    "\nSince there were other participants in the bracket, the new participants "
+                    "were appended at the end instead of potentially overriding a manual "
+                    "seeding.\nYou can force a full seeding with `{prefix}upload --force`."
+                ).format(prefix=ctx.clean_prefix)
             await ctx.send(text)
 
     @only_phase("ongoing")

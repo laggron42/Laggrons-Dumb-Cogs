@@ -2989,14 +2989,42 @@ class Tournament:
         """
         raise NotImplementedError
 
-    async def add_participants(self, *participants: str):
+    async def add_participants(
+        self, participants: Optional[List[Participant]] = None, force: bool = False
+    ) -> int:
         """
         Adds a list of participants to the tournament, ordered as you want them to be seeded.
+        The participants will have their `Player.player_id` updated as needed.
 
         Parameters
         ----------
-        participants: List[str]
-            The list of participants. The first element will be seeded 1.
+        participants: Optional[List[Participant]]
+            The list of participants. The first element will be seeded 1. If not provided, will
+            use the instance's `participants` attribute instead.
+        force: bool
+            If you want the bot to override the previous list of participants on the bracket.
+            Defaults to `False`.
+
+            *   If set to `True`: All manually added participants and seeding will be lost, and
+                the new list will be exactly the same as what's provided. All player IDs will
+                be modified.
+
+            *   If set to `False`: The bot will call `list_participants` and remove all elements
+                from the list where the player ID is already inside the upstream list. Then we
+                bulk add what's remaining, without clearing the rest.
+
+                Participants are still seeded, but at the end, separated from the rest.
+
+        Returns
+        -------
+        int
+            How many members were appended to the list. Can be useful for knowing if the bot
+            appended participants or if it was an initial upload (or forced).
+
+        Raise
+        -----
+        RuntimeError
+            The list of participants provided was empty, or there was nothing new to upload.
         """
         raise NotImplementedError
 
