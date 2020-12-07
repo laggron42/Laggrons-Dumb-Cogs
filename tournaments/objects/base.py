@@ -2746,13 +2746,13 @@ class Tournament:
         Raises
         ------
         asyncio.TimeoutError
-            Running the task took more than 10 seconds
+            Running the task took more than 30 seconds
         """
         # we're using a lock to prevent actions such as score setting of DQs being done while we're
         # updating the match list, which can make the bot think there were manual bracket changes
         async with self.lock:
             # since this will block other commands, we put an uncatched timeout
-            await asyncio.wait_for(self._loop_task(), 10)
+            await asyncio.wait_for(self._loop_task(), 30)
 
     loop_task.__doc__ = loop_task.coro.__doc__
 
