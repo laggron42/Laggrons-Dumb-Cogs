@@ -1492,6 +1492,14 @@ class Tournament:
                 ],
             )
         )
+        if len(tournament.participants) < participants:
+            await tournament._update_participants_list()
+        if not tournament.participants and matches:
+            raise RuntimeError(
+                "Participants list is empty while there are ongoing matches! "
+                "We probably don't want to continue resuming the tournament, as this "
+                "could result in the disqualification of absolutely everyone."
+            )
         for data in matches:
             player1 = tournament.find_participant(player_id=data["player1"])[1]
             player2 = tournament.find_participant(player_id=data["player2"])[1]
