@@ -2002,7 +2002,7 @@ class Tournament:
                     channel=_(" in {channel}").format(channel=self.register_channel.mention)
                     if self.register_channel
                     else "",
-                    date=self._format_datetime(self.register_start or self.tournament_start),
+                    date=self._format_datetime(self.register_stop or self.tournament_start),
                 )
             elif self.register_channel:
                 message = _(
