@@ -48,10 +48,7 @@ class ChallongeParticipant(Participant):
         If the tournament has started, disqualifies a player on the bracket, else he's removed
         from the list of participants.
         """
-        await self.tournament.request(
-            achallonge.participants.destroy, self.tournament.id, self.player_id
-        )
-        log.debug(f"Destroyed player {self.player_id} (tournament {self.tournament.id})")
+        await self.tournament.destroy_player(self.player_id)
 
 
 class ChallongeMatch(Match):
