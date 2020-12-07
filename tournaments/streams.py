@@ -67,7 +67,7 @@ class Streams(MixinMeta):
             return
         return streamer
 
-    @only_phase("ongoing")
+    @only_phase()
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
     async def stream(self, ctx: commands.Context):
@@ -84,7 +84,7 @@ class Streams(MixinMeta):
             else:
                 await ctx.send("\n".join([x.link for x in tournament.streamers]))
 
-    @only_phase("ongoing")
+    @only_phase()
     @stream.command(name="init")
     @commands.check(mod_or_streamer)
     async def stream_init(self, ctx: commands.Context, url: TwitchChannelConverter):
@@ -98,9 +98,11 @@ class Streams(MixinMeta):
             return
         streamer = Streamer(tournament, ctx.author, url)
         tournament.streamers.append(streamer)
+        if tournament.status != "ongoing":
+            await tournament.save()
         await ctx.tick()
 
-    @only_phase("ongoing")
+    @only_phase()
     @stream.command(name="list")
     @commands.check(mod_or_streamer)
     async def stream_list(self, ctx: commands.Context):
@@ -126,7 +128,7 @@ class Streams(MixinMeta):
         for page in pagify(text):
             await ctx.send(page)
 
-    @only_phase("ongoing")
+    @only_phase()
     @stream.command(name="set")
     @commands.check(mod_or_streamer)
     async def stream_set(
@@ -147,13 +149,16 @@ class Streams(MixinMeta):
         - `[p]stream set 5RF7G 260`
         - `[p]stream set https://twitch.tv/el_laggron 5RF7G 260`
         """
+        tournament = self.tournaments[ctx.guild.id]
         streamer = await self._get_streamer_from_ctx(ctx, streamer)
         if not streamer:
             return
         streamer.set_room(room_id, room_code)
+        if tournament.status != "ongoing":
+            await tournament.save()
         await ctx.tick()
 
-    @only_phase("ongoing")
+    @only_phase()
     @stream.command(name="transfer")
     @commands.check(mod_or_streamer)
     async def stream_transfer(
@@ -173,13 +178,16 @@ any streamer/T.O. can edit anyone's stream.
 
         If you want to edit someone else's stream, give its channel as the first argument.
         """
+        tournament = self.tournaments[ctx.guild.id]
         streamer = await self._get_streamer_from_ctx(ctx, streamer)
         if not streamer:
             return
         streamer.member = member or ctx.author
+        if tournament.status != "ongoing":
+            await tournament.save()
         await ctx.tick()
 
-    @only_phase("ongoing")
+    @only_phase()
     @stream.command(name="add")
     @commands.check(mod_or_streamer)
     async def stream_add(
@@ -215,7 +223,7 @@ any streamer/T.O. can edit anyone's stream.
         else:
             await ctx.tick()
 
-    @only_phase("ongoing")
+    @only_phase()
     @stream.command(name="remove", aliases=["del", "delete", "rm"])
     @commands.check(mod_or_streamer)
     async def stream_remove(
@@ -240,6 +248,7 @@ any streamer/T.O. can edit anyone's stream.
         if not sets:
             await ctx.send_help()
             return
+        tournament = self.tournaments[ctx.guild.id]
         streamer = await self._get_streamer_from_ctx(ctx, streamer)
         if not streamer:
             return
@@ -258,8 +267,10 @@ any streamer/T.O. can edit anyone's stream.
                 await ctx.send(_("None of the sets you sent were listed in the stream."))
             else:
                 await ctx.tick()
+        if tournament.status != "ongoing":
+            await tournament.save()
 
-    @only_phase("ongoing")
+    @only_phase()
     @stream.command(name="replace")
     @commands.check(mod_or_streamer)
     async def stream_replace(
@@ -371,9 +382,11 @@ any streamer/T.O. can edit anyone's stream.
             if to_remove:
                 await streamer.remove_matches(*[streamer.get_set(x) for x in to_remove])
             streamer.matches = new_list
+        if tournament.status != "ongoing":
+            await tournament.save()
         await ctx.send(_("Stream queue successfully modified."))
 
-    @only_phase("ongoing")
+    @only_phase()
     @stream.command(name="swap")
     @commands.check(mod_or_streamer)
     async def stream_swap(
@@ -395,6 +408,7 @@ any streamer/T.O. can edit anyone's stream.
         - `[p]stream swap 252 254`
         - `[p]stream swap https://twitch.tv/el_laggron 252 254`
         """
+        tournament = self.tournaments[ctx.guild.id]
         streamer = await self._get_streamer_from_ctx(ctx, streamer)
         if not streamer:
             return
@@ -404,8 +418,10 @@ any streamer/T.O. can edit anyone's stream.
             await ctx.send(_("One of the provided sets cannot be found."))
         else:
             await ctx.tick()
+        if tournament.status != "ongoing":
+            await tournament.save()
 
-    @only_phase("ongoing")
+    @only_phase()
     @stream.command(name="insert")
     @commands.check(mod_or_streamer)
     async def stream_insert(
@@ -430,6 +446,7 @@ already be in your stream queue.
         - `[p]stream insert 252 254`
         - `[p]stream insert https://twitch.tv/el_laggron 252 254`
         """
+        tournament = self.tournaments[ctx.guild.id]
         streamer = await self._get_streamer_from_ctx(ctx, streamer)
         if not streamer:
             return
@@ -439,8 +456,10 @@ already be in your stream queue.
             await ctx.send(_("One of the provided sets cannot be found."))
         else:
             await ctx.tick()
+        if tournament.status != "ongoing":
+            await tournament.save()
 
-    @only_phase("ongoing")
+    @only_phase()
     @stream.command(name="info")
     @commands.check(mod_or_streamer)
     async def stream_info(
@@ -497,7 +516,7 @@ already be in your stream queue.
                 embeds.append(_embed)
             await menus.menu(ctx, embeds, controls=menus.DEFAULT_CONTROLS)
 
-    @only_phase("ongoing")
+    @only_phase()
     @stream.command(name="end")
     @commands.check(mod_or_streamer)
     async def stream_end(
@@ -520,4 +539,6 @@ already be in your stream queue.
         tournament = self.tournaments[ctx.guild.id]
         await streamer.end()
         tournament.streamers.remove(streamer)
+        if tournament.status != "ongoing":
+            await tournament.save()
         await ctx.tick()
