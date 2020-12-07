@@ -2088,7 +2088,6 @@ class Tournament:
         if self.register_channel:
             if self.register_message:
                 await self.register_message.edit(content=self._prepare_register_message())
-                self.register_message = None
             await self.register_channel.set_permissions(
                 self.game_role, read_messages=True, send_messages=False
             )

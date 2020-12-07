@@ -145,6 +145,7 @@ class Games(MixinMeta):
         async def start():
             await tournament.start()
             tournament.phase = "ongoing"
+            tournament.register_message = None
             await tournament._get_top8()
 
         async def launch_sets():
