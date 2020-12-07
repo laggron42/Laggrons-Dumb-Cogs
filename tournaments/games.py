@@ -295,7 +295,9 @@ class Games(MixinMeta):
                     if messages:
                         await mass_purge(messages, channel)
                     if tournament.game_role:
-                        await channel.set_permissions(tournament.game_role, send_messages=False)
+                        await channel.set_permissions(
+                            tournament.game_role, read_messages=True, send_messages=False
+                        )
                     await channel.set_permissions(tournament.participant_role, send_messages=False)
                 except discord.HTTPException as e:
                     log.warning(
