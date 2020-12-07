@@ -2794,7 +2794,9 @@ class Tournament:
         to_timeout = [
             x
             for x in self.matches
-            if not x.checked_dq
+            if x.status == "ongoing"
+            and x.checked_dq is False
+            and x.duration is not None
             and x.duration > timedelta(minutes=self.delay)
             and (x.player1.spoke is False or x.player2.spoke is False)
         ]
