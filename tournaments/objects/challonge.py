@@ -363,7 +363,8 @@ class ChallongeTournament(Tournament):
         log.debug(f"Ended Challonge tournament {self.id}")
 
     async def add_participant(self, name: str, seed: int):
-        await self.request(achallonge.participants.create, self.id, name, seed=seed)
+        kwargs = {"seed": seed} if seed is not None else {}
+        await self.request(achallonge.participants.create, self.id, name, **kwargs)
         log.debug(f"Added participant {name} (seed {seed}) to Challonge tournament {self.id}")
 
     async def add_participants(
