@@ -300,6 +300,13 @@ class Match:
                 self.streamer.matches.remove(self)
             except ValueError:
                 pass
+        if self.tournament.cancelling is False and self.channel:
+            channel = self.guild.get_channel(self.channel.id)
+            if channel is not None:
+                log.warning(
+                    f"[Guild {self.guild.id}] Set {self.set} removed from memory while "
+                    f"the text channel with ID {channel.id} still exists."
+                )
 
     @property
     def duration(self) -> Optional[timedelta]:
@@ -1397,6 +1404,7 @@ class Tournament:
         }
         # self.debug_task = asyncio.get_event_loop().create_task(self.debug_loop_task())
         self.matches_to_announce: List[str] = []  # matches to announce in the queue channel
+        self.cancelling = False  # see Tournament.__del__ and Match.__del__
 
     def __repr__(self):
         return (
@@ -1412,6 +1420,7 @@ class Tournament:
         """
         Correctly clears the object, stopping the task and removing ranking data.
         """
+        self.cancelling = True
         if self.task:
             self.stop_loop_task()
         # try:
