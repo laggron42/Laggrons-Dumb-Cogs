@@ -65,8 +65,6 @@ class Registration(MixinMeta):
                 log.debug(f"[Guild {tournament.guild.id}] Scheduler call: {coro}")
                 if name == "register_second_start":
                     await coro(second=True)
-                elif name in ("register_stop", "checkin_stop"):
-                    await coro(background=True)
                 else:
                     await coro()
             await tournament.save()
@@ -380,7 +378,7 @@ there are spaces).
             )
             if result:
                 tournament.ignored_events.append("register_second_start")
-        await tournament.end_registration(background=False)
+        await tournament.end_registration()
         await ctx.tick()
 
     @only_phase("pending", "register", "awaiting")
@@ -457,7 +455,7 @@ there are spaces).
             )
             if result:
                 tournament.ignored_events.append("checkin_stop")
-        await tournament.end_checkin(background=False)
+        await tournament.end_checkin()
         await ctx.tick()
 
     @checkin.command(name="call")

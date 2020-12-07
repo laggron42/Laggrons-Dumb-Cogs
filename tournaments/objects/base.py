@@ -2068,7 +2068,7 @@ class Tournament:
             await self.announcements_channel.send(message, allowed_mentions=mentions)
         await self.save()
 
-    async def end_registration(self, background=False):
+    async def end_registration(self):
         """
         Close the registrations and save.
 
@@ -2097,8 +2097,7 @@ class Tournament:
         if not self.next_scheduled_event():
             # no more scheduled events, upload and wait for start
             self.phase = "awaiting"
-            if background:
-                await self._background_seed_and_upload()
+            await self._background_seed_and_upload()
         await self.save()
 
     async def start_check_in(self):
@@ -2217,7 +2216,7 @@ class Tournament:
                 except discord.HTTPException:
                     pass
 
-    async def end_checkin(self, background=False):
+    async def end_checkin(self):
         """
         Close the check-in, unregister unchecked members (attempts to DM) and save.
 
@@ -2281,8 +2280,7 @@ class Tournament:
         if not self.next_scheduled_event:
             # no more scheduled events, upload and wait for start
             self.phase = "awaiting"
-            if background:
-                await self._background_seed_and_upload()
+            await self._background_seed_and_upload()
         await self.save()
 
     async def register_participant(self, member: discord.Member, send_dm: bool = True):
