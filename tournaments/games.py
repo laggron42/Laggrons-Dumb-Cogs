@@ -738,6 +738,17 @@ you want the bot to override the previous list of participants, type `[p]upload 
                 )
             )
             return
+        if score[0] == score[1]:
+            await ctx.send(
+                _(
+                    "Hmm... So you're telling me there is a tie *but* you're somehow still "
+                    "the winner of your match? Review the formatting of your score."
+                )
+            )
+            return
+        if score[1] > score[0]:
+            # command used by winner, highest score first
+            score = score[::-1]
         # after second thought, checking the score based on BO3/BO5 is a bad idea
         # there are plenty of cases where a set could end with a lower score (bracket slowed down)
         # I'll leave the code here, uncomment if you want a strict score check
