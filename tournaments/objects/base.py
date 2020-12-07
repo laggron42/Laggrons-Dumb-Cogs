@@ -939,7 +939,11 @@ class Match:
         """
         self.cancel()
         if isinstance(player, int):
-            winner = self.player1 if self.player1.player_id == player else self.player2
+            winner = (
+                self.player1
+                if self.player1 is not None and self.player1.player_id != player
+                else self.player2
+            )
             player = _("Player with ID {id} (lost on Discord) ").format(id=player)
         else:
             winner = self.player1 if self.player1.id != player.id else self.player2
