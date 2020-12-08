@@ -27,7 +27,7 @@ class Registration(MixinMeta):
         for tournament in self.tournaments.values():
             if tournament.phase in ("ongoing", "finished"):
                 continue  # Tournament has its own loop for that part
-            if tournament.register_phase == "ongoing" and tournament.register_message:
+            if tournament.register_message:
                 new_content = tournament._prepare_register_message()
                 if new_content != tournament.register_message.content:
                     try:

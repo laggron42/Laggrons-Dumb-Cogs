@@ -362,10 +362,15 @@ class ChallongeTournament(Tournament):
         self.phase = "finished"
         log.debug(f"Ended Challonge tournament {self.id}")
 
-    async def add_participant(self, name: str, seed: int):
+    async def add_participant(self, participant: ChallongeParticipant, seed: int = None):
         kwargs = {"seed": seed} if seed is not None else {}
-        await self.request(achallonge.participants.create, self.id, name, **kwargs)
-        log.debug(f"Added participant {name} (seed {seed}) to Challonge tournament {self.id}")
+        data = await self.request(
+            achallonge.participants.create, self.id, str(participant), **kwargs
+        )
+        participant._player_id = data["id"]
+        log.debug(
+            f"Added participant {participant} (seed {seed}) to Challonge tournament {self.id}"
+        )
 
     async def add_participants(
         self, participants: Optional[List[ChallongeParticipant]] = None, force: bool = False
@@ -383,7 +388,8 @@ class ChallongeTournament(Tournament):
                 raw_ids = [x.get("id") for x in raw_participants]
                 participants = [x for x in participants if x.player_id not in raw_ids]
             if not participants:
-                raise RuntimeError("No new participant to add")
+                return
+                # raise RuntimeError("No new participant to add")
         participants = [str(x) for x in participants]
         size = len(participants)
         # make a composite list (to avoid "414 Request-URI Too Large")
