@@ -2315,7 +2315,7 @@ class Tournament:
         if self.checkin_phase != "pending":
             # registering during check-in, count as already checked
             participant.checked_in = True
-        if self.participants[-1].player_id is not None:
+        if self.participants and self.participants[-1].player_id is not None:
             # last registered participant has a player ID, so we should upload him to the bracket
             await self.add_participant(participant)
         self.participants.append(participant)
