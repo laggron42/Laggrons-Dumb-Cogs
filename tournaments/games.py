@@ -635,13 +635,6 @@ you want the bot to override the previous list of participants, type `[p]upload 
                 )
                 return
             raise
-        except RuntimeError:
-            await ctx.send(
-                _(
-                    "There was no new participant to upload. If you want to "
-                    "enforce a new seeding, type `{prefix}upload --force`."
-                ).format(prefix=ctx.clean_prefix)
-            )
         except Exception as e:
             log.error(f"[Guild {ctx.guild.id}] Failed uploading participants.", exc_info=e)
             await ctx.send(
@@ -655,6 +648,14 @@ you want the bot to override the previous list of participants, type `[p]upload 
                 )
             )
         else:
+            if not added:
+                await ctx.send(
+                    _(
+                        "There was no new participant to upload. If you want to "
+                        "enforce a new seeding, type `{prefix}upload --force`."
+                    ).format(prefix=ctx.clean_prefix)
+                )
+                return
             seeded = tournament.ranking["league_name"] and tournament.ranking["league_id"]
             text = _("{len} participants successfully seeded{upload} to the bracket!").format(
                 len=added, upload=_(" and uploaded") if seeded else ""
