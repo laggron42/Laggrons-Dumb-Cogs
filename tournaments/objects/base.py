@@ -89,13 +89,6 @@ class Participant(discord.Member):
         self.spoke = False  # True as soon as the participant sent a message in his channel
         # used to detect inactivity after the launch of a set
 
-    @property
-    def mention(self):
-        return str(self)
-
-    async def send(self, content, **kwargs):
-        print(f"DM {str(self)}: {content}")
-
     def __repr__(self):
         return (
             "<Participant player_id={0.player_id} tournament_name={0.tournament.name} "
