@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2020-11-26 18:11+0100\n"
+"POT-Creation-Date: 2020-12-10 17:30+0100\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "MIME-Version: 1.0\n"
@@ -60,46 +60,46 @@ msgstr ":warning: Certains participants n'ont pas d'ID assigné au bracket.\n"
 "Vous devriez essayer la commande précédente à nouveau avant de continuer, ou certains participants seront perdus.\n"
 "Voulez-vous continuer ?"
 
-#: tournaments/games.py:141
+#: tournaments/games.py:142
 msgid "Tournament starting..."
 msgstr "Lancement du tournoi..."
 
-#: tournaments/games.py:155
+#: tournaments/games.py:157
 msgid "Start the tournament"
 msgstr "Lancement du tournoi"
 
-#: tournaments/games.py:156
+#: tournaments/games.py:158
 msgid "Open text channels"
 msgstr "Ouverture des salons"
 
-#: tournaments/games.py:157
+#: tournaments/games.py:159
 msgid "Send messages"
 msgstr "Envoi des messages"
 
-#: tournaments/games.py:158
+#: tournaments/games.py:160
 msgid "Launch sets"
 msgstr "Lancement des sets"
 
-#: tournaments/games.py:161
+#: tournaments/games.py:163
 msgid "Seed and upload"
 msgstr "Seed et upload"
 
-#: tournaments/games.py:163
+#: tournaments/games.py:165
 msgid "Starting the tournament..."
 msgstr "Démarrage du tournoi..."
 
-#: tournaments/games.py:164
+#: tournaments/games.py:166
 msgid "Game: {game}\n"
 "URL: {url}"
 msgstr "Jeu : {game}\n"
 "URL : {url}"
 
-#: tournaments/games.py:187 tournaments/games.py:194 tournaments/games.py:389
-#: tournaments/games.py:396
+#: tournaments/games.py:189 tournaments/games.py:196 tournaments/games.py:393
+#: tournaments/games.py:400
 msgid "Progression"
 msgstr "Progression"
 
-#: tournaments/games.py:201
+#: tournaments/games.py:203
 msgid ":information_source: A 422 error can mean multiple things:\n"
 "- There are not enough participants on Challonge. Check the bracket, and use `{prefix}upload` to try sending the participants again (seeding reset).\n"
 "- You enabled the check-in on Challonge. Check the participants on Challonge, or disable this option."
@@ -107,7 +107,7 @@ msgstr ":information_source: Une erreur 422 peut signifier plusieurs choses :\n"
 "- Il n'y a pas assez de participants sur Challonge. Vérifiez le bracket et utilisez `{prefix}upload` pour essayer d'upload à nouveau les participants (perte du seeding).\n"
 "- Vous avez activé le check-in sur Challonge. Checkez les participants sur Challonge, ou désactivez cette option."
 
-#: tournaments/games.py:219 tournaments/games.py:603
+#: tournaments/games.py:221 tournaments/games.py:631
 #: tournaments/settings.py:1172
 msgid "__Error from Challonge: {error}__\n"
 "{error_msg}\n\n"
@@ -116,103 +116,103 @@ msgstr "__Erreur de Challonge : {error}__\n"
 "{error_msg}\n\n"
 "Si ce problème persiste, contactez un T.O. ou un administrateur du bot."
 
-#: tournaments/games.py:236
+#: tournaments/games.py:238
 msgid "An error occured when starting the tournament (most likely not related to Challonge). Check your logs or contact a bot admin."
 msgstr "Une erreur est survenue lors du démarrage du tournoi (probablement non lié à Challonge). Vérifiez les logs ou contactez un administrateur du bot."
 
-#: tournaments/games.py:244
+#: tournaments/games.py:246
 msgid "The tournament has now started!"
 msgstr "Le tournoi a commencé !"
 
-#: tournaments/games.py:251
+#: tournaments/games.py:253
 #, docstring
 msgid "\n"
 "        Ends the current tournament.\n"
 "        "
 msgstr "Met fin au tournoi actuel."
 
-#: tournaments/games.py:257
+#: tournaments/games.py:259
 msgid "There are still ongoing matches."
 msgstr "Il y a encore des matchs en cours."
 
-#: tournaments/games.py:313 tournaments/games.py:324 tournaments/games.py:340
+#: tournaments/games.py:317 tournaments/games.py:328 tournaments/games.py:344
 msgid "Tournament ending"
 msgstr "Arrêt du tournoi"
 
-#: tournaments/games.py:353
+#: tournaments/games.py:357
 msgid "Stopping the tournament"
 msgstr "Fin du tournoi"
 
-#: tournaments/games.py:354
+#: tournaments/games.py:358
 msgid "Clearing and closing channels"
 msgstr "Nettoyage et fermeture des salons"
 
-#: tournaments/games.py:355
+#: tournaments/games.py:359
 msgid "Deleting channels"
 msgstr "Suppression des salons"
 
-#: tournaments/games.py:356
+#: tournaments/games.py:360
 msgid "Removing roles"
 msgstr "Retrait des rôles"
 
-#: tournaments/games.py:359
+#: tournaments/games.py:363
 msgid "Ending the tournament..."
 msgstr "Arrêt du tournoi..."
 
-#: tournaments/games.py:360
+#: tournaments/games.py:364
 msgid "{participants} participants\n"
 "Lasted for {time} *(based on expected start time)*"
 msgstr "{participants} participants\n"
 "A duré pendant {time} *(basé sur l'heure de lancement prévue)*"
 
-#: tournaments/games.py:434
+#: tournaments/games.py:438
 msgid "An error occured when ending the tournament."
 msgstr "Une erreur s'est produite lors de l'arrêt du tournoi."
 
-#: tournaments/games.py:444
+#: tournaments/games.py:448
 msgid "Tournament ended."
 msgstr "Tournoi terminé."
 
-#: tournaments/games.py:446
+#: tournaments/games.py:450
 msgid "Failed deleting the following categories:"
 msgstr "Échec de la suppression des catégories suivantes :"
 
-#: tournaments/games.py:447
+#: tournaments/games.py:451
 msgid "Failed deleting the following channels:"
 msgstr "Échec de la suppression des salons suivants :"
 
-#: tournaments/games.py:448
+#: tournaments/games.py:452
 msgid "Failed clearing and closing the following channels:"
 msgstr "Échec du nettoyage et de la fermeture des salons suivants :"
 
-#: tournaments/games.py:449
+#: tournaments/games.py:453
 msgid "Failed removing roles to the following members:"
 msgstr "Échec du retrait des rôles aux membres suivants :"
 
-#: tournaments/games.py:462
+#: tournaments/games.py:466
 msgid "\n\n"
 "Check your console or logs for more informations."
 msgstr "\n\n"
 "Consultez votre console ou vos logs pour plus d'informations."
 
-#: tournaments/games.py:467
+#: tournaments/games.py:471
 msgid "The tournament is now ended, congratulations to all participants!\n"
 "Results and ranking: {url}"
 msgstr "Le tournoi est maintenant terminé, félicitations à tous les participants !\n"
 "Résultats et classement : {url}"
 
-#: tournaments/games.py:478
+#: tournaments/games.py:482
 #, docstring
 msgid "\n"
 "        Resets the bracket and stops the bot's activity.\n"
 "        "
 msgstr "Réinitialise le bracket et stoppe l'activité du bot."
 
-#: tournaments/games.py:482 tournaments/games.py:528
+#: tournaments/games.py:486 tournaments/games.py:532
 msgid "I need the \"Add reactions\" permission."
 msgstr "J'ai besoin de la permission \"Ajouter des réactions\"."
 
-#: tournaments/games.py:487
+#: tournaments/games.py:491
 msgid ":warning: **Warning!**\n"
 "If you continue, the entire progression will be lost, and the bot will roll back to its previous state. Then you will be able to start again with `{prefix}start`.\n"
 "**The matches __cannot__ be recovered!** Do you want to continue?"
@@ -220,36 +220,36 @@ msgstr ":warning: **Attention!**\n"
 "Si vous continuez, la progression entière sera perdue, et le bot reviendra à son état précédent. Vous serez alors en mesure de recommencer avec `{prefix}start`.\n"
 "**Les matchs __ne peuvent pas__ être récupérés !** Voulez-vous continuer ?"
 
-#: tournaments/games.py:498
+#: tournaments/games.py:502
 msgid "The tournament has been reset."
 msgstr "Le tournoi a été réinitialisé."
 
-#: tournaments/games.py:500
+#: tournaments/games.py:504
 msgid "\n"
 "Starting channels deletion, this may take a while... Please wait for this to be done before trying to restart."
 msgstr "\n"
 "Démarrage de la suppression des salons, cela peut prendre un certain temps... Veuillez attendre que cela soit terminé avant d'essayer de relancer."
 
-#: tournaments/games.py:515
+#: tournaments/games.py:519
 msgid "Channels cleared."
 msgstr "Salons effacés."
 
-#: tournaments/games.py:523
+#: tournaments/games.py:527
 #, docstring
 msgid "\n"
 "        Resets the current tournament from the bot.\n"
 "        "
 msgstr "Réinitialise le tournoi actuel du bot."
 
-#: tournaments/games.py:533 tournaments/settings.py:1308
+#: tournaments/games.py:537 tournaments/settings.py:1308
 msgid "There's no tournament setup on this server."
 msgstr "Il n'y a pas de tournoi configuré sur ce serveur."
 
-#: tournaments/games.py:537
+#: tournaments/games.py:541
 msgid "The tournament is ongoing. Please use `{prefix}resetbracket` first."
 msgstr "Le tournoi est en cours. Veuillez d'abord utiliser `{prefix}resetbracket`."
 
-#: tournaments/games.py:545
+#: tournaments/games.py:549
 msgid ":warning: **Warning!**\n"
 "If you continue, the participants registered will be lost. Then you will be able to configure a new tournament with `{prefix}setup`.\n"
 "**The participants __cannot__ be recovered!** Do you want to continue?"
@@ -257,91 +257,123 @@ msgstr ":warning: **Attention!**\n"
 "Si vous continuez, les participants inscrits seront perdus. Ensuite, vous serez en mesure de configurer un nouveau tournoi avec `{prefix}setup`.\n"
 "**Les participants __ne peuvent pas__ être récupérés !** Voulez-vous continuer ?"
 
-#: tournaments/games.py:557
+#: tournaments/games.py:561
 msgid "Tournament removed!"
 msgstr "Tournoi retiré!"
 
-#: tournaments/games.py:565
+#: tournaments/games.py:569
 #, docstring
 msgid "\n"
 "        Upload the participants to the bracket, and seed if possible.\n\n"
-"        If you set braacket informations, the bot will seed participants based on this.\n"
-"        Previously added participants in the bracket will be overwritten.\n"
+"        If you set braacket informations, the bot will seed participants based on this.\n\n"
+"        Previously added participants in the bracket will be kept with their seeding. However, if you want the bot to override the previous list of participants, type `[p]upload --force`\n"
 "        "
 msgstr "Upload les participants sur le bracket, avec seeding si possible.\n\n"
 "Si vous avez défini les informations braacket, le bot va seed les participants en se basant sur leur elo.\n"
-"Les participants précédemment ajoutés sur le bracket seront retirés."
+"Les participants précédemment ajoutés sur le bracket seront gardés avec leur seeding. Cependant, si vous voulez replacer la liste précédente de participants, tapez `[p]upload --force`."
 
-#: tournaments/games.py:575
+#: tournaments/games.py:582
 msgid ":warning: No participant registered."
 msgstr ":warning: Aucun membre inscrit."
 
-#: tournaments/games.py:578
+#: tournaments/games.py:585
 msgid "Check-in is still ongoing. Participants not checked yet won't be uploaded."
 msgstr "Le check-in est toujours en cours. Les participants non check ne seront pas upload."
 
-#: tournaments/games.py:582
+#: tournaments/games.py:589
 msgid "Check-in was not done. All participants will be uploaded."
 msgstr "Le check-in n'a pas été fait. Tous les participants seront upload."
 
-#: tournaments/games.py:585
+#: tournaments/games.py:591
+msgid "Using `--force` will clear the previous list of participants and replace it with the bot's internal list. Any seeding done on the bracket will be lost."
+msgstr "L'utilisation de `--force` effacera la liste précédente des participants et la remplacera par la liste interne du bot. Le seeding fait sur le bracket sera perdu."
+
+#: tournaments/games.py:597
 msgid "Do you want to continue?"
 msgstr "Voulez-vous continuer ?"
 
-#: tournaments/games.py:590
+#: tournaments/games.py:602
 msgid ":information_source: A 422 error when uploading participants probably means the limit of participants was hit.\n"
 "Did the bot register too many participants? Or did someone edit the limit? Check the settings on Challonge."
 msgstr ":information_source: Une erreur 422 lors de l'upload des participants signifie probablement que la limite des participants a été atteinte.\n"
 "Le bot a-t-il enregistré trop de participants ? Ou quelqu'un a-t-il modifié la limite ? Vérifiez les paramètres sur Challonge."
 
-#: tournaments/games.py:613
-msgid "An error occured while seeding/uploading. Check your logs or contact an admin of the bot."
-msgstr "Une erreur est survenue lors du seed/upload. Regardez les logs ou contactez un administrateur du bot."
+#: tournaments/games.py:615
+msgid "An error occured while seeding participants. Check your logs or contact an admin of the bot.\n"
+"Would you like to continue without seeding?"
+msgstr "Une erreur est survenue lors du seeding des participants. Vérifiez vos logs ou contactez un administrateur du bot.\n"
+"Voulez-vous continuer sans seeding ?"
 
-#: tournaments/games.py:619
-msgid "{len} participants successfully seeded and uploaded to the bracket!"
-msgstr "{len} participants ont été seed et upload avec succès sur le bracket !"
+#: tournaments/games.py:643
+msgid "Uploading the participants to the bracket failed. This issue is not due to seeding or Challonge. Contact an admin of the bot for details.\n"
+":information_source: You can manually add participants on the bracket as long as the names matches their exact Discord name (Username#1234), and the bot will fetch everyone back when you start the tournament (but will disqualify the ones with an invalid name)."
+msgstr "L'upload des participants sur le bracket a échoué. Ce problème n'est pas dû au seeding ou à Challonge. Contactez un administrateur du bot pour plus de détails.\n"
+":information_source: Vous pouvez ajouter manuellement des participants sur le bracket tant que les noms correspondent exactement aux pseudos Discord (Username#1234), et le bot récupèrera tout le monde lorsque vous lancerez le tournoi (mais disqualifiera ceux avec un nom invalide)."
 
-#: tournaments/games.py:634
+#: tournaments/games.py:655
+msgid "There was no new participant to upload. If you want to enforce a new seeding, type `{prefix}upload --force`."
+msgstr "Il n'y a pas eu nouveau participant à upload. Si vous voulez forcer un nouveau seeding, tapez `{prefix}upload --force`."
+
+#: tournaments/games.py:662
+msgid "{len} participants successfully seeded{upload} to the bracket!"
+msgstr "{len} participants ont été seed{upload} avec succès sur le bracket !"
+
+#: tournaments/games.py:663
+msgid " and uploaded"
+msgstr " et upload"
+
+#: tournaments/games.py:680
 msgid "\n"
 "Participants are not seeded starting at position {pos}."
 msgstr "\n"
 "Les participants ne sont pas seed à partir de la position {pos}."
 
-#: tournaments/games.py:644
+#: tournaments/games.py:684
+msgid "\n"
+"Since there were other participants in the bracket, the new participants were appended at the end instead of potentially overriding a manual seeding.\n"
+"You can force a full seeding with `{prefix}upload --force`."
+msgstr "\n"
+"Étant donné qu'il y a d'autres participants sur le bracket, les nouveaux participants ont été ajoutés à la fin au lieu de supprimer un seeding manuel.\n"
+"Vous pouvez forcer un seeding complet avec `{prefix}upload --force`."
+
+#: tournaments/games.py:696
 #, docstring
 msgid "\n"
 "        Set the score of your set. To be used by the winner.\n"
 "        "
 msgstr "Définissez le score de votre set. À être utilisé par le gagnant."
 
-#: tournaments/games.py:652 tournaments/games.py:788 tournaments/games.py:816
+#: tournaments/games.py:704 tournaments/games.py:851 tournaments/games.py:879
 msgid "You are not a member of this tournament."
 msgstr "Vous n'êtes pas inscrit à ce tournoi."
 
-#: tournaments/games.py:655 tournaments/games.py:791 tournaments/games.py:846
+#: tournaments/games.py:707 tournaments/games.py:854 tournaments/games.py:909
 msgid "You don't have any ongoing match."
 msgstr "Vous n'avez pas de match en cours."
 
-#: tournaments/games.py:659
+#: tournaments/games.py:711
 msgid "Your match has not started yet.\n"
 "You're either awaiting for a stream, or an error occured internally. You can ask a T.O. for a manual score setting."
 msgstr "Votre match n'a pas encore commencé.\n"
 "Vous êtes en attente d'un stream, ou une erreur est survenue en interne. Vous pouvez demander à un T.O. un réglage manuel du score."
 
-#: tournaments/games.py:668
+#: tournaments/games.py:720
 msgid "You have to use this command in {channel}."
 msgstr "Vous devez utiliser cette commande dans {channel}."
 
-#: tournaments/games.py:677
+#: tournaments/games.py:729
 msgid "You need to wait for 5 minutes at least after the beginning of your match before being able to set your score. T.O.s can bypass this by setting the score manually on the bracket."
 msgstr "Vous devez attendre au moins 5 minutes après le lancement de votre match avant de pouvoir définir votre score. Les T.O.s peuvent surpasser cela en réglant le score manuellement sur le bracket."
 
-#: tournaments/games.py:686
+#: tournaments/games.py:738
 msgid "That's a quite special score you've got there dude, you gotta tell me how to win without playing, I'm interested..."
 msgstr "C'est un score assez spécial qu'on a là, vous devez me dire comment gagner sans jouer, je suis intéressé..."
 
-#: tournaments/games.py:728
+#: tournaments/games.py:746
+msgid "Hmm... So you're telling me there is a tie *but* you're somehow still the winner of your match? Review the formatting of your score."
+msgstr "Hmm... Donc vous me dites qu'il y a match nul *mais* que vous êtes malgré tout le gagnant de ce match ? Revoyez le format de votre score."
+
+#: tournaments/games.py:791
 #, docstring
 msgid "\n"
 "        Set the score of a set. To be used by a T.O.\n\n"
@@ -358,23 +390,23 @@ msgstr "Règle le score d'un set. A être utilisé par un T.O.\n\n"
 "- `[p]setscore @Blite 2-1`\n"
 "- `[p]setscore 147 @Lorinato 3-1`"
 
-#: tournaments/games.py:748
+#: tournaments/games.py:811
 msgid "The winner is not a member of this tournament."
 msgstr "Le gagnant n'est pas membre de ce tournoi."
 
-#: tournaments/games.py:752
+#: tournaments/games.py:815
 msgid "I don't see any match here. Provide the set number as the first argument, or use this command inside a channel for a set (see `{prefix}help setscore`)."
 msgstr "Je ne vois aucun match ici. Donnez le numéro du set comme premier argument, ou utilisez cette commande dans un salon pour un set (voir `{prefix}help setscore`)."
 
-#: tournaments/games.py:759
+#: tournaments/games.py:822
 msgid "This match is already finished."
 msgstr "Ce match est déjà terminé."
 
-#: tournaments/games.py:763
+#: tournaments/games.py:826
 msgid "The winner isn't part of the match {set}."
 msgstr "Le gagnant ne fait pas partie du match {set}."
 
-#: tournaments/games.py:777
+#: tournaments/games.py:840
 #, docstring
 msgid "\n"
 "        Forfeit your current match.\n\n"
@@ -383,175 +415,175 @@ msgid "\n"
 msgstr "Déclarez forfait sur votre match actuel.\n\n"
 "Cela va définire le score -1 0"
 
-#: tournaments/games.py:794
+#: tournaments/games.py:857
 msgid "Are you sure you want to forfeit this match?"
 msgstr "Voulez-vous vraiment déclarer forfait sur ce match ?"
 
-#: tournaments/games.py:807
+#: tournaments/games.py:870
 #, docstring
 msgid "\n"
 "        Disqualify yourself from the tournament.\n"
 "        "
 msgstr "Disqualifiez-vous du tournoi."
 
-#: tournaments/games.py:819
+#: tournaments/games.py:882
 msgid "Are you sure you want to stop the tournament?"
 msgstr "Êtes-vous sûr de vouloir arrêter le tournoi ?"
 
-#: tournaments/games.py:835
+#: tournaments/games.py:898
 #, docstring
 msgid "\n"
 "        Call TO's for a lag test.\n"
 "        "
 msgstr "Appelle les TOs pour un lag test."
 
-#: tournaments/games.py:842
+#: tournaments/games.py:905
 msgid "You are not a participant in this tournament."
 msgstr "Vous n'êtes pas inscrit à ce tournoi."
 
-#: tournaments/games.py:849
+#: tournaments/games.py:912
 msgid "check set #{set} between {player1} and {player2} (match in DM)"
 msgstr "vérifiez le set #{set} entre {player1} et {player2} (match en MP)"
 
-#: tournaments/games.py:853
+#: tournaments/games.py:916
 msgid "consult channel {channel}"
 msgstr "consulter le salon {channel}"
 
-#: tournaments/games.py:854
+#: tournaments/games.py:917
 msgid ":satellite: **Lag report** : TOs are invited to {target}."
 msgstr ":satellite: **Lag report** : Les TOs sont invités à {target}."
 
-#: tournaments/games.py:863
+#: tournaments/games.py:926
 msgid "TOs were called. Prepare a new arena for them..."
 msgstr "Les TOs ont été appelés. Préparez une nouvelle arène pour eux..."
 
-#: tournaments/games.py:869
+#: tournaments/games.py:932
 #, docstring
 msgid "\n"
 "        Show the tournament's ruleset.\n"
 "        "
 msgstr "Affiche les règles du tournoi."
 
-#: tournaments/games.py:875
+#: tournaments/games.py:938
 msgid "There's no ruleset channel defined."
 msgstr "Aucun channel de règles défini."
 
-#: tournaments/games.py:878
+#: tournaments/games.py:941
 msgid "Ruleset: {channel}"
 msgstr "Règles : {channel}"
 
-#: tournaments/games.py:885
+#: tournaments/games.py:948
 #, docstring
 msgid "\n"
 "        Show the tournament's bracket.\n"
 "        "
 msgstr "Affiche le bracket du tournoi."
 
-#: tournaments/games.py:890
+#: tournaments/games.py:953
 msgid "Bracket: **{url}**"
 msgstr "Bracket : **{url}**"
 
-#: tournaments/games.py:896
+#: tournaments/games.py:959
 #, docstring
 msgid "\n"
 "        Show the list of legal stages.\n"
 "        "
 msgstr "Affiche la liste des stages légaux."
 
-#: tournaments/games.py:902
+#: tournaments/games.py:965
 msgid "There are no legal stages specified for this game."
 msgstr "Il n'y a pas de stages légaux spécifiés pour ce jeu."
 
-#: tournaments/games.py:904
+#: tournaments/games.py:967
 msgid "__Legal stages:__"
 msgstr "__Stages légaux :__"
 
-#: tournaments/games.py:912
+#: tournaments/games.py:975
 #, docstring
 msgid "\n"
 "        Show the list of legal counter stages\n"
 "        "
 msgstr "Affiche la liste des counters."
 
-#: tournaments/games.py:918
+#: tournaments/games.py:981
 msgid "There are no counter stages specified for this game."
 msgstr "Il n'y a pas de counters spécifiés pour ce jeu."
 
-#: tournaments/games.py:920
+#: tournaments/games.py:983
 msgid "__Counters:__"
 msgstr "__Counters :__"
 
-#: tournaments/games.py:929
+#: tournaments/games.py:992
 #, docstring
 msgid "\n"
 "        List matches, sorted by their duration.\n"
 "        "
 msgstr "Liste les matchs, triés par leur durée."
 
-#: tournaments/games.py:939
+#: tournaments/games.py:1002
 msgid "No match currently ongoing."
 msgstr "Aucun match en cours actuellement."
 
-#: tournaments/games.py:958
+#: tournaments/games.py:1021
 msgid "Set {set} ({time}): {player1} vs {player2}\n"
 msgstr "Set {set} ({time}) : {player1} vs {player2}\n"
 
-#: tournaments/games.py:961
+#: tournaments/games.py:1024
 msgid "#{set} *in DM*"
 msgstr "#{set} *en MP*"
 
-#: tournaments/games.py:976
+#: tournaments/games.py:1039
 msgid " (continued)"
 msgstr " (suite)"
 
-#: tournaments/games.py:987
+#: tournaments/games.py:1050
 msgid "List of ongoing matches"
 msgstr "Liste des matchs en cours"
 
-#: tournaments/games.py:987
+#: tournaments/games.py:1050
 msgid "Sorted by play order and duration"
 msgstr "Triés par ordre de jeu et durée"
 
-#: tournaments/games.py:994
+#: tournaments/games.py:1057
 msgid "Page {len}/{total}"
 msgstr "Page {len}/{total}"
 
-#: tournaments/registration.py:90
+#: tournaments/registration.py:94
 #, docstring
 msgid "\n"
 "        Register to the current tournament, or check-in.\n"
 "        "
 msgstr "Inscrivez-vous au tournoi actuel, ou confirmez votre présence (check-in)."
 
-#: tournaments/registration.py:98
+#: tournaments/registration.py:102
 msgid "You are already checked in."
 msgstr "Vous êtes déjà check."
 
-#: tournaments/registration.py:101
+#: tournaments/registration.py:105
 msgid "You cannot check in this channel."
 msgstr "Vous ne pouvez pas vous check dans ce salon."
 
-#: tournaments/registration.py:104
+#: tournaments/registration.py:108
 msgid "The check-in isn't active."
 msgstr "Le check-in n'est pas en cours."
 
-#: tournaments/registration.py:116
+#: tournaments/registration.py:120
 msgid "You cannot register in this channel."
 msgstr "Vous ne pouvez pas vous inscrire dans ce salon."
 
-#: tournaments/registration.py:119
+#: tournaments/registration.py:123
 msgid "No more places for this tournament."
 msgstr "Plus de places pour ce tournoi."
 
-#: tournaments/registration.py:127 tournaments/registration.py:130
+#: tournaments/registration.py:131 tournaments/registration.py:134
 msgid "Registrations aren't active."
 msgstr "Les inscriptions ne sont pas actives."
 
-#: tournaments/registration.py:142
+#: tournaments/registration.py:146
 msgid "I can't give you the role."
 msgstr "Je ne peux pas vous donner le rôle."
 
-#: tournaments/registration.py:149
+#: tournaments/registration.py:153
 #, docstring
 msgid "\n"
 "        Leave the current tournament.\n\n"
@@ -560,11 +592,11 @@ msgid "\n"
 msgstr "Se désinscrire du tournoi en cours.\n\n"
 "Si le tournoi a commencé, utilisez `[p]dq` à la place."
 
-#: tournaments/registration.py:158
+#: tournaments/registration.py:162
 msgid "You are not registered for this tournament."
 msgstr "Vous n'êtes pas inscrit à ce tournoi."
 
-#: tournaments/registration.py:167
+#: tournaments/registration.py:171
 #, docstring
 msgid "\n"
 "        Register members manually.\n\n"
@@ -575,51 +607,51 @@ msgstr "Inscrit des membres manuellement.\n\n"
 "Vous pouvez donner plusieurs mentions, IDs, ou des noms complets (encadrés par des guillemets s'il y a des espaces).\n"
 "Les membres déjà inscrits sont ignorés."
 
-#: tournaments/registration.py:182
+#: tournaments/registration.py:186
 msgid "The member you provided is already registered."
 msgstr "Le membre fourni est déjà inscrit."
 
-#: tournaments/registration.py:184
+#: tournaments/registration.py:188
 msgid "The members you provided are already registered."
 msgstr "Les membres que vous avez fournis sont déjà inscrits."
 
-#: tournaments/registration.py:190
+#: tournaments/registration.py:194
 msgid "You want to register a member, but you're exceeding the limit of participants ({total}/{limit})."
 msgstr "Vous voulez inscrire un membre, mais vous dépassez la limite de participants ({total}/{limit})."
 
-#: tournaments/registration.py:197 tournaments/troubleshooting.py:235
+#: tournaments/registration.py:201 tournaments/troubleshooting.py:235
 msgid "You want to register {register} members, but you're exceeding the limit of participants ({total}/{limit})."
 msgstr "Vous voulez inscrire {register} membres, mais vous dépassez la limite de participants ({total}/{limit})."
 
-#: tournaments/registration.py:215
+#: tournaments/registration.py:219
 msgid " He is pre-checked."
 msgstr " Il n'a pas besoin de check."
 
-#: tournaments/registration.py:217
+#: tournaments/registration.py:221
 msgid " They are pre-checked."
 msgstr " Ils n'ont pas besoin de check."
 
-#: tournaments/registration.py:222
+#: tournaments/registration.py:226
 msgid "\n"
 "A member couldn't be registered."
 msgstr "\n"
 "Un membre n'a pas pu être inscrit."
 
-#: tournaments/registration.py:224 tournaments/troubleshooting.py:279
+#: tournaments/registration.py:228 tournaments/troubleshooting.py:279
 msgid "\n"
 "{failed} members couldn't be registered."
 msgstr "\n"
 "{failed} membres n'ont pas pu être inscrits."
 
-#: tournaments/registration.py:229
+#: tournaments/registration.py:233
 msgid "Successfully registered a participant.{check}{failed}"
 msgstr "Un participant a été inscrit avec succès.{check}{failed}"
 
-#: tournaments/registration.py:236
+#: tournaments/registration.py:240
 msgid "Successfully registered {register} participants.{check}{failed}"
 msgstr "{register} participants ont été inscrits avec succès.{check}{failed}"
 
-#: tournaments/registration.py:247
+#: tournaments/registration.py:251
 #, docstring
 msgid "\n"
 "        Unregister members manually.\n\n"
@@ -628,35 +660,35 @@ msgid "\n"
 msgstr "Désinscrit des membres manuellement.\n\n"
 "Vous pouvez donner plusieurs mentions, IDs, ou des noms complets (encadrés par des guillemets s'il y a des espaces)."
 
-#: tournaments/registration.py:261
+#: tournaments/registration.py:265
 msgid "The member you provided isn't registered."
 msgstr "Le membre fourni n'est pas inscrit."
 
-#: tournaments/registration.py:263
+#: tournaments/registration.py:267
 msgid "The members you provided aren't registered."
 msgstr "Les membres que vous avez fournis ne sont pas inscrits."
 
-#: tournaments/registration.py:277
+#: tournaments/registration.py:281
 msgid "\n"
 "A member couldn't be unregistered."
 msgstr "\n"
 "Un membre n'a pas pu être désinscrit."
 
-#: tournaments/registration.py:279
+#: tournaments/registration.py:283
 msgid "\n"
 "{failed} members couldn't be unregistered."
 msgstr "\n"
 "{failed} membres n'ont pas pu être désinscrits."
 
-#: tournaments/registration.py:284
+#: tournaments/registration.py:288
 msgid "Successfully unregistered a participant.{failed}"
 msgstr "Un participant a été désinscrit avec succès.{failed}"
 
-#: tournaments/registration.py:288
+#: tournaments/registration.py:292
 msgid "Successfully unregistered {register} participants.{failed}"
 msgstr "{register} participants ont étés désinscrits avec succès.{failed}"
 
-#: tournaments/registration.py:298
+#: tournaments/registration.py:302
 #, docstring
 msgid "\n"
 "        Manually start and stop the registrations for the tournament.\n\n"
@@ -665,18 +697,18 @@ msgid "\n"
 msgstr "Démarre et stoppe manuellement les inscriptions pour le tournoi.\n\n"
 "L'ouverture et la fermeture peuvent être automatisés avec `[p]tset register`."
 
-#: tournaments/registration.py:307
+#: tournaments/registration.py:311
 #, docstring
 msgid "\n"
 "        Starts the registration phase.\n"
 "        "
 msgstr "Démarre la phase d'inscriptions."
 
-#: tournaments/registration.py:312
+#: tournaments/registration.py:316
 msgid "Registrations are already ongoing."
 msgstr "Les inscriptions sont déjà en cours."
 
-#: tournaments/registration.py:317
+#: tournaments/registration.py:321
 msgid "Looks like you have scheduled registrations. Do you want to cancel the next scheduled opening of registrations?\n"
 "Decline if you intend to manually close the registrations before the scheduled opening.\n"
 "Note: this doesn't affect the second scheduled opening for two-stage registrations."
@@ -684,36 +716,36 @@ msgstr "On dirait que vous avez des inscriptions planifiées. Voulez-vous annule
 "Refusez si vous avez l'intention de fermer manuellement les inscriptions avant l'ouverture planifiée.\n"
 "Note : cela n'affecte pas la seconde ouverture prévue pour les inscriptions en deux étapes."
 
-#: tournaments/registration.py:330
+#: tournaments/registration.py:334
 msgid "The first registrations are done, but it looks like you have a second scheduled opening (two-stage registrations). Do you want to cancel the next scheduled opening of registrations?\n"
 "Decline if you intend to manually close the registrations before the scheduled opening."
 msgstr "Les premières inscriptions sont faites, mais il semble que vous ayez une deuxième ouverture prévue (inscriptions en deux étapes). Voulez-vous annuler la prochaine ouverture planifiée des inscriptions ?\n"
 "Refusez si vous avez l'intention de fermer manuellement les inscriptions avant l'ouverture planifiée."
 
-#: tournaments/registration.py:345
+#: tournaments/registration.py:349
 #, docstring
 msgid "\n"
 "        Ends the registration phase.\n"
 "        "
 msgstr "Stoppe les inscriptions."
 
-#: tournaments/registration.py:350
+#: tournaments/registration.py:354
 msgid "Registrations are not active."
 msgstr "Les inscriptions ne sont pas actives."
 
-#: tournaments/registration.py:359
+#: tournaments/registration.py:363
 msgid "Looks like you have a scheduled stop. Do you want to cancel the next scheduled closing of registrations?\n"
 "Accept if you do not intend to re-open the registrations (or at least before the scheduled closing)."
 msgstr "On dirait que vous avez un arrêt programmé. Voulez-vous annuler la prochaine fermeture planifiée des inscriptions ?\n"
 "Acceptez si vous n'avez pas l'intention de rouvrir les inscriptions (ou au moins avant la fermeture prévue)."
 
-#: tournaments/registration.py:374
+#: tournaments/registration.py:378
 msgid "Looks like you have another scheduled opening (two-stage registrations). Do you want to cancel the next scheduled opening of registrations?\n"
 "Accept if you want to fully close the registrations as of now."
 msgstr "On dirait que vous avez une autre ouverture planifiée (inscriptions en deux étapes). Voulez-vous annuler la prochaine ouverture planifiée des inscriptions ?\n"
 "Acceptez si vous voulez fermer complètement les inscriptions dès maintenant."
 
-#: tournaments/registration.py:390
+#: tournaments/registration.py:394
 #, docstring
 msgid "\n"
 "        Manually start and stop the check-in for the tournament.\n\n"
@@ -722,47 +754,47 @@ msgid "\n"
 msgstr "Démarre et stoppe manuellement le check-in pour le tournoi.\n\n"
 "L'ouverture et la fermeture peuvent être automatisés avec `[p]tset checkin`."
 
-#: tournaments/registration.py:399
+#: tournaments/registration.py:403
 #, docstring
 msgid "\n"
 "        Starts the check-in phase.\n"
 "        "
 msgstr "Démarre la phase de check-in."
 
-#: tournaments/registration.py:404
+#: tournaments/registration.py:408
 msgid "Check-in is already ongoing."
 msgstr "Le check-in est déjà en cours."
 
-#: tournaments/registration.py:411
+#: tournaments/registration.py:415
 msgid "Looks like you have a scheduled check-in. If you continue, I will cancel this scheduled opening of the check-in, even if you manually close it before.\n"
 "Do you want to continue?"
 msgstr "On dirait que vous avez un check-in planifié. Si vous continuez, je vais annuler cette ouverture planifiée du check-in, même si vous la fermez manuellement avant.\n"
 "Voulez-vous continuer ?"
 
-#: tournaments/registration.py:424
+#: tournaments/registration.py:428
 msgid "Check-in was already done once. You can still manually open the check-in a second time, but be aware of this.\n"
 "Do you want to make all participants check again? Decline if you want participants that already checked not to be bothered by this new check-in."
 msgstr "Le check-in a déjà été effectué une fois. Vous pouvez toujours ouvrir manuellement le check-in une seconde fois, mais soyez au courant de cela.\n"
 "Voulez-vous que tous les participants doivent check à nouveau ? Refusez si vous voulez que les participants qui ont déjà check ne soient pas dérangés par ce nouveau check-in."
 
-#: tournaments/registration.py:440
+#: tournaments/registration.py:444
 #, docstring
 msgid "\n"
 "        Ends the check-in phase.\n"
 "        "
 msgstr "Stoppe la phase de check-in."
 
-#: tournaments/registration.py:445 tournaments/registration.py:473
+#: tournaments/registration.py:449 tournaments/registration.py:477
 msgid "Check-in is not active."
 msgstr "Le check-in n'est pas en cours."
 
-#: tournaments/registration.py:450
+#: tournaments/registration.py:454
 msgid "Looks like you have a scheduled stop. Do you want to cancel the next scheduled closing of check-in?\n"
 "Accept if you do not intend to re-open the check-in (or at least before the scheduled closing)."
 msgstr "On dirait que vous avez un arrêt programmé. Voulez-vous annuler la prochaine fermeture programmée du check-in ?\n"
 "Acceptez si vous n'avez pas l'intention de rouvrir le check-in (ou au moins avant la fermeture prévue)."
 
-#: tournaments/registration.py:465
+#: tournaments/registration.py:469
 #, docstring
 msgid "\n"
 "        Send a message in the check-in channel pinging all members not checked yet.\n\n"
@@ -773,19 +805,19 @@ msgstr "Envoie un message dans le salon des inscriptions mentionnant tous les me
 "Vous avez besoin d'un salon de check-in et d'une date de fin configurée avant d'utiliser ceci.\n"
 "Si vous voulez que le bot envoie également des MP aux membres, tapez `[p]checkin call yes`"
 
-#: tournaments/registration.py:476
+#: tournaments/registration.py:480
 msgid "There is no check-in channel currently configured."
 msgstr "Il n'y a pas de salon de check-in configuré."
 
-#: tournaments/registration.py:479
+#: tournaments/registration.py:483
 msgid "This feature is only available with a configured stop time."
 msgstr "Cette fonctionnalité est uniquement disponible avec un temps de fermeture configuré."
 
-#: tournaments/registration.py:482
+#: tournaments/registration.py:486
 msgid "The configured check-in end time has already passed."
 msgstr "L'heure de fermeture du check-in est déjà passée."
 
-#: tournaments/registration.py:487
+#: tournaments/registration.py:491
 msgid "Successfully called and DMed the unchecked members."
 msgstr "Membres non check rappelés avec messages privés avec succès."
 
@@ -865,7 +897,7 @@ msgid "I can't send you a DM. Activate the DMs on this server, or use the comman
 msgstr "Je ne peux pas vous envoyer de MP. Activez les MPs sur ce serveur, ou utilisez la commande comme ceci: `{prefix}challongeset api <api key>`.\n"
 "Faites attention à où vous tapez cette commande, votre clé doit rester privée !"
 
-#: tournaments/settings.py:174 tournaments/utils.py:152
+#: tournaments/settings.py:174 tournaments/utils.py:153
 msgid "Request timed out."
 msgstr "Requête expirée."
 
@@ -1933,7 +1965,7 @@ msgstr "Début du check-in"
 msgid "Check-in stop"
 msgstr "Arrêt du check-in"
 
-#: tournaments/settings.py:1396 tournaments/streams.py:104
+#: tournaments/settings.py:1396 tournaments/streams.py:126
 msgid "Pending"
 msgstr "En attente"
 
@@ -1973,52 +2005,52 @@ msgstr "Statut actuel : **{status}**\n\n"
 msgid "Timezone: {tz}"
 msgstr "Fuseau horaire : {tz}"
 
-#: tournaments/streams.py:43
-msgid "This is not a valid Twitch channel. Example: <https://twitch.tv/firedragon>"
-msgstr "Ce n'est pas une chaine Twitch valide. Exemple : <https://twitch.tv/firedragon>"
+#: tournaments/streams.py:61
+msgid "You don't have any stream. If you want to edit someone else's stream, put its channel link as the first argument (see `{prefix}help stream set`)."
+msgstr "Vous n'avez aucun stream. Si vous voulez éditer le stream de quelqu'un d'autre, mettez le lien de son stream comme premier argument (voir `{prefix}help stream set`)."
 
-#: tournaments/streams.py:56
+#: tournaments/streams.py:74
 #, docstring
 msgid "\n"
 "        Display streams, or manage them.\n"
 "        "
 msgstr "Afficher les streams, ou les gères."
 
-#: tournaments/streams.py:62 tournaments/streams.py:93
+#: tournaments/streams.py:80 tournaments/streams.py:115
 msgid "No streamers in this tournament for now."
 msgstr "Aucun streamer dans ce tournoi pour le moment."
 
-#: tournaments/streams.py:72
+#: tournaments/streams.py:91
 #, docstring
 msgid "\n"
 "        Initialize your stream.\n"
 "        "
 msgstr "Initialisez votre stream."
 
-#: tournaments/streams.py:78
+#: tournaments/streams.py:97
 msgid "A streamer with that link is already configured."
 msgstr "Un streamer avec ce lien est déjà configuré."
 
-#: tournaments/streams.py:87
+#: tournaments/streams.py:109
 #, docstring
 msgid "\n"
 "        List streams.\n"
 "        "
 msgstr "Liste les streams."
 
-#: tournaments/streams.py:95
+#: tournaments/streams.py:117
 msgid "__List of streamers on this tournament__\n\n"
 msgstr "__Liste des streamers sur ce tournoi__\n\n"
 
-#: tournaments/streams.py:98
+#: tournaments/streams.py:120
 msgid "<{s.link}> by {s.member}: {current}"
 msgstr "<{s.link}> par {s.member}: {current}"
 
-#: tournaments/streams.py:100
+#: tournaments/streams.py:122
 msgid "On set {set}"
 msgstr "Sur le set {set}"
 
-#: tournaments/streams.py:118
+#: tournaments/streams.py:141
 #, docstring
 msgid "\n"
 "        Configure room info for a stream.\n\n"
@@ -2035,21 +2067,7 @@ msgstr "Règle les infos d'une room pour un stream.\n\n"
 "- `[p]stream set 5RF7G 260`\n"
 "- `[p]stream set https://twitch.tv/el_laggron 5RF7G 260`"
 
-#: tournaments/streams.py:134 tournaments/streams.py:178
-#: tournaments/streams.py:226 tournaments/streams.py:281
-#: tournaments/streams.py:471 tournaments/streams.py:524
-#: tournaments/streams.py:569 tournaments/streams.py:644
-msgid "You don't have any stream. If you want to edit someone else's stream, put its channel link as the first argument (see `{prefix}help stream set`)."
-msgstr "Vous n'avez aucun stream. Si vous voulez éditer le stream de quelqu'un d'autre, mettez le lien de son stream comme premier argument (voir `{prefix}help stream set`)."
-
-#: tournaments/streams.py:145 tournaments/streams.py:189
-#: tournaments/streams.py:237 tournaments/streams.py:292
-#: tournaments/streams.py:482 tournaments/streams.py:535
-#: tournaments/streams.py:580 tournaments/streams.py:655
-msgid "I can't find any existing stream with that link. Please check the list with `{prefix}stream list`."
-msgstr "Je ne trouve aucun stream existant avec ce lien. Veuillez vérifier la liste avec `{prefix}stream list`."
-
-#: tournaments/streams.py:162
+#: tournaments/streams.py:170
 #, docstring
 msgid "\n"
 "        Transfer a stream's ownership.\n\n"
@@ -2064,7 +2082,7 @@ msgstr "Transfère les droits d'un stream.\n\n"
 "Avoir le droit sur un stream permet seulement de ne pas avoir à entrer un lien à chaque fois.\n\n"
 "Si vous voulez modifier le flux de quelqu'un d'autre, donne le lien de sa chaine en tant que premier argument."
 
-#: tournaments/streams.py:206
+#: tournaments/streams.py:199
 #, docstring
 msgid "\n"
 "        Add sets to a stream.\n\n"
@@ -2083,11 +2101,11 @@ msgstr "Ajoute des sets à un stream.\n"
 "- `[p]stream add 252 253 254 255`\n"
 "- `[p]stream add https://twitch.tv/el_laggron 252 253 254 255`"
 
-#: tournaments/streams.py:246
+#: tournaments/streams.py:220
 msgid "Some errors occured:\n\n"
 msgstr "Des erreurs se sont produites :\n\n"
 
-#: tournaments/streams.py:260
+#: tournaments/streams.py:235
 #, docstring
 msgid "\n"
 "        Remove sets from your stream.\n\n"
@@ -2108,11 +2126,11 @@ msgstr "Retire des sets de votre stream.\n\n"
 "- `[p]stream remove 252 253 254 255`\n"
 "- `[p]stream remove https://twitch.tv/el_laggron 252 253 254 255`"
 
-#: tournaments/streams.py:310
+#: tournaments/streams.py:267
 msgid "None of the sets you sent were listed in the stream."
 msgstr "Aucun des sets envoyés se trouve dans votre stream."
 
-#: tournaments/streams.py:322
+#: tournaments/streams.py:282
 #, docstring
 msgid "\n"
 "        Replace the set list of your stream.\n\n"
@@ -2129,55 +2147,47 @@ msgstr "Remplace les sets de votre stream.\n\n"
 "- `[p]stream remove 252 253 254 255`\n"
 "- `[p]stream remove https://twitch.tv/el_laggron 252 253 254 255`"
 
-#: tournaments/streams.py:341
-msgid "You don't have any stream. If you want to edit someone else's stream, put its channel name or link as the first argument (see `{prefix}help stream set`)."
-msgstr "Vous n'avez aucun stream. Si vous voulez éditer le stream de quelqu'un d'autre, mettez le lien ou le nom de sa chaine comme premier argument (voir `{prefix}help stream set`)."
-
-#: tournaments/streams.py:352
-msgid "I can't find any existing stream with that channel. Please check the list with `{prefix}stream list`."
-msgstr "Je ne trouve aucun stream existant avec ce lien. Veuillez vérifier la liste avec `{prefix}stream list`."
-
-#: tournaments/streams.py:360
+#: tournaments/streams.py:302
 msgid "You don't even have sets in your queue. Use `{prefix}stream add` instead."
 msgstr "Vous n'avez même pas de sets dans votre file d'attente. Utilisez d'abord `{prefix}stream add`."
 
-#: tournaments/streams.py:382
+#: tournaments/streams.py:324
 msgid "Same order, same sets, nothing to change."
 msgstr "Même ordre, même sets, rien à changer."
 
-#: tournaments/streams.py:388
+#: tournaments/streams.py:330
 msgid "There are some problems with the new sets, nothing was changed.\n\n"
 msgstr "Il y a quelques problèmes avec les nouveaux sets, rien n'a été changé.\n\n"
 
-#: tournaments/streams.py:410
+#: tournaments/streams.py:352
 msgid "Please confirm the following changes"
 msgstr "Veuillez confirmer les changements suivants"
 
-#: tournaments/streams.py:413
+#: tournaments/streams.py:355
 msgid "⚠ This will cancel your current set!"
 msgstr "⚠ Cela va annuler votre set actuel !"
 
-#: tournaments/streams.py:415
+#: tournaments/streams.py:357
 msgid "Your current set will not be cancelled"
 msgstr "Votre set actuel ne sera pas annulé"
 
-#: tournaments/streams.py:418
+#: tournaments/streams.py:360
 msgid "Sets removed"
 msgstr "Sets retirés"
 
-#: tournaments/streams.py:422
+#: tournaments/streams.py:364
 msgid "Sets added"
 msgstr "Sets ajoutés"
 
-#: tournaments/streams.py:423
+#: tournaments/streams.py:365
 msgid "New order"
 msgstr "Nouvel ordre"
 
-#: tournaments/streams.py:443
+#: tournaments/streams.py:387
 msgid "Stream queue successfully modified."
 msgstr "Stream queue modifiée avec succès."
 
-#: tournaments/streams.py:454
+#: tournaments/streams.py:399
 #, docstring
 msgid "\n"
 "        Swap two matches in your list.\n\n"
@@ -2196,11 +2206,11 @@ msgstr "Intervertit la position de deux sets.\n\n"
 "- `[p]stream swap 252 254`\n"
 "- `[p]stream swap https://twitch.tv/el_laggron 252 254`"
 
-#: tournaments/streams.py:491 tournaments/streams.py:544
+#: tournaments/streams.py:418 tournaments/streams.py:456
 msgid "One of the provided sets cannot be found."
 msgstr "Un des sets donnés ne peut pas être trouvé."
 
-#: tournaments/streams.py:504
+#: tournaments/streams.py:434
 #, docstring
 msgid "\n"
 "        Insert a match in your list.\n\n"
@@ -2220,7 +2230,7 @@ msgstr "Insère un match dans votre liste.\n\n"
 "- `[p]stream insert 252 254`\n"
 "- `[p]stream insert https://twitch.tv/el_laggron 252 254`"
 
-#: tournaments/streams.py:555
+#: tournaments/streams.py:470
 #, docstring
 msgid "\n"
 "        Shows infos about a stream.\n\n"
@@ -2235,33 +2245,33 @@ msgstr "Affiche les infos d'un stream.\n\n\n"
 "- `[p]stream info`\n"
 "- `[p]stream info https://twitch.tv/el_laggron`"
 
-#: tournaments/streams.py:589
+#: tournaments/streams.py:485
 msgid "#{set}: *waiting for players*\n"
 msgstr "#{set}: *en attente des joueurs*\n"
 
-#: tournaments/streams.py:595
+#: tournaments/streams.py:491
 msgid " (on hold)"
 msgstr " (en attente)"
 
-#: tournaments/streams.py:600
+#: tournaments/streams.py:496
 msgid "Room info"
 msgstr "Infos sur la room"
 
-#: tournaments/streams.py:601
+#: tournaments/streams.py:497
 msgid "ID: {id}\n"
 "Code: {code}"
 msgstr "ID : {id}\n"
 "Code : {code}"
 
-#: tournaments/streams.py:606 tournaments/streams.py:616
+#: tournaments/streams.py:502 tournaments/streams.py:512
 msgid "List of sets"
 msgstr "Liste des sets"
 
-#: tournaments/streams.py:607
+#: tournaments/streams.py:503
 msgid "Nothing set."
 msgstr "Rien de réglé."
 
-#: tournaments/streams.py:630
+#: tournaments/streams.py:527
 #, docstring
 msgid "\n"
 "        Closes a stream.\n\n"
@@ -2276,14 +2286,14 @@ msgstr "Ferme un stream.\n\n"
 "- `[p]stream end`\n"
 "- `[p]stream end https://twitch.tv/el_laggron`"
 
-#: tournaments/tournaments.py:125
+#: tournaments/tournaments.py:126
 #, docstring
 msgid "\n"
 "        Get informations about the cog.\n"
 "        "
 msgstr "Affiche des informations sur le cog."
 
-#: tournaments/tournaments.py:129
+#: tournaments/tournaments.py:130
 msgid "Laggron's Dumb Cogs V3 - tournaments\n\n"
 "Version: {0.__version__}\n"
 "Authors: {0.__author__[0]}, {0.__author__[1]} and {0.__author__[2]}\n\n"
@@ -2301,21 +2311,21 @@ msgstr "Laggron's Dumb Cogs V3 - tournaments\n\n"
 "Aidez à traduire le cog : https://crowdin.com/project/laggrons-dumb-cogs/\n\n"
 "Soutenez mon travail sur Patreon : https://www.patreon.com/retke"
 
-#: tournaments/tournaments.py:148
+#: tournaments/tournaments.py:149
 msgid "The challonge credentials were lost. Can't resume tournament."
 msgstr "Les identifiants de Challonge ont été perdus. Impossible de reprendre le tournoi."
 
-#: tournaments/tournaments.py:181
+#: tournaments/tournaments.py:182
 msgid ":information_source: A 401 error probably means the Challonge user setup on this server does not have the permission to access the tournament, or the username and API key are now invalid.\n"
 "Share admin access to this user, or setup another one with `{prefix}challongeset` (and `{prefix}tfix reload` for reloading the config).\n\n"
 msgstr ":information_source: Une erreur 401 signifie probablement que l'utilisateur Challonge configuré sur ce serveur n'a pas la permission d'accéder au tournoi, ou que le nom d'utilisateur et la clé API sont maintenant invalides.\n"
 "Rendez cet utilisateur admin sur le tournoi, ou configurez un autre utilisateur avec `{prefix}challongeset` (et `{prefix}tfix reload` pour recharger la config).\n\n"
 
-#: tournaments/tournaments.py:188
+#: tournaments/tournaments.py:189
 msgid ":information_source: A 404 error probably means the tournament was deleted or moved (URL or host change).\n"
 msgstr ":information_source: Une erreur 404 signifie probablement que le tournoi a été supprimé ou déplacé (changement d'URL ou d'hôte).\n"
 
-#: tournaments/tournaments.py:192
+#: tournaments/tournaments.py:193
 msgid ":information_source: Challonge is being unstable, try again later. This error is (sadly) very common, so no need to worry.\n"
 msgstr ":information_source: Challonge est instable, réessayez plus tard. Cette erreur est (malheureusement) très fréquente, donc inutile de vous inquiéter.\n"
 
@@ -2325,7 +2335,11 @@ msgid "__Error from Challonge: {error}__\n"
 msgstr "__Erreur de Challonge : {error}__\n"
 "{error_msg}Si ce problème persiste, contactez un T.O. ou un administrateur du bot."
 
-#: tournaments/tournaments.py:233
+#: tournaments/tournaments.py:208
+msgid "Challonge timed out responding, try again later."
+msgstr "La requête a expirée, veuillez réessayer plus tard."
+
+#: tournaments/tournaments.py:234
 #, docstring
 msgid "\n"
 "        Find and patch some potentially broken matches.\n\n"
@@ -2656,11 +2670,11 @@ msgstr "Il n'y a pas de tournoi en cours."
 msgid "This command cannot be executed right now."
 msgstr "Cette commande ne peut pas être exécutée pour le moment."
 
-#: tournaments/utils.py:142
+#: tournaments/utils.py:143
 msgid "I need the \"Add reactions\" permission in this channel to continue."
 msgstr "J'ai besoin de la permission \"Ajouter des réactions\" dans ce channel pour continuer."
 
-#: tournaments/utils.py:156
+#: tournaments/utils.py:157
 msgid "Cancelled."
 msgstr "Annulé."
 
