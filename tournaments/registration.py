@@ -27,6 +27,7 @@ class Registration(MixinMeta):
         for tournament in self.tournaments.values():
             if tournament.phase in ("ongoing", "finished"):
                 continue  # Tournament has its own loop for that part
+            need_saving = False  # prevent saving each 5 seconds
             if tournament.register_message:
                 new_content = tournament._prepare_register_message()
                 if new_content != tournament.register_message.content:
@@ -39,6 +40,7 @@ class Registration(MixinMeta):
                             exc_info=e,
                         )
                         tournament.register_message = None
+                        need_saving = True
             if (
                 tournament.checkin_phase == "ongoing"
                 and tournament.checkin_stop
@@ -50,24 +52,28 @@ class Registration(MixinMeta):
                 if next_call >= duration + 1:
                     await tournament.call_check_in(should_dm)
                     tournament.checkin_reminders.remove(data)
+                    need_saving = True
             try:
                 name, time = tournament.next_scheduled_event()
             except TypeError:
-                continue
-            if time.total_seconds() <= 0:
-                coro = {
-                    "register_start": tournament.start_registration,
-                    "register_second_start": tournament.start_registration,
-                    "register_stop": tournament.end_registration,
-                    "checkin_start": tournament.start_check_in,
-                    "checkin_stop": tournament.end_checkin,
-                }.get(name)
-                log.debug(f"[Guild {tournament.guild.id}] Scheduler call: {coro}")
-                if name == "register_second_start":
-                    await coro(second=True)
-                else:
-                    await coro()
-            await tournament.save()
+                pass
+            else:
+                if time.total_seconds() <= 0:
+                    coro = {
+                        "register_start": tournament.start_registration,
+                        "register_second_start": tournament.start_registration,
+                        "register_stop": tournament.end_registration,
+                        "checkin_start": tournament.start_check_in,
+                        "checkin_stop": tournament.end_checkin,
+                    }.get(name)
+                    log.debug(f"[Guild {tournament.guild.id}] Scheduler call: {coro}")
+                    if name == "register_second_start":
+                        await coro(second=True)
+                    else:
+                        await coro()
+                    need_saving = True
+            if need_saving is True:
+                await tournament.save()
 
     @registration_loop.error
     async def on_loop_task_error(self, exception):
