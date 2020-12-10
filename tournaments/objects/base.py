@@ -2750,38 +2750,19 @@ class Tournament:
         """
         # we're using a lock to prevent actions such as score setting of DQs being done while we're
         # updating the match list, which can make the bot think there were manual bracket changes
-        async with self.lock:
-            # since this will block other commands, we put an uncatched timeout
-            await asyncio.wait_for(self._loop_task(), 30)
+        try:
+            async with self.lock:
+                # since this will block other commands, we put an uncatched timeout
+                await asyncio.wait_for(self._loop_task(), 30)
+        except Exception:
+            raise
+        else:
+            if self.task_errors:
+                # there were previous errors but the task ran without any new exception
+                # so we're resetting the errors count (or 502 errors will keep cancelling the task)
+                self.task_errors = 0
 
     loop_task.__doc__ = loop_task.coro.__doc__
-
-    @loop_task.error
-    async def on_loop_task_error(self, exception):
-        self.task_errors += 1
-        if self.task_errors >= MAX_ERRORS:
-            log.critical(
-                f"[Guild {self.guild.id}] Error in loop task. 5th error, cancelling the task",
-                exc_info=exception,
-            )
-            self.task_errors = 0
-            try:
-                await self.to_channel.send(
-                    _(
-                        ":warning: **Attention**\nMultiple bugs occured within the loop task. "
-                        "It is therefore stopped. The bot will stop refreshing informations "
-                        "and launching matches.\nIf you believe the issue is fixed, resume "
-                        "the tournament with `{prefix}tfix resumetask`, else contact bot "
-                        "administrators."
-                    ).format(prefix=self.bot_prefix)
-                )
-            except Exception as e:
-                log.error(f"[Guild {self.guild.id}] Can't tell TOs of the above bug.", exc_info=e)
-        else:
-            log.error(
-                f"[Guild {self.guild.id}] Error in loop task. Resuming...", exc_info=exception
-            )
-            await self.start_loop_task()
 
     async def cancel_timeouts(self):
         """
