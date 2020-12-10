@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import achallonge
 import discord
@@ -194,18 +195,18 @@ class Tournaments(
                 "This error is (sadly) very common, so no need to worry.\n"
             ),
         }
-        if hasattr(error, "original") and isinstance(
-            error.original, achallonge.ChallongeException
-        ):
-            error_msg = error_mapping.get(error.original.args[0].split()[0]) or ""
-            await ctx.send(
-                _(
-                    "__Error from Challonge: {error}__\n{error_msg}"
-                    "If this problem persists, contact T.O.s or an admin of the bot."
-                ).format(error=error.original.args[0], error_msg=error_msg)
-            )
-        else:
-            await self.bot.on_command_error(ctx, error, unhandled_by_cog=True)
+        if hasattr(error, "original"):
+            if isinstance(error.original, achallonge.ChallongeException):
+                error_msg = error_mapping.get(error.original.args[0].split()[0]) or ""
+                return await ctx.send(
+                    _(
+                        "__Error from Challonge: {error}__\n{error_msg}"
+                        "If this problem persists, contact T.O.s or an admin of the bot."
+                    ).format(error=error.original.args[0], error_msg=error_msg)
+                )
+            elif isinstance(error.original, asyncio.TimeoutError):
+                return await ctx.send(_("Challonge timed out responding, try again later."))
+        await self.bot.on_command_error(ctx, error, unhandled_by_cog=True)
 
     def cog_unload(self):
         log.debug("Unloading cog...")

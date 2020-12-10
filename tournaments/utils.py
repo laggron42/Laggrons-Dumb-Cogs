@@ -91,20 +91,21 @@ async def async_http_retry(coro):
     This function is made by Wonderfall.
     https://github.com/Wonderfall/ATOS/blob/cac2c561c8f1ce23277765bcb43cd6421129d8a1/utils/http_retry.py#L6
     """
+    last_exc = None
     for retry in range(1):
         try:
             return await coro
         except ChallongeException as e:
-            log.error(f"Challonge exception. coro: {coro.__name__}", exc_info=e)
-            if "504" in str(e):
+            last_exc = e
+            if "504" in str(e):  # Gateway timeout
                 await asyncio.sleep(1 + retry)
             else:
                 raise
         except asyncio.exceptions.TimeoutError as e:
-            log.warn(f"Challonge timeout. coro: {coro}", exc_info=e)
+            last_exc = e
             continue
     else:
-        raise ChallongeException(f"Tried '{coro.__name__}' several times without success")
+        raise asyncio.TimeoutError from last_exc
 
 
 async def prompt_yes_or_no(

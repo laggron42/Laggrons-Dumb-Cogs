@@ -635,6 +635,8 @@ you want the bot to override the previous list of participants, type `[p]upload 
                 )
                 return
             raise
+        except asyncio.TimeoutError:
+            raise
         except Exception as e:
             log.error(f"[Guild {ctx.guild.id}] Failed uploading participants.", exc_info=e)
             await ctx.send(
