@@ -2429,7 +2429,7 @@ class Tournament:
         """
         Seed the participants if ranking info is configured.
 
-        .. info:: If an exception occurs, the list of participants will be rolled back to its
+        .. warning:: If an exception occurs, the list of participants will be rolled back to its
             previous state, then the error propagates.
 
         Parameters
@@ -2998,7 +2998,7 @@ class Tournament:
     ) -> int:
         """
         Adds a list of participants to the tournament, ordered as you want them to be seeded.
-        The participants will have their `Player.player_id` updated as needed.
+        The participants will have their `Participant.player_id` updated as needed.
 
         Parameters
         ----------
