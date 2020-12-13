@@ -250,7 +250,7 @@ class AutomodMixin(MixinMeta):
     @automod.group(name="warn")
     async def automod_warn(self, ctx: commands.Context):
         """
-        Trigger actions when a member get x warnings within the specified time.
+                Trigger actions when a member get x warnings within the specified time.
 
         For example, if a member gets 3 warnings within a day, you can make the bot automatically \
 set him a level 3 warning with the given reason.

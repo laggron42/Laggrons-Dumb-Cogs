@@ -183,5 +183,6 @@ intersphinx_mapping = {
     "redbot": ("https://docs.discord.red/en/latest/", None),
 }
 
-# Napoleon setting
-napoleon_numpy_docstrings = True
+autodoc_default_options = {"show-inheritance": True}
+autodoc_member_order = "bysource"
+autodoc_inherit_docstrings = False
