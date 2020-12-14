@@ -1,0 +1,29 @@
+{
+    "author": [
+        "retke (El Laggron)",
+        "Wonderfall",
+        "Xyleff"
+    ],
+    "bot_version": [
+        3,
+        3,
+        0
+    ],
+    "description": "Create and manage huge tournaments in your server!\nWorking with Challonge (and more to come), players will be able to join without any account and play on Discord. They have private channels for their matches, commands for reporting their scores, and the tournament organizers have a lot of tools for managing the tournament.",
+    "hidden": false,
+    "install_msg": "Thank you for installing the tournaments cog. Please check the wiki for all informations about the cog.\nhttps://laggrons-dumb-cogs.readthedocs.io/tournaments.html\n\nType `[p]help Tournaments` for a quick overview of the commands",
+    "required_cogs": {},
+    "requirements": [
+        "git+https://github.com/retke/Laggron-utils.git",
+        "apychal==1.10.0",
+        "aiofiles"
+    ],
+    "short": "Tools for managing your tournaments on Discord.",
+    "tags": [
+        "tournament",
+        "challonge",
+        "smash.gg",
+        "game",
+        "smash"
+    ]
+}

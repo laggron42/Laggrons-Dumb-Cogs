@@ -36,10 +36,15 @@ class Say(BaseCog):
         self.interaction = []
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.4.14"
+    __version__ = "1.5.0"
 
     async def say(
-        self, ctx: commands.Context, channel: Optional[discord.TextChannel], text: str, files: list
+        self,
+        ctx: commands.Context,
+        channel: Optional[discord.TextChannel],
+        text: str,
+        files: list,
+        mentions: discord.AllowedMentions = None,
     ):
         if not channel:
             channel = ctx.channel
@@ -59,10 +64,10 @@ class Say(BaseCog):
 
         # sending the message
         try:
-            await channel.send(text, files=files)
+            await channel.send(text, files=files, allowed_mentions=mentions)
         except discord.errors.HTTPException as e:
+            author = ctx.author
             if not ctx.guild.me.permissions_in(channel).send_messages:
-                author = ctx.author
                 try:
                     await ctx.send(
                         _("I am not allowed to send messages in ") + channel.mention,
@@ -91,8 +96,10 @@ class Say(BaseCog):
                 )
 
     @commands.command(name="say")
-    @checks.guildowner()
-    async def _say(self, ctx, channel: Optional[discord.TextChannel], *, text: str = ""):
+    @checks.admin_or_permissions(administrator=True)
+    async def _say(
+        self, ctx: commands.Context, channel: Optional[discord.TextChannel], *, text: str = ""
+    ):
         """
         Make the bot say what you want in the desired channel.
 
@@ -108,8 +115,10 @@ class Say(BaseCog):
         await self.say(ctx, channel, text, files)
 
     @commands.command(name="sayd", aliases=["sd"])
-    @checks.guildowner()
-    async def _saydelete(self, ctx, channel: Optional[discord.TextChannel], *, text: str = ""):
+    @checks.admin_or_permissions(administrator=True)
+    async def _saydelete(
+        self, ctx: commands.Context, channel: Optional[discord.TextChannel], *, text: str = ""
+    ):
         """
         Same as say command, except it deletes your message.
 
@@ -130,9 +139,59 @@ class Say(BaseCog):
 
         await self.say(ctx, channel, text, files)
 
+    @commands.command(name="saym", aliases=["sm"])
+    @checks.admin_or_permissions(administrator=True)
+    async def _saymention(
+        self, ctx: commands.Context, channel: Optional[discord.TextChannel], *, text: str = ""
+    ):
+        """
+        Same as say command, except role and mass mentions are enabled.
+        """
+        message = ctx.message
+        channel = channel or ctx.channel
+        guild = channel.guild
+        files = await Tunnel.files_from_attach(message)
+        role_mentions = message.role_mentions
+        if not role_mentions and not message.mention_everyone:
+            # no mentions, nothing to check
+            return await self.say(ctx, channel, text, files)
+        no_mention = [x for x in role_mentions if x.mentionable is False]
+        if guild.me.guild_permissions.administrator is False:
+            if no_mention:
+                await ctx.send(
+                    _(
+                        "I can't mention the following roles: {roles}\nTurn on "
+                        "mentions or make me an admin on the server.\n"
+                    ).format(roles=", ".join([x.name for x in no_mention]))
+                )
+                return
+            if (
+                message.mention_everyone
+                and channel.permissions_for(guild.me).mention_everyone is False
+            ):
+                await ctx.send(_("I don't have the permission to mention everyone."))
+                return
+        if (
+            message.mention_everyone
+            and channel.permissions_for(ctx.author).mention_everyone is False
+        ):
+            await ctx.send(_("You don't have the permission yourself to do mass mentions."))
+            return
+        if ctx.author.guild_permissions.administrator is False and no_mention:
+            await ctx.send(
+                _(
+                    "You're not allowed to mention the following roles: {roles}\nTurn on "
+                    "mentions for that role or be an admin in the server.\n"
+                ).format(roles=", ".join([x.name for x in no_mention]))
+            )
+            return
+        await self.say(
+            ctx, channel, text, files, mentions=discord.AllowedMentions(everyone=True, roles=True)
+        )
+
     @commands.command(name="interact")
-    @checks.guildowner()
-    async def _interact(self, ctx, channel: discord.TextChannel = None):
+    @checks.admin_or_permissions(administrator=True)
+    async def _interact(self, ctx: commands.Context, channel: discord.TextChannel = None):
         """Start receiving and sending messages as the bot through DM"""
 
         u = ctx.author

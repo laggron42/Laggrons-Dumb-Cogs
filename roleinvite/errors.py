@@ -62,7 +62,7 @@ class CannotGetInvites(Exception):
 
 class CannotAddRole(Exception):
     """
-    The bot isn't allowed to give a role. 
+    The bot isn't allowed to give a role.
     The role hierarchy was modified or a 3rd party module added the role without check.
     """
 

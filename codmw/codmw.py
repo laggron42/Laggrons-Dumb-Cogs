@@ -165,7 +165,7 @@ class CODMW(commands.Cog):
                 ).format(prefix=ctx.clean_prefix)
             )
             return False
-        self.cod_client = Client("v1", "mw", tokens["username"], tokens["password"],)
+        self.cod_client = Client("v1", "mw", tokens["username"], tokens["password"])
 
     def _format_timedelta(self, time: timedelta):
         """Format a timedelta object into a string"""
@@ -301,20 +301,14 @@ class CODMW(commands.Cog):
         )
         time = timedelta(seconds=game_data["timePlayedTotal"])
         time -= timedelta(seconds=time.seconds % 60)
-        embed.add_field(
-            name=_("Time played"), value=self._format_timedelta(time), inline=False,
-        )
+        embed.add_field(name=_("Time played"), value=self._format_timedelta(time), inline=False)
         games_played = round(game_data["gamesPlayed"])
-        embed.add_field(
-            name=_("Games played"), value=f"{games_played:,}", inline=False,
-        )
+        embed.add_field(name=_("Games played"), value=f"{games_played:,}", inline=False)
         wins = round(game_data["wins"])
         losses = round(game_data["losses"])
+        embed.add_field(name=_("Wins/Losses"), value=f"{wins:,}/{losses:,}", inline=True)
         embed.add_field(
-            name=_("Wins/Losses"), value=f"{wins:,}/{losses:,}", inline=True,
-        )
-        embed.add_field(
-            name=_("Winrate"), value=f"{round((wins/games_played)*100, 1)}%", inline=True,
+            name=_("Winrate"), value=f"{round((wins/games_played)*100, 1)}%", inline=True
         )
         embed.add_field(
             name=_("Win streak"),
@@ -356,13 +350,13 @@ class CODMW(commands.Cog):
             inline=True,
         )
         embed.add_field(
-            name=_("Accuracy"), value=f"{round(game_data['accuracy']*100, 2)}%", inline=True,
+            name=_("Accuracy"), value=f"{round(game_data['accuracy']*100, 2)}%", inline=True
         )
         embed.add_field(
-            name=_("Score per game"), value=f"{round(game_data['scorePerGame']):,}", inline=True,
+            name=_("Score per game"), value=f"{round(game_data['scorePerGame']):,}", inline=True
         )
         embed.add_field(
-            name=_("Best score per minute"), value=f"{round(game_data['bestSPM']):,}", inline=True,
+            name=_("Best score per minute"), value=f"{round(game_data['bestSPM']):,}", inline=True
         )
         if favorite_gamemode:
             embed.set_footer(text=f"Favorite gamemode: {self._get_gamemode(favorite_gamemode)}")
@@ -400,15 +394,11 @@ class CODMW(commands.Cog):
             inline=False,
         )
         games_played = round(game_data["gamesPlayed"])
-        embed.add_field(
-            name=_("Games played"), value=f"{games_played:,}", inline=True,
-        )
+        embed.add_field(name=_("Games played"), value=f"{games_played:,}", inline=True)
         wins = round(game_data["wins"])
+        embed.add_field(name=_("Wins"), value=f"{wins:,}", inline=True)
         embed.add_field(
-            name=_("Wins"), value=f"{wins:,}", inline=True,
-        )
-        embed.add_field(
-            name=_("Winrate"), value=f"{round((wins/games_played)*100, 1)}%", inline=True,
+            name=_("Winrate"), value=f"{round((wins/games_played)*100, 1)}%", inline=True
         )
         embed.add_field(
             name=_("Kills/Deaths"),
@@ -416,17 +406,13 @@ class CODMW(commands.Cog):
             inline=True,
         )
         embed.add_field(
-            name=_("K/D Ratio"), value=f"{round(game_data['kdRatio'], 3):,}", inline=True,
+            name=_("K/D Ratio"), value=f"{round(game_data['kdRatio'], 3):,}", inline=True
         )
         embed.add_field(
-            name=_("Contracts"), value=f"{round(game_data['contracts']):,}", inline=True,
+            name=_("Contracts"), value=f"{round(game_data['contracts']):,}", inline=True
         )
-        embed.add_field(
-            name=_("Revives"), value=f"{round(game_data['revives']):,}", inline=True,
-        )
-        embed.add_field(
-            name=_("Downs"), value=f"{round(game_data['downs']):,}", inline=True,
-        )
+        embed.add_field(name=_("Revives"), value=f"{round(game_data['revives']):,}", inline=True)
+        embed.add_field(name=_("Downs"), value=f"{round(game_data['downs']):,}", inline=True)
         embed.add_field(
             name=_("Number of tops"),
             value=_("Top 25: {top_25}\n" "Top 10: {top_10}\n" "Top 5: {top_5}").format(
@@ -470,7 +456,7 @@ class CODMW(commands.Cog):
             time = pretty_date(datetime.fromtimestamp(match["utcEndSeconds"]).replace(second=0))
             map = match["map"].split("_")[1].title()
             title = _("**{result}** a game of **{gamemode}** on **{map}** {time}").format(
-                result=result, gamemode=gamemode, map=map, time=time,
+                result=result, gamemode=gamemode, map=map, time=time
             )
             duration = self._format_timedelta(timedelta(seconds=match["duration"] / 1000))
             player_stats = match["playerStats"]

@@ -151,7 +151,7 @@ class AdvancedMemberSelect:
             raise BadArgument(_("Can't combine `--only-humans` with `--only-bots`."))
 
         if args.everyone:
-            return guild.members
+            return guild.members, []
         members = guild.members
         if args.name:
             members = self._name_regex(members, args.name, "name")

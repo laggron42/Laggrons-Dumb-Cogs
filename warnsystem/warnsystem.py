@@ -398,7 +398,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                     "{tick2} Send a DM to all members\n"
                     "{tick3}"
                     "{tick4} {time}\n"
-                    "{tick5} Reason: {reason}\n\n"
+                    "{tick5} Reason: {reason}\n\n{warning}"
                     "Continue?"
                 ).format(
                     level=level,
@@ -410,6 +410,12 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                     time=time_str,
                     tick5=tick5,
                     reason=reason or _("Not set"),
+                    warning=_(
+                        ":warning: You're about to warn a lot of members! Avoid doing this to "
+                        "prevent being rate limited by Discord, especially if you enabled DMs.\n\n"
+                    )
+                    if len(members) > 50 and level > 1
+                    else "",
                 ),
                 file=file,
             )
@@ -1502,7 +1508,8 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                 if modlog["duration"]:
                     duration = self.api._get_timedelta(modlog["duration"])
                     text += "Duration:  {duration} (raw: {raw}s)\n".format(
-                        duration=self.api._format_timedelta(duration), raw=modlog["duration"],
+                        duration=self.api._format_timedelta(duration),
+                        raw=modlog["duration"],
                     )
                 if modlog["roles"]:
                     text += "Roles:     {roles}\n".format(roles=", ".join(modlog["roles"]))

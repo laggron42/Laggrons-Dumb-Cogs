@@ -1,7 +1,9 @@
 Sphinx==3.0.3
 sphinxcontrib_trio==1.1.1
 sphinx_autodoc_napoleon_typehints==2.1.6
-sphinx_rtd_theme==0.4.3
+sphinx_rtd_theme==0.5.0
 Red-DiscordBot
 python-dateutil==2.8.1
+apychal==1.9.8
+aiofiles==0.5.0
 git+https://github.com/retke/laggron-utils

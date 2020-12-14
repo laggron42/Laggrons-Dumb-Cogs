@@ -614,7 +614,7 @@ channels, and prevented from talking in all voice channels.
             return text
 
         text = _("Successfully checked all channels, {len}/{total} were edited.\n\n").format(
-            len=count - len(perms_failed) - len(other_failed), total=count,
+            len=count - len(perms_failed) - len(other_failed), total=count
         )
         if perms_failed:
             text += _(

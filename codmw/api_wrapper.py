@@ -59,9 +59,7 @@ class Client:
         authentification, which can require a captcha after some requests.
     """
 
-    def __init__(
-        self, version: str, game: str, username: str, password: str, cookies: dict = {},
-    ):
+    def __init__(self, version: str, game: str, username: str, password: str, cookies: dict = {}):
         self.game = game
         self.credentials = {"username": username, "password": password}
         cookie_jar = aiohttp.CookieJar()

@@ -81,7 +81,6 @@ It can be a command (you will need to add the ``commands`` decorator) or a liste
     
     .. code-block:: python
     
-        @roleset.command()
         @commands.command()
         async def command(ctx, *, argument):
             """Say your text with some magic"""

@@ -58,6 +58,7 @@ Welcome to Laggron's Dumb Cogs's official documentation!
    instantcommands
    roleinvite
    say
+   tournaments
    warnsystem
 
 .. toctree::
@@ -65,6 +66,7 @@ Welcome to Laggron's Dumb Cogs's official documentation!
     :caption: API Reference
 
     roleinvite-api
+    tournaments-api
     warnsystem-api
 
 Indices and tables
