@@ -2,11 +2,14 @@ import asyncio
 import discord
 import logging
 import re
+import functools
 
 from copy import deepcopy
 from collections import namedtuple
 from typing import Union, Optional, Iterable, Callable, Awaitable
 from datetime import datetime, timedelta
+from multiprocessing import TimeoutError
+from multiprocessing.pool import Pool
 
 from redbot.core import Config
 from redbot.core.bot import Red
@@ -146,6 +149,8 @@ class API:
         self.bot = bot
         self.data = config
         self.cache = cache
+        self.re_pool = Pool(maxtasksperchild=1000)
+        self.regex_timeout = 1
         self.warned_guilds = []  # see automod_check_for_autowarn
         self.antispam = {}  # see automod_process_antispam
         self.antispam_warn_queue = {}  # see automod_warn
@@ -1292,42 +1297,78 @@ class API:
                 exc_info=antispam_exception,
             )
 
+    async def _safe_regex_search(self, regex: re.Pattern, message: discord.Message):
+        """
+        Mostly safe regex search to prevent reDOS from user defined regex patterns
+
+        This works by running the regex pattern inside a process pool defined at the
+        cog level and then checking that process in the default executor to keep
+        things asynchronous. If the process takes too long to complete we log a
+        warning and remove the trigger from trying to run again.
+
+        This function was fully made by TrustyJAID for Trusty-cogs/retrigger (amazing cog btw)
+        https://github.com/TrustyJAID/Trusty-cogs/blob/f08a88040dcc67291a463517a70dcbbe702ba8e3/retrigger/triggerhandler.py#L494
+        """
+        guild = message.guild
+        try:
+            process = self.re_pool.apply_async(regex.search, (message.content))
+            task = functools.partial(process.get, timeout=self.regex_timeout)
+            new_task = self.bot.loop.run_in_executor(None, task)
+            search = await asyncio.wait_for(new_task, timeout=self.regex_timeout + 5)
+        except TimeoutError:
+            error_msg = (
+                f"[Guild {guild.id}] Automod: regex process took too long. "
+                f"Removing from memory. Offending regex: {regex.pattern}"
+            )
+            log.warning(error_msg)
+            return (False, None)
+            # we certainly don't want to be performing multiple triggers if this happens
+        except asyncio.TimeoutError:
+            error_msg = (
+                f"[Guild {guild.id}] Automod: regex asyncio timed out. "
+                f"Removing from memory. Offending regex: {regex.pattern}"
+            )
+            log.warning(error_msg)
+            return (False, None)
+        except Exception:
+            log.error(
+                f"[Guild {guild.id}] Automod regex encountered an error with {regex.pattern}",
+                exc_info=True,
+            )
+            return (True, None)
+        else:
+            return (True, search)
+
     async def automod_process_regex(self, message: discord.Message):
         guild = message.guild
         member = message.author
         all_regex = await self.cache.get_automod_regex(guild)
         for name, regex in all_regex.items():
-            result = regex["regex"].search(message.content)
-            if result:
-                time = None
-                if regex["time"]:
-                    time = self._get_timedelta(regex["time"])
-                level = regex["level"]
-                reason = regex["reason"].format(
-                    guild=guild, channel=message.channel, member=member
+            result = await self._safe_regex_search(regex["regex"], message)
+            if result[1] is None:
+                if result[0] is False:
+                    await self.cache.remove_automod_regex(guild, name)
+                continue
+            time = None
+            if regex["time"]:
+                time = self._get_timedelta(regex["time"])
+            level = regex["level"]
+            reason = regex["reason"].format(guild=guild, channel=message.channel, member=member)
+            fail = await self.warn(guild, [member], guild.me, level, reason, time)
+            if fail:
+                log.warn(
+                    f"[Guild {guild.id}] Regex automod warn on member {member} ({member.id})\n"
+                    f"Level: {level}. Time: {time}. Reason: {reason}\n"
+                    f"Original message: {message.content}\n"
+                    f"Automatic warn failed due to the following exception:",
+                    exc_info=fail[0],
                 )
-                fail = await self.warn(
-                    guild,
-                    [member],
-                    guild.me,
-                    level,
-                    reason,
-                    time,
+            else:
+                log.info(
+                    f"[Guild {guild.id}] Regex automod warn on member {member} ({member.id})\n"
+                    f"Level: {level}. Time: {time}. Reason: {reason}\n"
+                    f"Original message: {message.content}"
                 )
-                if fail:
-                    log.warn(
-                        f"[Guild {guild.id}] Regex automod warn on member {member} ({member.id})\n"
-                        f"Level: {level}. Time: {time}. Reason: {reason}\n"
-                        f"Original message: {message.content}\n"
-                        f"Automatic warn failed due to the following exception:",
-                        exc_info=fail[0],
-                    )
-                else:
-                    log.info(
-                        f"[Guild {guild.id}] Regex automod warn on member {member} ({member.id})\n"
-                        f"Level: {level}. Time: {time}. Reason: {reason}\n"
-                        f"Original message: {message.content}"
-                    )
 
     async def automod_process_antispam(self, message: discord.Message):
         # we store the data in self.antispam
