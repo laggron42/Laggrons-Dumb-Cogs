@@ -1311,7 +1311,7 @@ class API:
         """
         guild = message.guild
         try:
-            process = self.re_pool.apply_async(regex.search, (message.content))
+            process = self.re_pool.apply_async(regex.findall, (message.content,))
             task = functools.partial(process.get, timeout=self.regex_timeout)
             new_task = self.bot.loop.run_in_executor(None, task)
             search = await asyncio.wait_for(new_task, timeout=self.regex_timeout + 5)
@@ -1321,7 +1321,7 @@ class API:
                 f"Removing from memory. Offending regex: {regex.pattern}"
             )
             log.warning(error_msg)
-            return (False, None)
+            return (False, [])
             # we certainly don't want to be performing multiple triggers if this happens
         except asyncio.TimeoutError:
             error_msg = (
@@ -1329,13 +1329,13 @@ class API:
                 f"Removing from memory. Offending regex: {regex.pattern}"
             )
             log.warning(error_msg)
-            return (False, None)
+            return (False, [])
         except Exception:
             log.error(
                 f"[Guild {guild.id}] Automod regex encountered an error with {regex.pattern}",
                 exc_info=True,
             )
-            return (True, None)
+            return (True, [])
         else:
             return (True, search)
 
@@ -1345,7 +1345,7 @@ class API:
         all_regex = await self.cache.get_automod_regex(guild)
         for name, regex in all_regex.items():
             result = await self._safe_regex_search(regex["regex"], message)
-            if result[1] is None:
+            if not result[1]:
                 if result[0] is False:
                     await self.cache.remove_automod_regex(guild, name)
                 continue
