@@ -201,6 +201,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                     "reason": "Sending messages too fast!",
                     "time": None,
                 },
+                "whitelist": [],
             },
             "regex": {},  # all regex expressions
             "warnings": [],  # all automatic warns

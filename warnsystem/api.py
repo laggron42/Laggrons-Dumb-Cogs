@@ -1382,6 +1382,9 @@ class API:
         antispam_data = await self.cache.get_automod_antispam(guild)
         if antispam_data is False:
             return
+        for word in antispam_data["whitelist"]:
+            if word in message.content:
+                return
 
         # we slowly go across each key, if it doesn't exist, data is created then the
         # function ends since there's no data to check
