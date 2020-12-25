@@ -247,6 +247,33 @@ class AutomodMixin(MixinMeta):
         )
         await ctx.send(embed=embed)
 
+    @automod_regex.command(name="edited")
+    async def automod_regex_edited(self, ctx: commands.Context, enable: bool = None):
+        """
+        Defines if the bot should check edited messages.
+        """
+        guild = ctx.guild
+        if enable is not None:
+            if enable is True:
+                await self.cache.set_automod_regex_edited(guild, True)
+                await ctx.send(_("The bot will now check edited messages."))
+            else:
+                await self.cache.set_automod_regex_edited(guild, False)
+                await ctx.send(_("The bot will no longer check edited messages."))
+        else:
+            current = await self.data.guild(guild).automod.regex_edited_messages()
+            await ctx.send(
+                _(
+                    "Edited message check is currently {state}.\n"
+                    "Type `{prefix}automod regex edited {arg}` to {action} it."
+                ).format(
+                    state=_("enabled") if current else _("disabled"),
+                    prefix=ctx.clean_prefix,
+                    arg=not current,
+                    action=_("enable") if not current else _("disable"),
+                )
+            )
+
     @automod.group(name="warn")
     async def automod_warn(self, ctx: commands.Context):
         """

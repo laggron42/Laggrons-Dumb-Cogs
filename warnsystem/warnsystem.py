@@ -203,6 +203,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                 },
                 "whitelist": [],
             },
+            "regex_edited_messages": False,  # if the bot should check message edits
             "regex": {},  # all regex expressions
             "warnings": [],  # all automatic warns
         },
