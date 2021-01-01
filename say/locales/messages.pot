@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2020-09-30 00:07+0000\n"
+"POT-Creation-Date: 2021-01-01 00:42+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,15 +18,15 @@ msgid ""
 "http://laggron.red/say.html\\n    "
 msgstr ""
 
-#: say/say.py:68 say/say.py:73
+#: say/say.py:73 say/say.py:78
 msgid "I am not allowed to send messages in "
 msgstr ""
 
-#: say/say.py:80 say/say.py:84
+#: say/say.py:85 say/say.py:89
 msgid "I am not allowed to upload files in "
 msgstr ""
 
-#: say/say.py:96
+#: say/say.py:103
 #, docstring
 msgid ""
 "\\n        Make the bot say what you want in the desired channel.\\n\\n"
@@ -37,7 +37,7 @@ msgid ""
 "command message)\\n        "
 msgstr ""
 
-#: say/say.py:113
+#: say/say.py:122
 #, docstring
 msgid ""
 "\\n        Same as say command, except it deletes your message.\\n\\n"
@@ -45,26 +45,53 @@ msgid ""
 "permissions.\\n        "
 msgstr ""
 
-#: say/say.py:127 say/say.py:129
+#: say/say.py:136 say/say.py:138
 msgid "Not enough permissions to delete messages."
 msgstr ""
 
-#: say/say.py:136
+#: say/say.py:147
+#, docstring
+msgid ""
+"\\n        Same as say command, except role and mass mentions are "
+"enabled.\\n        "
+msgstr ""
+
+#: say/say.py:162
+msgid ""
+"I can't mention the following roles: {roles}\\nTurn on mentions or make me "
+"an admin on the server.\\n"
+msgstr ""
+
+#: say/say.py:172
+msgid "I don't have the permission to mention everyone."
+msgstr ""
+
+#: say/say.py:178
+msgid "You don't have the permission yourself to do mass mentions."
+msgstr ""
+
+#: say/say.py:182
+msgid ""
+"You're not allowed to mention the following roles: {roles}\\nTurn on "
+"mentions for that role or be an admin in the server.\\n"
+msgstr ""
+
+#: say/say.py:195
 #, docstring
 msgid "Start receiving and sending messages as the bot through DM"
 msgstr ""
 
-#: say/say.py:142
+#: say/say.py:201
 msgid ""
 "You need to give a channel to enable this in DM. You can give the channel ID"
 " too."
 msgstr ""
 
-#: say/say.py:152
+#: say/say.py:211
 msgid "A session is already running."
 msgstr ""
 
-#: say/say.py:156
+#: say/say.py:215
 msgid ""
 "I will start sending you messages from {0}.\\nJust send me any message and I"
 " will send it in that channel.\\nReact with ❌ on this message to end the "
@@ -72,16 +99,16 @@ msgid ""
 "request will time out and stop."
 msgstr ""
 
-#: say/say.py:175
+#: say/say.py:234
 msgid "Request timed out. Session closed"
 msgstr ""
 
-#: say/say.py:209
+#: say/say.py:268
 #, docstring
 msgid "\\n        Get informations about the cog.\\n        "
 msgstr ""
 
-#: say/say.py:213
+#: say/say.py:272
 msgid ""
 "Laggron's Dumb Cogs V3 - say\\n\\nVersion: {0.__version__}\\nAuthor: "
 "{0.__author__}\\nGithub repository: https://github.com/retke/Laggrons-Dumb-"
@@ -91,6 +118,6 @@ msgid ""
 "Patreon: https://www.patreon.com/retke"
 msgstr ""
 
-#: say/say.py:247
+#: say/say.py:306
 msgid "Session closed"
 msgstr ""
