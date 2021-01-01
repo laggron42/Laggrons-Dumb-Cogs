@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2020-09-30 00:07+0000\n"
+"POT-Creation-Date: 2021-01-01 00:42+0000\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "MIME-Version: 1.0\n"
@@ -15,283 +15,283 @@ msgstr ""
 "X-Crowdin-File-ID: 34\n"
 "Language: fr_FR\n"
 
-#: warnsystem/__init__.py:112 warnsystem/api.py:181
+#: warnsystem/__init__.py:112 warnsystem/api.py:186
 #: warnsystem/warnsystem.py:56
 msgid "year"
 msgstr "an"
 
-#: warnsystem/__init__.py:112 warnsystem/api.py:181
+#: warnsystem/__init__.py:112 warnsystem/api.py:186
 #: warnsystem/warnsystem.py:56
 msgid "years"
 msgstr "ans"
 
-#: warnsystem/__init__.py:113 warnsystem/api.py:182
+#: warnsystem/__init__.py:113 warnsystem/api.py:187
 #: warnsystem/warnsystem.py:57
 msgid "month"
 msgstr "mois"
 
-#: warnsystem/__init__.py:113 warnsystem/api.py:182
+#: warnsystem/__init__.py:113 warnsystem/api.py:187
 #: warnsystem/warnsystem.py:57
 msgid "months"
 msgstr "mois"
 
-#: warnsystem/__init__.py:114 warnsystem/api.py:183
+#: warnsystem/__init__.py:114 warnsystem/api.py:188
 #: warnsystem/warnsystem.py:58
 msgid "week"
 msgstr "semaine"
 
-#: warnsystem/__init__.py:114 warnsystem/api.py:183
+#: warnsystem/__init__.py:114 warnsystem/api.py:188
 #: warnsystem/warnsystem.py:58
 msgid "weeks"
 msgstr "semaines"
 
-#: warnsystem/__init__.py:115 warnsystem/api.py:184
+#: warnsystem/__init__.py:115 warnsystem/api.py:189
 #: warnsystem/warnsystem.py:59
 msgid "day"
 msgstr "jour"
 
-#: warnsystem/__init__.py:115 warnsystem/api.py:184
+#: warnsystem/__init__.py:115 warnsystem/api.py:189
 #: warnsystem/warnsystem.py:59
 msgid "days"
 msgstr "jours"
 
-#: warnsystem/__init__.py:116 warnsystem/api.py:185
+#: warnsystem/__init__.py:116 warnsystem/api.py:190
 #: warnsystem/warnsystem.py:60
 msgid "hour"
 msgstr "heure"
 
-#: warnsystem/__init__.py:116 warnsystem/api.py:185
+#: warnsystem/__init__.py:116 warnsystem/api.py:190
 #: warnsystem/warnsystem.py:60
 msgid "hours"
 msgstr "heures"
 
-#: warnsystem/__init__.py:117 warnsystem/api.py:186
+#: warnsystem/__init__.py:117 warnsystem/api.py:191
 #: warnsystem/warnsystem.py:61
 msgid "minute"
 msgstr "minute"
 
-#: warnsystem/__init__.py:117 warnsystem/api.py:186
+#: warnsystem/__init__.py:117 warnsystem/api.py:191
 #: warnsystem/warnsystem.py:61
 msgid "minutes"
 msgstr "minutes"
 
-#: warnsystem/__init__.py:118 warnsystem/api.py:187
+#: warnsystem/__init__.py:118 warnsystem/api.py:192
 #: warnsystem/warnsystem.py:62
 msgid "second"
 msgstr "seconde"
 
-#: warnsystem/__init__.py:118 warnsystem/api.py:187
+#: warnsystem/__init__.py:118 warnsystem/api.py:192
 #: warnsystem/warnsystem.py:62
 msgid "seconds"
 msgstr "secondes"
 
-#: warnsystem/__init__.py:120 warnsystem/api.py:196
+#: warnsystem/__init__.py:120 warnsystem/api.py:201
 #: warnsystem/warnsystem.py:404
 msgid " and "
 msgstr " et "
 
-#: warnsystem/api.py:69
+#: warnsystem/api.py:72
 msgid "The given member cannot be found.\\nIf you're trying to hackban, the user ID is not valid."
 msgstr "The membre donné est introuvable.\\nSi vous essayez de hackban, l'ID de l'utilisateur n'est pas valide."
 
-#: warnsystem/api.py:567 warnsystem/api.py:1065
+#: warnsystem/api.py:572 warnsystem/api.py:1070
 msgid "warn"
 msgstr "warn"
 
-#: warnsystem/api.py:567
+#: warnsystem/api.py:572
 msgid "warns"
 msgstr "warns"
 
-#: warnsystem/api.py:568 warnsystem/api.py:1065 warnsystem/api.py:1154
+#: warnsystem/api.py:573 warnsystem/api.py:1070 warnsystem/api.py:1159
 msgid "mute"
 msgstr "mute"
 
-#: warnsystem/api.py:568
+#: warnsystem/api.py:573
 msgid "mutes"
 msgstr "mutes"
 
-#: warnsystem/api.py:569 warnsystem/api.py:1065
+#: warnsystem/api.py:574 warnsystem/api.py:1070
 msgid "kick"
 msgstr "kick"
 
-#: warnsystem/api.py:569
+#: warnsystem/api.py:574
 msgid "kicks"
 msgstr "kicks"
 
-#: warnsystem/api.py:570 warnsystem/api.py:1065
+#: warnsystem/api.py:575 warnsystem/api.py:1070
 msgid "softban"
 msgstr "softban"
 
-#: warnsystem/api.py:570
+#: warnsystem/api.py:575
 msgid "softbans"
 msgstr "softbans"
 
-#: warnsystem/api.py:571 warnsystem/api.py:1065 warnsystem/api.py:1154
+#: warnsystem/api.py:576 warnsystem/api.py:1070 warnsystem/api.py:1159
 msgid "ban"
 msgstr "ban"
 
-#: warnsystem/api.py:571
+#: warnsystem/api.py:576
 msgid "bans"
 msgstr "bans"
 
-#: warnsystem/api.py:572 warnsystem/api.py:1066 warnsystem/warnsystem.py:820
+#: warnsystem/api.py:577 warnsystem/api.py:1071 warnsystem/warnsystem.py:820
 msgid "unknown"
 msgstr "inconnu"
 
-#: warnsystem/api.py:575
+#: warnsystem/api.py:580
 msgid "No reason was provided."
 msgstr "Aucune raison n'a été fournie."
 
-#: warnsystem/api.py:576
+#: warnsystem/api.py:581
 msgid "\\nEdit this with `[p]warnings {id}`"
 msgstr "\\nEditez ceci avec `[p]warnings {id}`"
 
-#: warnsystem/api.py:587
+#: warnsystem/api.py:592
 msgid "{who} now {verb} {total} {warning} ({total_type} {action})"
 msgstr "{who} {verb} désormais {total} {warning} ({total_type} {action})"
 
-#: warnsystem/api.py:590
+#: warnsystem/api.py:595
 msgid "The member"
 msgstr "Le membre"
 
-#: warnsystem/api.py:590
+#: warnsystem/api.py:595
 msgid "You"
 msgstr "Vous"
 
-#: warnsystem/api.py:591
+#: warnsystem/api.py:596
 msgid "has"
 msgstr "a"
 
-#: warnsystem/api.py:591
+#: warnsystem/api.py:596
 msgid "have"
 msgstr "avez"
 
-#: warnsystem/api.py:593
+#: warnsystem/api.py:598
 msgid "warnings"
 msgstr "avertissements"
 
-#: warnsystem/api.py:593
+#: warnsystem/api.py:598
 msgid "warning"
 msgstr "avertissement"
 
-#: warnsystem/api.py:605 warnsystem/api.py:611
+#: warnsystem/api.py:610 warnsystem/api.py:616
 msgid "*[couldn't create an invite]*"
 msgstr "*[création d'invitation impossible]*"
 
-#: warnsystem/api.py:619
+#: warnsystem/api.py:624
 msgid "*[No time given]*"
 msgstr "*[Aucun temps donné]*"
 
-#: warnsystem/api.py:628
+#: warnsystem/api.py:633
 msgid "Level {level} warning ({action})"
 msgstr "Avertissement de niveau {level} ({action})"
 
-#: warnsystem/api.py:632
+#: warnsystem/api.py:637
 msgid "Member"
 msgstr "Membre"
 
-#: warnsystem/api.py:633 warnsystem/warnsystem.py:872
+#: warnsystem/api.py:638 warnsystem/warnsystem.py:872
 msgid "Moderator"
 msgstr "Modérateur"
 
-#: warnsystem/api.py:635 warnsystem/api.py:660 warnsystem/warnsystem.py:876
+#: warnsystem/api.py:640 warnsystem/api.py:665 warnsystem/warnsystem.py:876
 msgid "Duration"
 msgstr "Durée"
 
-#: warnsystem/api.py:636 warnsystem/api.py:654 warnsystem/warnsystem.py:882
+#: warnsystem/api.py:641 warnsystem/api.py:659 warnsystem/warnsystem.py:882
 #: warnsystem/warnsystem.py:940
 msgid "Reason"
 msgstr "Raison"
 
-#: warnsystem/api.py:637 warnsystem/api.py:657
+#: warnsystem/api.py:642 warnsystem/api.py:662
 msgid "Status"
 msgstr "Statut"
 
-#: warnsystem/api.py:644
+#: warnsystem/api.py:649
 msgid "\\n\\n***The message could not be delivered to the user. They may have DMs disabled, blocked the bot, or may not have a mutual server.***"
 msgstr "\\n\\n***Le message n'a pas pu être envoyé à l'utilisateur. Il peut avoir bloqués les MPs, le bot, ou ne pas avoir de serveur en commun.***"
 
-#: warnsystem/api.py:702 warnsystem/api.py:1043 warnsystem/settings.py:484
+#: warnsystem/api.py:707 warnsystem/api.py:1048 warnsystem/settings.py:484
 msgid "I can't manage roles, please give me this permission to continue."
 msgstr "Je ne peux pas gérer les rôles, veuillez me donner la permission pour continuer."
 
-#: warnsystem/api.py:708
+#: warnsystem/api.py:713
 msgid "WarnSystem mute role. This role will be assigned to the muted members, feel free to move it or modify its channel permissions."
 msgstr "Role de mute WarnSystem. Ce rôle sera attribué aux membres mute, n'hésitez pas à le déplacer ou modifier ses permissions."
 
-#: warnsystem/api.py:716
+#: warnsystem/api.py:721
 msgid "Modifying role's position, keep it under my top role so I can add it to muted members."
 msgstr "Modification de la position du rôle, gardez le sous mon rôle principal afin que je puisse l'attribuer aux membres."
 
-#: warnsystem/api.py:728
+#: warnsystem/api.py:733
 msgid "Setting up WarnSystem mute. All muted members will have this role, feel free to edit its permissions."
 msgstr "Réglage du mute WarnSystem. Tous les membres mute auront ce rôle, n'hésitez pas à modifier ses permissions."
 
-#: warnsystem/api.py:735
+#: warnsystem/api.py:740
 msgid "Cannot edit permissions of the channel {channel} because of a permission error (probably enforced permission for `Manage channel`)."
 msgstr "Impossible d'éditer les permission du channel {channel} à cause d'une erreur de permissions (probablement une permission enforcée pour `Gérer le channel`)."
 
-#: warnsystem/api.py:742 warnsystem/api.py:754
+#: warnsystem/api.py:747 warnsystem/api.py:759
 msgid "Cannot edit permissions of the channel {channel} because of an unknown error."
 msgstr "Impossible d'éditer les permissions du channel {channel} à cause d'une erreur inconnue."
 
-#: warnsystem/api.py:914
+#: warnsystem/api.py:919
 msgid "Cannot take actions on this member, they are above me in the roles hierarchy. Modify the hierarchy so my top role ({bot_role}) is above {member_role}."
-msgstr ""
+msgstr "Impossible de sanctionner ce membre, il est au dessus de moi dans la hiérarchie des rôles. Modifiez la hiérarchie pour que mon premier rôle ({bot_role}) soit au dessus du rôle {member_role}."
 
-#: warnsystem/api.py:929
+#: warnsystem/api.py:934
 msgid "I can't take actions on the owner of the guild."
 msgstr "Je ne peux pas sanctionner le propriétaire du serveur."
 
-#: warnsystem/api.py:933
+#: warnsystem/api.py:938
 msgid "Why would you warn me? I did nothing wrong :c\\n(use a manual kick/ban instead, warning the bot will cause issues)"
 msgstr "Pouquoi m'avertir moi ? Je n'ai rien fait de mal :c\\n(utilisez un kick/ban manuel à la place, avertir le bot peut causer des problèmes)"
 
-#: warnsystem/api.py:981
+#: warnsystem/api.py:986
 msgid "Unbanning the softbanned member after cleaning up the messages."
 msgstr "Déban du membre après nettoyage de ses messages."
 
-#: warnsystem/api.py:1034
+#: warnsystem/api.py:1039
 msgid "I need the `Send messages` and `Embed links` permissions in {channel} to do this."
 msgstr "J'ai besoin des permission `Envoyer des messages` et `Intégrer des liens` dans {channel} pour faire cela."
 
-#: warnsystem/api.py:1047
+#: warnsystem/api.py:1052
 msgid "The mute role `{mute_role}` was moved above my top role `{my_role}`. Please move the roles so my top role is above the mute role."
 msgstr "Le rôle de mute `{mute_role}` a été déplacé au dessus de mon premier rôle `{my_role}`. Merci de déplacer les rôles pour que mon premier rôle soit au dessus du rôle de mute."
 
-#: warnsystem/api.py:1056
+#: warnsystem/api.py:1061
 msgid "I can't kick members, please give me this permission to continue."
 msgstr "Je ne peux pas expulser des membres, veuillez me donner la permission pour continuer."
 
-#: warnsystem/api.py:1062
+#: warnsystem/api.py:1067
 msgid "I can't ban members, please give me this permission to continue."
 msgstr "Je ne peux pas bannir des membres, veuillez me donner la permission pour continuer."
 
-#: warnsystem/api.py:1068
+#: warnsystem/api.py:1073
 msgid "[WarnSystem] {action} requested by {author} (ID: {author.id}) against {member}. "
 msgstr "[WarnSystem] {action} demandé par {author} (ID: {author.id}) contre {member}. "
 
-#: warnsystem/api.py:1074
+#: warnsystem/api.py:1079
 msgid "\\n\\nDuration: {time} "
 msgstr "\\n\\nDuée : {time} "
 
-#: warnsystem/api.py:1077
+#: warnsystem/api.py:1082
 msgid "Reason: {reason}"
 msgstr "Motif : {reason}"
 
-#: warnsystem/api.py:1079
+#: warnsystem/api.py:1084
 msgid "Reason too long to be shown."
 msgstr "Motif trop long pour être affiché."
 
-#: warnsystem/api.py:1117
+#: warnsystem/api.py:1122
 msgid "You were unbanned from {guild}, your temporary ban (reason: {reason}) just ended after {duration}.\\nYou can join back using this invite: {invite}"
 msgstr "Vous avez été débanni de {guild}, votre ban temporaire (motif : {reason}) vient de se terminer après {duration}.\\nVous pouvez rejoindre à nouveau en utilisant cette invitation : {invite}"
 
-#: warnsystem/api.py:1162
+#: warnsystem/api.py:1167
 msgid "End of timed {action} of {member} requested by {author} that lasted for {time}. Reason of the {action}: {reason}"
 msgstr "Fin du {action} temporaire de {member} demandé par {author} qui a duré {time}. Motif du {action}: {reason}"
 
-#: warnsystem/api.py:1382
+#: warnsystem/api.py:1430
 msgid "{member} you're sending messages too fast!"
 msgstr "{member} vous envoyez des messages trop vite !"
 
@@ -485,10 +485,8 @@ msgstr "**Niveau :** {level}\\n**Raison :** {reason}\\n**Durée :** {time}"
 
 #: warnsystem/automod.py:252
 #, docstring
-msgid "\\n        Trigger actions when a member get x warnings within the specified time.\\n\\n        For example, if a member gets 3 warnings within a day, you can make the bot automatically\\nset him a level 3 warning with the given reason.\\n        It is also possible to only include warnings given by the bot when counting.\\n        "
-msgstr "Créer des avertissements automatiques lorsqu'un membre reçoit x avertissements dans le délai spécifié.\n\n"
-"Par exemple, si un membre reçoit 3 avertissements en un jour, vous pouvez configurer le bot pour qu'il lui fixe automatiquement un avertissement de niveau 3 avec la raison donnée.\n"
-"Il est également possible de n'inclure que les avertissements donnés par le bot lors du comptage."
+msgid "\\n                Trigger actions when a member get x warnings within the specified time.\\n\\n        For example, if a member gets 3 warnings within a day, you can make the bot automatically set him a level 3 warning with the given reason.\\n        It is also possible to only include warnings given by the bot when counting.\\n        "
+msgstr ""
 
 #: warnsystem/automod.py:263
 #, docstring
@@ -663,7 +661,9 @@ msgstr "True"
 
 #: warnsystem/automod.py:533
 msgid "WarnSystem's antispam feature will make your text channels cleaner by removing and warning members sending undesired content.\\n\\nAntispam is currently **{status}**.\\n{status_change} it with `{prefix}automod antispam enable {setting}`."
-msgstr ""
+msgstr "La fonction d'antispam de WarnSystem rendra vos channels plus propres en supprimant et en avertissant les membres qui envoient du contenu indésirable.\n\n"
+"L'antispam est actuellement **{status}**.\n"
+"{status_change} le avec `{prefix}automod antispam enable {setting}`."
 
 #: warnsystem/automod.py:548
 msgid "Antispam system is now {status}."
@@ -694,7 +694,7 @@ msgstr "Si l'antispam est déclenché deux fois dans ce délai, exécuter l'aver
 
 #: warnsystem/automod.py:598
 msgid "Done. If the antispam is triggered twice within {time} seconds, actions will be taken. Use `{prefix}automod antispam warn` to define the warn taken."
-msgstr "Terminé Si l'antispam est déclenché deux fois en {time} secondes, une sanction sera fixée. Utilisez `{prefix}automod antispam warn` pour définir l'avertissement pris."
+msgstr "Terminé. Si l'antispam est déclenché deux fois en {time} secondes, une sanction sera fixée. Utilisez `{prefix}automod antispam warn` pour définir l'avertissement pris."
 
 #: warnsystem/automod.py:606
 msgid "Done. When triggered, the antispam will immediately perform the warn you defined with `{prefix}automod antispam warn`."
@@ -1020,13 +1020,13 @@ msgstr "Vous devez spécifier `modlog` ou `user`. Lisez la description de la com
 msgid "The new description for {destination} (warn {level}) was successfully set!"
 msgstr "La nouvelle description pour {destination} (avertissement {level}) a été définie avec succès !"
 
-#: warnsystem/settings.py:397 warnsystem/warnsystem.py:389
-msgid "user"
-msgstr "user"
-
 #: warnsystem/settings.py:397
 msgid "modlog"
 msgstr "modlog"
+
+#: warnsystem/settings.py:397 warnsystem/warnsystem.py:389
+msgid "user"
+msgstr "user"
 
 #: warnsystem/settings.py:403
 #, docstring
@@ -1168,23 +1168,23 @@ msgstr "Définit si le bot doit envoyer une invitation après un ban temporaire.
 
 #: warnsystem/settings.py:647
 msgid "The bot {respect} reinvite unbanned members. If you want to change this, type `[p]warnset reinvite {opposite}`."
-msgstr "Le bot {respect} les membres débannis. Si vous voulez changer ceci, tapez `[p]warnset reinvite {opposite}`."
+msgstr "Le bot {respect} réinviter les membres débannis. Si vous voulez changer ceci, tapez `[p]warnset reinvite {opposite}`."
 
 #: warnsystem/settings.py:650 warnsystem/settings.py:849
 msgid "does"
-msgstr ""
+msgstr "va"
 
 #: warnsystem/settings.py:650 warnsystem/settings.py:849
 msgid "doesn't"
-msgstr ""
+msgstr "ne va pas"
 
 #: warnsystem/settings.py:655
 msgid "Done. The bot will try to send an invite to unbanned members. Please note that the bot needs to share one server in common with the member to receive the message."
-msgstr ""
+msgstr "Terminé. Le bot va essayer d'envoyer une invitation aux membres débannis. Veuillez noter que le bot doit partager un serveur en commun avec le membre pour recevoir le message."
 
 #: warnsystem/settings.py:663
 msgid "Done. The bot will no longer reinvite unbanned members."
-msgstr ""
+msgstr "Terminé. Le bot ne réinvitera plus les membres dé-bannis."
 
 #: warnsystem/settings.py:667
 #, docstring
@@ -1193,23 +1193,23 @@ msgstr ""
 
 #: warnsystem/settings.py:679
 msgid "The bot currently {remove} all roles on mute. If you want to change this, type `[p]warnset removeroles {opposite}`."
-msgstr ""
+msgstr "Le bot {remove} actuellement tous les rôles pour le mute. Pour changer cela, tapez `[p]warnset removeroles {opposite}`."
 
 #: warnsystem/settings.py:683
 msgid "removes"
-msgstr ""
+msgstr "retire"
 
 #: warnsystem/settings.py:683
 msgid "doesn't remove"
-msgstr ""
+msgstr "ne retire pas"
 
 #: warnsystem/settings.py:689
 msgid "Done. All roles will be removed from muted members. They will get their roles back once the mute ends or when someone removes the warning using the `{prefix}warnings` command."
-msgstr ""
+msgstr "Terminé. Tous les rôles seront retirés des membres mute. Ils récupéreront leurs rôles une fois que le mute se terminera ou quand quelqu'un retirera l'avertissement en utilisant la commande `{prefix}warnings`."
 
 #: warnsystem/settings.py:697
 msgid "Done. Muted members will keep their roles on mute."
-msgstr ""
+msgstr "Fait. Les membres mutes vont garder leurs rôles quand ils seront mute."
 
 #: warnsystem/settings.py:701
 #, docstring
@@ -1218,139 +1218,140 @@ msgstr ""
 
 #: warnsystem/settings.py:706
 msgid "I can't send embed links here!"
-msgstr ""
+msgstr "Je ne peux pas afficher les liens ici !"
 
 #: warnsystem/settings.py:718
 msgid "Not set. Use `{prefix}warnset channel`"
-msgstr ""
+msgstr "Non réglé. Utilisez `{prefix}warnset channel`"
 
 #: warnsystem/settings.py:721
 msgid "Not found"
-msgstr ""
+msgstr "Non trouvé"
 
 #: warnsystem/settings.py:723
 msgid "Default channel: {channel}\\n"
-msgstr ""
+msgstr "Channel par défaut : {channel}\\n"
 
 #: warnsystem/settings.py:725
 msgid "Level {level} warnings channel: {channel}\\n"
-msgstr ""
+msgstr "Channel des avertissements de niveau {level} : {channel}\\n"
 
 #: warnsystem/settings.py:729
 msgid "No mute role set."
-msgstr ""
+msgstr "Aucun rôle de mute réglé."
 
 #: warnsystem/settings.py:730 warnsystem/settings.py:731
 #: warnsystem/settings.py:732 warnsystem/settings.py:733
 #: warnsystem/settings.py:734 warnsystem/settings.py:735
 msgid "Enabled"
-msgstr ""
+msgstr "Activé"
 
 #: warnsystem/settings.py:730 warnsystem/settings.py:731
 #: warnsystem/settings.py:732 warnsystem/settings.py:733
 #: warnsystem/settings.py:734 warnsystem/settings.py:735
 msgid "Disabled"
-msgstr ""
+msgstr "Désactivé"
 
 #: warnsystem/settings.py:736
 msgid "Softban: {softban}\\nBan: {ban}"
-msgstr ""
+msgstr "Softban : {softban}\\nBan : {ban}"
 
 #: warnsystem/settings.py:741
 msgid "No substitution set.\\nType `{prefix}help warnset substitutions` to get started."
-msgstr ""
+msgstr "Aucune substitution définie.\n"
+"Tapez `{prefix}help warnset substitutions` pour commencer."
 
 #: warnsystem/settings.py:746
 msgid "{number} subsitution{plural} set.\\nType `{prefix}warnset substitutions list` to list them."
-msgstr ""
+msgstr "{number} substitution{plural} définie{plural}.\\nTapez `{prefix}warnset substitutions list` pour les lister."
 
 #: warnsystem/settings.py:751
 msgid "s"
-msgstr ""
+msgstr "s"
 
 #: warnsystem/settings.py:762 warnsystem/settings.py:770
 msgid "Too long to be shown..."
-msgstr ""
+msgstr "Trop long pour être affiché..."
 
 #: warnsystem/settings.py:783
 msgid "WarnSystem settings. Page 1/2"
-msgstr ""
+msgstr "Réglages WarnSystem. Page 1/2"
 
 #: warnsystem/settings.py:784
 msgid "WarnSystem settings. Page 2/2"
-msgstr ""
+msgstr "Réglages WarnSystem. Page 2/2"
 
 #: warnsystem/settings.py:791
 msgid "You can change all of these values with {prefix}warnset"
-msgstr ""
+msgstr "Vous pouvez changer toutes ces valeurs avec {prefix}warnset"
 
 #: warnsystem/settings.py:794
 msgid "Cog made with ❤️ by Laggron"
-msgstr ""
+msgstr "Cog fait avec ❤️ par Laggron"
 
 #: warnsystem/settings.py:796
 msgid "Log channels"
-msgstr ""
+msgstr "Channels de log"
 
 #: warnsystem/settings.py:797
 msgid "Mute role"
-msgstr ""
+msgstr "Rôle de mute"
 
 #: warnsystem/settings.py:798
 msgid "Respect hierarchy"
-msgstr ""
+msgstr "Respect de la hiérarchie"
 
 #: warnsystem/settings.py:799
 msgid "Reinvite unbanned members"
-msgstr ""
+msgstr "Réinvitation des membres dé-bannis"
 
 #: warnsystem/settings.py:800
 msgid "Show responsible moderator"
-msgstr ""
+msgstr "Affichage du modérateur responsable"
 
 #: warnsystem/settings.py:801
 msgid "Detect manual bans"
-msgstr ""
+msgstr "Détection des bans manuels"
 
 #: warnsystem/settings.py:802
 msgid "Update new channels for mute role"
-msgstr ""
+msgstr "Mise à jour des nouveaux channels pour le rôle de mute"
 
 #: warnsystem/settings.py:803
 msgid "Remove roles on mute"
-msgstr ""
+msgstr "Retrait des rôles lors d'un mute"
 
 #: warnsystem/settings.py:804
 msgid "Days of messages to delete"
-msgstr ""
+msgstr "Jours de messages à supprimer"
 
 #: warnsystem/settings.py:805
 msgid "Substitutions"
-msgstr ""
+msgstr "Substitutions"
 
 #: warnsystem/settings.py:806
 msgid "Embed thumbnails"
-msgstr ""
+msgstr "Images des embed"
 
 #: warnsystem/settings.py:807
 msgid "Embed colors"
-msgstr ""
+msgstr "Couleurs des embed"
 
 #: warnsystem/settings.py:809
 msgid "Modlog embed descriptions"
-msgstr ""
+msgstr "Description des embeds du modlog"
 
 #: warnsystem/settings.py:812
 msgid "User embed descriptions"
-msgstr ""
+msgstr "Description des embeds des membres"
 
 #: warnsystem/settings.py:816
 msgid "To see informations about the cog (version, documentation, support server, Patreon), type `{prefix}warnsysteminfo`."
-msgstr ""
+msgstr "Pour voir des informations sur le cog (version, documentation, serveur de support, Patreon), tapez `{prefix}warnsysteminfo`."
 
 #: warnsystem/settings.py:827
 msgid "Error when sending the message. Check the warnsystem logs for more informations."
-msgstr ""
+msgstr "Erreur lors de l'envoi du message. Vérifiez les logs warnsystem pour plus d'informations."
 
 #: warnsystem/settings.py:835
 #, docstring
@@ -1359,15 +1360,15 @@ msgstr ""
 
 #: warnsystem/settings.py:846
 msgid "The bot {respect} show the responsible moderator to the warned member in DM. If you want to change this, type `[p]warnset showmod {opposite}`."
-msgstr ""
+msgstr "Le bot {respect} montrer le modérateur responsable au membre averti en MP. Si vous voulez changer cela, tapez `[p]warnset showmod {opposite}`."
 
 #: warnsystem/settings.py:854
 msgid "Done. The moderator responsible of a warn will now be shown to the warned member in direct messages."
-msgstr ""
+msgstr "Terminé. Le modérateur responsable d'un avertissement sera maintenant affiché au membre averti en MP."
 
 #: warnsystem/settings.py:861
 msgid "Done. The bot will no longer show the responsible moderator."
-msgstr ""
+msgstr "Terminé. Le bot ne montrera plus le modérateur responsable."
 
 #: warnsystem/settings.py:865
 #, docstring
@@ -1381,15 +1382,16 @@ msgstr ""
 
 #: warnsystem/settings.py:894
 msgid "The name you're using is already used by another substitution!\\nDelete or edit it with `[p]warnset substitutions delete`"
-msgstr ""
+msgstr "Le nom que vous utilisez est déjà utilisé par une autre substitution !\\nSupprimez ou éditez la avec `[p]warnset substitutions delete`"
 
 #: warnsystem/settings.py:901
 msgid "That substitution is too long! Maximum is 600 characters!"
-msgstr ""
+msgstr "Cette substitution est trop longue ! Le maximum est de 600 caractères !"
 
 #: warnsystem/settings.py:905
 msgid "Your new subsitutions with the keyword `{keyword}` was successfully created! Type `[{substitution}]` in your warning reason to use the text you just set.\\nManage your substitutions with the `{prefix}warnset substitutions` subcommands."
-msgstr ""
+msgstr "Votre nouvelle substitution avec le mot-clé `{keyword}` a été créée avec succès ! Tapez `[{substitution}]` dans la raison de votre avertissement pour utiliser le texte que vous venez de définir.\n"
+"Gérez vos substitutions avec les commandes sous `{prefix}warnset substitutions`."
 
 #: warnsystem/settings.py:915
 #, docstring
@@ -1398,11 +1400,12 @@ msgstr ""
 
 #: warnsystem/settings.py:924
 msgid "That substitution doesn't exist!\\nSee existing substitutions with the `{prefix}warnset substitutions list` command."
-msgstr ""
+msgstr "Cette substitution n'existe pas !\n"
+"Listez les substitutions existantes avec la commande `{prefix}warnset substitutions list`."
 
 #: warnsystem/settings.py:931
 msgid "The substitutions was successfully deleted."
-msgstr ""
+msgstr "La substitution a été supprimée avec succès."
 
 #: warnsystem/settings.py:935
 #, docstring
@@ -1411,15 +1414,16 @@ msgstr ""
 
 #: warnsystem/settings.py:942
 msgid "You don't have any existing substitution on this server!\\nCreate one with `{prefix}warnset substitutions add`"
-msgstr ""
+msgstr "Vous n'avez aucune substitution existante sur ce serveur !\n"
+"Créez-en une avec `{prefix}warnset substitutions add`"
 
 #: warnsystem/settings.py:955
 msgid "Substitutions for {server}:"
-msgstr ""
+msgstr "Substitutions pour {server} :"
 
 #: warnsystem/settings.py:957
 msgid "Page {page}/{max}"
-msgstr ""
+msgstr "Page {page}/{max}"
 
 #: warnsystem/settings.py:962
 #, docstring
@@ -1428,35 +1432,35 @@ msgstr ""
 
 #: warnsystem/settings.py:975
 msgid "The new image for level {level} warnings has been set to {image}."
-msgstr ""
+msgstr "La nouvelle image pour les avertissements de niveau {level} a été réglée sur {image}."
 
 #: warnsystem/warnsystem.py:53
 msgid "{amount} {unit} ago."
-msgstr ""
+msgstr "Il y a {amount} {unit}."
 
 #: warnsystem/warnsystem.py:72
 msgid "Just now"
-msgstr ""
+msgstr "À l'instant"
 
 #: warnsystem/warnsystem.py:76
 msgid "A minute ago"
-msgstr ""
+msgstr "Il y a une minute"
 
 #: warnsystem/warnsystem.py:80
 msgid "An hour ago"
-msgstr ""
+msgstr "Il y a une heure"
 
 #: warnsystem/warnsystem.py:84
 msgid "Yesterday"
-msgstr ""
+msgstr "Hier"
 
 #: warnsystem/warnsystem.py:110
 msgid "A member got a level {} warning."
-msgstr ""
+msgstr "Un membre a reçu un avertissement de niveau {}."
 
 #: warnsystem/warnsystem.py:111
 msgid "The moderation team set you a level {} warning."
-msgstr ""
+msgstr "L'équipe de modération vous a fixé un avertissement de niveau {}."
 
 #: warnsystem/warnsystem.py:127
 #, docstring
@@ -1465,31 +1469,38 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:236
 msgid "The reason is too long for an embed.\\n\\n*Tip: You can use Github Gist to write a long text formatted in Markdown, create a new file with the extension `.md` at the end and write as if you were on Discord.\\n<https://gist.github.com/>*"
-msgstr ""
+msgstr "La raison est trop longue pour un embed.\n\n"
+"*Astuce : Vous pouvez utiliser Github Gist pour écrire un long texte formaté en Markdown, créer un nouveau fichier avec l'extension `.md` et écrivez comme si vous étiez sur Discord.\n"
+"<https://gist.github.com/>*"
 
 #: warnsystem/warnsystem.py:259
 msgid "You need to set up the mute role before doing this.\\nUse the `[p]warnset mute` command for this."
-msgstr ""
+msgstr "Vous devez configurer le rôle de mute avant de faire ceci.\n"
+"Utilisez la commande `[p]warnset mute` pour cela."
 
 #: warnsystem/warnsystem.py:266
 msgid "Please set up a modlog channel before warning a member.\\n\\n**With WarnSystem**\\n*Use the `[p]warnset channel` command.*\\n\\n**With Red Modlog**\\n*Load the `modlogs` cog and use the `[p]modlogset modlog` command.*"
-msgstr ""
+msgstr "Veuillez configurer un channel de modlog avant d'avertir un membre.\n\n"
+"**Avec WarnSystem**\n"
+"*Utilisez la commande `[p]warnset channel`.\n\n"
+"**Avec Red Modlog**\n"
+"*Chargez le cog `modlogs` et utilisez la commande `[p]modlogset modlog`.*"
 
 #: warnsystem/warnsystem.py:277
 msgid "You are not allowed to do this, {member} is higher than you in the role hierarchy. You can only warn members which top role is lower than yours.\\n\\n"
-msgstr ""
+msgstr "Vous n'êtes pas autorisé à faire cela, {member} est plus élevé que vous dans la hiérarchie des rôles. Vous pouvez seulement avertir les membres dont le rôle principal est inférieur au vôtre.\\n\\n"
 
 #: warnsystem/warnsystem.py:282
 msgid "You can disable this check by using the `[p]warnset hierarchy` command."
-msgstr ""
+msgstr "Vous pouvez désactiver cette vérification en utilisant la commande `[p]warnset hierarchy`."
 
 #: warnsystem/warnsystem.py:288
 msgid "Hackban failed: No user found."
-msgstr ""
+msgstr "Échec du hackban : aucun utilisateur trouvé."
 
 #: warnsystem/warnsystem.py:297 warnsystem/warnsystem.py:1273
 msgid "Done."
-msgstr ""
+msgstr "Fait."
 
 #: warnsystem/warnsystem.py:331
 msgid "Processing mass warning...\\n{i}/{total} {members} warned ({percent}%)\\n\\n{tick1} Log to the modlog\\n{tick2} Send a DM to all members\\n{tick3}{tick4} {time}\\n{tick5} Reason: {reason}"
@@ -1624,151 +1635,158 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:803
 msgid "You are not allowed to see other's warnings!"
-msgstr ""
+msgstr "Vous n'êtes pas autorisé à voir les avertissements des autres !"
 
 #: warnsystem/warnsystem.py:807
 msgid "That member was never warned."
-msgstr ""
+msgstr "Ce membre n'a jamais été averti."
 
 #: warnsystem/warnsystem.py:810
 msgid "That case doesn't exist."
-msgstr ""
+msgstr "Ce casier n'existe pas."
 
 #: warnsystem/warnsystem.py:815
 msgid "Warnings"
-msgstr ""
+msgstr "Avertissements"
 
 #: warnsystem/warnsystem.py:816
 msgid "Mute"
-msgstr ""
+msgstr "Mute"
 
 #: warnsystem/warnsystem.py:816
 msgid "Mutes"
-msgstr ""
+msgstr "Mutes"
 
 #: warnsystem/warnsystem.py:817
 msgid "Kick"
-msgstr ""
+msgstr "Kick"
 
 #: warnsystem/warnsystem.py:817
 msgid "Kicks"
-msgstr ""
+msgstr "Kicks"
 
 #: warnsystem/warnsystem.py:818
 msgid "Softban"
-msgstr ""
+msgstr "Softban"
 
 #: warnsystem/warnsystem.py:818
 msgid "Softbans"
-msgstr ""
+msgstr "Softbans"
 
 #: warnsystem/warnsystem.py:819
 msgid "Ban"
-msgstr ""
+msgstr "Ban"
 
 #: warnsystem/warnsystem.py:819
 msgid "Bans"
-msgstr ""
+msgstr "Bans"
 
 #: warnsystem/warnsystem.py:843
 msgid "User modlog summary."
-msgstr ""
+msgstr "Résumé du modlog du membre."
 
 #: warnsystem/warnsystem.py:846
 msgid "Total number of warnings: "
-msgstr ""
+msgstr "Nombre total d'avertissements : "
 
 #: warnsystem/warnsystem.py:849
 msgid "{len} last warnings"
-msgstr ""
+msgstr "{len} derniers avertissements"
 
 #: warnsystem/warnsystem.py:851
 msgid "Last warning"
-msgstr ""
+msgstr "Dernier avertissement"
 
 #: warnsystem/warnsystem.py:855
 msgid "Click on the reactions to scroll through the warnings"
-msgstr ""
+msgstr "Cliquez sur les réactions pour faire défiler les avertissements"
 
 #: warnsystem/warnsystem.py:866
 msgid "Case #{number} informations"
-msgstr ""
+msgstr "Informations du casier #{number}"
 
 #: warnsystem/warnsystem.py:870
 msgid "Level"
-msgstr ""
+msgstr "Niveau"
 
 #: warnsystem/warnsystem.py:877
 msgid "{duration}\\n(Until {date})"
-msgstr ""
+msgstr "{duration}\n"
+"(Jusqu'à {date})"
 
 #: warnsystem/warnsystem.py:979
 msgid "Case #{number} edition.\\n\\n**Please type the new reason to set**"
-msgstr ""
+msgstr "Édition du casier #{number}.\n\n"
+"**Veuillez saisir la nouvelle raison à définir**"
 
 #: warnsystem/warnsystem.py:982
 msgid "You have two minutes to type your text in the chat."
-msgstr ""
+msgstr "Vous avez deux minutes pour taper votre texte dans le chat."
 
 #: warnsystem/warnsystem.py:994
 msgid "Case #{number} edition."
-msgstr ""
+msgstr "Édition du casier #{number}."
 
 #: warnsystem/warnsystem.py:995
 msgid "Old reason"
-msgstr ""
+msgstr "Ancienne raison"
 
 #: warnsystem/warnsystem.py:996
 msgid "New reason"
-msgstr ""
+msgstr "Nouvelle raison"
 
 #: warnsystem/warnsystem.py:997
 msgid "Click on ✅ to confirm the changes."
-msgstr ""
+msgstr "Cliquez sur ✅ pour confirmer les modifications."
 
 #: warnsystem/warnsystem.py:1005 warnsystem/warnsystem.py:1128
 msgid "Question timed out."
-msgstr ""
+msgstr "Requête expirée."
 
 #: warnsystem/warnsystem.py:1017
 msgid "The reason was successfully edited!\\n"
-msgstr ""
+msgstr "La raison a été éditée avec succès !\\n"
 
 #: warnsystem/warnsystem.py:1019
 msgid "*The modlog message couldn't be edited. Check your logs for details.*"
-msgstr ""
+msgstr "*Le message du modlog n'a pas pu être modifié. Vérifiez vos logs pour plus de détails.*"
 
 #: warnsystem/warnsystem.py:1023
 msgid "The reason was not edited."
-msgstr ""
+msgstr "La raison n'a pas été modifiée."
 
 #: warnsystem/warnsystem.py:1094
 msgid "Member {member}'s clearance. By selecting ❌ on the user modlog summary, you can remove all warnings given to {member}. __All levels and notes are affected.__\\n**Click on the reaction to confirm the removal of the entire user's modlog. This cannot be undone.**"
-msgstr ""
+msgstr "Remise à zéro du membre {member}. En cliquant sur ❌ sur le résumé du modlog du membre, vous pouvez supprimer tous les avertissements donnés à {member}. __Tous les niveaux et les notes sont affectés.__\n"
+"**Cliquez sur la réaction pour confirmer la suppression de l'intégralité du modlog de l'utilisateur. Cela ne peut pas être annulé.**"
 
 #: warnsystem/warnsystem.py:1111
 msgid "Case #{number} deletion.\\n**Click on the reaction to confirm your action.**"
-msgstr ""
+msgstr "Suppression du casier #{number} .\n"
+"**Cliquez sur la réaction pour confirmer votre action.**"
 
 #: warnsystem/warnsystem.py:1115
 msgid "\\nNote: Deleting the case will also do the following:"
-msgstr ""
+msgstr "\n"
+"Note : La suppression du casier fera également ce qui suit :"
 
 #: warnsystem/warnsystem.py:1117
 msgid "\\n- unmute the member"
-msgstr ""
+msgstr "\n"
+"- unmute du membre"
 
 #: warnsystem/warnsystem.py:1119
 msgid "\\n- add all roles back to the member"
-msgstr ""
+msgstr "\n"
+"- ajout des rôles en retour au membre"
 
 #: warnsystem/warnsystem.py:1132
 msgid "Nothing was removed."
-msgstr ""
+msgstr "Rien n'a été retiré."
 
 #: warnsystem/warnsystem.py:1139
 msgid "User modlog cleared."
-msgstr ""
+msgstr "Modlog du membre effacé."
 
 #: warnsystem/warnsystem.py:1160
 msgid "Warning deleted by {author}"
@@ -1776,15 +1794,15 @@ msgstr "Avertissement supprimé par {author}"
 
 #: warnsystem/warnsystem.py:1166
 msgid "Adding removed roles back after unmute."
-msgstr ""
+msgstr "Ajout des rôles retirés après l'unmute."
 
 #: warnsystem/warnsystem.py:1167 warnsystem/warnsystem.py:1170
 msgid "The case was successfully deleted!"
-msgstr ""
+msgstr "Le casier a été supprimé avec succès !"
 
 #: warnsystem/warnsystem.py:1169
 msgid "*The modlog message couldn't be deleted. Check your logs for details.*"
-msgstr ""
+msgstr "*Le message du modlog n'a pas pu être supprimé. Vérifiez vos logs pour plus de détails.*"
 
 #: warnsystem/warnsystem.py:1176
 #, docstring
@@ -1793,7 +1811,7 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:1183
 msgid "No warnings have been issued in this server yet."
-msgstr ""
+msgstr "Aucun avertissement n'a encore été donné sur ce serveur."
 
 #: warnsystem/warnsystem.py:1186
 msgid "--- Case {number} ---\\nMember:    {member} (ID: {member.id})\\nLevel:     {level}\\nReason:    {reason}\\nAuthor:    {author} (ID: {author.id})\\nDate:      {time}\\n"

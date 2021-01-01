@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2020-07-08 00:09+0000\n"
+"POT-Creation-Date: 2021-01-01 00:42+0000\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "MIME-Version: 1.0\n"
@@ -130,7 +130,7 @@ msgstr ""
 msgid "\\n        Show global stats of your Call of Duty account.\\n\\n        `platform` is the platform you play on. Use the following values:\\n        `psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` = Battle.net\\n        `steam` = Steam\\n\\n        `username` is your username on the said platform (tag included if it exists)\\n        "
 msgstr ""
 
-#: codmw/codmw.py:288 codmw/codmw.py:394
+#: codmw/codmw.py:288 codmw/codmw.py:388
 msgid "{username}'s stats"
 msgstr ""
 
@@ -142,121 +142,121 @@ msgstr ""
 msgid "**{level}** {bar} {next_level}"
 msgstr ""
 
-#: codmw/codmw.py:305 codmw/codmw.py:398
+#: codmw/codmw.py:304 codmw/codmw.py:392
 msgid "Time played"
 msgstr ""
 
-#: codmw/codmw.py:309 codmw/codmw.py:404
+#: codmw/codmw.py:306 codmw/codmw.py:397
 msgid "Games played"
 msgstr ""
 
-#: codmw/codmw.py:314
+#: codmw/codmw.py:309
 msgid "Wins/Losses"
 msgstr ""
 
-#: codmw/codmw.py:317 codmw/codmw.py:411
+#: codmw/codmw.py:311 codmw/codmw.py:401
 msgid "Winrate"
 msgstr ""
 
-#: codmw/codmw.py:320
+#: codmw/codmw.py:314
 msgid "Win streak"
 msgstr ""
 
-#: codmw/codmw.py:321
+#: codmw/codmw.py:315
 msgid "Current: {current}\\nBest: {best}"
 msgstr ""
 
-#: codmw/codmw.py:328
+#: codmw/codmw.py:322
 msgid "Kills/Deaths/Assists"
 msgstr ""
 
-#: codmw/codmw.py:329
+#: codmw/codmw.py:323
 msgid "{kills}/{deaths}/{assists}\\nBest number of kills: {best_kills}\\nBest number of assists: {best_assists}\\n"
 msgstr ""
 
-#: codmw/codmw.py:343 codmw/codmw.py:419
+#: codmw/codmw.py:337 codmw/codmw.py:409
 msgid "K/D Ratio"
 msgstr ""
 
-#: codmw/codmw.py:344
+#: codmw/codmw.py:338
 msgid "Average: {avg}\\nBest: {best}"
 msgstr ""
 
-#: codmw/codmw.py:351
+#: codmw/codmw.py:345
 msgid "Kill streak"
 msgstr ""
 
-#: codmw/codmw.py:352
+#: codmw/codmw.py:346
 msgid "Current: {current}\\nBest: {best}"
 msgstr ""
 
-#: codmw/codmw.py:359
+#: codmw/codmw.py:353
 msgid "Accuracy"
 msgstr ""
 
-#: codmw/codmw.py:362
+#: codmw/codmw.py:356
 msgid "Score per game"
 msgstr ""
 
-#: codmw/codmw.py:365
+#: codmw/codmw.py:359
 msgid "Best score per minute"
 msgstr ""
 
-#: codmw/codmw.py:374
+#: codmw/codmw.py:368
 #, docstring
 msgid "\\n        Show Warzone stats on your Call of Duty account.\\n\\n        `platform` is the platform you play on. Use the following values:\\n        `psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` = Battle.net\\n        `steam` = Steam\\n\\n        `username` is your username on the said platform (tag included if it exists)\\n        "
 msgstr ""
 
-#: codmw/codmw.py:408
+#: codmw/codmw.py:399
 msgid "Wins"
 msgstr ""
 
-#: codmw/codmw.py:414
+#: codmw/codmw.py:404
 msgid "Kills/Deaths"
 msgstr ""
 
-#: codmw/codmw.py:422
+#: codmw/codmw.py:412
 msgid "Contracts"
 msgstr ""
 
-#: codmw/codmw.py:425
+#: codmw/codmw.py:414
 msgid "Revives"
 msgstr ""
 
-#: codmw/codmw.py:428
+#: codmw/codmw.py:415
 msgid "Downs"
 msgstr ""
 
-#: codmw/codmw.py:431
+#: codmw/codmw.py:417
 msgid "Number of tops"
 msgstr ""
 
-#: codmw/codmw.py:432
+#: codmw/codmw.py:418
 msgid "Top 25: {top_25}\\nTop 10: {top_10}\\nTop 5: {top_5}"
 msgstr ""
 
-#: codmw/codmw.py:444
+#: codmw/codmw.py:430
 #, docstring
 msgid "\\n        Show your 5 last Call of Duty matches.\\n\\n        `platform` is the platform you play on. Use the following values:\\n        `psn` = Playstation Network\\n        `xbl` = Xbox Live\\n        `battle` = Battle.net\\n        `steam` = Steam\\n\\n        `username` is your username on the said platform (tag included if it exists)\\n        "
 msgstr ""
 
-#: codmw/codmw.py:463
+#: codmw/codmw.py:449
 msgid "5 most recent matches."
 msgstr ""
 
-#: codmw/codmw.py:468
+#: codmw/codmw.py:454
 msgid "Won"
 msgstr ""
 
-#: codmw/codmw.py:468
+#: codmw/codmw.py:454
 msgid "Lost"
 msgstr ""
 
-#: codmw/codmw.py:472
+#: codmw/codmw.py:458
 msgid "**{result}** a game of **{gamemode}** on **{map}** {time}"
 msgstr ""
 
-#: codmw/codmw.py:477
+#: codmw/codmw.py:463
 msgid "⏳ Match lasted {duration}\\nScore: `{score}` | XP: `{xp}`\\nKills: `{kills}` | Deaths: `{deaths}` | KDR: {kdr}%"
 msgstr ""
 

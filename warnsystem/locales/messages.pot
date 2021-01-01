@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2020-09-30 00:07+0000\n"
+"POT-Creation-Date: 2021-01-01 00:42+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,312 +11,312 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: redgettext 3.2\n"
 
-#: warnsystem/__init__.py:112 warnsystem/api.py:181
+#: warnsystem/__init__.py:112 warnsystem/api.py:186
 #: warnsystem/warnsystem.py:56
 msgid "year"
 msgstr ""
 
-#: warnsystem/__init__.py:112 warnsystem/api.py:181
+#: warnsystem/__init__.py:112 warnsystem/api.py:186
 #: warnsystem/warnsystem.py:56
 msgid "years"
 msgstr ""
 
-#: warnsystem/__init__.py:113 warnsystem/api.py:182
+#: warnsystem/__init__.py:113 warnsystem/api.py:187
 #: warnsystem/warnsystem.py:57
 msgid "month"
 msgstr ""
 
-#: warnsystem/__init__.py:113 warnsystem/api.py:182
+#: warnsystem/__init__.py:113 warnsystem/api.py:187
 #: warnsystem/warnsystem.py:57
 msgid "months"
 msgstr ""
 
-#: warnsystem/__init__.py:114 warnsystem/api.py:183
+#: warnsystem/__init__.py:114 warnsystem/api.py:188
 #: warnsystem/warnsystem.py:58
 msgid "week"
 msgstr ""
 
-#: warnsystem/__init__.py:114 warnsystem/api.py:183
+#: warnsystem/__init__.py:114 warnsystem/api.py:188
 #: warnsystem/warnsystem.py:58
 msgid "weeks"
 msgstr ""
 
-#: warnsystem/__init__.py:115 warnsystem/api.py:184
+#: warnsystem/__init__.py:115 warnsystem/api.py:189
 #: warnsystem/warnsystem.py:59
 msgid "day"
 msgstr ""
 
-#: warnsystem/__init__.py:115 warnsystem/api.py:184
+#: warnsystem/__init__.py:115 warnsystem/api.py:189
 #: warnsystem/warnsystem.py:59
 msgid "days"
 msgstr ""
 
-#: warnsystem/__init__.py:116 warnsystem/api.py:185
+#: warnsystem/__init__.py:116 warnsystem/api.py:190
 #: warnsystem/warnsystem.py:60
 msgid "hour"
 msgstr ""
 
-#: warnsystem/__init__.py:116 warnsystem/api.py:185
+#: warnsystem/__init__.py:116 warnsystem/api.py:190
 #: warnsystem/warnsystem.py:60
 msgid "hours"
 msgstr ""
 
-#: warnsystem/__init__.py:117 warnsystem/api.py:186
+#: warnsystem/__init__.py:117 warnsystem/api.py:191
 #: warnsystem/warnsystem.py:61
 msgid "minute"
 msgstr ""
 
-#: warnsystem/__init__.py:117 warnsystem/api.py:186
+#: warnsystem/__init__.py:117 warnsystem/api.py:191
 #: warnsystem/warnsystem.py:61
 msgid "minutes"
 msgstr ""
 
-#: warnsystem/__init__.py:118 warnsystem/api.py:187
+#: warnsystem/__init__.py:118 warnsystem/api.py:192
 #: warnsystem/warnsystem.py:62
 msgid "second"
 msgstr ""
 
-#: warnsystem/__init__.py:118 warnsystem/api.py:187
+#: warnsystem/__init__.py:118 warnsystem/api.py:192
 #: warnsystem/warnsystem.py:62
 msgid "seconds"
 msgstr ""
 
-#: warnsystem/__init__.py:120 warnsystem/api.py:196
+#: warnsystem/__init__.py:120 warnsystem/api.py:201
 #: warnsystem/warnsystem.py:404
 msgid " and "
 msgstr ""
 
-#: warnsystem/api.py:69
+#: warnsystem/api.py:72
 msgid ""
 "The given member cannot be found.\\nIf you're trying to hackban, the user ID"
 " is not valid."
 msgstr ""
 
-#: warnsystem/api.py:567 warnsystem/api.py:1065
+#: warnsystem/api.py:572 warnsystem/api.py:1070
 msgid "warn"
 msgstr ""
 
-#: warnsystem/api.py:567
+#: warnsystem/api.py:572
 msgid "warns"
 msgstr ""
 
-#: warnsystem/api.py:568 warnsystem/api.py:1065 warnsystem/api.py:1154
+#: warnsystem/api.py:573 warnsystem/api.py:1070 warnsystem/api.py:1159
 msgid "mute"
 msgstr ""
 
-#: warnsystem/api.py:568
+#: warnsystem/api.py:573
 msgid "mutes"
 msgstr ""
 
-#: warnsystem/api.py:569 warnsystem/api.py:1065
+#: warnsystem/api.py:574 warnsystem/api.py:1070
 msgid "kick"
 msgstr ""
 
-#: warnsystem/api.py:569
+#: warnsystem/api.py:574
 msgid "kicks"
 msgstr ""
 
-#: warnsystem/api.py:570 warnsystem/api.py:1065
+#: warnsystem/api.py:575 warnsystem/api.py:1070
 msgid "softban"
 msgstr ""
 
-#: warnsystem/api.py:570
+#: warnsystem/api.py:575
 msgid "softbans"
 msgstr ""
 
-#: warnsystem/api.py:571 warnsystem/api.py:1065 warnsystem/api.py:1154
+#: warnsystem/api.py:576 warnsystem/api.py:1070 warnsystem/api.py:1159
 msgid "ban"
 msgstr ""
 
-#: warnsystem/api.py:571
+#: warnsystem/api.py:576
 msgid "bans"
 msgstr ""
 
-#: warnsystem/api.py:572 warnsystem/api.py:1066 warnsystem/warnsystem.py:820
+#: warnsystem/api.py:577 warnsystem/api.py:1071 warnsystem/warnsystem.py:820
 msgid "unknown"
 msgstr ""
 
-#: warnsystem/api.py:575
+#: warnsystem/api.py:580
 msgid "No reason was provided."
 msgstr ""
 
-#: warnsystem/api.py:576
+#: warnsystem/api.py:581
 msgid "\\nEdit this with `[p]warnings {id}`"
 msgstr ""
 
-#: warnsystem/api.py:587
+#: warnsystem/api.py:592
 msgid "{who} now {verb} {total} {warning} ({total_type} {action})"
 msgstr ""
 
-#: warnsystem/api.py:590
+#: warnsystem/api.py:595
 msgid "The member"
 msgstr ""
 
-#: warnsystem/api.py:590
+#: warnsystem/api.py:595
 msgid "You"
 msgstr ""
 
-#: warnsystem/api.py:591
+#: warnsystem/api.py:596
 msgid "has"
 msgstr ""
 
-#: warnsystem/api.py:591
+#: warnsystem/api.py:596
 msgid "have"
 msgstr ""
 
-#: warnsystem/api.py:593
+#: warnsystem/api.py:598
 msgid "warnings"
 msgstr ""
 
-#: warnsystem/api.py:593
+#: warnsystem/api.py:598
 msgid "warning"
 msgstr ""
 
-#: warnsystem/api.py:605 warnsystem/api.py:611
+#: warnsystem/api.py:610 warnsystem/api.py:616
 msgid "*[couldn't create an invite]*"
 msgstr ""
 
-#: warnsystem/api.py:619
+#: warnsystem/api.py:624
 msgid "*[No time given]*"
 msgstr ""
 
-#: warnsystem/api.py:628
+#: warnsystem/api.py:633
 msgid "Level {level} warning ({action})"
 msgstr ""
 
-#: warnsystem/api.py:632
+#: warnsystem/api.py:637
 msgid "Member"
 msgstr ""
 
-#: warnsystem/api.py:633 warnsystem/warnsystem.py:872
+#: warnsystem/api.py:638 warnsystem/warnsystem.py:872
 msgid "Moderator"
 msgstr ""
 
-#: warnsystem/api.py:635 warnsystem/api.py:660 warnsystem/warnsystem.py:876
+#: warnsystem/api.py:640 warnsystem/api.py:665 warnsystem/warnsystem.py:876
 msgid "Duration"
 msgstr ""
 
-#: warnsystem/api.py:636 warnsystem/api.py:654 warnsystem/warnsystem.py:882
+#: warnsystem/api.py:641 warnsystem/api.py:659 warnsystem/warnsystem.py:882
 #: warnsystem/warnsystem.py:940
 msgid "Reason"
 msgstr ""
 
-#: warnsystem/api.py:637 warnsystem/api.py:657
+#: warnsystem/api.py:642 warnsystem/api.py:662
 msgid "Status"
 msgstr ""
 
-#: warnsystem/api.py:644
+#: warnsystem/api.py:649
 msgid ""
 "\\n\\n***The message could not be delivered to the user. They may have DMs "
 "disabled, blocked the bot, or may not have a mutual server.***"
 msgstr ""
 
-#: warnsystem/api.py:702 warnsystem/api.py:1043 warnsystem/settings.py:484
+#: warnsystem/api.py:707 warnsystem/api.py:1048 warnsystem/settings.py:484
 msgid "I can't manage roles, please give me this permission to continue."
 msgstr ""
 
-#: warnsystem/api.py:708
+#: warnsystem/api.py:713
 msgid ""
 "WarnSystem mute role. This role will be assigned to the muted members, feel "
 "free to move it or modify its channel permissions."
 msgstr ""
 
-#: warnsystem/api.py:716
+#: warnsystem/api.py:721
 msgid ""
 "Modifying role's position, keep it under my top role so I can add it to "
 "muted members."
 msgstr ""
 
-#: warnsystem/api.py:728
+#: warnsystem/api.py:733
 msgid ""
 "Setting up WarnSystem mute. All muted members will have this role, feel free"
 " to edit its permissions."
 msgstr ""
 
-#: warnsystem/api.py:735
+#: warnsystem/api.py:740
 msgid ""
 "Cannot edit permissions of the channel {channel} because of a permission "
 "error (probably enforced permission for `Manage channel`)."
 msgstr ""
 
-#: warnsystem/api.py:742 warnsystem/api.py:754
+#: warnsystem/api.py:747 warnsystem/api.py:759
 msgid ""
 "Cannot edit permissions of the channel {channel} because of an unknown "
 "error."
 msgstr ""
 
-#: warnsystem/api.py:914
+#: warnsystem/api.py:919
 msgid ""
 "Cannot take actions on this member, they are above me in the roles "
 "hierarchy. Modify the hierarchy so my top role ({bot_role}) is above "
 "{member_role}."
 msgstr ""
 
-#: warnsystem/api.py:929
+#: warnsystem/api.py:934
 msgid "I can't take actions on the owner of the guild."
 msgstr ""
 
-#: warnsystem/api.py:933
+#: warnsystem/api.py:938
 msgid ""
 "Why would you warn me? I did nothing wrong :c\\n(use a manual kick/ban "
 "instead, warning the bot will cause issues)"
 msgstr ""
 
-#: warnsystem/api.py:981
+#: warnsystem/api.py:986
 msgid "Unbanning the softbanned member after cleaning up the messages."
 msgstr ""
 
-#: warnsystem/api.py:1034
+#: warnsystem/api.py:1039
 msgid ""
 "I need the `Send messages` and `Embed links` permissions in {channel} to do "
 "this."
 msgstr ""
 
-#: warnsystem/api.py:1047
+#: warnsystem/api.py:1052
 msgid ""
 "The mute role `{mute_role}` was moved above my top role `{my_role}`. Please "
 "move the roles so my top role is above the mute role."
 msgstr ""
 
-#: warnsystem/api.py:1056
+#: warnsystem/api.py:1061
 msgid "I can't kick members, please give me this permission to continue."
 msgstr ""
 
-#: warnsystem/api.py:1062
+#: warnsystem/api.py:1067
 msgid "I can't ban members, please give me this permission to continue."
 msgstr ""
 
-#: warnsystem/api.py:1068
+#: warnsystem/api.py:1073
 msgid ""
 "[WarnSystem] {action} requested by {author} (ID: {author.id}) against "
 "{member}. "
 msgstr ""
 
-#: warnsystem/api.py:1074
+#: warnsystem/api.py:1079
 msgid "\\n\\nDuration: {time} "
 msgstr ""
 
-#: warnsystem/api.py:1077
+#: warnsystem/api.py:1082
 msgid "Reason: {reason}"
 msgstr ""
 
-#: warnsystem/api.py:1079
+#: warnsystem/api.py:1084
 msgid "Reason too long to be shown."
 msgstr ""
 
-#: warnsystem/api.py:1117
+#: warnsystem/api.py:1122
 msgid ""
 "You were unbanned from {guild}, your temporary ban (reason: {reason}) just "
 "ended after {duration}.\\nYou can join back using this invite: {invite}"
 msgstr ""
 
-#: warnsystem/api.py:1162
+#: warnsystem/api.py:1167
 msgid ""
 "End of timed {action} of {member} requested by {author} that lasted for "
 "{time}. Reason of the {action}: {reason}"
 msgstr ""
 
-#: warnsystem/api.py:1382
+#: warnsystem/api.py:1430
 msgid "{member} you're sending messages too fast!"
 msgstr ""
 
@@ -518,11 +518,11 @@ msgstr ""
 #: warnsystem/automod.py:252
 #, docstring
 msgid ""
-"\\n        Trigger actions when a member get x warnings within the specified"
-" time.\\n\\n        For example, if a member gets 3 warnings within a day, "
-"you can make the bot automatically\\nset him a level 3 warning with the "
-"given reason.\\n        It is also possible to only include warnings given "
-"by the bot when counting.\\n        "
+"\\n                Trigger actions when a member get x warnings within the "
+"specified time.\\n\\n        For example, if a member gets 3 warnings within"
+" a day, you can make the bot automatically set him a level 3 warning with "
+"the given reason.\\n        It is also possible to only include warnings "
+"given by the bot when counting.\\n        "
 msgstr ""
 
 #: warnsystem/automod.py:263
@@ -1143,12 +1143,12 @@ msgid ""
 "The new description for {destination} (warn {level}) was successfully set!"
 msgstr ""
 
-#: warnsystem/settings.py:397 warnsystem/warnsystem.py:389
-msgid "user"
-msgstr ""
-
 #: warnsystem/settings.py:397
 msgid "modlog"
+msgstr ""
+
+#: warnsystem/settings.py:397 warnsystem/warnsystem.py:389
+msgid "user"
 msgstr ""
 
 #: warnsystem/settings.py:403
