@@ -923,13 +923,13 @@ class API:
                     ).format(bot_role=guild.me.top_role.name, member_role=member.top_role.name)
                 )
             if await self.data.guild(guild).respect_hierarchy() and (
-                not (await self.bot.is_owner(author) or author == guild.owner)
+                not (await self.bot.is_owner(author) or author.id == guild.owner_id)
                 and member.top_role.position >= author.top_role.position
             ):
                 return errors.NotAllowedByHierarchy(
                     "The moderator is lower than the member in the servers's role hierarchy."
                 )
-            if level > 2 and member == guild.owner:
+            if level > 2 and member.id == guild.owner_id:
                 return errors.MissingPermissions(
                     _("I can't take actions on the owner of the guild.")
                 )
@@ -1271,7 +1271,7 @@ class API:
             return
         if member.bot:
             return
-        if guild.owner.id == member.id:
+        if guild.owner_id == member.id:
             return
         if not self.cache.is_automod_enabled(guild):
             return
