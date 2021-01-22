@@ -402,7 +402,7 @@ cog at this point.
 
         This allows you to add custom values to the developer's environement used by the \
 core dev commands (debug, eval, repl).
-        This can also be used inside instantcommands by calling `instantcmd.utils.get_env(ctx)`.
+        Note that this cannot be used inside instantcommands due to the context requirement. 
         """
         pass
 
