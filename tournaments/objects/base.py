@@ -91,8 +91,8 @@ class Participant(discord.Member):
 
     def __repr__(self):
         return (
-            "<Participant player_id={0.player_id} tournament_name={0.tournament.name} "
-            "tournament_id={0.tournament.id} spoke={0.spoke} id={1.id} name={1.name!r}>"
+            "<Participant name={1.name!r} id={1.id} player_id={0.player_id} tournament_name={0.tournament.name} "
+            "tournament_id={0.tournament.id} spoke={0.spoke}>"
         ).format(self, self._user)
 
     @classmethod
