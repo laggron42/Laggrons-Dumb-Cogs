@@ -2,7 +2,7 @@
 InstantCommands
 ===============
 
-.. note:: These docs refers to the version **1.1.0**. 
+.. note:: These docs refers to the version **1.3.0**. 
     Make sure you're under the good version by typing ``[p]cog update``.
 
 This is the guide for the ``instantcmd`` cog. Everything you need is here.
@@ -37,6 +37,8 @@ Usage
 
 InstantCommands is designed to create new commands and listeners directly 
 from Discord. You just need basic Python and discord.py knowledge.
+
+You can also edit the Dev's environment added with Red 3.4.6.
 
 Here's an example of his it works:
 
@@ -111,17 +113,6 @@ It can be a command (you will need to add the ``commands`` decorator) or a liste
     * ``asyncio``
     
     * ``redbot``
-    
-      * ``.core.commands``
-      
-      * ``.core.checks``
-      
-      * ``.core.Config``
-      
-      * ``.core.utils.chat_formatting.pagify``
-      
-    It isn't recommanded to use the ``Config`` value for now. 
-    A future release should give a ready ``Config.Config`` object.
 
 If you try to add a new command/listener that already exists, the bot will ask
 you if you want to replace the command/listener, useful for a quick bug fix
@@ -167,23 +158,37 @@ Remove an instant command or a listener from what you registered before.
 
 * ``<name>`` The name of the command/listener.
 
-.. _command-instantcommand-info:
+.. _command-instantcommand-list:
 
 ~~~~~~~~~~~~~~~~~~~
-instantcommand info
+instantcommand list
 ~~~~~~~~~~~~~~~~~~~
 
 **Syntax**
 
 .. code-block:: none
 
-    [p]instantcommand info [command]
+    [p]instantcommand list
+
+**Description**
+
+Lists the commands and listeners added with instantcmd.
+
+.. _command-instantcommand-source:
+
+~~~~~~~~~~~~~~~~~~~~~
+instantcommand source
+~~~~~~~~~~~~~~~~~~~~~
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]instantcommand source [command]
     
 **Description**
 
-List all existings commands and listeners created with InstantCommands.
-
-You can give a command/listener name to show its source code.
+Shows the source code of an instantcmd command or listener.
 
 .. note::
 
@@ -191,9 +196,71 @@ You can give a command/listener name to show its source code.
     
 **Arguments**
 
-* ``[commands]`` The command/listener name to get the source code from. 
-  If not given, a list of existing commands and listeners created with the cog
-  is shown.
+* ``[command]`` The command/listener name to get the source code from.
+
+.. _command-instnatcommand-env:
+
+~~~~~~~~~~~~~~~~~~
+instantcommand env
+~~~~~~~~~~~~~~~~~~
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]instantcommand env
+
+**Description**
+
+This will allow you to add custom values to the dev environment.
+
+Those values will be accessible with any dev command (``[p]debug``,
+``[p]eval``, ``[p]repl``), allowing you to make shortcuts to objects,
+import more libraries by default or having fixed values and functions.
+
+This group subcommand has itself 4 subcommands, similar to the base commands:
+
+*   ``[p]instantcommand env add``: Add a new env value
+*   ``[p]instantcommand env delete``: Remove an env value
+*   ``[p]instantcommand env list``: List all env values registered to Red
+*   ``[p]instantcommand env source``: Show an env value's source code
+
+Use ``[p]instantcmd env add <name>`` to add a new value, then the bot will
+prompt for the code of your value. **You must return a callable taking**
+:class:`ctx <redbot.core.commands.Context>` **as its sole parameter.**
+
+``<name>`` will be the name given to that value.
+
+.. warning:: You must have the dev mode enabled to use this. Make sure you're
+    running Red with the ``--dev`` flag.
+
+Once added, that value will stay available with your dev commands.
+
+For more informations, see the
+:meth:`add_dev_env_value <redbot.core.bot.Red.add_dev_env_value>` method.
+
+.. admonition:: Examples
+
+    *   ``[p]instantcmd env add me return lambda ctx: ctx.guild.me``
+
+    *   ``[p]instantcmd env add inspect import inspect
+        return lambda ctx: inspect``
+    
+    *   ``[p]instantcmd env add conf`` ::
+
+            def get_conf(ctx):
+                return ctx.bot.get_cog("MyCog").config
+
+            return get_conf
+    
+    *   ``[p]instantcmd env add smile`` ::
+
+            def smile(ctx):
+                def make_smile(text):
+                    return "😃" + text + "😃"
+                return make_smile
+            
+            return smile
 
 --------------------------
 Frequently Asked Questions
