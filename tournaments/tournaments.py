@@ -118,6 +118,19 @@ class Tournaments(
         self.registration_loop.start()
         self.registration_loop_task_errors = 0
 
+        # Useful dev tools
+        try:
+            self.bot.add_dev_env_value("tm_cog", lambda ctx: self)
+            self.bot.add_dev_env_value("tm", lambda ctx: self.tournaments.get(ctx.guild.id))
+        except AttributeError:
+            if self.bot.get_cog("Dev") is not None:
+                log.info(
+                    "Customizable dev environment not available. Update to Red 3.4.6 if "
+                    'you want the "tm" and "tm_cog" values available with the dev commands.'
+                )
+        except Exception as e:
+            log.error("Couldn't load dev env values.", exc_info=e)
+
     __version__ = "1.0.0"
     __author__ = ["retke (El Laggron)", "Wonderfall", "Xyleff"]
 
@@ -214,6 +227,13 @@ class Tournaments(
         # remove all handlers from the logger, this prevents adding
         # multiple times the same handler if the cog gets reloaded
         close_logger(log)
+
+        # Remove dev env values
+        try:
+            self.bot.remove_dev_env_value("tm")
+            self.bot.remove_dev_env_value("tm_cog")
+        except AttributeError:
+            pass
 
         tournament: Tournament
         for tournament in self.tournaments.values():
