@@ -1322,8 +1322,7 @@ class Tournament:
         self.participant_role: discord.Role = guild.get_role(data["roles"].get("participant"))
         self.streamer_role: discord.Role = guild.get_role(data["roles"].get("streamer"))
         self.to_role: discord.Role = guild.get_role(data["roles"].get("to"))
-        # self.tester_role: discord.Role = guild.get_role(data["roles"].get("tester"))
-        self.tester_role = None
+        self.tester_role: discord.Role = guild.get_role(data["roles"].get("tester"))
         self.credentials = data["credentials"]
         # fitting to achallonge's requirements
         self.credentials["login"] = self.credentials.pop("username")
