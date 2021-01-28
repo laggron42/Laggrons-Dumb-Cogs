@@ -930,7 +930,8 @@ Else you can specify the set you want to update as the first argument.
         await ctx.send(_("TOs were called. Prepare a new arena for them..."))
 
     @only_phase("ongoing")
-    @commands.command()
+    @mod_or_to()
+    @commands.command(hidden=True)
     @commands.guild_only()
     async def getset(self, ctx: commands.Context, set: Optional[int]):
         """
@@ -946,7 +947,8 @@ Else you can specify the set you want to update as the first argument.
         await ctx.channel.send("```py\n{match}\n```".format(match=match))
 
     @only_phase("ongoing")
-    @commands.command()
+    @mod_or_to()
+    @commands.command(hidden=True)
     @commands.guild_only()
     async def rmset(self, ctx: commands.Context, set: Optional[int]):
         """
