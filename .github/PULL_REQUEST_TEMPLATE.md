@@ -1,14 +1,18 @@
-<!--
-Hello and thanks for contributing to Laggron's Dumb Cogs
-Before submitting your PR, please fill out the following questions
-To tick a case, place an x between the brackets.
--->
-
 ## Pull request type
 
-- [ ] Feature addition
-- [ ] Bug fix
-- [ ] Grammar or minor corrections
+<!-- Short description of what this pull request is (new feature, bug fix, enhancement...) -->
 
 ## Description of the changes
 
+
+
+<!--
+## Check-list
+
+If useful, make a bullet list of the things done or not (will show up in the PR list). Example:
+
+- [x] Do thing 1
+- [x] Do thing 2
+- [ ] Testing
+- [ ] Docs
+-->
