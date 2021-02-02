@@ -70,7 +70,7 @@ class Tournaments(
             "to": None,
             "vipregister": None,
         },
-        "roles": {"participant": None, "streamer": None, "to": None},
+        "roles": {"participant": None, "streamer": None, "to": None, "tester": None},
         "tournament": {
             "name": None,
             "game": None,
