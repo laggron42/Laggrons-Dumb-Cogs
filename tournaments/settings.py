@@ -1074,7 +1074,10 @@ the start of the tournament, then closing 15 minutes before.
             else:
                 roles[k] = role.name
         roles = _(
-            "Participant : {participant}\n" "Streamer : {streamer}\n" "T.O. : {to}\n" "Tester : {tester}\n"
+            "Participant : {participant}\n"
+            "Streamer : {streamer}\n"
+            "T.O. : {to}\n"
+            "Tester : {tester}\n"
         ).format(**roles)
         embeds = []
         embed = discord.Embed(title=_("Parameters"))
