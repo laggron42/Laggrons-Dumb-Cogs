@@ -22,8 +22,7 @@ class Registration(MixinMeta):
         self.update_message_task_errors = 0
 
     # update message, also scheduler for registration/checkin start/stop
-    @tasks.loop(seconds=5)
-    async def registration_loop(self):
+    async def _registration_loop(self):
         for tournament in self.tournaments.values():
             if tournament.phase in ("ongoing", "finished"):
                 continue  # Tournament has its own loop for that part
@@ -75,17 +74,20 @@ class Registration(MixinMeta):
             if need_saving is True:
                 await tournament.save()
 
-    @registration_loop.error
-    async def on_loop_task_error(self, exception):
-        self.registration_loop_task_errors += 1
-        if self.registration_loop_task_errors >= MAX_ERRORS:
-            log.critical(
-                "Error in loop task. 3rd error, cancelling the task ...",
-                exc_info=exception,
-            )
-        else:
-            log.error("Error in loop task. Resuming ...", exc_info=exception)
-            self.registration_loop.start()
+    @tasks.loop(seconds=5)
+    async def registration_loop(self):
+        try:
+            await self._registration_loop()
+        except Exception as e:
+            self.registration_loop_task_errors += 1
+            if self.registration_loop_task_errors >= MAX_ERRORS:
+                log.critical(
+                    "Error in loop task. 3rd error, cancelling the task ...",
+                    exc_info=e,
+                )
+                self.registration_loop.stop()
+            else:
+                log.error("Error in loop task. Resuming ...", exc_info=e)
 
     @only_phase("pending", "register", "awaiting")
     @commands.command(name="in")
