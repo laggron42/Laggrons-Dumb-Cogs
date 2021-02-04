@@ -3,17 +3,19 @@ import logging
 import re
 import asyncio
 import achallonge
+import inspect
 
 from datetime import datetime
 from typing import Optional
 
 from redbot.core import commands
 from redbot.core import checks
-from redbot.core import Config
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
 from redbot.core.utils.predicates import MessagePredicate
-from redbot.core.utils.chat_formatting import pagify
+from redbot.core.utils.chat_formatting import humanize_timedelta, pagify
+from redbot.core.commands.converter import TimedeltaConverter
+from discord.ext.commands.view import StringView
 
 from .abc import MixinMeta
 from .objects import ChallongeTournament
@@ -36,15 +38,58 @@ class ChallongeURLConverter(commands.Converter):
         return link_id
 
 
-class GameSetting(commands.Converter):
+class ConfigSelector(commands.Converter):
+    """
+    Attempts to parse a config parameter inside the last argument, then return a cleaned string
+    to another given converter. We're looking for a -c/--config flag.
+
+    Basically we use discord.py's logic for parsing quoted strings, get what we're looking for,
+    if it exists, then make a new string cleaned from this argument and pass this to the proper
+    converter.
+
+    Ex: "--config Thing Some other stuff" -> "Some other stuff" config=Thing
+    "Here's more -c 'Another config' stuff !" -> "Here's more stuff !" config='Another config'
+    """
+
+    def __init__(self, converter=str):
+        self.converter = converter
+        self.config: str = None
+        self.arg = None
+
+    async def config_exists(self, ctx: commands.Context, name):
+        data = ctx.bot.get_cog("Tournaments").data
+        configs = await data.settings(ctx.guild.id).all()
+        if name not in configs:
+            raise commands.BadArgument(_("That config doesn't exist."))
+
     async def convert(self, ctx: commands.Context, argument: str):
-        config = Config.get_conf(None, identifier=260, cog_name="Tournaments")
-        games = await config.custom("GAME", ctx.guild.id).all()
-        if argument not in games:
-            raise commands.BadArgument(
-                _("This game doesn't exist. Check the name, and use quotes if there are spaces.")
-            )
-        return argument
+        # we use dpy's tools for parsing quoted strings
+        view = StringView(argument)
+        config = None
+        start, stop = 0, view.end
+        while view.eof is False and config is None:
+            view.skip_ws()
+            next_word = view.get_word()
+            if next_word == "-c" or next_word == "--config":
+                start = view.previous
+                view.skip_ws()
+                config = view.get_quoted_word()
+                await self.config_exists(ctx, config)
+                self.config = config
+                view.skip_ws()
+                stop = view.index
+                break
+        if self.config is not None:
+            argument = (argument[:start] + argument[stop:]).strip()
+        param: inspect.Parameter = list(ctx.command.params.values())[-1]
+        if not argument:
+            if param.default is param.empty:
+                raise commands.MissingRequiredArgument(param)
+            else:
+                self.arg = None if param.default.__class__ == self.__class__ else param.default
+        else:
+            self.arg = await ctx.command.do_conversion(ctx, self.converter, argument, param)
+        return self
 
 
 class Settings(MixinMeta):
