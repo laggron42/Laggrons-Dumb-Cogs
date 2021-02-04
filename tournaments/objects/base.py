@@ -1267,6 +1267,7 @@ class Tournament:
         bot: Red,
         guild: discord.Guild,
         config: Config,
+        custom_config: str,
         name: str,
         game: str,
         url: str,
@@ -1281,6 +1282,7 @@ class Tournament:
         self.bot = bot
         self.guild = guild
         self.data = config
+        self.config = custom_config
         self.name = name
         self.game = game
         self.url = url
@@ -1565,6 +1567,7 @@ class Tournament:
         else:
             offset = 0
         data = {
+            "config": self.config,
             "name": self.name,
             "game": self.game,
             "url": self.url,
