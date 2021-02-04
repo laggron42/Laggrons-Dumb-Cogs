@@ -11,7 +11,15 @@
 # pipenv
 Pipfile
 
+# JetBrains IDE properties
 .idea/
+
+# Sphinx docs
+.build
+_build
+
+# pygettext
+*.mo
 
 # the following is licensed under the Expat/MIT license:
 
