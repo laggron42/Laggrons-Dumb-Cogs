@@ -243,6 +243,68 @@ it directly.
         """
         pass
 
+    @tournamentset.group(name="config")
+    async def tournamentset_config(self, ctx: commands.Context):
+        """
+        Manage multiple configurations for tournaments.
+        """
+        pass
+
+    @tournamentset_config.command(name="add")
+    async def tournamentset_config_add(self, ctx: commands.Context, name: str):
+        """
+        Add a new configuration to your settings.
+
+        You will be able to set independent settings for this configuration.
+        If there are spaces in the name, wrap it in quotes.
+
+        If you use the name of a game, the bot will automatically switch to that config \
+        for related tournaments.
+        """
+        all_configs = await self.data.settings(ctx.guild.id).all()
+        if name in all_configs:
+            await ctx.send(_("That name is already used."))
+            return
+        # we set something useless so it registers the new entry
+        await self.data.settings(ctx.guild.id, name).delay.set(None)
+        await ctx.send(
+            _(
+                "New configuration {name} added.\n"
+                "If you want to define settings for that config, "
+                "add `--config {name}` at the end of your command.\n\n"
+                "Example: `{prefix}tset channels ruleset #my-channel --config {name}`"
+            )
+        )
+
+    @tournamentset_config.command(name="remove")
+    async def tournamentset_config_remove(self, ctx: commands.Context, name: str):
+        """
+        Remove a configuration.
+
+        If there are spaces in the name, wrap it in quotes.
+        """
+        async with self.data.settings(ctx.guild.id).all() as configs:
+            if name not in configs:
+                await ctx.send(_("That name doesn't exist."))
+                return
+            del configs[name]
+        await ctx.send(_("The config was successfully deleted."))
+
+    @tournamentset_config.command(name="list")
+    async def tournamentset_config_list(self, ctx: commands.Context):
+        """
+        List all existing configs.
+        """
+        all_configs = await self.data.settings(ctx.guild.id).all()
+        if all_configs is None:
+            await ctx.send(_("Nothing setup yet!"))
+            return
+        text = _("__List of configs:__\n\n")
+        for config in all_configs:
+            text += f"- {config}\n"
+        for page in pagify(text):
+            await ctx.send(page)
+
     @tournamentset.group(name="channels")
     async def tournamentset_channels(self, ctx: commands.Context):
         """
