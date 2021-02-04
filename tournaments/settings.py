@@ -5,7 +5,7 @@ import asyncio
 import achallonge
 import inspect
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from redbot.core import commands
@@ -314,7 +314,10 @@ it directly.
 
     @tournamentset_channels.command(name="announcements")
     async def tournamentset_channels_announcements(
-        self, ctx: commands.Context, *, channel: discord.TextChannel
+        self,
+        ctx: commands.Context,
+        *,
+        channel: ConfigSelector(discord.TextChannel) = ConfigSelector(),
     ):
         """
         Set the announcements channel.
@@ -324,18 +327,27 @@ it directly.
         - Tournament launch
         - Tournament end
         """
+        config = channel.config
+        channel = channel.arg
         guild = ctx.guild
+        if channel is None:
+            await self.data.settings(guild.id, config).channels.announcements.set(None)
+            await ctx.send(_("The channel was successfully removed."))
+            return
         if not channel.permissions_for(guild.me).read_messages:
             await ctx.send(_("I don't have the permission to read messages in this channel."))
         elif not channel.permissions_for(guild.me).send_messages:
             await ctx.send(_("I don't have the permission to send messages in this channel."))
         else:
-            await self.data.guild(guild).channels.announcements.set(channel.id)
+            await self.data.settings(guild.id, config).channels.announcements.set(channel.id)
             await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="checkin")
     async def tournamentset_channels_checkin(
-        self, ctx: commands.Context, *, channel: Optional[discord.TextChannel]
+        self,
+        ctx: commands.Context,
+        *,
+        channel: ConfigSelector(discord.TextChannel) = ConfigSelector(),
     ):
         """
         Set the check-in channel.
@@ -346,8 +358,10 @@ command to confirm their registration.
         Don't set this to keep the command channel unrestricted (can be typed anywhere).
         """
         guild = ctx.guild
+        config = channel.config
+        channel = channel.arg
         if channel is None:
-            await self.data.guild(guild).channels.checkin.set(None)
+            await self.data.settings(guild.id, config).channels.checkin.set(None)
             await ctx.send(
                 _(
                     "The check-in will now be available in any channel. Careful, "
@@ -360,12 +374,15 @@ command to confirm their registration.
         elif not channel.permissions_for(guild.me).send_messages:
             await ctx.send(_("I don't have the permission to send messages in this channel."))
         else:
-            await self.data.guild(guild).channels.checkin.set(channel.id)
+            await self.data.settings(guild.id, config).channels.checkin.set(channel.id)
             await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="register")
     async def tournamentset_channels_register(
-        self, ctx: commands.Context, *, channel: Optional[discord.TextChannel]
+        self,
+        ctx: commands.Context,
+        *,
+        channel: ConfigSelector(discord.TextChannel) = ConfigSelector(),
     ):
         """
         Set the registration channel.
@@ -376,8 +393,10 @@ enter a command to register or unregister.
         Don't set this to keep the command channel unrestricted (can be typed anywhere).
         """
         guild = ctx.guild
+        config = channel.config
+        channel = channel.arg
         if channel is None:
-            await self.data.guild(guild).channels.register.set(None)
+            await self.data.settings(guild.id, config).channels.register.set(None)
             await ctx.send(
                 _(
                     "The registration will now be available in any channel. Careful, "
@@ -390,12 +409,15 @@ enter a command to register or unregister.
         elif not channel.permissions_for(guild.me).send_messages:
             await ctx.send(_("I don't have the permission to send messages in this channel."))
         else:
-            await self.data.guild(guild).channels.register.set(channel.id)
+            await self.data.settings(guild.id, config).channels.register.set(channel.id)
             await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="scores")
     async def tournamentset_channels_scores(
-        self, ctx: commands.Context, *, channel: Optional[discord.TextChannel]
+        self,
+        ctx: commands.Context,
+        *,
+        channel: ConfigSelector(discord.TextChannel) = ConfigSelector(),
     ):
         """
         Set the score entry channel.
@@ -405,8 +427,10 @@ enter a command to register or unregister.
         Don't set this to keep the command channel unrestricted (can be typed anywhere).
         """
         guild = ctx.guild
+        config = channel.config
+        channel = channel.arg
         if channel is None:
-            await self.data.guild(guild).channels.scores.set(None)
+            await self.data.settings(guild.id, config).channels.scores.set(None)
             await ctx.send(
                 _(
                     "The score entry will now be available in any channel. Careful, "
@@ -419,44 +443,83 @@ enter a command to register or unregister.
         elif not channel.permissions_for(guild.me).send_messages:
             await ctx.send(_("I don't have the permission to send messages in this channel."))
         else:
-            await self.data.guild(guild).channels.scores.set(channel.id)
+            await self.data.settings(guild.id, config).channels.scores.set(channel.id)
             await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="queue")
     async def tournamentset_channels_queue(
-        self, ctx: commands.Context, *, channel: discord.TextChannel
+        self,
+        ctx: commands.Context,
+        *,
+        channel: ConfigSelector(discord.TextChannel) = ConfigSelector(),
     ):
         """
-        Define the set announcement channel.
+        Define the channel for announcing new sets.
         """
         guild = ctx.guild
+        config = channel.config
+        channel = channel.arg
+        if channel is None:
+            await self.data.settings(guild.id, config).channels.queue.set(None)
+            await ctx.send(_("The channel was successfully removed."))
+            return
         if not channel.permissions_for(guild.me).read_messages:
             await ctx.send(_("I don't have the permission to read messages in this channel."))
         elif not channel.permissions_for(guild.me).send_messages:
             await ctx.send(_("I don't have the permission to send messages in this channel."))
         else:
-            await self.data.guild(guild).channels.queue.set(channel.id)
+            await self.data.settings(guild.id, config).channels.queue.set(channel.id)
+            await ctx.send(_("The channel was successfully set."))
+
+    @tournamentset_channels.command(name="ruleset")
+    async def tournamentset_channels_ruleset(
+        self,
+        ctx: commands.Context,
+        *,
+        channel: ConfigSelector(discord.TextChannel) = ConfigSelector(),
+    ):
+        """
+        Set the channel of the rules for your tournament.
+
+        Example: `[p]tset ruleset #tournament-rules`
+        """
+        guild = ctx.guild
+        config = channel.config
+        channel = channel.arg
+        if channel is None:
+            await self.data.settings(guild.id, config).channels.ruleset.set(None)
+            await ctx.send(_("The channel was successfully removed."))
+        else:
+            await self.data.settings(guild.id, config).channels.ruleset.set(channel.arg.id)
             await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="stream")
     async def tournamentset_channels_stream(
-        self, ctx: commands.Context, *, channel: discord.TextChannel
+        self,
+        ctx: commands.Context,
+        *,
+        channel: ConfigSelector(discord.TextChannel) = ConfigSelector(),
     ):
         """
         Set the stream announcement channel.
         """
         guild = ctx.guild
-        if not channel.permissions_for(guild.me).read_messages:
+        config = channel.config
+        channel = channel.arg
+        if channel is None:
+            await self.data.settings(guild.id, config).channels.stream.set(None)
+            await ctx.send(_("The channel was successfully removed."))
+        elif not channel.permissions_for(guild.me).read_messages:
             await ctx.send(_("I don't have the permission to read messages in this channel."))
         elif not channel.permissions_for(guild.me).send_messages:
             await ctx.send(_("I don't have the permission to send messages in this channel."))
         else:
-            await self.data.guild(guild).channels.stream.set(channel.id)
+            await self.data.settings(guild.id, config).channels.stream.set(channel.id)
             await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="to")
     async def tournamentset_channels_to(
-        self, ctx: commands.Context, *, channel: discord.TextChannel
+        self, ctx: commands.Context, *, channel: ConfigSelector(discord.TextChannel)
     ):
         """
         Set the T.O. channel.
@@ -471,17 +534,22 @@ enter a command to register or unregister.
         The Red permissions system will define if someone has access to the commands.
         """
         guild = ctx.guild
+        config = channel.config
+        channel = channel.arg
         if not channel.permissions_for(guild.me).read_messages:
             await ctx.send(_("I don't have the permission to read messages in this channel."))
         elif not channel.permissions_for(guild.me).send_messages:
             await ctx.send(_("I don't have the permission to send messages in this channel."))
         else:
-            await self.data.guild(guild).channels.to.set(channel.id)
+            await self.data.settings(guild.id, config).channels.to.set(channel.id)
             await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="vipregister", hidden=True)
     async def tournamentset_channels_vipregister(
-        self, ctx: commands.Context, *, channel: Optional[discord.TextChannel]
+        self,
+        ctx: commands.Context,
+        *,
+        channel: ConfigSelector(discord.TextChannel) = ConfigSelector(),
     ):
         """
         Set the VIP registration channel.
@@ -491,8 +559,10 @@ there is able to use `[p]in` as soon as the tournament is setup, regardless of t
 of the other registrations channel.
         """
         guild = ctx.guild
+        config = channel.config
+        channel = channel.arg
         if channel is None:
-            await self.data.guild(guild).channels.vipregister.set(None)
+            await self.data.settings(guild.id, config).channels.vipregister.set(None)
             await ctx.send(_("VIP registration channel removed."))
             return
         if not channel.permissions_for(guild.me).read_messages:
@@ -500,12 +570,15 @@ of the other registrations channel.
         elif not channel.permissions_for(guild.me).send_messages:
             await ctx.send(_("I don't have the permission to send messages in this channel."))
         else:
-            await self.data.guild(guild).channels.vipregister.set(channel.id)
+            await self.data.settings(guild.id, config).channels.vipregister.set(channel.id)
             await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="category")
     async def tournamentset_channels_category(
-        self, ctx: commands.Context, *, category: discord.CategoryChannel
+        self,
+        ctx: commands.Context,
+        *,
+        category: ConfigSelector(discord.CategoryChannel) = ConfigSelector(),
     ):
         """
         Set the category of your tournaments channels.
@@ -516,8 +589,14 @@ of the other registrations channel.
         You can either give the complete name of the category, or its ID.
         """
         guild = ctx.guild
-        await self.data.guild(guild).channels.category.set(category.id)
-        await ctx.send(_("The category was successfully set."))
+        config = category.config
+        category = category.arg
+        if category is None:
+            await self.data.settings(guild.id, config).channels.category.set(None)
+            await ctx.send(_("The category was successfully removed."))
+        else:
+            await self.data.settings(guild.id, config).channels.category.set(category.id)
+            await ctx.send(_("The category was successfully set."))
 
     @tournamentset.group(name="roles")
     async def tournamentset_roles(self, ctx: commands.Context):
@@ -532,7 +611,9 @@ with the `[p]set addadminrole` and `[p]set addmodrole` commands.
         pass
 
     @tournamentset_roles.command(name="participant")
-    async def tournamentset_roles_participant(self, ctx: commands.Context, *, role: discord.Role):
+    async def tournamentset_roles_participant(
+        self, ctx: commands.Context, *, role: ConfigSelector(discord.Role)
+    ):
         """
         Set the participant role in the tournament.
 
@@ -540,28 +621,57 @@ with the `[p]set addadminrole` and `[p]set addmodrole` commands.
 tournament ends.
         """
         guild = ctx.guild
-        if role.position >= guild.me.top_role.position:
+        if role.arg.position >= guild.me.top_role.position:
             await ctx.send(_("This role is too high. Place it below my main role."))
             return
-        await self.data.guild(guild).roles.participant.set(role.id)
+        await self.data.settings(guild.id, role.config).roles.participant.set(role.id)
         await ctx.send(_("The role was successfully set."))
 
+    @tournamentset_roles.command(name="player")
+    async def tournamentset_roles_player(
+        self, ctx: commands.Context, *, role: ConfigSelector(discord.Role) = ConfigSelector()
+    ):
+        """
+        Define the role for players that could register to tournaments.
+
+        This role will be used for:
+        - Setting the permissions of the registration channel when they are opened
+        - Mention players when opening the registration
+
+        Give the entire name of the role or its ID.
+
+        If this role isn't set, the @everyone role is used by default (without pinging).
+        Use this command without role to reset it to its initial state.
+        """
+        guild = ctx.guild
+        if role.arg is None:
+            await self.data.settings(guild.id, role.config).role.set(None)
+            await ctx.send(_("The role was reset to its initial state."))
+        else:
+            await self.data.settings(guild.id, role.config).role.set(role.arg.id)
+            await ctx.send(_("The role was successfully set."))
+
     @tournamentset_roles.command(name="streamer")
-    async def tournamentset_roles_streamer(self, ctx: commands.Context, *, role: discord.Role):
+    async def tournamentset_roles_streamer(
+        self, ctx: commands.Context, *, role: ConfigSelector(discord.Role) = ConfigSelector()
+    ):
         """
         Set the streamer role.
 
         This role will give access to the sets channels, and the streamer commands.
         """
         guild = ctx.guild
-        if role.position >= guild.me.top_role.position:
-            await ctx.send(_("This role is too high. Place it below my main role."))
-            return
-        await self.data.guild(guild).roles.streamer.set(role.id)
-        await ctx.send(_("The role was successfully set."))
+        if role.arg is None:
+            await self.data.settings(guild.id, role.config).roles.streamer.set(None)
+            await ctx.send(_("The role was reset to its initial state."))
+        else:
+            await self.data.settings(guild.id, role.config).roles.streamer.set(role.arg.id)
+            await ctx.send(_("The role was successfully set."))
 
     @tournamentset_roles.command(name="to")
-    async def tournamentset_roles_to(self, ctx: commands.Context, *, role: discord.Role):
+    async def tournamentset_roles_to(
+        self, ctx: commands.Context, *, role: ConfigSelector(discord.Role)
+    ):
         """
         Set the T.O. role (Tournament Organizer).
 
@@ -574,6 +684,8 @@ tournament ends.
 moderators and admins.
         """
         guild = ctx.guild
+        config = role.config
+        role = role.arg
         if role.permissions.kick_members or role.permissions.manage_roles:
             # we consider this role is a mod role
             result = await prompt_yes_or_no(
@@ -595,186 +707,12 @@ moderators and admins.
         if role.position >= guild.me.top_role.position:
             await ctx.send(_("This role is too high. Place it below my main role."))
             return
-        await self.data.guild(guild).roles.to.set(role.id)
+        await self.data.settings(guild.id, config).roles.to.set(role.id)
         await ctx.send(_("The role was successfully set."))
 
-    @tournamentset.group(name="games")
-    async def tournamentset_games(self, ctx: commands.Context):
-        """
-        Configure the different games of the tournaments.
-
-        First use `[p]tset games add`, then an explaination will be given on the \
-other commands.
-        """
-        pass
-
-    @tournamentset_games.command(name="add")
-    async def tournamentset_games_add(self, ctx: commands.Context, *, name: str):
-        """
-        Add a new game to the list.
-
-        The name must be the exact same as how it is shown on Challonge.
-
-        Example: "Super Smash Bros. Ultimate"
-        """
-        guild = ctx.guild
-        games = await self.data.custom("GAME", guild.id).all()
-        if name in games:
-            await ctx.send(
-                _(
-                    "This game already exists.\n"
-                    "Delete it with `{prefix}tset games delete` or edit its name "
-                    "with `{prefix}tset games edit`."
-                ).format(prefix=ctx.clean_prefix)
-            )
-            return
-        # doing this ensures the creation of the identifier
-        await self.data.custom("GAME", guild.id, name).role.set(None)
-        await ctx.send(
-            _(
-                "Game added to the list!\n\n"
-                "You can now do multiple settings:\n"
-                "- `{prefix}tset games ruleset` : Set the ruleset channel\n"
-                "- `{prefix}tset games role` : Set the player role\n"
-                "- `{prefix}tset games baninfo` : Infos on the ban mode (ex: 2-3-1)\n"
-                "- `{prefix}tset games stages` : List of authorized stages\n"
-                "- `{prefix}tset games counters` : List of authorized counters\n"
-                "- `{prefix}tset games ranking` : Braacket settings\n\n"
-                "- `{prefix}tset games edit` : Edit the name of this game\n"
-                "- `{prefix}tset games delete` : Delete this game from the list\n\n"
-                "Those settings are optionnal, but they will bring more details to the player "
-                "and more commands (such as `{prefix}stages` or `{prefix}rules`).\n"
-                "Careful, if the role isn't set, the @everyone role will be used by default "
-                "for permissions when starting the registration."
-            ).format(prefix=ctx.clean_prefix)
-        )
-
-    @tournamentset_games.command(name="edit")
-    async def tournamentset_games_edit(
-        self, ctx: commands.Context, old_name: GameSetting, new_name: str
-    ):
-        """
-        Edit the name of a game in the list.
-
-        Give the old name of the game, then its new name.
-        Use quotes if there are spaces.
-
-        Example: [p]tset games edit "Super Smqsh Bros. Ultimate" \
-"Super Smash Bros Ultimate"
-        """
-        guild = ctx.guild
-        async with self.data.custom("GAME", guild.id).all() as games:
-            content = games[old_name]
-            games[new_name] = content
-            del games[old_name]
-        await ctx.send(_("The name was successfully edited."))
-
-    @tournamentset_games.command(name="delete", aliases=["del", "remove"])
-    async def tournamentset_games_delete(self, ctx: commands.Context, game: GameSetting):
-        """
-        Delete a game from the list.
-        """
-        guild = ctx.guild
-        async with self.data.custom("GAME", guild.id).all() as games:
-            del games[game]
-        await ctx.send(_("The game was successfully removed from the list."))
-
-    @tournamentset_games.command(name="list")
-    async def tournamentset_games_list(self, ctx: commands.Context):
-        """
-        Display all saved games.
-        """
-        guild = ctx.guild
-        async with self.data.custom("GAME", guild.id).all() as games:
-            if not games:
-                await ctx.send(_("No saved game."))
-                return
-            text = _("List of saved games:\n\n")
-            for game in games.keys():
-                text += f"- {game}\n"
-        for page in pagify(text):
-            await ctx.send(page)
-
-    @tournamentset_games.command(name="show")
-    async def tournamentset_games_show(self, ctx: commands.Context, game: GameSetting):
-        """
-        Show the settings of a game
-        """
-        guild = ctx.guild
-        if not ctx.channel.permissions_for(guild.me).embed_links:
-            await ctx.send(_("I need the `Embed links` permission in this channel."))
-            return
-        data = await self.data.custom("GAME", guild.id, game).all()
-        role_id = data["role"]
-        if role_id is None:
-            role = "@everyone"
-        else:
-            role = guild.get_role(role_id)
-            role = role.name if role else _("Lost role.")
-        ruleset = guild.get_channel(data["ruleset"])
-        ruleset = ruleset.mention if ruleset else _("Lost channel.")
-        baninfo = data["baninfo"] if data["baninfo"] else _("Not set.")
-        embed = discord.Embed(title=_("Settings of game {game}").format(game=game))
-        embed.description = _(
-            "Player role: {role}\n" "Rules channel: {channel}\n" "Ban info: {baninfo}"
-        ).format(role=role, channel=ruleset, baninfo=baninfo)
-        if data["stages"]:
-            embed.add_field(name=_("Stages"), value="\n".join([f"- {x}" for x in data["stages"]]))
-        if data["counterpicks"]:
-            embed.add_field(
-                name=_("Counters"), value="\n".join([f"- {x}" for x in data["counterpicks"]])
-            )
-        if data["ranking"]["league_name"]:
-            embed.add_field(
-                name=_("Ranking league"),
-                value=_("Name: {name}\nID: {id}").format(
-                    name=data["ranking"]["league_name"], id=data["ranking"]["league_id"]
-                ),
-            )
-        else:
-            embed.add_field(name=_("Ranking league"), value=_("Not set."))
-        await ctx.send(embed=embed)
-
-    @tournamentset_games.command(name="ruleset")
-    async def tournamentset_games_ruleset(
-        self, ctx: commands.Context, game: GameSetting, *, channel: discord.TextChannel
-    ):
-        """
-        Set the channel of the rules for a game.
-
-        Example: `[p]tset games ruleset "Super Smash Bros. Ultimate" #tournament-rules`
-        """
-        guild = ctx.guild
-        await self.data.custom("GAME", guild.id, game).ruleset.set(channel.id)
-        await ctx.send(_("The channel was successfully set."))
-
-    @tournamentset_games.command(name="role")
-    async def tournamentset_games_role(
-        self, ctx: commands.Context, game: GameSetting, *, role: Optional[discord.Role]
-    ):
-        """
-        Define the player role.
-
-        This role will be used for:
-        - Setting the permissions of the registration channel when they are opened
-        - Mention players when opening the registration
-
-        Give the entire name of the role or its ID.
-
-        If this role isn't set, the @everyone role is used by default (without pinging).
-        Use this command without role to reset it to its initial state.
-        """
-        guild = ctx.guild
-        if role is None:
-            await self.data.custom("GAME", guild.id, game).role.set(None)
-            await ctx.send(_("The role was reset to its initial state."))
-        else:
-            await self.data.custom("GAME", guild.id, game).role.set(role.id)
-            await ctx.send(_("The role was successfully set."))
-
-    @tournamentset_games.command(name="baninfo")
-    async def tournamentset_games_baninfo(
-        self, ctx: commands.Context, game: GameSetting, *, text: Optional[str]
+    @tournamentset.command(name="baninfo")
+    async def tournamentset_baninfo(
+        self, ctx: commands.Context, *, text: ConfigSelector = ConfigSelector()
     ):
         """
         Define infos on the bans (ex: 2-3-1)
@@ -786,6 +724,8 @@ other commands.
         ":game_die: **[player 1]** was picked to begin the bans *(2-3-1)*"
         """
         guild = ctx.guild
+        config = text.config
+        text = text.arg
         if text is not None and len(text) > 256:
             await ctx.send(
                 _(
@@ -794,57 +734,60 @@ other commands.
                 ).format(prefix=ctx.clean_prefix)
             )
             return
-        await self.data.custom("GAME", guild.id, game).baninfo.set(text)
+        await self.data.settings(guild.id, config).baninfo.set(text)
         if text is not None:
             await ctx.send(_("The text was successfully set."))
         else:
             await ctx.send(_("The text was successfully deleted."))
 
-    @tournamentset_games.command(name="stages")
-    async def tournamentset_games_stages(
-        self, ctx: commands.Context, game: GameSetting, *stages: str
+    @tournamentset.command(name="stages")
+    async def tournamentset_stages(
+        self, ctx: commands.Context, *, stages: ConfigSelector = ConfigSelector()
     ):
         """
         Define the list of authorized stages.
 
-        Give the stages one after another, with quotes if there are spaces.
+        Give the stages one after another, separated by a comma.
 
-        Example : `[p]tset games stages "Super Smash Bros. Ultimate" Battlefield \
-"Final Destination" "Pokémon Stadium 2"`
+        Example : `[p]tset stages Battlefield, Final Destination, Pokémon Stadium 2`
         """
         guild = ctx.guild
-        await self.data.custom("GAME", guild.id, game).stages.set(stages)
-        if stages:
-            await ctx.send(_("The stages were successfully set."))
-        else:
+        if stages.arg is None:
+            await self.data.settings(guild.id, stages.config).stages.set(None)
             await ctx.send(_("The stage list was deleted."))
+            return
+        selection = [x.strip() for x in stages.arg.split(",")]
+        await self.data.settings(guild.id, stages.config).stages.set(selection)
+        await ctx.send(_("The stages were successfully set."))
 
-    @tournamentset_games.command(name="counters")
-    async def tournamentset_games_counters(
-        self, ctx: commands.Context, game: GameSetting, *counters: str
+    @tournamentset.command(name="counters")
+    async def tournamentset_counters(
+        self, ctx: commands.Context, *, counters: ConfigSelector = ConfigSelector()
     ):
         """
         Define the list of authorized counter stages.
 
-        Give the stages one after another, with quotes if there are spaces.
+        Give the stages one after another, separated by a comma.
 
-        Example : `[p]tset games counters "Super Smash Bros. Ultimate" Battlefield \
-"Final Destination" "Pokémon Stadium 2"`
+        Example : `[p]tset counters Battlefield, Final Destination, Pokémon Stadium 2`
         """
         guild = ctx.guild
-        await self.data.custom("GAME", guild.id, game).counterpicks.set(counters)
-        if counters:
-            await ctx.send(_("The stages were successfully set."))
-        else:
+        if counters.arg is None:
+            await self.data.settings(guild.id, counters.config).stages.set(None)
             await ctx.send(_("The stage list was deleted."))
+            return
+        selection = [x.strip() for x in counters.arg.split(",")]
+        await self.data.settings(guild.id, counters.config).counterpicks.set(selection)
+        await ctx.send(_("The stages were successfully set."))
 
-    @tournamentset_games.command(name="ranking")
-    async def tournamentset_games_ranking(
+    @tournamentset.command(name="ranking")
+    async def tournamentset_ranking(
         self,
         ctx: commands.Context,
-        game: GameSetting,
         league_name: Optional[str],
         league_id: Optional[str],
+        *,
+        config: ConfigSelector = ConfigSelector(),
     ):
         """
         Define Braacket ranking informations for a game.
@@ -856,7 +799,7 @@ other commands.
         """
         guild = ctx.guild
         if league_name is None and league_id is None:
-            await self.data.custom("GAME", guild.id, game).ranking.set(
+            await self.data.settings(guild.id, config.config).ranking.set(
                 {"league_name": None, "league_id": None}
             )
             await ctx.send(_("Ranking informations deleted."))
@@ -864,106 +807,133 @@ other commands.
             # only one value provided
             await ctx.send_help()
         else:
-            await self.data.custom("GAME", guild.id, game).ranking.set(
+            await self.data.settings(guild.id, config.config).ranking.set(
                 {"league_name": league_name, "league_id": league_id}
             )
             await ctx.send(_("The ranking informations were successfully set."))
 
     @tournamentset.command(name="delay")
-    async def tournamentset_delay(self, ctx: commands.Context, delay: int):
+    async def tournamentset_delay(
+        self,
+        ctx: commands.Context,
+        *,
+        delay: ConfigSelector(TimedeltaConverter),
+    ):
         """
         Set the delay before automatically DQing an inactive player.
 
-        This delay is in minutes.
-        Give 0 minutes to disable.
+        Example formats: `30s`, `5m`, `1h`, `10m30s`...
+        Set a time of `0s` to disable
         """
         guild = ctx.guild
-        if delay < 0:
+        config = delay.config
+        delay: timedelta = config.arg
+        if delay.total_seconds() < 0:
             await ctx.send(_("This can't be negative!"))
             return
-        await self.data.guild(guild).delay.set(delay)
-        if delay == 0:
+        await self.data.settings(guild.id, config).delay.set(delay.total_seconds())
+        if delay.total_seconds() == 0:
             await ctx.send(_("Automatic DQ is now disabled."))
         else:
             await ctx.send(
                 _(
-                    "Done. If a player doesn't respond in his channel {delay} minutes "
+                    "Done. If a player doesn't respond in his channel {delay} "
                     "after its creation, he will automatically be disqualified."
-                ).format(delay=delay)
+                ).format(delay=humanize_timedelta(delay))
             )
 
     @tournamentset.command(name="warntime")
     async def tournamentset_warntime(
         self,
         ctx: commands.Context,
-        time_until_warn_in_channel: int,
-        time_until_to_warn: int,
-        mode: str = "bo3",
+        time_until_warn_in_channel: TimedeltaConverter,
+        time_until_to_warn: TimedeltaConverter,
+        mode: ConfigSelector = ConfigSelector(),
     ):
         """
         Set the time until warning for too long matches.
 
         You set two delays: the delay until warning the players about the length of their match, \
-then the delay until warning the T.O.s about this match, both in minutes.
+then the delay until warning the T.O.s about this match.
         The second delay is in addition to the first one.
         You also have to set the mode, either "bo3" or "bo5". Defaults to "bo3" if not set.
-        Put 0 to one of the values (or both) to disable that warn.
+        Put `0s` to one of the values (or both) to disable that warn.
 
         Examples:
-        `[p]tset warntime 30 10`: will warn the players 30 minutes after the start of their \
+        `[p]tset warntime 30m 10m`: will warn the players 30 minutes after the start of their \
 match, then warn the T.O.s 10 minutes after the first warn (so 40 minutes in total).
-        `[p]tset warntime 40 10 bo5`: same as above, but for bo5 matches instead, and with 40 \
-minutes before the first one instead of 30.
+        `[p]tset warntime 1h 10m bo5`: same as above but for bo5 matches instead, and with a one \
+hour limit instead of 30 minutes.
         """
         guild = ctx.guild
+        config = mode.config
+        mode = mode.arg or "bo3"
         if mode not in ("bo3", "bo5"):
             await ctx.send(_('The mode must either be "bo3" or "bo5".'))
             return
-        await self.data.guild(guild).time_until_warn.set_raw(
-            mode, value=(time_until_warn_in_channel, time_until_to_warn)
+        await self.data.settings(guild.id, config).time_until_warn.set_raw(
+            mode,
+            value=(time_until_warn_in_channel.total_seconds(), time_until_to_warn.total_seconds()),
         )
         await ctx.send(_("New values have been set."))
 
     @tournamentset.command(name="register")
-    async def tournamentset_register(self, ctx: commands.Context, opening: int, closing: int):
+    async def tournamentset_register(
+        self,
+        ctx: commands.Context,
+        opening: TimedeltaConverter,
+        *,
+        closing: ConfigSelector(TimedeltaConverter),
+    ):
         """
         Set the opening and closing time of the registration.
 
-        You need to give the number of minutes before the start of the tournament for each value.
+        You need to give the delay before the start of the tournament for each value.
         First the opening hour, then the closing hour.
 
         Date and time of the tournament's start is the one defined on Challonge.
 
-        To disable the automatic opening/closing of the registration, give 0 for its \
+        To disable the automatic opening/closing of the registration, give 0s for its \
 corresponding value.
 
-        Example: `[p]tset register 2880 10` = Opening of the registration 2880 minutes (2 days) \
+        Example: `[p]tset register 2d 10m` = Opening of the registration 2 days \
 before the opening of the tournament, then closing 10 minutes before.
         """
         guild = ctx.guild
-        if closing != 0 and opening != 0 and closing >= opening:
+        config = closing.config
+        closing: timedelta = closing.arg
+        if (
+            closing.total_seconds() != 0
+            and opening.total_seconds() != 0
+            and closing.total_seconds() >= opening.total_seconds()
+        ):
             await ctx.send(_("Opening must occur before closing time."))
             return
-        async with self.data.guild(guild).register() as register:
-            if opening != 0 and register["second_opening"] >= opening:
+        async with self.data.settings(guild.id, config).register() as register:
+            if (
+                opening.total_seconds() != 0
+                and register["second_opening"] >= opening.total_seconds()
+            ):
                 await ctx.send(
                     _("Opening must occur before second attempt (two-stage registrations).")
                 )
                 return
-            register["opening"] = opening
-            register["closing"] = closing
-        if opening == 0 and closing == 0:
+            register["opening"] = opening.total_seconds()
+            register["closing"] = closing.total_seconds()
+        if opening.total_seconds() == 0 and closing.total_seconds() == 0:
             await ctx.send(_("Automatic registration is now disabled."))
         else:
             await ctx.send(
                 _(
-                    "Registration will now open {opening} minutes before the start and close "
-                    "{closing} minutes before the start of the tournament."
-                ).format(opening=opening, closing=closing)
+                    "Registration will now open {opening} before the start and close "
+                    "{closing} before the start of the tournament."
+                ).format(opening=humanize_timedelta(opening), closing=humanize_timedelta(closing))
             )
 
     @tournamentset.command(name="autostopregister")
-    async def tournamentset_autostopregister(self, ctx: commands.Context, enable: bool = None):
+    async def tournamentset_autostopregister(
+        self, ctx: commands.Context, enable: ConfigSelector(bool) = ConfigSelector()
+    ):
         """
         End registration when the limit is reached.
 
@@ -971,8 +941,8 @@ before the opening of the tournament, then closing 10 minutes before.
         This is useful with two-stage registrations (see `[p]help tset twostageregister`).
         """
         guild = ctx.guild
-        current = await self.data.guild(guild).autostop_register()
-        if enable is None:
+        current = await self.data.settings(guild.id, enable.config).autostop_register()
+        if enable.arg is None:
             await ctx.send(
                 _("The bot currently ends registrations automatically. ")
                 if current
@@ -981,13 +951,13 @@ before the opening of the tournament, then closing 10 minutes before.
                     "If you want to change this, type `{prefix}tset autostopregister {opposite}`."
                 ).format(prefix=ctx.clean_prefix, opposite=not current)
             )
-        elif enable:
-            await self.data.guild(guild).autostop_register.set(True)
+        elif enable.arg is True:
+            await self.data.settings(guild.id, enable.config).autostop_register.set(True)
             await ctx.send(
                 _("Done. Registrations will now end as soon as your participants cap is reached.")
             )
         else:
-            await self.data.guild(guild).autostop_register.set(False)
+            await self.data.settings(guild.id, enable.config).autostop_register.set(False)
             await ctx.send(
                 _(
                     "Done. Registrations will continue regardless of the limit (someone still "
@@ -996,7 +966,9 @@ before the opening of the tournament, then closing 10 minutes before.
             )
 
     @tournamentset.command(name="twostageregister")
-    async def tournamentset_twostageregister(self, ctx: commands.Context, second_opening: int):
+    async def tournamentset_twostageregister(
+        self, ctx: commands.Context, second_opening: ConfigSelector(TimedeltaConverter)
+    ):
         """
         Give a second opening attempt hour for registrations.
 
@@ -1011,11 +983,13 @@ have registrations that can look like this:
         - **Set up last minute registrations** where members don't have to check and fill your \
 bracket.
 
-        Provide a number of **minutes** before tournament start for this second opening.
-        Set 0 to disable.
+        Provide the duration before tournament start for this second opening (ex: "1h", "15m").
+        Set 0s to disable.
         """
         guild = ctx.guild
-        async with self.data.guild(guild).register() as register:
+        config = second_opening.config
+        second_opening = second_opening.arg.total_seconds()
+        async with self.data.settings(guild.id, config) as register:
             if second_opening != 0 and second_opening >= register["opening"]:
                 await ctx.send(_("Second opening must occur after first opening."))
                 return
@@ -1029,34 +1003,44 @@ bracket.
             await ctx.send(_("Two stage registration is now enabled with your second opening."))
 
     @tournamentset.command(name="checkin")
-    async def tournamentset_checkin(self, ctx: commands.Context, opening: int, closing: int):
+    async def tournamentset_checkin(
+        self,
+        ctx: commands.Context,
+        opening: TimedeltaConverter,
+        *,
+        closing: ConfigSelector(TimedeltaConverter),
+    ):
         """
         Set the opening and closing time of the check-in.
 
-        You need to give the number of minutes before the start of the tournament for each value.
+        You need to give the delay before the start of the tournament for each value.
         First the opening hour, then the closing hour.
 
         Date and time of the tournament's start is the one defined on Challonge.
 
-        To disable the check-in, give 0 for both values.
+        To disable the check-in, give 0s for both values.
 
-        Example: `[p]tset checkin 60 15` = Opening of the check-in 60 minutes before \
+        Example: `[p]tset checkin 1h 15m` = Opening of the check-in one hour before \
 the start of the tournament, then closing 15 minutes before.
         """
         guild = ctx.guild
-        await self.data.guild(guild).checkin.set({"opening": opening, "closing": closing})
-        if opening == 0 and closing == 0:
+        config = closing.config
+        closing = closing.arg
+        await self.data.settings(guild.id, config).checkin.set(
+            {"opening": opening.total_seconds(), "closing": closing.total_seconds()}
+        )
+        if opening.total_seconds() == 0 and closing.total_seconds() == 0:
             await ctx.send(_("The check-in is now disabled."))
         else:
             await ctx.send(
                 _(
-                    "Check-in will now open {opening} minutes before the start and closed "
-                    "{closing} minutes before the start of the tournament."
-                ).format(opening=opening, closing=closing)
+                    "Check-in will now open {opening} before the start and close "
+                    "{closing} before the start of the tournament."
+                ).format(opening=humanize_timedelta(opening), closing=humanize_timedelta(closing))
             )
 
     @tournamentset.command(name="startbo5")
-    async def tournamentset_startbo5(self, ctx: commands.Context, level: int):
+    async def tournamentset_startbo5(self, ctx: commands.Context, level: ConfigSelector(int)):
         """
         Define when the sets switch to Best of 5 format (BO5)
 
@@ -1067,19 +1051,28 @@ the start of the tournament, then closing 15 minutes before.
         -1 = top 12...
         """
         guild = ctx.guild
-        await self.data.guild(guild).start_bo5.set(level)
+        await self.data.settings(guild.id, level.config).start_bo5.set(level.arg)
         await ctx.send(_("The level was successfully set."))
 
     @tournamentset.command(name="settings")
-    async def tournamentset_settings(self, ctx: commands.Context):
+    async def tournamentset_settings(
+        self, ctx: commands.Context, *, config: ConfigSelector = ConfigSelector()
+    ):
         """
         Show all settings for this server.
+
+        If you want to display the settings for a specific configuration, use `[p]tset settings \
+--config "Your config name"`
         """
         guild = ctx.guild
         if not ctx.channel.permissions_for(guild.me).embed_links:
             await ctx.send(_("I need the `Embed links` permission in this channel."))
             return
-        data = await self.data.guild(guild).all()
+        data = await self._get_settings(ctx.guild.id, config.config)
+        if config.config is not None:
+            config = _('Displaying configuration "{name}".').format(name=config.config)
+        else:
+            config = _("Displaying the default configuration.")
 
         def get_warn_time(mode):
             _data = data["time_until_warn"][mode]
@@ -1093,9 +1086,11 @@ the start of the tournament, then closing 15 minutes before.
                 text += _("T.O. warn: disabled")
             return text
 
-        no_games = len(await self.data.custom("GAME", guild.id).all())
-        if data["credentials"]["api"]:
-            challonge = _("Configured")
+        no_configs = len(await self.data.settings(guild.id).all()) - 1
+        if data["credentials"]["api"] and data["credentials"]["username"]:
+            challonge = _(
+                "Configured account: [{user}](https://challonge.com/users/{user})"
+            ).format(user=data["credentials"]["username"])
         else:
             challonge = _("Not configured. Use `{prefix}challongeset`").format(
                 prefix=ctx.clean_prefix
@@ -1150,6 +1145,7 @@ the start of the tournament, then closing 15 minutes before.
         channels = _(
             "Category : {category}\n\n"
             "Announcements : {announcements}\n"
+            "Ruleset : {ruleset}\n"
             "Registration : {register}\n"
             "Check-in : {checkin}\n"
             "Queue : {queue}\n"
@@ -1169,18 +1165,31 @@ the start of the tournament, then closing 15 minutes before.
             else:
                 roles[k] = role.name
         roles = _(
-            "Participant : {participant}\n" "Streamer : {streamer}\n" "T.O. : {to}\n"
+            "Participant : {participant}\n"
+            "Player : {player}\n"
+            "Streamer : {streamer}\n"
+            "T.O. : {to}\n"
         ).format(**roles)
+        baninfo = data["baninfo"] if data["baninfo"] else _("Not set.")
+        stages = "\n".join([f"- {x}" for x in data["stages"]])
+        counterpicks = "\n".join([f"- {x}" for x in data["counterpicks"]])
+        if data["ranking"]["league_name"] and data["ranking"]["league_id"]:
+            ranking = _("Name: {name}\nID: {id}").format(
+                name=data["ranking"]["league_name"], id=data["ranking"]["league_id"]
+            )
+        else:
+            ranking = _("Not set.")
         embeds = []
-        embed = discord.Embed(title=_("Parameters"))
+        embed = discord.Embed(title=_("Settings • Page 1/3"))
+        embed.set_footer(text=config)
         embed.description = _(
             "Challonge credentials : {challonge}\n"
-            "Number of configured games : {games}\n"
+            "Number of configs : {configs}\n"
             "Delay before DQ : {delay} minutes\n"
             "Begin of BO5 : {bo5} *(see `{prefix}help tset startbo5`)*"
         ).format(
             challonge=challonge,
-            games=no_games,
+            configs=no_configs,
             delay=delay,
             bo5=start_bo5,
             prefix=ctx.clean_prefix,
@@ -1215,9 +1224,19 @@ the start of the tournament, then closing 15 minutes before.
             inline=False,
         )
         embeds.append(embed)
-        embed = discord.Embed(title=_("Settings"))
+        embed = discord.Embed(title=_("Settings • Page 2/3"))
+        embed.set_footer(text=config)
         embed.add_field(name=_("Channels"), value=channels)
         embed.add_field(name=_("Roles"), value=roles)
+        embeds.append(embed)
+        embed = discord.Embed(title=_("Settings • Page 3/3"))
+        embed.set_footer(text=config)
+        embed.description = _("Ban info: {baninfo}").format(baninfo=baninfo)
+        if stages:
+            embed.add_field(name=_("Stages"), value=stages)
+        if counterpicks:
+            embed.add_field(name=_("Counterpicks"), value=counterpicks)
+        embed.add_field(name=_("Ranking league"), value=ranking)
         embeds.append(embed)
         await menus.menu(ctx, embeds, controls=menus.DEFAULT_CONTROLS)
 
@@ -1226,7 +1245,7 @@ the start of the tournament, then closing 15 minutes before.
     @commands.command()
     @commands.guild_only()
     @commands.cooldown(1, 30, commands.BucketType.guild)
-    async def setup(self, ctx: commands.Context, url: ChallongeURLConverter):
+    async def setup(self, ctx: commands.Context, *, url: ConfigSelector(ChallongeURLConverter)):
         """
         Setup the next tournament for this server.
 
@@ -1248,7 +1267,6 @@ the start of the tournament, then closing 15 minutes before.
                 ).format(prefix=ctx.clean_prefix)
             )
             return
-        config_data = await self.data.guild(guild).all()
         credentials = await self.data.guild(guild).credentials.all()
         credentials["login"] = credentials.pop("username")
         credentials["password"] = credentials.pop("api")
@@ -1267,6 +1285,8 @@ the start of the tournament, then closing 15 minutes before.
                 "to your community once it is ended."
             ),
         }
+        config = url.config
+        url = url.arg
         async with ctx.typing():
             try:
                 data = await async_http_retry(
@@ -1286,35 +1306,15 @@ the start of the tournament, then closing 15 minutes before.
         if data is None:
             await ctx.send(_("Tournament not found. Check your URL."))
             return
-        games = await self.data.custom("GAME", guild.id).all()
-        if data["game_name"].title() not in games:
-            result = await prompt_yes_or_no(
-                ctx,
-                _(
-                    ":warning: **The game {game} isn't registered on this bot !**\n\n"
-                    "You can configure the different settings of this game by typing the "
-                    "following command: `{prefix}tset games add {game}`\n"
-                    "Else, you can continue without configuration, but the following "
-                    "function will be unavailable:\n"
-                    "- Indication of a ruleset channel\n"
-                    "- Use of a role for the permissions of the registration (the @everyone "
-                    "role will be used instead)\n"
-                    "- Precision of a ban mode\n"
-                    "- List of starters/counters stages\n"
-                    "- Ranking and seeding with Braacket\n\n"
-                    "Would you like to continue or cancel?"
-                ).format(game=data["game_name"].title(), prefix=ctx.clean_prefix),
-                timeout=120,
-            )
-            if result is False:
-                return
-        del games
-        config_data.update(
-            await self.data.custom("GAME", guild.id, data["game_name"].title()).all()
-        )
         if data["start_at"] is None:
             await ctx.send(_("You need to define a start date and time on your tournament."))
             return
+        if config is None:
+            configs = await self.data.settings(guild.id).all()
+            if data["game_name"] and data["game_name"].title() in configs:
+                config = data["game_name"]
+            del configs
+        config_data = await self._get_settings(guild.id, config)
         tournament: ChallongeTournament = ChallongeTournament.build_from_api(
             bot=self.bot,
             guild=guild,
@@ -1348,6 +1348,7 @@ the start of the tournament, then closing 15 minutes before.
         embed.description += _("\nTournament start: {date}").format(
             date=format_datetime(tournament.tournament_start)
         )
+        embed.description += _("Time zone: {tz}").format(tz=tournament.tournament_start.tzname())
         embed.add_field(
             name=_("Registration"),
             value=_(
@@ -1371,28 +1372,13 @@ the start of the tournament, then closing 15 minutes before.
                 closing=format_datetime(tournament.checkin_stop),
             ),
         )
-        ruleset = guild.get_channel(config_data["ruleset"])
-        ruleset = ruleset.mention if ruleset else _("Not set")
-        role = guild.get_role(config_data["role"]) or guild.default_role
-        baninfo = config_data["baninfo"] or _("Not set")
-        embed.add_field(
-            name=_("Game options"),
-            value=_("Rules: {rules}\nPlayer role: {role}\nBan mode: {ban}").format(
-                rules=ruleset,
-                role=role,
-                ban=baninfo,
-            ),
+        embed.set_footer(
+            text=(
+                _('Using config "{name}"').format(name=config)
+                if config
+                else _("Using default config.")
+            )
         )
-        if config_data["stages"]:
-            embed.add_field(
-                name=("Stages"), value="".join([f"- {x}\n" for x in config_data["stages"]])
-            )
-        if config_data["counterpicks"]:
-            embed.add_field(
-                name=("Counterpicks"),
-                value="".join([f"- {x}\n" for x in config_data["counterpicks"]]),
-            )
-        embed.set_footer(text=_("Time zone: {tz}").format(tz=tournament.tournament_start.tzname()))
         result = await prompt_yes_or_no(
             ctx, _("Is this correct?"), embed=embed, timeout=60, delete_after=False
         )
