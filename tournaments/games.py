@@ -605,6 +605,7 @@ you want the bot to override the previous list of participants, type `[p]upload 
                 "Or did someone edit the limit? Check the settings on Challonge."
             ),
         }
+        seeded = tournament.ranking["league_name"] and tournament.ranking["league_id"]
         try:
             async with ctx.typing():
                 await tournament.seed_participants(tournament.checkin_phase == "done")
@@ -621,6 +622,7 @@ you want the bot to override the previous list of participants, type `[p]upload 
             )
             if result is False:
                 return
+            seeded = False
         try:
             async with ctx.typing():
                 added = await tournament.add_participants(force=force)
@@ -658,7 +660,6 @@ you want the bot to override the previous list of participants, type `[p]upload 
                     ).format(prefix=ctx.clean_prefix)
                 )
                 return
-            seeded = tournament.ranking["league_name"] and tournament.ranking["league_id"]
             text = _("{len} participants successfully seeded{upload} to the bracket!").format(
                 len=added, upload=_(" and uploaded") if seeded else ""
             )
