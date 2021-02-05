@@ -145,7 +145,7 @@ class Tournaments(
         except Exception as e:
             log.error("Couldn't load dev env values.", exc_info=e)
 
-    __version__ = "1.0.1"
+    __version__ = "1.1.0"
     __author__ = ["retke (El Laggron)", "Wonderfall", "Xyleff"]
 
     @commands.command(hidden=True)
