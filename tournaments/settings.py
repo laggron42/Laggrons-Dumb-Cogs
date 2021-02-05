@@ -1087,10 +1087,11 @@ the start of the tournament, then closing 15 minutes before.
             return text
 
         no_configs = len(await self.data.settings(guild.id).all()) - 1
-        if data["credentials"]["api"] and data["credentials"]["username"]:
+        credentials = await self.data.guild(guild).credentials.all()
+        if credentials["api"] and credentials["username"]:
             challonge = _(
                 "Configured account: [{user}](https://challonge.com/users/{user})"
-            ).format(user=data["credentials"]["username"])
+            ).format(user=credentials["username"])
         else:
             challonge = _("Not configured. Use `{prefix}challongeset`").format(
                 prefix=ctx.clean_prefix
