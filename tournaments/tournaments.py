@@ -125,6 +125,7 @@ class Tournaments(
         )
         self.tournaments: Mapping[int, Tournament] = {}
 
+        self.data.register_global(**self.default_global)
         self.data.register_guild(**self.default_guild_settings)
         self.data.init_custom("SETTINGS", 2)  # guild ID > config name
         self.data.register_custom("SETTINGS", **self.default_settings)
