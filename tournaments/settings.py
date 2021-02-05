@@ -668,6 +668,18 @@ tournament ends.
             await self.data.settings(guild.id, role.config).roles.streamer.set(role.arg.id)
             await ctx.send(_("The role was successfully set."))
 
+    @tournamentset_roles.command(name="tester")
+    async def tournamentset_roles_tester(self, ctx: commands.Context, *, role: discord.Role):
+        """
+        Set the tester role.
+        """
+        guild = ctx.guild
+        if role.position >= guild.me.top_role.position:
+            await ctx.send(_("This role is too high. Place it below my main role."))
+            return
+        await self.data.guild(guild).roles.tester.set(role.id)
+        await ctx.send(_("The role was successfully set."))
+
     @tournamentset_roles.command(name="to")
     async def tournamentset_roles_to(
         self, ctx: commands.Context, *, role: ConfigSelector(discord.Role)
@@ -1170,6 +1182,7 @@ the start of the tournament, then closing 15 minutes before.
             "Player : {player}\n"
             "Streamer : {streamer}\n"
             "T.O. : {to}\n"
+            "Tester : {tester}\n"
         ).format(**roles)
         baninfo = data["baninfo"] if data["baninfo"] else _("Not set.")
         stages = "\n".join([f"- {x}" for x in data["stages"]])

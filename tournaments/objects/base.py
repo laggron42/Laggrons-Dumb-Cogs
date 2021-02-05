@@ -91,8 +91,8 @@ class Participant(discord.Member):
 
     def __repr__(self):
         return (
-            "<Participant player_id={0.player_id} tournament_name={0.tournament.name} "
-            "tournament_id={0.tournament.id} spoke={0.spoke} id={1.id} name={1.name!r}>"
+            "<Participant name={1.name!r} id={1.id} player_id={0.player_id} tournament_name={0.tournament.name} "
+            "tournament_id={0.tournament.id} spoke={0.spoke}>"
         ).format(self, self._user)
 
     @classmethod
@@ -1324,8 +1324,7 @@ class Tournament:
         self.participant_role: discord.Role = guild.get_role(data["roles"].get("participant"))
         self.streamer_role: discord.Role = guild.get_role(data["roles"].get("streamer"))
         self.to_role: discord.Role = guild.get_role(data["roles"].get("to"))
-        # self.tester_role: discord.Role = guild.get_role(data["roles"].get("tester"))
-        self.tester_role = None
+        self.tester_role: discord.Role = guild.get_role(data["roles"].get("tester"))
         self.credentials = data["credentials"]
         # fitting to achallonge's requirements
         self.credentials["login"] = self.credentials.pop("username")

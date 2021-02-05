@@ -6,7 +6,6 @@ import shutil
 
 from abc import ABC
 from typing import Mapping, Optional
-from datetime import datetime, timedelta
 from laggron_utils.logging import close_logger
 
 from redbot.core import commands
@@ -22,7 +21,6 @@ from .registration import Registration
 from .settings import Settings
 from .streams import Streams
 from .troubleshooting import Troubleshooting
-from .utils import mod_or_to, only_phase
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -134,7 +132,20 @@ class Tournaments(
         self.registration_loop.start()
         self.registration_loop_task_errors = 0
 
-    __version__ = "1.0.0"
+        # Useful dev tools
+        try:
+            self.bot.add_dev_env_value("tm_cog", lambda ctx: self)
+            self.bot.add_dev_env_value("tm", lambda ctx: self.tournaments.get(ctx.guild.id))
+        except AttributeError:
+            if self.bot.get_cog("Dev") is not None:
+                log.info(
+                    "Customizable dev environment not available. Update to Red 3.4.6 if "
+                    'you want the "tm" and "tm_cog" values available with the dev commands.'
+                )
+        except Exception as e:
+            log.error("Couldn't load dev env values.", exc_info=e)
+
+    __version__ = "1.0.1"
     __author__ = ["retke (El Laggron)", "Wonderfall", "Xyleff"]
 
     @commands.command(hidden=True)
@@ -263,6 +274,13 @@ class Tournaments(
         # multiple times the same handler if the cog gets reloaded
         close_logger(log)
 
+        # Remove dev env values
+        try:
+            self.bot.remove_dev_env_value("tm")
+            self.bot.remove_dev_env_value("tm_cog")
+        except AttributeError:
+            pass
+
         tournament: Tournament
         for tournament in self.tournaments.values():
             tournament.stop_loop_task()
@@ -270,40 +288,3 @@ class Tournaments(
 
         # remove ranking data
         shutil.rmtree(cog_data_path(self) / "ranking", ignore_errors=True)
-
-    # this is a temporary command existing because of an annoying bug I still can't find
-    # working hard on this, looking for a fix as fast as possible
-    # made this command for the tournaments that run until then
-    @only_phase("ongoing")
-    @mod_or_to()
-    @commands.command(hidden=True)
-    @commands.guild_only()
-    async def fixmatches(self, ctx: commands.Context):
-        """
-        Find and patch some potentially broken matches.
-
-        This command exists because of an unresolved bug and should not stay for long, hopefully.
-        """
-        tournament = self.tournaments[ctx.guild.id]
-        async with tournament.lock:
-            # we don't want to start the matches twice
-            # *or maybe the lock is the source of the bug*
-            pass
-        # potentially broken matches
-        pending_matches = [
-            x
-            for x in tournament.matches
-            if x.status == "pending" and x.channel and x.on_hold is False
-        ]
-        if not pending_matches:
-            await ctx.send("No broken match found.")
-            return
-        async with ctx.typing():
-            for match in pending_matches:
-                await match._start()
-                match.checked_dq = True
-                match.start_time = datetime.now(tournament.tz) - timedelta(minutes=5)
-        await ctx.send(
-            f"Patched {len(pending_matches)} matches (AFK check disabled):\n"
-            f"{' '.join(x.channel.mention for x in pending_matches)}"
-        )
