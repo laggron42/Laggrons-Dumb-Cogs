@@ -1652,17 +1652,12 @@ class Tournament:
 
     def _valid_dates(self):
         now = datetime.now(self.tz)
-        if now > self.tournament_start:
-            raise RuntimeError(
-                _("The tournament's date has already passed."),
-                [(_("Start date"), self.tournament_start)],
-            )
         dates = [
-            (_("Registration start"), self.register_start),
-            (_("Registration second start"), self.register_second_start),
-            (_("Registration stop"), self.register_stop),
-            (_("Check-in start"), self.checkin_start),
-            (_("Check-in stop"), self.checkin_stop),
+            (_("Registration start"), self.register_start, "register_start"),
+            (_("Registration second start"), self.register_second_start, "register_second_start"),
+            (_("Registration stop"), self.register_stop, "register_stop"),
+            (_("Check-in start"), self.checkin_start, "checkin_start"),
+            (_("Check-in stop"), self.checkin_stop, "checkin_stop"),
         ]
         passed = {x: y for x, y in dates if y and now > y}
         if passed:

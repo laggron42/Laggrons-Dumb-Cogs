@@ -1339,20 +1339,31 @@ the start of the tournament, then closing 15 minutes before.
             config_data=config_data,
         )
 
-        def format_datetime(datetime: Optional[datetime]):
-            if datetime:
+        def format_datetime(datetime: Optional[datetime], name_to_check: Optional[str]):
+            if name_to_check and name_to_check in tournament.ignored_events:
+                return _("Skipped")
+            elif datetime:
                 return datetime.strftime("%a %d %b %H:%M")
             else:
                 return _("Manual")
 
+        now = datetime.now(tournament.tz)
+        if now > tournament.tournament_start:
+            await ctx.send(
+                _("The tournament's date has already passed: ")
+                + format_datetime(tournament.tournament_start)
+            )
+            return
         try:
             tournament._valid_dates()
         except RuntimeError as e:
             text = _("There are conflicts with dates!\n\n") + e.args[0] + "\n"
-            for name, time in e.args[1]:
+            for name, time, identifier in e.args[1]:
                 text += f"{name}: {format_datetime(time)}\n"
-            await ctx.send(text)
-            return
+                tournament.ignored_events.append(identifier)
+            text += _("\nWould you like to continue and skip these events?")
+            if not await prompt_yes_or_no(ctx, text, delete_after=False):
+                return
         embed = discord.Embed(title=f"{tournament.name} • *{tournament.game}*")
         embed.url = tournament.url
         if tournament.limit is not None:
@@ -1371,19 +1382,21 @@ the start of the tournament, then closing 15 minutes before.
                 "Close when complete: {autostop}\n"
                 "Closing : {closing}"
             ).format(
-                opening=format_datetime(tournament.register_start),
-                secondopening=format_datetime(tournament.register_second_start)
+                opening=format_datetime(tournament.register_start, "register_start"),
+                secondopening=format_datetime(
+                    tournament.register_second_start, "register_second_start"
+                )
                 if tournament.register_second_start
                 else _("Disabled"),
                 autostop=_("Enabled") if tournament.autostop_register else _("Disabled"),
-                closing=format_datetime(tournament.register_stop),
+                closing=format_datetime(tournament.register_stop, "register_stop"),
             ),
         )
         embed.add_field(
             name=_("Check-in"),
             value=_("Opening: {opening}\nClosing : {closing}").format(
-                opening=format_datetime(tournament.checkin_start),
-                closing=format_datetime(tournament.checkin_stop),
+                opening=format_datetime(tournament.checkin_start, "checkin_start"),
+                closing=format_datetime(tournament.checkin_stop, "checkin_stop"),
             ),
         )
         embed.set_footer(
