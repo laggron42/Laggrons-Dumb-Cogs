@@ -1254,6 +1254,74 @@ the start of the tournament, then closing 15 minutes before.
         embeds.append(embed)
         await menus.menu(ctx, embeds, controls=menus.DEFAULT_CONTROLS)
 
+    async def setup_ongoing(self, ctx: commands.Context, tournament: ChallongeTournament):
+        """
+        Called by [p]setup when a tournament is setup while underway. Makes the command shorter.
+        """
+        response = await prompt_yes_or_no(
+            ctx,
+            _(
+                "That tournament was already started on Challonge!\nYou can continue, and the "
+                "bot will attempt to resume that tournament where it is currently.\n\n"
+                "- Registrations and check-in will be skipped\n"
+                "- The bot will internally register all participants on the bracket "
+                "using their name\n"
+                "- **Participants which can't be found on the server will be disqualified!**\n"
+                "- Then the bot will create channels for everyone, and all that stuff...\n\n"
+                "Would you like to continue? (The bot will give you another prompt if it finds "
+                "participants which should be disqualified)"
+            ),
+            delete_after=False,
+        )
+        if not response:
+            return
+        participants = await tournament.list_participants()
+        participants = [x for x in participants if x["active"] is True]  # very challonge specific
+        failed = []
+        for participant in participants:
+            try:
+                tournament.participant_object.build_from_api(tournament, participant)
+            except RuntimeError:
+                failed.append(participant["name"])
+        if failed:
+            if len(failed) == 1:
+                text = _(
+                    ":warning: Challonge player with name \"{name}\n can't be found on "
+                    "the server. If you continue the setup, he will be disqualified."
+                ).format(name=failed[0])
+            else:
+                text = _(
+                    ":warning: {len} Challonge players can't be found on the server! "
+                    "If you continue, they will all be disqualified.\nPlayers: {players}\n"
+                ).format(len=len(failed), players=", ".join(failed))
+            text += _("\nWould you like to continue?")
+            response = await prompt_yes_or_no(ctx, text, delete_after=False)
+            if not response:
+                return
+        send_announcement = await prompt_yes_or_no(
+            ctx,
+            _("Do you want to send announcement messages?"),
+            delete_after=False,
+            negative_response=False,
+        )
+        async with ctx.typing():
+            self.tournaments[ctx.guild.id] = tournament
+            tournament.phase = "ongoing"
+            if send_announcement:
+                await tournament.send_start_messages()
+            channels = list(filter(None, [tournament.queue_channel, tournament.scores_channel]))
+            for channel in channels:
+                await channel.set_permissions(
+                    tournament.participant_role,
+                    read_messages=True,
+                    send_messages=True,
+                    reason=_("Tournament starting..."),
+                )
+            await tournament._get_top8()
+            await tournament.start_loop_task()
+            await tournament.save()
+        await ctx.send(_("The tournament is now up and running!"))
+
     @credentials_check
     @mod_or_to()
     @commands.command()
@@ -1338,6 +1406,8 @@ the start of the tournament, then closing 15 minutes before.
             data=data,
             config_data=config_data,
         )
+        if tournament.status == "underway":
+            return await self.setup_ongoing(ctx, tournament)
 
         def format_datetime(datetime: Optional[datetime], name_to_check: Optional[str]):
             if name_to_check and name_to_check in tournament.ignored_events:
