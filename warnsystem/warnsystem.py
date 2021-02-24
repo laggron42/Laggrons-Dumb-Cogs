@@ -224,7 +224,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
 
         self.task: asyncio.Task
 
-    __version__ = "1.3.12"
+    __version__ = "1.3.13"
     __author__ = ["retke (El Laggron)"]
 
     # helpers
