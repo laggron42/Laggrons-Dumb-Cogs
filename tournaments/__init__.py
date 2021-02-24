@@ -82,7 +82,8 @@ async def _convert_to_v1(config):
                 if role:
                     settings[name]["roles"] = {"player": role}
         settings = convert_timedelta(settings)
-        await config.custom("SETTINGS", guild_id).set(settings)
+        if settings:
+            await config.custom("SETTINGS", guild_id).set(settings)
     # Can't delete a Config group, so we empty it to save some data
     await config.custom("GAME").set({})
 
