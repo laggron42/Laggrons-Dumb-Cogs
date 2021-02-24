@@ -73,14 +73,14 @@ async def _convert_to_v1(config):
         settings = {None: data}
         if len(games) == 1:
             game = list(games.values())[0]
-            settings[None]["roles"]["player"] = game.pop("role")
+            settings[None]["roles"] = {"player": game.pop("role")}
             settings[None].update(game)
         else:
             for name, value in games.items():
                 role = value.pop("role")
                 settings[name] = value
                 if role:
-                    settings[name]["roles"]["player"] = role
+                    settings[name]["roles"] = {"player": role}
         settings = convert_timedelta(settings)
         await config.custom("SETTINGS", guild_id).set(settings)
     # Can't delete a Config group, so we empty it to save some data
