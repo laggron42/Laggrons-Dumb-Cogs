@@ -1162,7 +1162,7 @@ class API:
                     if level == 2:
                         to_remove.append(member)
                         continue
-                roles = [guild.get_role(x) for x in action.get("roles") or []]
+                roles = list(filter(None, [guild.get_role(x) for x in action.get("roles") or []]))
 
                 reason = _(
                     "End of timed {action} of {member} requested by {author} that lasted "
