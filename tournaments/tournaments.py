@@ -195,7 +195,7 @@ class Tournaments(
             "autostop_register": False,
             "register": {"opening": 0, "second_opening": 0, "closing": 600},
             "checkin": {"opening": 3600, "closing": 900},
-            "start_bo5": None,
+            "start_bo5": 0,
             "stages": [],
             "counterpicks": [],
         }
