@@ -45,7 +45,7 @@ class Say(BaseCog):
         text: str,
         files: list,
         mentions: discord.AllowedMentions = None,
-        delete: int = None
+        delete: int = None,
     ):
         if not channel:
             channel = ctx.channel
@@ -114,12 +114,16 @@ class Say(BaseCog):
 
         files = await Tunnel.files_from_attatch(ctx.message)
         await self.say(ctx, channel, text, files)
-        
+
     @commands.command(name="sayad")
     @checks.admin_or_permissions(administrator=True)
     async def _sayautodelete(
-        self, ctx: commands.Context, channel: Optional[discord.TextChannel], delete_delay: int, 
-        *, text: str = ""
+        self, 
+        ctx: commands.Context, 
+        channel: Optional[discord.TextChannel], 
+        delete_delay: int, 
+        *, 
+        text: str = "",
     ):
         """
         Same as say command, except it deletes the said message after a set number of seconds.
