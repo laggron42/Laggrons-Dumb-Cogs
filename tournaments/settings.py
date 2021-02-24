@@ -272,7 +272,7 @@ it directly.
                 "If you want to define settings for that config, "
                 "add `--config {name}` at the end of your command.\n\n"
                 "Example: `{prefix}tset channels ruleset #my-channel --config {name}`"
-            )
+            ).format(name=name, prefix=ctx.clean_prefix)
         )
 
     @tournamentset_config.command(name="remove")
