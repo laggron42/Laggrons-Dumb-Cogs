@@ -93,7 +93,7 @@ class ConfigSelector(commands.Converter):
 
 
 class Settings(MixinMeta):
-    async def _verify_settings(self, ctx: commands.Context) -> str:
+    async def _verify_settings(self, ctx: commands.Context, data: dict) -> str:
         """
         Check if all settings are correctly filled and the roles/channels still exist.
         """
@@ -102,7 +102,6 @@ class Settings(MixinMeta):
         lost = {"channels": [], "roles": []}
         required_channels = ["to"]
         required_roles = ["participant"]
-        data = await self.data.guild(guild).all()
         for name, channel_id in data["channels"].items():
             if name not in required_channels:
                 continue
@@ -139,13 +138,13 @@ class Settings(MixinMeta):
         if lost["channels"]:
             text += (
                 _("The following channels were lost:\n")
-                + "".join([f"- {x}\n" for x in not_set["channels"]])
+                + "".join([f"- {x}\n" for x in lost["channels"]])
                 + "\n"
             )
         if lost["roles"]:
             text += (
                 _("The following roles were lost:\n")
-                + "".join([f"- {x}\n" for x in not_set["roles"]])
+                + "".join([f"- {x}\n" for x in lost["roles"]])
                 + "\n"
             )
         text += _(
@@ -939,7 +938,10 @@ before the opening of the tournament, then closing 10 minutes before.
                 _(
                     "Registration will now open {opening} before the start and close "
                     "{closing} before the start of the tournament."
-                ).format(opening=humanize_timedelta(opening), closing=humanize_timedelta(closing))
+                ).format(
+                    opening=humanize_timedelta(timedelta=opening),
+                    closing=humanize_timedelta(timedelta=closing),
+                )
             )
 
     @tournamentset.command(name="autostopregister")
@@ -1091,9 +1093,11 @@ the start of the tournament, then closing 15 minutes before.
             text = "__{mode}__\n".format(mode=mode.upper())
             if not _data[0]:
                 return text + _("Disabled")
-            text += _("First warn: after {} minutes\n").format(_data[0])
+            text += _("First warn: after {}\n").format(humanize_timedelta(seconds=_data[0]))
             if _data[1]:
-                text += _("T.O. warn: {} minutes after first warn").format(_data[1])
+                text += _("T.O. warn: {} after first warn").format(
+                    humanize_timedelta(seconds=_data[1])
+                )
             else:
                 text += _("T.O. warn: disabled")
             return text
@@ -1111,35 +1115,27 @@ the start of the tournament, then closing 15 minutes before.
         delay = data["delay"]
         start_bo5 = data["start_bo5"]
         if data["register"]["opening"] != 0:
-            register_start = _("{time} minutes before the start of the tournament.").format(
-                time=data["register"]["opening"]
-            )
+            register_start = humanize_timedelta(seconds=data["register"]["opening"]) + "*"
         else:
             register_start = _("manual.")
         if data["register"]["second_opening"] != 0:
-            register_secondstart = _("{time} minutes before the start of the tournament.").format(
-                time=data["register"]["second_opening"]
+            register_secondstart = (
+                humanize_timedelta(seconds=data["register"]["second_opening"]) + "*"
             )
         else:
             register_secondstart = _("disabled.")
         if data["register"]["closing"] != 0:
-            register_end = _("{time} minutes before the start of the tournament.").format(
-                time=data["register"]["closing"]
-            )
+            register_end = humanize_timedelta(seconds=data["register"]["closing"]) + "*"
         else:
             register_end = _("manual.")
         if data["checkin"]["opening"] != 0:
-            checkin_start = _("{time} minutes before the start of the tournament.").format(
-                time=data["checkin"]["opening"]
-            )
+            checkin_start = humanize_timedelta(seconds=data["checkin"]["opening"]) + "*"
         else:
             checkin_start = _("manual.")
         if data["checkin"]["closing"] != 0:
-            checkin_end = _("{time} minutes before the start of the tournament.").format(
-                time=data["checkin"]["closing"]
-            )
+            checkin_end = humanize_timedelta(seconds=data["checkin"]["closing"]) + "*"
         else:
-            checkin_end = _("Manual.")
+            checkin_end = _("manual.")
         autostop = _("enabled") if data["autostop_register"] else _("disabled")
         channels = {}
         for k, v in data["channels"].items():
@@ -1214,7 +1210,8 @@ the start of the tournament, then closing 15 minutes before.
                 "Opening : {opening}\n"
                 "Second opening : {secondopening}\n"
                 "Closing : {closing}\n"
-                "Auto-stop : {stop}"
+                "Auto-stop : {stop}\n"
+                "*\\* Delay before the start of the tournament*"
             ).format(
                 opening=register_start,
                 secondopening=register_secondstart,
@@ -1334,11 +1331,6 @@ the start of the tournament, then closing 15 minutes before.
         You must give a valid Challonge URL.
         """
         guild = ctx.guild
-        message = await self._verify_settings(ctx)
-        if message:
-            await ctx.send(message)
-            return
-        del message
         tournament = self.tournaments.get(guild.id)
         if tournament is not None:
             await ctx.send(
@@ -1397,10 +1389,16 @@ the start of the tournament, then closing 15 minutes before.
                 config = data["game_name"]
             del configs
         config_data = await self._get_settings(guild.id, config)
+        message = await self._verify_settings(ctx, config_data)
+        if message:
+            await ctx.send(message)
+            return
+        del message
         tournament: ChallongeTournament = ChallongeTournament.build_from_api(
             bot=self.bot,
             guild=guild,
             config=self.data,
+            custom_config=config,
             prefix=ctx.clean_prefix,
             cog_version=self.__version__,
             data=data,
@@ -1408,9 +1406,10 @@ the start of the tournament, then closing 15 minutes before.
         )
         if tournament.status == "underway":
             return await self.setup_ongoing(ctx, tournament)
+        skipped = []
 
-        def format_datetime(datetime: Optional[datetime], name_to_check: Optional[str]):
-            if name_to_check and name_to_check in tournament.ignored_events:
+        def format_datetime(datetime: Optional[datetime], name_to_check: Optional[str] = None):
+            if name_to_check and name_to_check in skipped:
                 return _("Skipped")
             elif datetime:
                 return datetime.strftime("%a %d %b %H:%M")
@@ -1431,6 +1430,7 @@ the start of the tournament, then closing 15 minutes before.
             for name, time, identifier in e.args[1]:
                 text += f"{name}: {format_datetime(time)}\n"
                 tournament.ignored_events.append(identifier)
+                skipped.append(identifier)
             text += _("\nWould you like to continue and skip these events?")
             if not await prompt_yes_or_no(ctx, text, delete_after=False):
                 return
@@ -1443,7 +1443,7 @@ the start of the tournament, then closing 15 minutes before.
         embed.description += _("\nTournament start: {date}").format(
             date=format_datetime(tournament.tournament_start)
         )
-        embed.description += _("Time zone: {tz}").format(tz=tournament.tournament_start.tzname())
+        embed.description += _("\nTime zone: {tz}").format(tz=tournament.tournament_start.tzname())
         embed.add_field(
             name=_("Registration"),
             value=_(

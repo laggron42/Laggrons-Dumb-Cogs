@@ -109,7 +109,13 @@ class Tournaments(
             "to": None,
             "vipregister": None,
         },
-        "roles": {"participant": None, "player": None, "streamer": None, "to": None},
+        "roles": {
+            "participant": None,
+            "player": None,
+            "streamer": None,
+            "tester": None,
+            "to": None,
+        },
         "baninfo": None,
         "ranking": {"league_name": None, "league_id": None},
         "stages": None,
@@ -180,17 +186,22 @@ class Tournaments(
         cog_default = {
             "delay": 10,
             "time_until_warn": {  # warn brackets taking too much time
-                "bo3": (25, 10),  # time until warn in channel, then time until warning the T.O.s
-                "bo5": (30, 10),  # in minutes
+                "bo3": (
+                    1500,
+                    600,
+                ),  # time until warn in channel, then time until warning the T.O.s
+                "bo5": (1800, 600),  # in minutes
             },
             "autostop_register": False,
-            "register": {"opening": 0, "second_opening": 0, "closing": 10},
-            "checkin": {"opening": 60, "closing": 15},
+            "register": {"opening": 0, "second_opening": 0, "closing": 600},
+            "checkin": {"opening": 3600, "closing": 900},
             "start_bo5": None,
             "stages": [],
             "counterpicks": [],
         }
+        credentials = await self.data.guild_from_id(guild_id).credentials()
         default = await self.data.settings(guild_id, None).all()
+        default["credentials"] = credentials
         default = overwrite_dict(cog_default, default)
         if config is None:
             return default

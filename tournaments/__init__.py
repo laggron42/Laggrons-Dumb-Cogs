@@ -43,6 +43,18 @@ async def _save_backup(config):
 
 
 async def _convert_to_v1(config):
+    def convert_timedelta(data: dict):
+        for key, value in data.items():
+            if key in ("bo3", "bo5"):
+                data[key] = tuple(x * 60 for x in value)
+            elif key in ("channels", "roles"):
+                data[key] = value
+            elif isinstance(value, int):
+                data[key] = value * 60  # minutes to seconds
+            elif isinstance(value, dict):
+                data[key] = convert_timedelta(value)
+        return data
+
     all_games: dict = await config.custom("GAME").all()
     guilds: dict = await config.all_guilds()
     for guild_id, data in guilds.items():
@@ -60,10 +72,16 @@ async def _convert_to_v1(config):
         )
         settings = {None: data}
         if len(games) == 1:
-            settings[None].update(list(games.values())[0])
+            game = list(games.values())[0]
+            settings[None]["roles"]["player"] = game.pop("role")
+            settings[None].update(game)
         else:
             for name, value in games.items():
+                role = value.pop("role")
                 settings[name] = value
+                if role:
+                    settings[name]["roles"]["player"] = role
+        settings = convert_timedelta(settings)
         await config.custom("SETTINGS", guild_id).set(settings)
     # Can't delete a Config group, so we empty it to save some data
     await config.custom("GAME").set({})

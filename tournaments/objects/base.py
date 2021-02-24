@@ -1342,41 +1342,43 @@ class Tournament:
         # works with next_scheduled_event, used for manual early starts/stops
         if data["register"]["second_opening"] != 0:
             self.register_second_start: datetime = tournament_start - timedelta(
-                minutes=data["register"]["second_opening"]
+                seconds=data["register"]["second_opening"]
             )
         else:
             self.register_second_start = None
             self.ignored_events.append("register_second_start")
         if data["register"]["opening"] != 0:
             self.register_start: datetime = tournament_start - timedelta(
-                minutes=data["register"]["opening"]
+                seconds=data["register"]["opening"]
             )
         else:
             self.register_start = None
             self.ignored_events.append("register_start")
         if data["register"]["closing"] != 0:
             self.register_stop: datetime = tournament_start - timedelta(
-                minutes=data["register"]["closing"]
+                seconds=data["register"]["closing"]
             )
         else:
             self.register_stop = None
             self.ignored_events.append("register_stop")
         if data["checkin"]["opening"] != 0:
             self.checkin_start: datetime = tournament_start - timedelta(
-                minutes=data["checkin"]["opening"]
+                seconds=data["checkin"]["opening"]
             )
         else:
             self.checkin_start = None
             self.ignored_events.append("checkin_start")
         if data["checkin"]["closing"] != 0:
             self.checkin_stop: datetime = tournament_start - timedelta(
-                minutes=data["checkin"]["closing"]
+                seconds=data["checkin"]["closing"]
             )
         else:
             self.checkin_stop = None
             self.ignored_events.append("checkin_stop")
-        self.ruleset_channel: discord.TextChannel = guild.get_channel(data["ruleset"])
-        self.game_role: discord.Role = guild.get_role(data["role"]) or guild.default_role
+        self.ruleset_channel: discord.TextChannel = guild.get_channel(data["channels"]["ruleset"])
+        self.game_role: discord.Role = (
+            guild.get_role(data["roles"]["player"]) or guild.default_role
+        )
         self.baninfo: str = data["baninfo"]
         self.ranking: dict = data["ranking"]
         self.stages: list = data["stages"]
@@ -1461,6 +1463,7 @@ class Tournament:
             int(data["tournament_start"][0]),
             tz=timezone(timedelta(seconds=data["tournament_start"][1])),
         )
+        custom_config = data.pop("config")
         participants = data.pop("participants")
         matches = data.pop("matches")
         streamers = data.pop("streamers")
@@ -1477,6 +1480,7 @@ class Tournament:
             bot,
             guild,
             config,
+            custom_config,
             **data,
             tournament_start=tournament_start,
             cog_version=cog_version,
@@ -1659,9 +1663,9 @@ class Tournament:
             (_("Check-in start"), self.checkin_start, "checkin_start"),
             (_("Check-in stop"), self.checkin_stop, "checkin_stop"),
         ]
-        passed = {x: y for x, y in dates if y and now > y}
+        passed = [(x, y, z) for x, y, z in dates if y and now > y]
         if passed:
-            raise RuntimeError(_("Some dates are passed."), dates)
+            raise RuntimeError(_("Some dates are passed."), passed)
         if (
             self.register_start
             and self.register_stop
