@@ -489,7 +489,7 @@ enter a command to register or unregister.
             await self.data.settings(guild.id, config).channels.ruleset.set(None)
             await ctx.send(_("The channel was successfully removed."))
         else:
-            await self.data.settings(guild.id, config).channels.ruleset.set(channel.arg.id)
+            await self.data.settings(guild.id, config).channels.ruleset.set(channel.id)
             await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="stream")
@@ -623,7 +623,7 @@ tournament ends.
         if role.arg.position >= guild.me.top_role.position:
             await ctx.send(_("This role is too high. Place it below my main role."))
             return
-        await self.data.settings(guild.id, role.config).roles.participant.set(role.id)
+        await self.data.settings(guild.id, role.config).roles.participant.set(role.arg.id)
         await ctx.send(_("The role was successfully set."))
 
     @tournamentset_roles.command(name="player")
