@@ -206,6 +206,7 @@ class Tournaments(
         if config is None:
             return default
         config = await self.data.settings(guild_id, config).all()
+        config["credentials"] = credentials
         return overwrite_dict(default, config)
 
     async def _restore_tournament(
