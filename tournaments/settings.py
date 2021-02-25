@@ -668,16 +668,21 @@ tournament ends.
             await ctx.send(_("The role was successfully set."))
 
     @tournamentset_roles.command(name="tester")
-    async def tournamentset_roles_tester(self, ctx: commands.Context, *, role: discord.Role):
+    async def tournamentset_roles_tester(
+        self, ctx: commands.Context, *, role: ConfigSelector(discord.Role) = ConfigSelector()
+    ):
         """
         Set the tester role.
+
+        This role will be pinged when calling for a lag test.
         """
         guild = ctx.guild
-        if role.position >= guild.me.top_role.position:
-            await ctx.send(_("This role is too high. Place it below my main role."))
-            return
-        await self.data.guild(guild).roles.tester.set(role.id)
-        await ctx.send(_("The role was successfully set."))
+        if role.arg is None:
+            await self.data.settings(guild.id, role.config).roles.tester.set(None)
+            await ctx.send(_("The role was reset to its initial state."))
+        else:
+            await self.data.settings(guild.id, role.config).roles.tester.set(role.arg.id)
+            await ctx.send(_("The role was successfully set."))
 
     @tournamentset_roles.command(name="to")
     async def tournamentset_roles_to(
