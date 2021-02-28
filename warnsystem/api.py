@@ -1531,7 +1531,7 @@ class API:
             # we increase this value until reaching the given limit
             time = autowarn["time"]
             if time:
-                until = datetime.now() - timedelta(seconds=time)
+                until = datetime.utcnow() - timedelta(seconds=time)
                 autowarns[i]["until"] = until
         del time
         found_warnings = {}  # we fill this list with the valid autowarns, there can be more than 1
