@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2021-02-12 19:56+0100\n"
+"POT-Creation-Date: 2021-03-01 00:28+0000\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "MIME-Version: 1.0\n"
@@ -1130,13 +1130,13 @@ msgstr "Vous devez spécifier `modlog` ou `user`. Lisez la description de la com
 msgid "The new description for {destination} (warn {level}) was successfully set!"
 msgstr "La nouvelle description pour {destination} (avertissement {level}) a été définie avec succès !"
 
-#: warnsystem/settings.py:397
-msgid "modlog"
-msgstr "modlog"
-
 #: warnsystem/settings.py:397 warnsystem/warnsystem.py:389
 msgid "user"
 msgstr "user"
+
+#: warnsystem/settings.py:397
+msgid "modlog"
+msgstr "modlog"
 
 #: warnsystem/settings.py:403
 #, docstring
