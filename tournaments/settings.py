@@ -284,10 +284,49 @@ it directly.
         """
         async with self.data.settings(ctx.guild.id).all() as configs:
             if name not in configs:
-                await ctx.send(_("That name doesn't exist."))
+                await ctx.send(_("That config doesn't exist."))
                 return
             del configs[name]
         await ctx.send(_("The config was successfully deleted."))
+
+    @tournamentset_config.command(name="rename")
+    async def tournamentset_config_rename(
+        self, ctx: commands.Context, old_name: str, new_name: str
+    ):
+        """
+        Rename a configuration.
+
+        If there are spaces in the name, wrap it in quotes.
+        """
+        async with self.data.settings(ctx.guild.id).all() as configs:
+            if old_name not in configs:
+                await ctx.send(_("That config doesn't exist."))
+                return
+            if new_name in configs:
+                await ctx.send(_("That new name is already used."))
+                return
+            configs[new_name] = configs[old_name]
+            del configs[old_name]
+        await ctx.send(_("The config was successfully renamed."))
+
+    @tournamentset_config.command(name="clone")
+    async def tournamentset_config_clone(
+        self, ctx: commands.Context, base_config: str, new_config: str
+    ):
+        """
+        Copy the settings of an existing config to a new one.
+
+        If there are spaces in the names, wrap them in quotes.
+        """
+        async with self.data.settings(ctx.guild.id).all() as configs:
+            if base_config not in configs:
+                await ctx.send(_("That config doesn't exist."))
+                return
+            if new_config in configs:
+                await ctx.send(_("That new name is already used."))
+                return
+            configs[new_config] = configs[new_config]
+        await ctx.send(_("The config was successfully renamed."))
 
     @tournamentset_config.command(name="list")
     async def tournamentset_config_list(self, ctx: commands.Context):
@@ -295,6 +334,7 @@ it directly.
         List all existing configs.
         """
         all_configs = await self.data.settings(ctx.guild.id).all()
+        all_configs.pop(None)
         if all_configs is None:
             await ctx.send(_("Nothing setup yet!"))
             return
