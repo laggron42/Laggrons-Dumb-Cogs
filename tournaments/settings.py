@@ -56,6 +56,9 @@ class ConfigSelector(commands.Converter):
         self.config: str = None
         self.arg = None
 
+    def __repr__(self) -> str:
+        return "default"
+
     async def config_exists(self, ctx: commands.Context, name):
         data = ctx.bot.get_cog("Tournaments").data
         configs = await data.settings(ctx.guild.id).all()
@@ -325,8 +328,8 @@ it directly.
             if new_config in configs:
                 await ctx.send(_("That new name is already used."))
                 return
-            configs[new_config] = configs[new_config]
-        await ctx.send(_("The config was successfully renamed."))
+            configs[new_config] = configs[base_config]
+        await ctx.send(_("The config was successfully cloned."))
 
     @tournamentset_config.command(name="list")
     async def tournamentset_config_list(self, ctx: commands.Context):
@@ -334,7 +337,10 @@ it directly.
         List all existing configs.
         """
         all_configs = await self.data.settings(ctx.guild.id).all()
-        all_configs.pop(None)
+        try:
+            all_configs.pop("None")
+        except KeyError:
+            pass
         if all_configs is None:
             await ctx.send(_("Nothing setup yet!"))
             return
@@ -684,10 +690,10 @@ tournament ends.
         """
         guild = ctx.guild
         if role.arg is None:
-            await self.data.settings(guild.id, role.config).role.set(None)
+            await self.data.settings(guild.id, role.config).roles.player.set(None)
             await ctx.send(_("The role was reset to its initial state."))
         else:
-            await self.data.settings(guild.id, role.config).role.set(role.arg.id)
+            await self.data.settings(guild.id, role.config).roles.player.set(role.arg.id)
             await ctx.send(_("The role was successfully set."))
 
     @tournamentset_roles.command(name="streamer")
@@ -883,7 +889,7 @@ moderators and admins.
         """
         guild = ctx.guild
         config = delay.config
-        delay: timedelta = config.arg
+        delay: timedelta = delay.arg
         if delay.total_seconds() < 0:
             await ctx.send(_("This can't be negative!"))
             return
@@ -895,7 +901,7 @@ moderators and admins.
                 _(
                     "Done. If a player doesn't respond in his channel {delay} "
                     "after its creation, he will automatically be disqualified."
-                ).format(delay=humanize_timedelta(delay))
+                ).format(delay=humanize_timedelta(timedelta=delay))
             )
 
     @tournamentset.command(name="warntime")
@@ -968,6 +974,7 @@ before the opening of the tournament, then closing 10 minutes before.
         async with self.data.settings(guild.id, config).register() as register:
             if (
                 opening.total_seconds() != 0
+                and register["second_opening"]
                 and register["second_opening"] >= opening.total_seconds()
             ):
                 await ctx.send(
@@ -1048,11 +1055,19 @@ bracket.
         guild = ctx.guild
         config = second_opening.config
         second_opening = second_opening.arg.total_seconds()
-        async with self.data.settings(guild.id, config) as register:
-            if second_opening != 0 and second_opening >= register["opening"]:
+        async with self.data.settings(guild.id, config).register() as register:
+            if (
+                second_opening != 0
+                and register["opening"]
+                and second_opening >= register["opening"]
+            ):
                 await ctx.send(_("Second opening must occur after first opening."))
                 return
-            if second_opening != 0 and second_opening <= register["closing"]:
+            if (
+                second_opening != 0
+                and register["closing"]
+                and second_opening <= register["closing"]
+            ):
                 await ctx.send(_("Second opening must before closing."))
                 return
             register["second_opening"] = second_opening
@@ -1095,7 +1110,10 @@ the start of the tournament, then closing 15 minutes before.
                 _(
                     "Check-in will now open {opening} before the start and close "
                     "{closing} before the start of the tournament."
-                ).format(opening=humanize_timedelta(opening), closing=humanize_timedelta(closing))
+                ).format(
+                    opening=humanize_timedelta(timedelta=opening),
+                    closing=humanize_timedelta(timedelta=closing),
+                )
             )
 
     @tournamentset.command(name="startbo5")
@@ -1157,7 +1175,7 @@ the start of the tournament, then closing 15 minutes before.
             challonge = _("Not configured. Use `{prefix}challongeset`").format(
                 prefix=ctx.clean_prefix
             )
-        delay = data["delay"]
+        delay = humanize_timedelta(seconds=data["delay"])
         start_bo5 = data["start_bo5"]
         if data["register"]["opening"] != 0:
             register_start = humanize_timedelta(seconds=data["register"]["opening"]) + "*"
@@ -1240,7 +1258,7 @@ the start of the tournament, then closing 15 minutes before.
         embed.description = _(
             "Challonge credentials : {challonge}\n"
             "Number of configs : {configs}\n"
-            "Delay before DQ : {delay} minutes\n"
+            "Delay before DQ : {delay}\n"
             "Begin of BO5 : {bo5} *(see `{prefix}help tset startbo5`)*"
         ).format(
             challonge=challonge,
