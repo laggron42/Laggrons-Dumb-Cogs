@@ -17,7 +17,7 @@ from random import choice, shuffle
 from itertools import islice
 from datetime import datetime, timedelta, timezone
 from babel.dates import format_date, format_time
-from typing import Optional, Tuple, List, Union
+from typing import Mapping, Optional, Tuple, List, Union
 
 from redbot import __version__ as red_version
 from redbot.core import Config
@@ -1329,10 +1329,16 @@ class Tournament:
         # fitting to achallonge's requirements
         self.credentials["login"] = self.credentials.pop("username")
         self.credentials["password"] = self.credentials.pop("api")
-        self.delay: int = data["delay"]
-        self.time_until_warn = {
-            "bo3": data["time_until_warn"].get("bo3", (25, 10)),
-            "bo5": data["time_until_warn"].get("bo5", (30, 10)),
+        self.delay: timedelta = timedelta(seconds=data["delay"]) or None
+        self.time_until_warn: Mapping[str, Tuple[timedelta]] = {
+            "bo3": tuple(
+                timedelta(seconds=x) or None
+                for x in data["time_until_warn"].get("bo3", (1500, 600))
+            ),
+            "bo5": tuple(
+                timedelta(seconds=x) or None
+                for x in data["time_until_warn"].get("bo5", (1800, 600))
+            ),
         }  # the default values are somehow not loaded into the dict sometimes
         self.register: dict = data["register"]
         self.checkin: dict = data["checkin"]
@@ -2527,7 +2533,7 @@ class Tournament:
                     ":timer: **You will automatically be disqualified if you don't talk in your "
                     "channel within the first {delay} minutes.**"
                 ).format(delay=self.delay)
-                if self.delay != 0
+                if self.delay
                 else "",
                 prefix=self.bot_prefix,
             ),
@@ -2555,7 +2561,7 @@ class Tournament:
                     ":timer: **You will be disqualified if you were not active in your channel** "
                     "within the {delay} first minutes after the set launch."
                 ).format(delay=self.delay)
-                if self.delay > 0
+                if self.delay
                 else "",
             ),
         }
@@ -2638,8 +2644,8 @@ class Tournament:
             lambda x: x[1].status != "pending" and x[1].channel is not None,
             enumerate(self.matches),
         ):
-            if self.delay > 0 and match.status == "ongoing":
-                if not match.checked_dq and match.duration > timedelta(minutes=self.delay):
+            if self.delay and match.status == "ongoing":
+                if not match.checked_dq and match.duration > self.delay:
                     log.debug(f"Checking inactivity for match {match.set}")
                     await match.check_inactive()
             elif match.status == "finished":
@@ -2671,11 +2677,9 @@ class Tournament:
             if not max_length[0]:
                 continue
             if match.warned is None:
-                if match.duration > timedelta(minutes=max_length[0]):
+                if match.duration > max_length[0]:
                     await match.warn_length()
-            elif max_length[1] and datetime.now(self.tz) > match.warned + timedelta(
-                minutes=max_length[1]
-            ):
+            elif max_length[1] and datetime.now(self.tz) > match.warned + max_length[1]:
                 await match.warn_to_length()
 
     async def _loop_task(self):
@@ -2771,7 +2775,7 @@ class Tournament:
         so this function will cancel all AFK checks for the matches that are going to have
         players DQed.
         """
-        if self.delay == 0:
+        if self.delay is None:
             return
         to_timeout = [
             x
@@ -2779,7 +2783,7 @@ class Tournament:
             if x.status == "ongoing"
             and x.checked_dq is False
             and x.duration is not None
-            and x.duration > timedelta(minutes=self.delay)
+            and x.duration > self.delay
             and (x.player1.spoke is False or x.player2.spoke is False)
         ]
         if not to_timeout:
