@@ -29,8 +29,11 @@ class MemoryCache:
 
     async def init_automod_enabled(self):
         for guild_id, data in (await self.data.all_guilds()).items():
-            if data["automod"]["enabled"] is True:
-                self.automod_enabled.append(guild_id)
+            try:
+                if data["automod"]["enabled"] is True:
+                    self.automod_enabled.append(guild_id)
+            except KeyError:
+                pass
 
     async def _debug_info(self) -> str:
         """
