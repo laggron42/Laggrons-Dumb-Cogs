@@ -24,7 +24,7 @@ from redbot.core import Config
 from redbot.core.bot import Red
 from redbot.core.i18n import Translator, get_babel_locale, set_contextual_locales_from_guild
 from redbot.core.data_manager import cog_data_path
-from redbot.core.utils.chat_formatting import pagify
+from redbot.core.utils.chat_formatting import humanize_timedelta, pagify
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -829,8 +829,8 @@ class Match:
         time = self.tournament.time_until_warn["bo5" if self.is_bo5 else "bo3"][1]
         if time:
             message += _(
-                "\nT.O.s will be warned if this match is still ongoing in {time} minutes."
-            ).format(time=time)
+                "\nT.O.s will be warned if this match is still ongoing in {time}."
+            ).format(time=humanize_timedelta(timedelta=time))
         try:
             await target(message)
         except discord.NotFound:
@@ -2531,8 +2531,8 @@ class Tournament:
                 scores_channel=scores_channel,
                 delay=_(
                     ":timer: **You will automatically be disqualified if you don't talk in your "
-                    "channel within the first {delay} minutes.**"
-                ).format(delay=self.delay)
+                    "channel within the first {delay}.**"
+                ).format(delay=humanize_timedelta(timedelta=self.delay))
                 if self.delay
                 else "",
                 prefix=self.bot_prefix,
@@ -2559,8 +2559,8 @@ class Tournament:
                 prefix=self.bot_prefix,
                 dq=_(
                     ":timer: **You will be disqualified if you were not active in your channel** "
-                    "within the {delay} first minutes after the set launch."
-                ).format(delay=self.delay)
+                    "within {delay} after the set launch."
+                ).format(delay=humanize_timedelta(timedelta=self.delay))
                 if self.delay
                 else "",
             ),
