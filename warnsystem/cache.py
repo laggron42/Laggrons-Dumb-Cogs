@@ -28,9 +28,9 @@ class MemoryCache:
         self.automod_regex = {}
 
     async def init_automod_enabled(self):
-        for guild in self.bot.guilds:
-            if await self.data.guild(guild).automod.enabled():
-                self.automod_enabled.append(guild.id)
+        for guild_id, data in (await self.data.all_guilds()).items():
+            if data["automod"]["enabled"] is True:
+                self.automod_enabled.append(guild_id)
 
     async def _debug_info(self) -> str:
         """
