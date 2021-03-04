@@ -983,18 +983,42 @@ before the opening of the tournament, then closing 10 minutes before.
                 return
             register["opening"] = opening.total_seconds()
             register["closing"] = closing.total_seconds()
-        if opening.total_seconds() == 0 and closing.total_seconds() == 0:
-            await ctx.send(_("Automatic registration is now disabled."))
-        else:
-            await ctx.send(
-                _(
-                    "Registration will now open {opening} before the start and close "
-                    "{closing} before the start of the tournament."
-                ).format(
-                    opening=humanize_timedelta(timedelta=opening),
-                    closing=humanize_timedelta(timedelta=closing),
+        if opening.total_seconds() == 0:
+            if closing.total_seconds() == 0:
+                await ctx.send(_("Automatic registration is now disabled."))
+            else:
+                await ctx.send(
+                    _(
+                        "Registrations will now close {closing} before the start of the "
+                        "tournament.\nAutomatic opening time is disabled, use "
+                        "`{prefix}register start` to start them."
+                    ).format(
+                        closing=humanize_timedelta(timedelta=closing),
+                        prefix=ctx.clean_prefix,
+                    )
                 )
-            )
+        else:
+            if closing.total_seconds() == 0:
+                await ctx.send(
+                    _(
+                        "Registrations will now open {opening} before the start of the "
+                        "tournament.\nAutomatic closing time is disabled, use "
+                        "`{prefix}register stop` to stop registrations."
+                    ).format(
+                        opening=humanize_timedelta(timedelta=opening),
+                        prefix=ctx.clean_prefix,
+                    )
+                )
+            else:
+                await ctx.send(
+                    _(
+                        "Registration will now open {opening} before the start and close "
+                        "{closing} before the start of the tournament."
+                    ).format(
+                        opening=humanize_timedelta(timedelta=opening),
+                        closing=humanize_timedelta(timedelta=closing),
+                    )
+                )
 
     @tournamentset.command(name="autostopregister")
     async def tournamentset_autostopregister(
@@ -1103,18 +1127,42 @@ the start of the tournament, then closing 15 minutes before.
         await self.data.settings(guild.id, config).checkin.set(
             {"opening": opening.total_seconds(), "closing": closing.total_seconds()}
         )
-        if opening.total_seconds() == 0 and closing.total_seconds() == 0:
-            await ctx.send(_("The check-in is now disabled."))
-        else:
-            await ctx.send(
-                _(
-                    "Check-in will now open {opening} before the start and close "
-                    "{closing} before the start of the tournament."
-                ).format(
-                    opening=humanize_timedelta(timedelta=opening),
-                    closing=humanize_timedelta(timedelta=closing),
+        if opening.total_seconds() == 0:
+            if closing.total_seconds() == 0:
+                await ctx.send(_("Automatic check-in is now disabled."))
+            else:
+                await ctx.send(
+                    _(
+                        "Check-in will now close {closing} before the start of the "
+                        "tournament.\nAutomatic opening time is disabled, use "
+                        "`{prefix}checkin start` to start the check-in."
+                    ).format(
+                        closing=humanize_timedelta(timedelta=closing),
+                        prefix=ctx.clean_prefix,
+                    )
                 )
-            )
+        else:
+            if closing.total_seconds() == 0:
+                await ctx.send(
+                    _(
+                        "Check-in will now open {opening} before the start of the "
+                        "tournament.\nAutomatic closing time is disabled, use "
+                        "`{prefix}checkin stop` to stop the check-in."
+                    ).format(
+                        opening=humanize_timedelta(timedelta=opening),
+                        prefix=ctx.clean_prefix,
+                    )
+                )
+            else:
+                await ctx.send(
+                    _(
+                        "Check-in will now open {opening} before the start and close "
+                        "{closing} before the start of the tournament."
+                    ).format(
+                        opening=humanize_timedelta(timedelta=opening),
+                        closing=humanize_timedelta(timedelta=closing),
+                    )
+                )
 
     @tournamentset.command(name="startbo5")
     async def tournamentset_startbo5(self, ctx: commands.Context, level: ConfigSelector(int)):
