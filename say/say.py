@@ -118,11 +118,11 @@ class Say(BaseCog):
     @commands.command(name="sayad")
     @checks.admin_or_permissions(administrator=True)
     async def _sayautodelete(
-        self, 
-        ctx: commands.Context, 
-        channel: Optional[discord.TextChannel], 
-        delete_delay: int, 
-        *, 
+        self,
+        ctx: commands.Context,
+        channel: Optional[discord.TextChannel],
+        delete_delay: int,
+        *,
         text: str = "",
     ):
         """
