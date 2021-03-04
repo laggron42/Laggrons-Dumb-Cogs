@@ -498,7 +498,7 @@ set him a level 3 warning with the given reason.
             autowarn["warn"]["reason"],
             autowarn["level"],
             autowarn["automod_only"],
-            timedelta(seconds=autowarn["time"]),
+            timedelta(seconds=autowarn["time"]) if autowarn["time"] else None,
             timedelta(seconds=duration) if duration else None,
         )
         await ctx.send(embed=embed)
