@@ -1394,7 +1394,7 @@ the start of the tournament, then closing 15 minutes before.
         if failed:
             if len(failed) == 1:
                 text = _(
-                    ":warning: Challonge player with name \"{name}\n can't be found on "
+                    ':warning: Challonge player with name "{name}" can\'t be found on '
                     "the server. If you continue the setup, he will be disqualified."
                 ).format(name=failed[0])
             else:
