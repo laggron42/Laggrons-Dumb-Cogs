@@ -36,7 +36,7 @@ class Say(BaseCog):
         self.interaction = []
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.5.0"
+    __version__ = "1.6.0"
 
     async def say(
         self,
@@ -45,6 +45,7 @@ class Say(BaseCog):
         text: str,
         files: list,
         mentions: discord.AllowedMentions = None,
+        delete: int = None,
     ):
         if not channel:
             channel = ctx.channel
@@ -64,7 +65,7 @@ class Say(BaseCog):
 
         # sending the message
         try:
-            await channel.send(text, files=files, allowed_mentions=mentions)
+            await channel.send(text, files=files, allowed_mentions=mentions, delete_after=delete)
         except discord.errors.HTTPException as e:
             author = ctx.author
             if not ctx.guild.me.permissions_in(channel).send_messages:
@@ -113,6 +114,23 @@ class Say(BaseCog):
 
         files = await Tunnel.files_from_attatch(ctx.message)
         await self.say(ctx, channel, text, files)
+
+    @commands.command(name="sayad")
+    @checks.admin_or_permissions(administrator=True)
+    async def _sayautodelete(
+        self,
+        ctx: commands.Context,
+        channel: Optional[discord.TextChannel],
+        delete_delay: int,
+        *,
+        text: str = "",
+    ):
+        """
+        Same as say command, except it deletes the said message after a set number of seconds.
+        """
+
+        files = await Tunnel.files_from_attatch(ctx.message)
+        await self.say(ctx, channel, text, files, delete=delete_delay)
 
     @commands.command(name="sayd", aliases=["sd"])
     @checks.admin_or_permissions(administrator=True)
