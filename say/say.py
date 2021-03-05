@@ -36,7 +36,7 @@ class Say(BaseCog):
         self.interaction = []
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.5.0"
+    __version__ = "1.6.0"
 
     async def say(
         self,
