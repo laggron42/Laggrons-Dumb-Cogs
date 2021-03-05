@@ -1552,7 +1552,7 @@ class API:
                     # value exceeded, no need to continue, it's already done for this one warn
                     to_remove.append(i)
                     del found_warnings[i]
-            for index in to_remove:
+            for index in reversed(to_remove):
                 autowarns.pop(index)
             if not autowarns:
                 # we could be out of autowarns to check after a certain time
