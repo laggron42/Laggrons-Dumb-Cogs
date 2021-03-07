@@ -1618,6 +1618,8 @@ class Tournament:
             allowed_roles.append(self.to_role)
         if self.streamer_role is not None:
             allowed_roles.append(self.streamer_role)
+        if self.tester_role is not None:
+            allowed_roles.append(self.tester_role)
         return allowed_roles
 
     # some common utils
