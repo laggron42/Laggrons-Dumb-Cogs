@@ -74,13 +74,17 @@ async def _convert_to_v1(config):
         if len(games) == 1:
             game = list(games.values())[0]
             settings[None]["roles"] = {"player": game.pop("role")}
+            settings[None]["channels"] = {"ruleset": game.pop("ruleset")}
             settings[None].update(game)
         else:
             for name, value in games.items():
                 role = value.pop("role")
+                ruleset = value.pop("ruleset")
                 settings[name] = value
                 if role:
                     settings[name]["roles"] = {"player": role}
+                if ruleset:
+                    settings[name]["channels"] = {"ruleset": role}
         settings = convert_timedelta(settings)
         if settings:
             await config.custom("SETTINGS", guild_id).set(settings)
