@@ -73,13 +73,13 @@ async def _convert_to_v1(config):
         settings = {None: data}
         if len(games) == 1:
             game = list(games.values())[0]
-            settings[None]["roles"] = {"player": game.pop("role")}
-            settings[None]["channels"] = {"ruleset": game.pop("ruleset")}
+            settings[None]["roles"] = {"player": game.pop("role", None)}
+            settings[None]["channels"] = {"ruleset": game.pop("ruleset", None)}
             settings[None].update(game)
         else:
             for name, value in games.items():
-                role = value.pop("role")
-                ruleset = value.pop("ruleset")
+                role = value.pop("role", None)
+                ruleset = value.pop("ruleset", None)
                 settings[name] = value
                 if role:
                     settings[name]["roles"] = {"player": role}
