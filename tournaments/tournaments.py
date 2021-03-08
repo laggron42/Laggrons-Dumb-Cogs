@@ -42,6 +42,10 @@ class TournamentsConfig(Config):
     Just a shortcut for custom groups.
     """
 
+    @classmethod
+    def get_conf(cls, *args, **kwargs):
+        return super(TournamentsConfig, cls).get_conf(*args, **kwargs)
+
     def settings(self, *args, **kwargs) -> Group:
         return self.custom("SETTINGS", *args, *kwargs)
 
