@@ -42,9 +42,18 @@ class TournamentsConfig(Config):
     Just a shortcut for custom groups.
     """
 
+    def __init__(self, cog_name, unique_identifier, driver, force_registration, defaults):
+        super().__init__(
+            cog_name,
+            unique_identifier,
+            driver,
+            force_registration=force_registration,
+            defaults=defaults,
+        )
+
     @classmethod
     def get_conf(cls, *args, **kwargs):
-        return super(TournamentsConfig, cls).get_conf(*args, **kwargs)
+        return super().get_conf(*args, **kwargs)
 
     def settings(self, *args, **kwargs) -> Group:
         return self.custom("SETTINGS", *args, *kwargs)
