@@ -19,8 +19,7 @@ log = logging.getLogger("red.laggron.warnsystem")
 # credit to mikeshardmind (Sinbad) for parse_time
 # https://github.com/mikeshardmind/SinbadCogs/blob/v3/scheduler/time_utils.py
 def parse_time(datetimestring: str):
-    ret = parser.parse(datetimestring, ignoretz=True)
-    return ret
+    return parser.parse(datetimestring, ignoretz=True)
 
 
 # credit to mikeshardmind (Sinbad) once again for all the argument parsing stuff
@@ -225,9 +224,7 @@ class AdvancedMemberSelect:
         pattern = re.compile(pattern)
 
         def member_filter(member: discord.Member):
-            if pattern.search(getattr(member, attribute)):
-                return True
-            return False
+            return bool(pattern.search(getattr(member, attribute)))
 
         return list(filter(member_filter, members))
 
@@ -240,9 +237,7 @@ class AdvancedMemberSelect:
             maybe_custom = next(filter(lambda a: a.type == 4, member.activities), None)
             if not maybe_custom:
                 return False
-            if pattern.search(maybe_custom.state or ""):
-                return True
-            return False
+            return bool(pattern.search(maybe_custom.state or ""))
 
         return list(filter(member_filter, members))
 
@@ -263,9 +258,7 @@ class AdvancedMemberSelect:
         def member_filter(member: discord.Member):
             if when == "before" and member.joined_at < date:
                 return True
-            if when == "after" and member.joined_at > date:
-                return True
-            return False
+            return when == "after" and member.joined_at > date
 
         return list(filter(member_filter, members))
 
@@ -278,9 +271,7 @@ class AdvancedMemberSelect:
             ]
 
         def member_filter(member: discord.Member):
-            if member.joined_at > last_member.joined_at:
-                return True
-            return False
+            return member.joined_at > last_member.joined_at
 
         return list(filter(member_filter, members))
 
@@ -291,9 +282,7 @@ class AdvancedMemberSelect:
             last_member = sorted(members, key=lambda x: x.joined_at)[len(members) - 1]
 
         def member_filter(member: discord.Member):
-            if member.joined_at < last_member.joined_at:
-                return True
-            return False
+            return member.joined_at < last_member.joined_at
 
         return list(filter(member_filter, members))
 
@@ -309,19 +298,21 @@ class AdvancedMemberSelect:
                 )
 
         def member_filter(member: discord.Member):
-            if requires == "perm":
-                if getattr(member.guild_permissions, permissions[0]):
-                    return True
-            elif requires == "any-perm":
-                if set([x[0] for x in member.guild_permissions if x[1]]).intersection(permissions):
-                    return True
-            elif requires == "all-perms":
+            if requires == "all-perms":
                 if set(permissions).issubset([x[0] for x in member.guild_permissions if x[1]]):
                     return True
-            elif requires == "none-perms":
-                if not set([x[0] for x in member.guild_permissions if x[1]]).intersection(
+            elif requires == "any-perm":
+                if {x[0] for x in member.guild_permissions if x[1]}.intersection(
                     permissions
                 ):
+                    return True
+            elif requires == "none-perms":
+                if not {x[0] for x in member.guild_permissions if x[1]}.intersection(
+                    permissions
+                ):
+                    return True
+            elif requires == "perm":
+                if getattr(member.guild_permissions, permissions[0]):
                     return True
             return False
 
@@ -329,9 +320,7 @@ class AdvancedMemberSelect:
 
     def _perm_int(self, members: list, permissions: int):
         def member_filter(member: discord.Member):
-            if member.guild_permissions.value == permissions:
-                return True
-            return False
+            return member.guild_permissions.value == permissions
 
         return list(filter(member_filter, members))
 
@@ -397,11 +386,11 @@ class AdvancedMemberSelect:
                     ).format(arg=member, state=requires)
                 )
 
-        if requires == "select":
-            members.extend(selection)
-            return members
-        else:
+        if requires != "select":
             return list(set(members) - set(selection))
+
+        members.extend(selection)
+        return members
 
     async def _unavailable_selection(self, _selection):
         # don't question my function names

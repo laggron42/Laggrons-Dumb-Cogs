@@ -46,10 +46,7 @@ def pretty_date(time: datetime):
 
     def text(amount: float, unit: tuple):
         amount = round(amount)
-        if amount > 1:
-            unit = unit[1]
-        else:
-            unit = unit[0]
+        unit = unit[1] if amount > 1 else unit[0]
         return _("{amount} {unit} ago.").format(amount=amount, unit=unit)
 
     units_name = {
@@ -830,10 +827,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         for case in cases[:-10:-1]:
             level = case["level"]
             reason = str(case["reason"]).splitlines()
-            if len(reason) > 1:
-                reason = reason[0] + "..."
-            else:
-                reason = reason[0]
+            reason = reason[0] + "..." if len(reason) > 1 else reason[0]
             date = pretty_date(self.api._get_datetime(case["time"]))
             text = f"**{warning_str(level, False)}:** {reason} • *{date}*\n"
             if len("".join(warn_list + [text])) > 1024:  # embed limits
@@ -1343,7 +1337,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         mute_role = guild.get_role(await self.cache.get_mute_role(guild))
         if not mute_role:
             return
-        if not (mute_role in before.roles and mute_role not in after.roles):
+        if mute_role not in before.roles or mute_role in after.roles:
             return
         if after.id in self.cache.temp_actions:
             await self.cache.remove_temp_action(guild, after)
@@ -1443,7 +1437,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
-        if not ctx.command.cog_name == self.__class__.__name__:
+        if ctx.command.cog_name != self.__class__.__name__:
             # That error doesn't belong to the cog
             return
         if isinstance(error, commands.MissingPermissions):

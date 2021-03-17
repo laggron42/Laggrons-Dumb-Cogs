@@ -150,12 +150,12 @@ excluded) by calling the command like this: `[p]tfix resetmatches yes`
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
-        if try_delete is True:
+        if try_delete:
             channels = [x.channel for x in tournament.matches if x.channel is not None]
         tournament.matches = []
         tournament.participants = []
         await tournament.save()
-        if try_delete is False:
+        if not try_delete:
             await ctx.send(_("Matches reset."))
             return
         await ctx.send(_("Matches reset. Starting channels deletion, this might take a while..."))
@@ -184,11 +184,11 @@ excluded) by calling the command like this: `[p]tfix resetmatches yes`
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
-        if try_remove is True:
+        if try_remove:
             participants = tournament.participants if tournament.participant_role else []
         tournament.participants = []
         await tournament.save()
-        if try_remove is False:
+        if not try_remove:
             await ctx.send(_("Participants reset."))
             return
         await ctx.send(_("Participants reset. Starting roles removal, this might take a while..."))
@@ -240,7 +240,7 @@ members of that role.
             return
         pre_check = tournament.checkin_phase in ("ongoing", "done")
         if not to_register:
-            if pre_check is False:
+            if not pre_check:
                 await ctx.send(_("No new member to register."))
             else:
                 for member in role.members:
@@ -372,7 +372,7 @@ will be disabled for all ongoing matches at the time of the task pause.
                 f"[Guild {guild.id}] User tried to resume the task, but it failed", exc_info=e
             )
             failed = True
-        if failed is True or tournament.task_errors > 0:
+        if failed or tournament.task_errors > 0:
             await ctx.send(
                 _(
                     "I attempted to run the task once but it failed. The task will not be "

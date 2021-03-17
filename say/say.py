@@ -55,11 +55,9 @@ class Say(BaseCog):
 
         # preparing context info in case of an error
         if files != []:
-            error_message = (
-                "Has files: yes\n"
+            error_message = ("Has files: yes\n"
                 f"Number of files: {len(files)}\n"
-                f"Files URL: " + ", ".join([x.url for x in ctx.message.attachments])
-            )
+                f"Files URL: " + ", ".join(x.url for x in ctx.message.attachments))
         else:
             error_message = "Has files: no"
 
@@ -196,12 +194,10 @@ class Say(BaseCog):
             await ctx.send(_("You don't have the permission yourself to do mass mentions."))
             return
         if ctx.author.guild_permissions.administrator is False and no_mention:
-            await ctx.send(
-                _(
+            await ctx.send(_(
                     "You're not allowed to mention the following roles: {roles}\nTurn on "
                     "mentions for that role or be an admin in the server.\n"
-                ).format(roles=", ".join([x.name for x in no_mention]))
-            )
+                ).format(roles=", ".join(x.name for x in no_mention)))
             return
         await self.say(
             ctx, channel, text, files, mentions=discord.AllowedMentions(everyone=True, roles=True)
@@ -259,13 +255,10 @@ class Say(BaseCog):
                     return
                 await channel.send(message.content, files=files)
             elif (
-                message.channel != channel
-                or message.author == channel.guild.me
-                or message.author == u
+                message.channel == channel
+                and message.author != channel.guild.me
+                and message.author != u
             ):
-                pass
-
-            else:
                 embed = discord.Embed()
                 embed.set_author(
                     name="{} | {}".format(str(message.author), message.author.id),
@@ -310,7 +303,7 @@ class Say(BaseCog):
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
-        if not ctx.command.cog_name == self.__class__.__name__:
+        if ctx.command.cog_name != self.__class__.__name__:
             # That error doesn't belong to the cog
             return
         with DisabledConsoleOutput(log):

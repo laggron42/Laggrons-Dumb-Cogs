@@ -523,7 +523,7 @@ class API:
             except RuntimeError:
                 raise errors.NotFound("No modlog found from WarnSystem or Red")
 
-        return self.bot.get_channel(channel if channel else default_channel)
+        return self.bot.get_channel(channel or default_channel)
 
     async def get_embeds(
         self,
@@ -614,14 +614,8 @@ class API:
                 invite = await guild.create_invite(max_uses=1)
             except Exception:
                 invite = _("*[couldn't create an invite]*")
-        if date:
-            today = date.strftime("%a %d %B %Y %H:%M")
-        else:
-            today = datetime.utcnow()
-        if time:
-            duration = self._format_timedelta(time)
-        else:
-            duration = _("*[No time given]*")
+        today = date.strftime("%a %d %B %Y %H:%M") if date else datetime.utcnow()
+        duration = self._format_timedelta(time) if time else _("*[No time given]*")
         format_description = lambda x: x.format(
             invite=invite, member=member, mod=author, duration=duration, time=today
         )
@@ -922,8 +916,10 @@ class API:
                         "the hierarchy so my top role ({bot_role}) is above {member_role}."
                     ).format(bot_role=guild.me.top_role.name, member_role=member.top_role.name)
                 )
-            if await self.data.guild(guild).respect_hierarchy() and (
-                not (await self.bot.is_owner(author) or author.id == guild.owner_id)
+            if (
+                await self.data.guild(guild).respect_hierarchy()
+                and not await self.bot.is_owner(author)
+                and author.id != guild.owner_id
                 and member.top_role.position >= author.top_role.position
             ):
                 return errors.NotAllowedByHierarchy(
@@ -1001,15 +997,12 @@ class API:
                     )
                     return e
             # actions were taken, time to log
-            if log_modlog:
-                modlog_message = await mod_channel.send(embed=modlog_e)
-            else:
-                modlog_message = None
+            modlog_message = await mod_channel.send(embed=modlog_e) if log_modlog else None
             data = await self._create_case(
                 guild, member, author, level, date, reason, time, roles, modlog_message
             )
             # start timer if there is a temporary warning
-            if time and (level == 2 or level == 5):
+            if time and level in [2, 5]:
                 await self._start_timer(guild, member, data)
             if automod:
                 # This function can be pretty heavy, and the response can be seriously delayed
@@ -1392,8 +1385,6 @@ class API:
         except KeyError:
             self.antispam[guild.id] = {channel.id: {member.id: data}}
             return
-        else:
-            pass
         try:
             channel_data = guild_data[channel.id]
         except KeyError:
@@ -1519,7 +1510,7 @@ class API:
         def is_autowarn_valid(warn):
             if author.id != self.bot.user.id and warn["automod_only"]:
                 return False
-            return warn["level"] == 0 or warn["level"] == level
+            return warn["level"] in [0, level]
 
         autowarns = list(filter(is_autowarn_valid, autowarns))
         if not autowarns:

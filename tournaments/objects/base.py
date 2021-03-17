@@ -284,7 +284,7 @@ class Match:
             round >= tournament.top_8["winner"]["bo5"] or round <= tournament.top_8["loser"]["bo5"]
         )
         self.round_name = self._get_name()
-        self.checked_dq = True if self.is_top8 else False
+        self.checked_dq = self.is_top8
 
     def __repr__(self):
         return (
@@ -871,7 +871,7 @@ class Match:
             If the score should be uploaded to the bracket. Set `False` to only send the message
             with a note "score set on bracket" added. Defaults to `True`.
         """
-        if upload is True:
+        if upload:
             await self.set_scores(player1_score, player2_score)
         self.cancel()
         winner = self.player1 if player1_score > player2_score else self.player2
@@ -888,9 +888,13 @@ class Match:
                     "*Note : this channel will be deleted after 5 minutes of inactivity.*{remote}"
                 ).format(
                     winner=winner.mention,
-                    score=f" **{score}**" if player1_score + player2_score > 0 else "",
-                    remote=_("\n\n:information_source: The score was directly set on the bracket.")
-                    if upload is False
+                    score=f" **{score}**"
+                    if player1_score + player2_score > 0
+                    else "",
+                    remote=_(
+                        "\n\n:information_source: The score was directly set on the bracket."
+                    )
+                    if not upload
                     else "",
                 )
             )
@@ -980,10 +984,7 @@ class Match:
         player: Participant
             The player that forfeits.
         """
-        if player.id == self.player1.id:
-            score = (-1, 0)
-        else:
-            score = (0, -1)
+        score = (-1, 0) if player.id == self.player1.id else (0, -1)
         await self.set_scores(*score)
         self.cancel()
         winner = self.player1 if self.player1.id != player.id else self.player2
@@ -1503,23 +1504,22 @@ class Tournament:
             player1 = tournament.find_participant(player_id=data["player1"])[1]
             player2 = tournament.find_participant(player_id=data["player2"])[1]
             match = tournament.match_object.from_saved_data(tournament, player1, player2, data)
-            if player1 is None and player2 is None:
-                if match.channel:
-                    await tournament.destroy_player(data["player1"])
-                    await tournament.destroy_player(data["player2"])
-                    try:
-                        await match.channel.delete()
-                    except discord.HTTPException as e:
-                        log.warn(
-                            f"[Guild {guild.id}] Can't delete set channel #{match.set}.",
-                            exc_info=e,
-                        )
-                    await tournament.to_channel.send(
-                        _(":information_source: Set {match} cancelled, both players left.").format(
-                            set=match.set
-                        )
+            if player1 is None and player2 is None and match.channel:
+                await tournament.destroy_player(data["player1"])
+                await tournament.destroy_player(data["player2"])
+                try:
+                    await match.channel.delete()
+                except discord.HTTPException as e:
+                    log.warn(
+                        f"[Guild {guild.id}] Can't delete set channel #{match.set}.",
+                        exc_info=e,
                     )
-                    continue
+                await tournament.to_channel.send(
+                    _(":information_source: Set {match} cancelled, both players left.").format(
+                        set=match.set
+                    )
+                )
+                continue
             stop = False
             for i, player in enumerate((player1, player2), start=1):
                 if player is None:
@@ -1559,11 +1559,8 @@ class Tournament:
     def to_dict(self) -> dict:
         """Returns a dict ready for Config."""
         offset = self.tournament_start.utcoffset()
-        if offset:
-            offset = offset.total_seconds()
-        else:
-            offset = 0
-        data = {
+        offset = offset.total_seconds() if offset else 0
+        return {
             "name": self.name,
             "game": self.game,
             "url": self.url,
@@ -1583,9 +1580,10 @@ class Tournament:
             "checkin": self.checkin_phase,
             "checkin_reminders": self.checkin_reminders,
             "ignored_events": self.ignored_events,
-            "register_message_id": self.register_message.id if self.register_message else None,
+            "register_message_id": self.register_message.id
+            if self.register_message
+            else None,
         }
-        return data
 
     async def save(self):
         """
@@ -1640,10 +1638,7 @@ class Tournament:
                 events[name] = None
                 continue
             delta = date - now
-            if condition is True:
-                events[name] = delta
-            else:
-                events[name] = None
+            events[name] = delta if condition is True else None
         events = dict(filter(lambda x: x[1] is not None, events.items()))
         return min(events.items(), key=lambda x: x[1], default=None)
 
@@ -1691,10 +1686,7 @@ class Tournament:
         try:
             return next(filter(lambda x: len(x.channels) + inc < 50, categories))
         except StopIteration:
-            if dest == "winner":
-                name = "Winner bracket"
-            else:
-                name = "Loser bracket"
+            name = "Winner bracket" if dest == "winner" else "Loser bracket"
             channel = await self.guild.create_category(
                 name, reason=_("New category of sets."), position=position
             )
@@ -1765,13 +1757,11 @@ class Tournament:
         *sets: str
             The list of affected sets.
         """
-        await self.to_channel.send(
-            _(
+        await self.to_channel.send(_(
                 ":information_source: Changes were detected on the upstream bracket.\n"
                 "This may result in multiple sets ending, relaunch or cancellation.\n"
                 "Affected sets: {sets}"
-            ).format(sets=", ".join([f"#{x}" for x in sets]))
-        )
+            ).format(sets=", ".join(f"#{x}" for x in sets)))
 
     # tools for finding objects within the instance's lists of Participants, Matches and Streamers
     def find_participant(

@@ -76,7 +76,7 @@ class Settings(MixinMeta):
             role = guild.get_role(role_id)
             if role is None:
                 lost["roles"].append(name)
-        if all([not x for x in not_set.values()]) and all([not x for x in lost.values()]):
+        if not any(not_set.values()) and not any(lost.values()):
             return
         text = ""
         if not_set["channels"]:
@@ -88,21 +88,21 @@ class Settings(MixinMeta):
         if not_set["roles"]:
             text += (
                 _("The following roles are not configured:\n")
-                + "".join([f"- {x}\n" for x in not_set["roles"]])
-                + "\n"
-            )
+                + "".join(f"- {x}\n" for x in not_set["roles"])
+            ) + "\n"
+
         if lost["channels"]:
             text += (
                 _("The following channels were lost:\n")
-                + "".join([f"- {x}\n" for x in not_set["channels"]])
-                + "\n"
-            )
+                + "".join(f"- {x}\n" for x in not_set["channels"])
+            ) + "\n"
+
         if lost["roles"]:
             text += (
                 _("The following roles were lost:\n")
-                + "".join([f"- {x}\n" for x in not_set["roles"]])
-                + "\n"
-            )
+                + "".join(f"- {x}\n" for x in not_set["roles"])
+            ) + "\n"
+
         text += _(
             "Please configure the missing settings with the "
             "`{prefix}tset channels` and `{prefix}tset roles` commands."
@@ -618,17 +618,22 @@ other commands.
             role = role.name if role else _("Lost role.")
         ruleset = guild.get_channel(data["ruleset"])
         ruleset = ruleset.mention if ruleset else _("Lost channel.")
-        baninfo = data["baninfo"] if data["baninfo"] else _("Not set.")
+        baninfo = data["baninfo"] or _("Not set.")
         embed = discord.Embed(title=_("Settings of game {game}").format(game=game))
         embed.description = _(
             "Player role: {role}\n" "Rules channel: {channel}\n" "Ban info: {baninfo}"
         ).format(role=role, channel=ruleset, baninfo=baninfo)
         if data["stages"]:
-            embed.add_field(name=_("Stages"), value="\n".join([f"- {x}" for x in data["stages"]]))
+            embed.add_field(
+                name=_("Stages"), value="\n".join(f"- {x}" for x in data["stages"])
+            )
+
         if data["counterpicks"]:
             embed.add_field(
-                name=_("Counters"), value="\n".join([f"- {x}" for x in data["counterpicks"]])
+                name=_("Counters"),
+                value="\n".join(f"- {x}" for x in data["counterpicks"]),
             )
+
         if data["ranking"]["league_name"]:
             embed.add_field(
                 name=_("Ranking league"),

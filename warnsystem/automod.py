@@ -73,7 +73,7 @@ class AutomodMixin(MixinMeta):
         embed.description += _("Warning level: {level}\n").format(level=warn_level)
         embed.description += _("Warning reason: {reason}\n").format(reason=warn_reason)
         embed.description += _("Time interval: {time}\n").format(time=time_str)
-        if warn_level == 2 or warn_level == 5:
+        if warn_level in [2, 5]:
             embed.description += _("Duration: {time}\n").format(time=duration_str)
         embed.description += _("Lock to level: {level}\n").format(
             level=_("disabled") if lock_level == 0 else lock_level
@@ -176,10 +176,7 @@ class AutomodMixin(MixinMeta):
             await ctx.send(_("That name is already used."))
             return
         if time:
-            if level == 2 or level == 5:
-                time = time.total_seconds()
-            else:
-                time = None
+            time = time.total_seconds() if level in [2, 5] else None
         await self.cache.add_automod_regex(guild, name, regex, level, time, reason)
         await ctx.send(_("Regex trigger added!"))
 
@@ -202,20 +199,21 @@ class AutomodMixin(MixinMeta):
         """
         guild = ctx.guild
         automod_regex = await self.cache.get_automod_regex(guild)
-        text = ""
         if not automod_regex:
             await ctx.send(_("Nothing registered."))
             return
-        for name, value in automod_regex.items():
-            text += (
-                f"+ {name}\nLevel {value['level']} warning. Reason: {value['reason'][:40]}...\n\n"
-            )
-        messages = []
+        text = "".join(
+            f"+ {name}\nLevel {value['level']} warning. Reason: {value['reason'][:40]}...\n\n"
+            for name, value in automod_regex.items()
+        )
+
         pages = list(pagify(text, delims=["\n\n", "\n"], priority=True, page_length=1900))
-        for i, page in enumerate(pages):
-            messages.append(
-                _("Page {i}/{total}").format(i=i + 1, total=len(pages)) + box(page, "diff")
-            )
+        messages = [
+            _("Page {i}/{total}").format(i=i + 1, total=len(pages))
+            + box(page, "diff")
+            for i, page in enumerate(pages)
+        ]
+
         await menus.menu(ctx, pages=messages, controls=menus.DEFAULT_CONTROLS)
 
     @automod_regex.command(name="show")
@@ -314,7 +312,7 @@ set him a level 3 warning with the given reason.
                 optional=True,
             )
             duration = None
-            if warn_level == 2 or warn_level == 5:
+            if warn_level in [2, 5]:
                 duration: timedelta = await self._ask_for_value(
                     ctx,
                     msg,
@@ -342,9 +340,8 @@ set him a level 3 warning with the given reason.
                 )
                 if 0 <= lock_level <= 5:
                     break
-                else:
-                    await ctx.send(_("Level must be between 0 and 5."))
-                    await asyncio.sleep(1)
+                await ctx.send(_("Level must be between 0 and 5."))
+                await asyncio.sleep(1)
             only_automod = await self._ask_for_value(
                 ctx,
                 msg,
@@ -455,21 +452,21 @@ set him a level 3 warning with the given reason.
         if not autowarns:
             await ctx.send(_("No automatic warn registered."))
             return
-        text = ""
-        for index, data in enumerate(autowarns):
-            text += _("{index}. level {level} warn (need {number} warns to trigger)\n").format(
+        text = "".join(
+            _(
+                "{index}. level {level} warn (need {number} warns to trigger)\n"
+            ).format(
                 index=index, level=data["warn"]["level"], number=data["number"]
             )
+            for index, data in enumerate(autowarns)
+        )
+
         text = list(pagify(text, page_length=1900))
-        pages = []
-        for i, page in enumerate(text):
-            pages.append(
-                _("Page {i}/{total}\n\n").format(i=i + 1, total=len(text))
+        pages = [_("Page {i}/{total}\n\n").format(i=i + 1, total=len(text))
                 + page
                 + _("\n*Type `{prefix}automod warn show` to view details.*").format(
                     prefix=ctx.clean_prefix
-                )
-            )
+                ) for i, page in enumerate(text)]
         await menus.menu(ctx, pages=pages, controls=menus.DEFAULT_CONTROLS)
 
     @automod_warn.command(name="show")
@@ -548,7 +545,7 @@ you shouldn't need further setup.
         text = _("Antispam system is now {status}.").format(
             status=_("enabled") if enable else _("disabled")
         )
-        if await self.data.guild(guild).automod.enabled() is False and enable is True:
+        if await self.data.guild(guild).automod.enabled() is False and enable:
             text += _(
                 "\n:warning: Automod isn't enabled on this guild, "
                 "enable it with `{prefix}automod enable True`."
@@ -690,7 +687,7 @@ automod infractions, like a mute after 3 warns.
         )
         level = antispam_settings["warn"]["level"]
         reason = antispam_settings["warn"]["reason"]
-        if level == 2 or level == 5:
+        if level in [2, 5]:
             time = _("Time: {time}\n").format(
                 time=self.api._format_timedelta(
                     timedelta(seconds=antispam_settings["warn"]["time"])

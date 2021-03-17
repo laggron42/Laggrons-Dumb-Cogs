@@ -124,10 +124,7 @@ class ChallongeMatch(Match):
     ):
         score = f"{player1_score}-{player2_score}"
         if winner is None:
-            if player1_score > player2_score:
-                winner = self.player1
-            else:
-                winner = self.player2
+            winner = self.player1 if player1_score > player2_score else self.player2
         await self.tournament.request(
             achallonge.matches.update,
             self.tournament.id,
@@ -345,9 +342,12 @@ class ChallongeTournament(Tournament):
         difference = list(set(self.matches).difference(matches))
         if difference:
             log.debug(
-                f"[Guild {self.guild.id}] Removing these matches from cache:\n"
-                + "\n".join([repr(x) for x in difference])
+                (
+                    f"[Guild {self.guild.id}] Removing these matches from cache:\n"
+                    + "\n".join(repr(x) for x in difference)
+                )
             )
+
         self.matches = matches
         if remote_changes:
             await self.warn_bracket_change(*remote_changes)
@@ -378,7 +378,7 @@ class ChallongeTournament(Tournament):
         participants = copy(participants or self.participants)
         if not participants:
             raise RuntimeError("No participant provided")
-        if force is True:
+        if force:
             # remove previous participants
             await self.request(achallonge.participants.clear, self.id)
         else:

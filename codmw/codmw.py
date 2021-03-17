@@ -40,10 +40,7 @@ def pretty_date(time: datetime):
 
     def text(amount: float, unit: tuple):
         amount = round(amount)
-        if amount > 1:
-            unit = unit[1]
-        else:
-            unit = unit[0]
+        unit = unit[1] if amount > 1 else unit[0]
         return _("{amount} {unit} ago.").format(amount=amount, unit=unit)
 
     units_name = {
@@ -102,7 +99,7 @@ class CODMW(commands.Cog):
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
-        if not ctx.command.cog_name == self.__class__.__name__:
+        if ctx.command.cog_name != self.__class__.__name__:
             # That error doesn't belong to the cog
             return
         log.removeHandler(self.stdout_handler)  # remove console output since red also handle this
@@ -129,7 +126,7 @@ class CODMW(commands.Cog):
             try:
                 response = await coro(*args, **kwargs)
             except Forbidden as e:
-                if retried is False:
+                if not retried:
                     retried = True
                     await self.cod_client._get_tokens()
                     continue

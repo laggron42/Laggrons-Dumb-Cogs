@@ -177,10 +177,7 @@ class Games(MixinMeta):
                 if index > i:
                     text += f":white_check_mark: {task}\n"
                 elif i == index:
-                    if failed:
-                        text += f":warning: {task}\n"
-                    else:
-                        text += f":arrow_forward: **{task}**\n"
+                    text += f":warning: {task}\n" if failed else f":arrow_forward: **{task}**\n"
                 else:
                     text += f"*{task}*\n"
             if message is not None:
@@ -381,10 +378,7 @@ class Games(MixinMeta):
                 elif local_index == index:
                     if total:
                         task += f" ({i}/{total})"
-                    if errored:
-                        text += f":warning: {task}\n"
-                    else:
-                        text += f":arrow_forward: **{task}**\n"
+                    text += f":warning: {task}\n" if errored else f":arrow_forward: **{task}**\n"
                 else:
                     text += f"*{task}*\n"
             if message is not None:
@@ -667,7 +661,7 @@ you want the bot to override the previous list of participants, type `[p]upload 
                 if seeded:
                     # looks like it was the initial upload (or forced),
                     # so we display infos for a full seeding
-                    base_elo = min([x.elo for x in tournament.participants])
+                    base_elo = min(x.elo for x in tournament.participants)
                     generator = (
                         i for i, x in enumerate(tournament.participants, 1) if x.elo == base_elo
                     )
@@ -1017,16 +1011,14 @@ Else you can specify the set you want to update as the first argument.
         # convert to strings
         rounds_str = {}
         for matches in rounds:
-            text = ""
-            for match in matches:
-                text += _("Set {set} ({time}): {player1} vs {player2}\n").format(
+            text = "".join(_("Set {set} ({time}): {player1} vs {player2}\n").format(
                     set=match.channel.mention
                     if match.channel
                     else _("#{set} *in DM*").format(set=match.set),
                     time=str(match.duration).split(".")[0],
                     player1=match.player1.mention,
                     player2=match.player2.mention,
-                )
+                ) for match in matches)
             name = matches[0]._get_name()
             rounds_str[name] = text
         del rounds

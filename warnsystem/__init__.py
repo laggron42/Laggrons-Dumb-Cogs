@@ -164,7 +164,7 @@ async def update_config(bot, config):
     """
     if await config.data_version() == "0.0":
         all_guilds = await config.all_guilds()
-        if not any("temporary_warns" in x for x in all_guilds.values()):
+        if all("temporary_warns" not in x for x in all_guilds.values()):
             await config.data_version.set("1.0")
             return
         log.info(

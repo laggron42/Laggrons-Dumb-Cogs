@@ -71,7 +71,7 @@ class Registration(MixinMeta):
                     else:
                         await coro()
                     need_saving = True
-            if need_saving is True:
+            if need_saving:
                 await tournament.save()
 
     @tasks.loop(seconds=5)
@@ -487,7 +487,7 @@ there are spaces).
         if tournament.checkin_stop < datetime.now(tournament.tz):
             await ctx.send(_("The configured check-in end time has already passed."))
             return
-        if should_dm is True:
+        if should_dm:
             async with ctx.typing():
                 await tournament.call_check_in(True)
             await ctx.send(_("Successfully called and DMed the unchecked members."))

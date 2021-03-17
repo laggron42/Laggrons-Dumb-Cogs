@@ -30,9 +30,10 @@ async def mod_or_streamer(ctx: commands.Context):
     if is_owner is True:
         return True
     tournament = ctx.cog.tournaments[ctx.guild.id]
-    if tournament.streamer_role and tournament.streamer_role in ctx.author.roles:
-        return True
-    return False
+    return bool(
+        tournament.streamer_role
+        and tournament.streamer_role in ctx.author.roles
+    )
 
 
 class TwitchChannelConverter(commands.Converter):
@@ -82,7 +83,7 @@ class Streams(MixinMeta):
             if len(tournament.streamers) == 1:
                 await ctx.send(tournament.streamers[0].link)
             else:
-                await ctx.send("\n".join([x.link for x in tournament.streamers]))
+                await ctx.send("\n".join(x.link for x in tournament.streamers))
 
     @only_phase()
     @stream.command(name="init")
@@ -217,9 +218,12 @@ any streamer/T.O. can edit anyone's stream.
         errors = await streamer.check_integrity(sets, add=True)
         if errors:
             await ctx.send(
-                _("Some errors occured:\n\n")
-                + "\n".join([f"#{x}: {y}" for x, y in errors.items()])
+                (
+                    _("Some errors occured:\n\n")
+                    + "\n".join(f"#{x}: {y}" for x, y in errors.items())
+                )
             )
+
         else:
             await ctx.tick()
 

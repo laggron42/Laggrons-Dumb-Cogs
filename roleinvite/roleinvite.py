@@ -242,8 +242,9 @@ class RoleInvite(BaseCog):
                 message = _("You're about to remove all roles linked to this invite.\n")
 
             message += _("List of roles:\n{}\nProceed? (yes/no)\n\n").format(
-                "```Diff\n+ " + "\n+ ".join([x.name for x in roles]) + "\n```"
+                "```Diff\n+ " + "\n+ ".join(x.name for x in roles) + "\n```"
             )
+
 
             if len(bot_invite["roles"]) > 1:
                 message += _(
@@ -317,7 +318,7 @@ class RoleInvite(BaseCog):
             if not roles:
                 to_delete.append(i)  # no more roles
                 continue
-            roles_names = "\n+ ".join([x.name for x in roles])
+            roles_names = "\n+ ".join(x.name for x in roles)
 
             if i == "default":
                 text += f"{_('Roles linked to the default autorole')}:\n+ {roles_names}\n\n"
@@ -419,7 +420,7 @@ class RoleInvite(BaseCog):
                 else:
                     roles.append(role)
             if to_remove:
-                roles_id_str = ", ".join([str(x) for x in to_remove])
+                roles_id_str = ", ".join(str(x) for x in to_remove)
                 log.warning(
                     "Removing the following roles because they were not found on the server.\n"
                     f"Roles ID: {roles_id_str}\n"
@@ -449,7 +450,7 @@ class RoleInvite(BaseCog):
             if to_remove != []:
                 roles = [x for x in invites_data["roles"] if x not in [x.id for x in to_remove]]
                 await self.data.guild(guild).invites.set_raw(invite, "roles", value=roles)
-                roles_str = "; ".join([f"{x.name} (ID: {x.id})" for x in to_remove])
+                roles_str = "; ".join(f"{x.name} (ID: {x.id})" for x in to_remove)
                 log.warning(
                     f"Some roles linked to {invite} were removed because the role "
                     "hierarchy has changed and the roles are upper than mine.\n"
@@ -526,7 +527,7 @@ class RoleInvite(BaseCog):
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
-        if not ctx.command.cog_name == self.__class__.__name__:
+        if ctx.command.cog_name != self.__class__.__name__:
             # That error doesn't belong to the cog
             return
         with DisabledConsoleOutput(log):

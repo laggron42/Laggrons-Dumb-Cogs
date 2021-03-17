@@ -352,7 +352,7 @@ cog at this point.
         if _commands == {}:
             await ctx.send("No instant command created.")
             return
-        for page in pagify(message):
+        for _ in pagify(message):
             await ctx.send(message)
 
     @instantcmd.command()
@@ -389,7 +389,7 @@ cog at this point.
     async def on_command_error(self, ctx, error):
         if not isinstance(error, commands.CommandInvokeError):
             return
-        if not ctx.command.cog_name == self.__class__.__name__:
+        if ctx.command.cog_name != self.__class__.__name__:
             # That error doesn't belong to the cog
             return
         async with self.data.commands() as _commands:

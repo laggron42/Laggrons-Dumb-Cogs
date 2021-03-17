@@ -155,7 +155,7 @@ class Tournaments(
             data = await self.data.guild(guild).all()
         game_data = await self.data.custom("GAME", guild.id, data["tournament"]["game"]).all()
         if data["tournament"]["tournament_type"] == "challonge":
-            if any([x is None for x in data["credentials"].values()]):
+            if any(x is None for x in data["credentials"].values()):
                 raise RuntimeError(
                     _("The challonge credentials were lost. Can't resume tournament.")
                 )

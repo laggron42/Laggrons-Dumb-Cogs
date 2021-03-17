@@ -30,7 +30,6 @@ def listener(name: str = None):
         nonlocal name
         if name is None:
             name = func.__name__
-        result = Listener(func, name)
-        return result
+        return Listener(func, name)
 
     return decorator

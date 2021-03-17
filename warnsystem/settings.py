@@ -96,7 +96,7 @@ class SettingsMixin(MixinMeta):
           The bans will not delete any messages.
         """
         guild = ctx.guild
-        if all([ban_type != x for x in ["softban", "ban"]]):
+        if all(ban_type != x for x in ["softban", "ban"]):
             await ctx.send(
                 _(
                     "The first argument must be `ban` or `softban`.\n"
@@ -375,7 +375,7 @@ class SettingsMixin(MixinMeta):
           an invite which will be replace `{invite}`
         """
         guild = ctx.guild
-        if not any([destination == x for x in ["modlog", "user"]]):
+        if all(destination != x for x in ["modlog", "user"]):
             await ctx.send(
                 _(
                     "You need to specify `modlog` or `user`. Read the help of "
@@ -769,14 +769,15 @@ channels, and prevented from talking in all voice channels.
             if len(user_descriptions) > 1024:
                 user_descriptions = _("Too long to be shown...")
             embed_thumbnails = "\n".join(
-                [f"{level}: {value}" for level, value in all_data["thumbnails"].items()]
+                f"{level}: {value}"
+                for level, value in all_data["thumbnails"].items()
             )
+
             embed_colors = "\n".join(
-                [
-                    f"{level}: {hex(value).replace('0x', '#')}"
-                    for level, value in all_data["colors"].items()
-                ]
+                f"{level}: {hex(value).replace('0x', '#')}"
+                for level, value in all_data["colors"].items()
             )
+
 
             # make embed
             embeds = [discord.Embed() for x in range(2)]
@@ -945,9 +946,11 @@ channels, and prevented from talking in all voice channels.
                 ).format(prefix=ctx.prefix)
             )
             return
-        text = ""
-        for substitution, content in substitutions.items():
-            text += f"+ {substitution}\n{content}\n\n"
+        text = "".join(
+            f"+ {substitution}\n{content}\n\n"
+            for substitution, content in substitutions.items()
+        )
+
         messages = [x for x in pagify(text, page_length=1800)]
         total_pages = len(messages)
         for i, page in enumerate(messages):

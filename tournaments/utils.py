@@ -25,7 +25,7 @@ def credentials_check(command: commands.Command) -> commands.Command:
 
     async def hook(cog, ctx: commands.Context):
         credentials = await cog.data.guild(ctx.guild).credentials()
-        if any([x is None for x in credentials.values()]):
+        if any(x is None for x in credentials.values()):
             raise commands.UserFeedbackCheckFailure(
                 _(
                     "You need to set your Challonge credentials before using this "
@@ -77,9 +77,7 @@ def mod_or_to():
             tournament: Tournament = ctx.cog.tournaments[ctx.guild.id]
         except KeyError:
             return False
-        if tournament.to_role in ctx.author.roles:
-            return True
-        return False
+        return tournament.to_role in ctx.author.roles
 
     return commands.check(check)
 
