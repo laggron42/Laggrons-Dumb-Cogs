@@ -17,7 +17,7 @@ for dependency, package in dependencies.items():
             "in the terminal to install the library."
         )
 
-from .tournaments import Tournaments, TournamentsConfig
+from .tournaments import Tournaments
 from laggron_utils import init_logger, close_logger
 
 log = logging.getLogger("red.laggron.tournaments")
@@ -129,10 +129,6 @@ async def restore_tournaments(bot, cog):
 async def setup(bot):
     init_logger(log, "Tournaments")
     n = Tournaments(bot)
-    if not isinstance(n.data, TournamentsConfig):
-        raise CogLoadError(
-            "The update requires a bot restart *due to some messy changes with Config*"
-        )
     try:
         await update_config(n.data)
     except Exception as e:
