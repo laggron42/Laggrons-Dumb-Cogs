@@ -1,13 +1,13 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2021-01-01 00:42+0000\n"
+"POT-Creation-Date: 2021-02-12 19:56+0100\n"
 "Last-Translator: \n"
 "Language-Team: Chinese Simplified\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: redgettext 3.2\n"
+"Generated-By: redgettext 3.3\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Crowdin-Project: laggrons-dumb-cogs\n"
 "X-Crowdin-Project-ID: 409698\n"
@@ -17,7 +17,10 @@ msgstr ""
 
 #: say/say.py:28
 #, docstring
-msgid "\\n    Speak as if you were the bot\\n\\n    Documentation: http://laggron.red/say.html\\n    "
+msgid "\n"
+"    Speak as if you were the bot\n\n"
+"    Documentation: http://laggron.red/say.html\n"
+"    "
 msgstr ""
 
 #: say/say.py:73 say/say.py:78
@@ -30,12 +33,22 @@ msgstr ""
 
 #: say/say.py:103
 #, docstring
-msgid "\\n        Make the bot say what you want in the desired channel.\\n\\n        If no channel is specified, the message will be send in the current channel.\\n        You can attach some files to upload them to Discord.\\n\\n        Example usage :\\n        - `!say #general hello there`\\n        - `!say owo I have a file` (a file is attached to the command message)\\n        "
+msgid "\n"
+"        Make the bot say what you want in the desired channel.\n\n"
+"        If no channel is specified, the message will be send in the current channel.\n"
+"        You can attach some files to upload them to Discord.\n\n"
+"        Example usage :\n"
+"        - `!say #general hello there`\n"
+"        - `!say owo I have a file` (a file is attached to the command message)\n"
+"        "
 msgstr ""
 
 #: say/say.py:122
 #, docstring
-msgid "\\n        Same as say command, except it deletes your message.\\n\\n        If the message wasn't removed, then I don't have enough permissions.\\n        "
+msgid "\n"
+"        Same as say command, except it deletes your message.\n\n"
+"        If the message wasn't removed, then I don't have enough permissions.\n"
+"        "
 msgstr ""
 
 #: say/say.py:136 say/say.py:138
@@ -44,11 +57,14 @@ msgstr ""
 
 #: say/say.py:147
 #, docstring
-msgid "\\n        Same as say command, except role and mass mentions are enabled.\\n        "
+msgid "\n"
+"        Same as say command, except role and mass mentions are enabled.\n"
+"        "
 msgstr ""
 
 #: say/say.py:162
-msgid "I can't mention the following roles: {roles}\\nTurn on mentions or make me an admin on the server.\\n"
+msgid "I can't mention the following roles: {roles}\n"
+"Turn on mentions or make me an admin on the server.\n"
 msgstr ""
 
 #: say/say.py:172
@@ -60,7 +76,8 @@ msgid "You don't have the permission yourself to do mass mentions."
 msgstr ""
 
 #: say/say.py:182
-msgid "You're not allowed to mention the following roles: {roles}\\nTurn on mentions for that role or be an admin in the server.\\n"
+msgid "You're not allowed to mention the following roles: {roles}\n"
+"Turn on mentions for that role or be an admin in the server.\n"
 msgstr ""
 
 #: say/say.py:195
@@ -77,7 +94,10 @@ msgid "A session is already running."
 msgstr ""
 
 #: say/say.py:215
-msgid "I will start sending you messages from {0}.\\nJust send me any message and I will send it in that channel.\\nReact with ❌ on this message to end the session.\\nIf no message was send or received in the last 5 minutes, the request will time out and stop."
+msgid "I will start sending you messages from {0}.\n"
+"Just send me any message and I will send it in that channel.\n"
+"React with ❌ on this message to end the session.\n"
+"If no message was send or received in the last 5 minutes, the request will time out and stop."
 msgstr ""
 
 #: say/say.py:234
@@ -86,11 +106,20 @@ msgstr ""
 
 #: say/say.py:268
 #, docstring
-msgid "\\n        Get informations about the cog.\\n        "
+msgid "\n"
+"        Get informations about the cog.\n"
+"        "
 msgstr ""
 
 #: say/say.py:272
-msgid "Laggron's Dumb Cogs V3 - say\\n\\nVersion: {0.__version__}\\nAuthor: {0.__author__}\\nGithub repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\\nDiscord server: https://discord.gg/AVzjfpR\\nDocumentation: http://laggrons-dumb-cogs.readthedocs.io/\\nHelp translating the cog: https://crowdin.com/project/laggrons-dumb-cogs/\\n\\nSupport my work on Patreon: https://www.patreon.com/retke"
+msgid "Laggron's Dumb Cogs V3 - say\n\n"
+"Version: {0.__version__}\n"
+"Author: {0.__author__}\n"
+"Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
+"Discord server: https://discord.gg/AVzjfpR\n"
+"Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n"
+"Help translating the cog: https://crowdin.com/project/laggrons-dumb-cogs/\n\n"
+"Support my work on Patreon: https://www.patreon.com/retke"
 msgstr ""
 
 #: say/say.py:306

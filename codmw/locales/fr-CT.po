@@ -3,17 +3,17 @@ msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
 "POT-Creation-Date: 2021-02-12 19:56+0100\n"
 "Last-Translator: \n"
-"Language-Team: German\n"
+"Language-Team: Le chti\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: redgettext 3.3\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n==2 ? 1 : 2);\n"
 "X-Crowdin-Project: laggrons-dumb-cogs\n"
 "X-Crowdin-Project-ID: 409698\n"
-"X-Crowdin-Language: de\n"
+"X-Crowdin-Language: frc\n"
 "X-Crowdin-File-ID: 26\n"
-"Language: de_DE\n"
+"Language: fr_CT\n"
 
 #: codmw/codmw.py:47
 msgid "{amount} {unit} ago."
@@ -21,59 +21,59 @@ msgstr ""
 
 #: codmw/codmw.py:50 codmw/codmw.py:189
 msgid "year"
-msgstr "jahr"
+msgstr ""
 
 #: codmw/codmw.py:50 codmw/codmw.py:189
 msgid "years"
-msgstr "jahre"
+msgstr ""
 
 #: codmw/codmw.py:51 codmw/codmw.py:190
 msgid "month"
-msgstr "monat"
+msgstr ""
 
 #: codmw/codmw.py:51 codmw/codmw.py:190
 msgid "months"
-msgstr "monate"
+msgstr ""
 
 #: codmw/codmw.py:52 codmw/codmw.py:191
 msgid "week"
-msgstr "woche"
+msgstr ""
 
 #: codmw/codmw.py:52 codmw/codmw.py:191
 msgid "weeks"
-msgstr "wochen"
+msgstr ""
 
 #: codmw/codmw.py:53 codmw/codmw.py:192
 msgid "day"
-msgstr "tag"
+msgstr ""
 
 #: codmw/codmw.py:53 codmw/codmw.py:192
 msgid "days"
-msgstr "tage"
+msgstr ""
 
 #: codmw/codmw.py:54 codmw/codmw.py:193
 msgid "hour"
-msgstr "stunde"
+msgstr ""
 
 #: codmw/codmw.py:54 codmw/codmw.py:193
 msgid "hours"
-msgstr "stunden"
+msgstr ""
 
 #: codmw/codmw.py:55 codmw/codmw.py:194
 msgid "minute"
-msgstr "minute"
+msgstr ""
 
 #: codmw/codmw.py:55 codmw/codmw.py:194
 msgid "minutes"
-msgstr "minuten"
+msgstr ""
 
 #: codmw/codmw.py:56 codmw/codmw.py:195
 msgid "second"
-msgstr "sekunde"
+msgstr ""
 
 #: codmw/codmw.py:56 codmw/codmw.py:195
 msgid "seconds"
-msgstr "sekunden"
+msgstr ""
 
 #: codmw/codmw.py:66
 msgid "just now"
@@ -81,15 +81,15 @@ msgstr ""
 
 #: codmw/codmw.py:70
 msgid "a minute ago"
-msgstr "vor einer Minute"
+msgstr ""
 
 #: codmw/codmw.py:74
 msgid "an hour ago"
-msgstr "vor einer Stunde"
+msgstr ""
 
 #: codmw/codmw.py:78
 msgid "yesterday"
-msgstr "gestern"
+msgstr ""
 
 #: codmw/codmw.py:90
 #, docstring
@@ -117,7 +117,7 @@ msgstr ""
 
 #: codmw/codmw.py:204
 msgid " and "
-msgstr " und "
+msgstr ""
 
 #: codmw/codmw.py:208
 msgid "None."
@@ -277,11 +277,11 @@ msgstr ""
 
 #: codmw/codmw.py:454
 msgid "Won"
-msgstr "Gewonnen"
+msgstr ""
 
 #: codmw/codmw.py:454
 msgid "Lost"
-msgstr "Verloren"
+msgstr ""
 
 #: codmw/codmw.py:458
 msgid "**{result}** a game of **{gamemode}** on **{map}** {time}"

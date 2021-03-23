@@ -1162,7 +1162,7 @@ class API:
                     if level == 2:
                         to_remove.append(member)
                         continue
-                roles = [guild.get_role(x) for x in action.get("roles") or []]
+                roles = list(filter(None, [guild.get_role(x) for x in action.get("roles") or []]))
 
                 reason = _(
                     "End of timed {action} of {member} requested by {author} that lasted "
@@ -1531,7 +1531,7 @@ class API:
             # we increase this value until reaching the given limit
             time = autowarn["time"]
             if time:
-                until = datetime.now() - timedelta(seconds=time)
+                until = datetime.utcnow() - timedelta(seconds=time)
                 autowarns[i]["until"] = until
         del time
         found_warnings = {}  # we fill this list with the valid autowarns, there can be more than 1
@@ -1552,7 +1552,7 @@ class API:
                     # value exceeded, no need to continue, it's already done for this one warn
                     to_remove.append(i)
                     del found_warnings[i]
-            for index in to_remove:
+            for index in reversed(to_remove):
                 autowarns.pop(index)
             if not autowarns:
                 # we could be out of autowarns to check after a certain time
