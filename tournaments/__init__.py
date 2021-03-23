@@ -98,7 +98,7 @@ async def update_config(config):
     """
     if await config.data_version() == "0.0":
         all_guilds = await config.all_guilds()
-        if not any("channels" in x for x in all_guilds.values()):
+        if all("channels" not in x for x in all_guilds.values()):
             await config.data_version.set("1.0")
             return
         log.info(

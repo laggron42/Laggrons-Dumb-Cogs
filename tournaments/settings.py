@@ -77,7 +77,7 @@ class ConfigSelector(commands.Converter):
             # we look for the first occurence of "-c" or "--config"
             view.skip_ws()
             next_word = view.get_word()
-            if next_word == "-c" or next_word == "--config":
+            if next_word in ["-c", "--config"]:
                 # flag found, now we get the quoted word afterwards
                 start = view.previous
                 view.skip_ws()
@@ -155,33 +155,33 @@ class Settings(MixinMeta):
             role = guild.get_role(role_id)
             if role is None:
                 lost["roles"].append(name)
-        if all([not x for x in not_set.values()]) and all([not x for x in lost.values()]):
+        if not any(not_set.values()) and not any(lost.values()):
             return
         text = ""
         if not_set["channels"]:
             text += (
                 _("The following channels are not configured:\n")
-                + "".join([f"- {x}\n" for x in not_set["channels"]])
-                + "\n"
-            )
+                + "".join(f"- {x}\n" for x in not_set["channels"])
+            ) + "\n"
+
         if not_set["roles"]:
             text += (
                 _("The following roles are not configured:\n")
-                + "".join([f"- {x}\n" for x in not_set["roles"]])
-                + "\n"
-            )
+                + "".join(f"- {x}\n" for x in not_set["roles"])
+            ) + "\n"
+
         if lost["channels"]:
             text += (
                 _("The following channels were lost:\n")
-                + "".join([f"- {x}\n" for x in lost["channels"]])
-                + "\n"
-            )
+                + "".join(f"- {x}\n" for x in lost["channels"])
+            ) + "\n"
+
         if lost["roles"]:
             text += (
                 _("The following roles were lost:\n")
-                + "".join([f"- {x}\n" for x in lost["roles"]])
-                + "\n"
-            )
+                + "".join(f"- {x}\n" for x in lost["roles"])
+            ) + "\n"
+
         text += _(
             "Please configure the missing settings with the "
             "`{prefix}tset channels` and `{prefix}tset roles` commands."
