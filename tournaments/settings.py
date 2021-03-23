@@ -67,31 +67,63 @@ class ConfigSelector(commands.Converter):
 
     async def convert(self, ctx: commands.Context, argument: str):
         # we use dpy's tools for parsing quoted strings
+        # check the source of StringView if you want details
+        # pro-tip: ws=whitespace (took me a while to figure out)
         view = StringView(argument)
         config = None
         start, stop = 0, view.end
+
         while view.eof is False and config is None:
+            # we look for the first occurence of "-c" or "--config"
             view.skip_ws()
             next_word = view.get_word()
             if next_word == "-c" or next_word == "--config":
+                # flag found, now we get the quoted word afterwards
                 start = view.previous
                 view.skip_ws()
                 config = view.get_quoted_word()
+                # and look for an existing config
                 await self.config_exists(ctx, config)
                 self.config = config
                 view.skip_ws()
+                # we registered start and stop so we know the range of our flag in the string
                 stop = view.index
+                # we stop here, only need one flag
                 break
+
         if self.config is not None:
+            # we found a config, now we need to transform the base argument.
+            # using start and stop, representing the index where the flag is, we can
+            # strip the flag text from the original argument
             argument = (argument[:start] + argument[stop:]).strip()
+            # "My long --config hello argument" -> "My long argument"
+
+        # get the object of our parameter (always last)
         param: inspect.Parameter = list(ctx.command.params.values())[-1]
-        if not argument:
+
+        if not argument:  # if argument is empty (with or without config)
+
             if param.default is param.empty:
+                # there is no default value for the command, this argument is required
                 raise commands.MissingRequiredArgument(param)
+
             else:
+                # there is a default value, param is optional, we send that default and continue
                 self.arg = None if param.default.__class__ == self.__class__ else param.default
+
+                # that condition is important due to discord.py's behaviour with default values
+                #
+                # If you have an argument like "member = None", d.py will never call this class
+                # and we always need an object of this kind to be sent back to the command
+                #
+                # So instead, arguments are done like this "member = ConfigSelector()"
+                # then we check here if the default argument is the type of ConfigSelector
+                # that way, we know we have to set None as the default argument
+
         else:
+            # we process the conversion with the cleaned argument
             self.arg = await ctx.command.do_conversion(ctx, self.converter, argument, param)
+
         return self
 
 
