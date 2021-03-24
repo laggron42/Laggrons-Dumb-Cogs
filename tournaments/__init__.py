@@ -130,6 +130,18 @@ async def setup(bot):
     init_logger(log, "Tournaments")
     n = Tournaments(bot)
     try:
+        n.data.settings
+    except AttributeError:
+        raise CogLoadError(
+            "Update 1.1.0 requires a bot restart due to internal changes with Config."
+        )
+        # Basically I do something ugly and not recommanded which is subclassing Config.
+        # However, when calling get_conf, Red will internally register the Config object and
+        # re-use it when needed again.
+        # So, after updating, Red will keep returning the old instance of config, while we need
+        # an instance of our new object TournamentsConfig.
+        # Only safe way to do that is restarting
+    try:
         await update_config(n.data)
     except Exception as e:
         log.critical(

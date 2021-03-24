@@ -40,6 +40,10 @@ class CompositeMetaClass(type(commands.Cog), type(ABC)):
 class TournamentsConfig(Config):
     """
     Just a shortcut for custom groups.
+
+    This solution is NOT recommanded for Red. Object proxying is recommanded instead.
+    However, I'm annoying af and want proper type hints, which is not possible with a proxy,
+    so I go for the ugly method, sorry
     """
 
     def settings(self, *args, **kwargs) -> Group:
