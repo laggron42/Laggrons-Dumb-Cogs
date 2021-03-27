@@ -623,7 +623,10 @@ enter a command to register or unregister.
 
     @tournamentset_channels.command(name="lag")
     async def tournamentset_channels_lag(
-            self, ctx: commands.Context, *, channel: ConfigSelector(discord.TextChannel)
+        self,
+        ctx: commands.Context,
+        *,
+        channel: ConfigSelector(discord.TextChannel) = ConfigSelector(),
     ):
         """
         Set the Lag tests channel.
