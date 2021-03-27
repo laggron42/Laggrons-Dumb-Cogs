@@ -633,6 +633,10 @@ enter a command to register or unregister.
         guild = ctx.guild
         config = channel.config
         channel = channel.arg
+        if channel is None:
+            await self.data.settings(guild.id, config).channels.lag.set(None)
+            await ctx.send(_("Lag tests channel removed."))
+            return
         if not channel.permissions_for(guild.me).read_messages:
             await ctx.send(_("I don't have the permission to read messages in this channel."))
         elif not channel.permissions_for(guild.me).send_messages:
