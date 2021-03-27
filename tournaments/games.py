@@ -779,7 +779,7 @@ you want the bot to override the previous list of participants, type `[p]upload 
         await ctx.tick()
 
     @only_phase("ongoing")
-    @mod_or_to
+    @mod_or_to()
     @commands.command()
     @commands.guild_only()
     @commands.cooldown(1, 1, commands.BucketType.user)
