@@ -1318,6 +1318,7 @@ class Tournament:
             data["channels"].get("stream")
         )
         self.to_channel: discord.TextChannel = guild.get_channel(data["channels"].get("to"))
+        self.lag_channel: discord.TextChannel = guild.get_channel(data["channels"].get("lag"))
         self.vip_register_channel: discord.TextChannel = guild.get_channel(
             data["channels"].get("vipregister")
         )

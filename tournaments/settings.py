@@ -621,6 +621,26 @@ enter a command to register or unregister.
             await self.data.settings(guild.id, config).channels.to.set(channel.id)
             await ctx.send(_("The channel was successfully set."))
 
+    @tournamentset_channels.command(name="lag")
+    async def tournamentset_channels_lag(
+            self, ctx: commands.Context, *, channel: ConfigSelector(discord.TextChannel)
+    ):
+        """
+        Set the Lag tests channel.
+
+        Lag tests announcements requested with the `[p]lag` command will be sent there.
+        """
+        guild = ctx.guild
+        config = channel.config
+        channel = channel.arg
+        if not channel.permissions_for(guild.me).read_messages:
+            await ctx.send(_("I don't have the permission to read messages in this channel."))
+        elif not channel.permissions_for(guild.me).send_messages:
+            await ctx.send(_("I don't have the permission to send messages in this channel."))
+        else:
+            await self.data.settings(guild.id, config).channels.lag.set(channel.id)
+            await ctx.send(_("The channel was successfully set."))
+
     @tournamentset_channels.command(name="vipregister", hidden=True)
     async def tournamentset_channels_vipregister(
         self,
@@ -1304,6 +1324,7 @@ the start of the tournament, then closing 15 minutes before.
             "Scores : {scores}\n"
             "Stream : {stream}\n"
             "T.O. : {to}\n"
+            "Lag tests : {lag}\n"
             "VIP Registration : {vipregister}"
         ).format(**channels)
         roles = {}

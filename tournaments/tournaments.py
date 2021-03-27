@@ -111,6 +111,7 @@ class Tournaments(
             "scores": None,
             "stream": None,
             "to": None,
+            "lag": None,
             "vipregister": None,
         },
         "roles": {
