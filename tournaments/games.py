@@ -267,6 +267,7 @@ class Games(MixinMeta):
                     tournament.queue_channel,
                     tournament.register_channel,
                     tournament.scores_channel,
+                    tournament.lag_channel,
                 ],
             )
         )
