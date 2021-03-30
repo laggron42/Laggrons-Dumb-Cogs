@@ -218,7 +218,7 @@ class Tournaments(
         self, guild: discord.Guild, tournament_data: dict = None
     ) -> Tournament:
         if tournament_data is None:
-            tournament_data = (await self.data.guild(guild).tournament())["tournament"]
+            tournament_data = await self.data.guild(guild).tournament()
         data = await self._get_settings(guild.id, tournament_data["config"])
         if tournament_data["tournament_type"] == "challonge":
             if any([x is None for x in data["credentials"].values()]):
