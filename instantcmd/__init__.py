@@ -62,7 +62,12 @@ def copy_utils():
     path = cog_data_path(None, raw_name="InstantCommands") / "instantcmd"
     path.mkdir(exist_ok=True)
     init_file = path / "__init__.py"
-    init_file.touch(exist_ok=True)
+    if not init_file.exists():
+        init_file.touch()
+        init_file.write_text(
+            "# This is what you get when importing instantcmd inside an instant command/listener\n"
+            "# Feel free to add whatever you want there\n"
+        )
     try:
         shutil.copy(Path() / "utils.py", path)
     except shutil.SameFileError:
