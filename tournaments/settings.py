@@ -1331,8 +1331,8 @@ the start of the tournament, then closing 15 minutes before.
             "Scores : {scores}\n"
             "Stream : {stream}\n"
             "T.O. : {to}\n"
-            "Lag tests : {lag}\n"
-            "VIP Registration : {vipregister}"
+            "*Lag tests : {lag}*\n"
+            "*VIP Registration : {vipregister}*"
         ).format(**channels)
         roles = {}
         for k, v in data["roles"].items():
