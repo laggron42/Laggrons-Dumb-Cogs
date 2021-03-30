@@ -1,5 +1,7 @@
 import logging
+import shutil
 import importlib.util
+from pathlib import Path
 from .instantcmd import InstantCommands
 
 from redbot.core.data_manager import cog_data_path
@@ -56,6 +58,19 @@ async def ask_reset(bot, commands):
         )
 
 
+def copy_utils():
+    path = cog_data_path(None, raw_name="InstantCommands") / "instantcmd"
+    path.mkdir(exist_ok=True)
+    init_file = path / "__init__.py"
+    init_file.touch(exist_ok=True)
+    try:
+        shutil.copy(Path() / "utils.py", path)
+    except shutil.SameFileError:
+        pass
+    else:
+        log.info(f"Copied utils.py file over {path}")
+
+
 async def setup(bot):
     init_logger(log, InstantCommands.__class__.__name__, "instantcmd")
     n = InstantCommands(bot)
@@ -66,5 +81,6 @@ async def setup(bot):
             await ask_reset(bot, commands)
             await n.data.commands.set({})
         await n.data.updated_body.set(True)
+    copy_utils()
     bot.add_cog(n)
     log.debug("Cog successfully loaded on the instance.")
