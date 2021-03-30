@@ -426,6 +426,100 @@ cog at this point.
         )
 
     @instantcmd.group()
+    async def shared(self, ctx: commands.Context):
+        """
+        Register code snippets that can be used within your instantcmds.
+
+        Unlike instantcmds, these code snippets are directly written in .py files and can be \
+imported inside your commands or listeners.
+        Files are written inside `/path/to/redbot/cogs/InstantCommands/instantcmd/shared/`
+        """
+
+    @shared.command(name="add")
+    async def shared_add(self, ctx: commands.Context, *path):
+        """
+        Add a shared code snippet to the given path.
+
+        The last word is the name of the file, the ones before that are folders.
+        Ex: `[p]instantcmd shared add embed utils proxy` -> `/shared/embed/utils/proxy.py`
+        `[p]instantcmd shared add stuff` -> `/shared/stuff.py`
+
+        The `__init__.py` file is automatically created, empty, but you may provide one.
+
+        :warning: You cannot paste your code in the same message as the command.
+        """
+        if not path:
+            await ctx.send_help()
+            return
+        code = await self._extract_code(ctx, None, CodeType.SHARED, path)
+
+        def write_file(working_directory: Path, *full_path):
+            if len(full_path) > 1:
+                path: Path = working_directory / full_path[0]
+                if not path.exists():
+                    log.info(f"Creating folder at {path.absolute()} with empty __init__.py file")
+                    path.mkdir()
+                    init_path = path / "__init__.py"
+                    init_path.touch()
+                    init_path.write_text(INIT_FILE_PREFIX)
+                write_file(path, *full_path[1:])
+            else:
+                path: Path = working_directory / (full_path[0] + ".py")
+                log.info(f"Writing shared file at {path.absolute()}")
+                path.touch(exist_ok=True)
+                path.write_text(SHARED_FILE_PREFIX.format(author=ctx.author) + code)
+
+        base_path = self.path
+        write_file(base_path, "shared", *path)
+        if path[-1] == "__init__":
+            path = path[:-1]
+        await ctx.send(
+            (
+                "Added shared code snippet to instantcmd. You can import it like this:\n"
+                "```py\n"
+                "from instantcmd.shared{path} import ...\n"
+                "```"
+            ).format(path="." + ".".join(path) if path else "")
+        )
+
+    @shared.command(name="delete", aliases=["del", "remove"])
+    async def shared_delete(self, ctx: commands.Context, *path):
+        """
+        Delete the shared file at the given path.
+
+        The last word is the name of the file, the ones before that are folders.
+        Ex: `[p]instantcmd shared del embed utils proxy` -> `/shared/embed/utils/proxy.py`
+        `[p]instantcmd shared del stuff` -> `/shared/stuff.py`
+
+        If the folder is empty, it is deleted with its `__init__.py` file.
+        """
+        if not path:
+            await ctx.send_help()
+            return
+
+        def delete_file(working_directory: Path, *full_path):
+            if not full_path:
+                return
+            path = working_directory.joinpath(full_path)
+            if not path.exists():
+                return
+            if path.is_file():
+                log.info(f"Deleting file at {path.absolute()}")
+                path.unlink()
+            else:
+                files = list(path.iterdir())
+                if len(files) == 1 and files[0].name == "__init__.py":
+                    files[0].unlink()
+                    path.rmdir()
+                else:
+                    return
+            return delete_file(working_directory, full_path[:-1])
+
+        base_path = self.path / "shared"
+        delete_file(base_path, "shared", *path)
+        await ctx.send("Removed shared code snippet.")
+
+    @instantcmd.group()
     async def env(self, ctx: commands.Context):
         """
         Manage Red's dev environment
