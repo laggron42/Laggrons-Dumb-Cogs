@@ -925,10 +925,8 @@ Else you can specify the set you want to update as the first argument.
             mentions = discord.AllowedMentions(roles=[tournament.tester_role])
         else:
             mentions = None
-        if tournament.lag_channel is not None:
-            await tournament.lag_channel.send(msg, allowed_mentions=mentions)
-        else:
-            await tournament.to_channel.send(msg, allowed_mentions=mentions)
+        lag_channel = tournament.lag_channel or tournament.to_channel
+        await lag_channel.send(msg, allowed_mentions=mentions)
         await ctx.send(_("TOs were called. Prepare a new arena for them..."))
 
     @only_phase()
