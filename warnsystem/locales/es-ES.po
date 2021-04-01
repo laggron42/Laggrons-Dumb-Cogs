@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2021-03-01 00:28+0000\n"
+"POT-Creation-Date: 2021-04-01 02:36+0000\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "MIME-Version: 1.0\n"
@@ -146,7 +146,8 @@ msgstr "Ninguna razón especificada."
 #: warnsystem/api.py:581
 msgid "\n"
 "Edit this with `[p]warnings {id}`"
-msgstr ""
+msgstr "\n"
+"Editar esto con `[p]advertencias {id}`"
 
 #: warnsystem/api.py:592
 msgid "{who} now {verb} {total} {warning} ({total_type} {action})"
@@ -212,7 +213,8 @@ msgstr "Estado"
 #: warnsystem/api.py:649
 msgid "\n\n"
 "***The message could not be delivered to the user. They may have DMs disabled, blocked the bot, or may not have a mutual server.***"
-msgstr ""
+msgstr "\n\n"
+"***El mensaje no pudo ser enviado al usuario. Pueden tener los MDs deshabilitados, el bot bloqueado o no tener un servidor en común.***"
 
 #: warnsystem/api.py:707 warnsystem/api.py:1048 warnsystem/settings.py:484
 msgid "I can't manage roles, please give me this permission to continue."
@@ -1084,13 +1086,13 @@ msgstr ""
 msgid "The new description for {destination} (warn {level}) was successfully set!"
 msgstr ""
 
-#: warnsystem/settings.py:397 warnsystem/warnsystem.py:389
-msgid "user"
-msgstr "usuario"
-
 #: warnsystem/settings.py:397
 msgid "modlog"
 msgstr ""
+
+#: warnsystem/settings.py:397 warnsystem/warnsystem.py:389
+msgid "user"
+msgstr "usuario"
 
 #: warnsystem/settings.py:403
 #, docstring
@@ -1639,7 +1641,7 @@ msgstr ""
 #: warnsystem/warnsystem.py:342 warnsystem/warnsystem.py:381
 #: warnsystem/warnsystem.py:478 warnsystem/warnsystem.py:486
 msgid "member"
-msgstr ""
+msgstr "miembro"
 
 #: warnsystem/warnsystem.py:359
 msgid "You can only use `--hackban-select` with a level 5 warn."
@@ -1668,7 +1670,7 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:411
 msgid "Not set"
-msgstr ""
+msgstr "Sin configurar"
 
 #: warnsystem/warnsystem.py:412
 msgid ":warning: You're about to warn a lot of members! Avoid doing this to prevent being rate limited by Discord, especially if you enabled DMs.\n\n"

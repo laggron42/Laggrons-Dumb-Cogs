@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2021-02-12 19:56+0100\n"
+"POT-Creation-Date: 2021-04-01 02:36+0000\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "MIME-Version: 1.0\n"
@@ -827,7 +827,7 @@ msgstr "URL Challonge invalide."
 
 #: tournaments/settings.py:45
 msgid "This game doesn't exist. Check the name, and use quotes if there are spaces."
-msgstr "Ce jeu n'existe pas. Vérifiez le nom et utilisez des guillemets s'il y a des espaces."
+msgstr ""
 
 #: tournaments/settings.py:84
 msgid "The following channels are not configured:\n"
@@ -1017,7 +1017,7 @@ msgstr "L'entrée des scores sera maintenant disponible dans n'importe quel salo
 msgid "\n"
 "        Define the set announcement channel.\n"
 "        "
-msgstr "Définit le channel d'annonce."
+msgstr ""
 
 #: tournaments/settings.py:338
 #, docstring
@@ -1122,7 +1122,7 @@ msgstr "Règle le rôle de streamer.\n\n"
 msgid "\n"
 "        Set the tester role.\n"
 "        "
-msgstr "Définit le rôle de testeur."
+msgstr ""
 
 #: tournaments/settings.py:470
 #, docstring
@@ -1153,8 +1153,7 @@ msgid "\n"
 "        Configure the different games of the tournaments.\n\n"
 "        First use `[p]tset games add`, then an explaination will be given on the other commands.\n"
 "        "
-msgstr "Configure les différents jeux des tournois.\n\n"
-"Utilisez d'abord `[p]tset games add`, puis une explication sera donnée sur les autres commandes."
+msgstr ""
 
 #: tournaments/settings.py:518
 #, docstring
@@ -1163,15 +1162,12 @@ msgid "\n"
 "        The name must be the exact same as how it is shown on Challonge.\n\n"
 "        Example: \"Super Smash Bros. Ultimate\"\n"
 "        "
-msgstr "Ajoute un nouveau jeu à la liste.\n\n"
-"Le nom doit être exactement le même que celui affiché sur Challonge.\n\n"
-"Exemple: \"Super Smash Bros. Ultimate\""
+msgstr ""
 
 #: tournaments/settings.py:529
 msgid "This game already exists.\n"
 "Delete it with `{prefix}tset games delete` or edit its name with `{prefix}tset games edit`."
-msgstr "Ce jeu existe déjà.\n"
-"Supprimez-le avec `{prefix}tset games delete` ou éditez-le avec `{prefix}tset games edit`."
+msgstr ""
 
 #: tournaments/settings.py:539
 msgid "Game added to the list!\n\n"
@@ -1186,18 +1182,7 @@ msgid "Game added to the list!\n\n"
 "- `{prefix}tset games delete` : Delete this game from the list\n\n"
 "Those settings are optionnal, but they will bring more details to the player and more commands (such as `{prefix}stages` or `{prefix}rules`).\n"
 "Careful, if the role isn't set, the @everyone role will be used by default for permissions when starting the registration."
-msgstr "Jeu ajouté à la liste !\n\n"
-"Vous pouvez maintenant faire plusieurs réglages :\n"
-"- `{prefix}tset games ruleset` : Définit le salon des règles\n"
-"- `{prefix}tset games role` : Définit le rôle de joueur\n"
-"- `{prefix}tset games baninfo` : Infos sur le mode de ban (ex: 2-3-1)\n"
-"- `{prefix}tset games stages` : Liste des stages autorisées\n"
-"- `{prefix}tset games counters` : Liste des counters autorisés\n"
-"- `{prefix}tset games ranking` : Paramètres de Braacket\n\n"
-"- `{prefix}tset games edit` : Modifie le nom de ce jeu\n"
-"- `{prefix}tset games delete` : Supprime ce jeu de la liste\n\n"
-"Ces paramètres sont optionnels, mais ils apporteront plus de détails aux joueurs et plus de commandes (comme `{prefix}stages` ou `{prefix}rules`).\n"
-"Attention, si le rôle n'est pas défini, le rôle @everyone sera utilisé par défaut pour les permissions lors du démarrage des inscriptions."
+msgstr ""
 
 #: tournaments/settings.py:561
 #, docstring
@@ -1207,47 +1192,44 @@ msgid "\n"
 "        Use quotes if there are spaces.\n\n"
 "        Example: [p]tset games edit \"Super Smqsh Bros. Ultimate\" \"Super Smash Bros Ultimate\"\n"
 "        "
-msgstr "Modifie le nom d'un jeu dans la liste.\n\n"
-"Donnez l'ancien nom du jeu, puis son nouveau nom.\n"
-"Utilisez des guillemets s'il y a des espaces.\n\n"
-"Exemple : [p]tset games edit \"Super Smqsh Bros. Ultimate\" \"Super Smash Bros Ultimate\""
+msgstr ""
 
 #: tournaments/settings.py:575
 msgid "The name was successfully edited."
-msgstr "Le nom a été modifié avec succès."
+msgstr ""
 
 #: tournaments/settings.py:579
 #, docstring
 msgid "\n"
 "        Delete a game from the list.\n"
 "        "
-msgstr "Supprime un jeu de la liste."
+msgstr ""
 
 #: tournaments/settings.py:585
 msgid "The game was successfully removed from the list."
-msgstr "Le jeu a été retiré de la liste avec succès."
+msgstr ""
 
 #: tournaments/settings.py:589
 #, docstring
 msgid "\n"
 "        Display all saved games.\n"
 "        "
-msgstr "Affiche tous les jeux sauvegardées."
+msgstr ""
 
 #: tournaments/settings.py:595
 msgid "No saved game."
-msgstr "Aucun jeu sauvegardé."
+msgstr ""
 
 #: tournaments/settings.py:597
 msgid "List of saved games:\n\n"
-msgstr "Liste des jeux sauvegardés :\n\n"
+msgstr ""
 
 #: tournaments/settings.py:605
 #, docstring
 msgid "\n"
 "        Show the settings of a game\n"
 "        "
-msgstr "Affiche les paramètres d'un jeu"
+msgstr ""
 
 #: tournaments/settings.py:610 tournaments/settings.py:985
 msgid "I need the `Embed links` permission in this channel."
@@ -1255,11 +1237,11 @@ msgstr "J'ai besoin de la permission `Intégrer des liens` pour envoyer ceci."
 
 #: tournaments/settings.py:618
 msgid "Lost role."
-msgstr "Rôle perdu."
+msgstr ""
 
 #: tournaments/settings.py:620
 msgid "Lost channel."
-msgstr "Salon perdu."
+msgstr ""
 
 #: tournaments/settings.py:621 tournaments/settings.py:640
 #: tournaments/settings.py:1336
@@ -1268,15 +1250,13 @@ msgstr "Non défini."
 
 #: tournaments/settings.py:622
 msgid "Settings of game {game}"
-msgstr "Réglages du jeu {game}"
+msgstr ""
 
 #: tournaments/settings.py:623
 msgid "Player role: {role}\n"
 "Rules channel: {channel}\n"
 "Ban info: {baninfo}"
-msgstr "Rôle de joueur : {role}\n"
-"Salon des règles : {channel}\n"
-"Mode de ban : {baninfo}"
+msgstr ""
 
 #: tournaments/settings.py:627
 msgid "Stages"
@@ -1284,7 +1264,7 @@ msgstr "Stages"
 
 #: tournaments/settings.py:630
 msgid "Counters"
-msgstr "Counters"
+msgstr ""
 
 #: tournaments/settings.py:634 tournaments/settings.py:640
 msgid "Ranking league"
@@ -1302,8 +1282,7 @@ msgid "\n"
 "        Set the channel of the rules for a game.\n\n"
 "        Example: `[p]tset games ruleset \"Super Smash Bros. Ultimate\" #tournament-rules`\n"
 "        "
-msgstr "Définit le channel des règles pour un jeu.\n\n"
-"Exemple : `[p]tset games ruleset \"Super Smash Bros. Ultimate\" #tournament-rules`"
+msgstr ""
 
 #: tournaments/settings.py:660
 #, docstring
@@ -1316,13 +1295,7 @@ msgid "\n"
 "        If this role isn't set, the @everyone role is used by default (without pinging).\n"
 "        Use this command without role to reset it to its initial state.\n"
 "        "
-msgstr "Règle le rôle de joueur.\n\n"
-"Ce rôle sera utilisé pour :\n"
-"- Définir les permissions du salon d'inscriptions quand il sera ouvert\n"
-"- Mentionner les joueurs lors de l'ouverture des inscriptions\n\n"
-"Donnez le nom complet du rôle ou son ID.\n\n"
-"Si ce rôle n'est pas défini, le rôle @everyone est utilisé par défaut (sans ping).\n"
-"Utilisez cette commande sans rôle pour la réinitialiser à son état initial."
+msgstr ""
 
 #: tournaments/settings.py:675
 msgid "The role was reset to its initial state."
@@ -1362,9 +1335,7 @@ msgid "\n"
 "        Give the stages one after another, with quotes if there are spaces.\n\n"
 "        Example : `[p]tset games stages \"Super Smash Bros. Ultimate\" Battlefield \"Final Destination\" \"Pokémon Stadium 2\"`\n"
 "        "
-msgstr "Définissez la liste des stages autorisées.\n\n"
-"Donnez les stages les uns après l'autre, avec des guillemets s'il y a des espaces.\n\n"
-"Exemple : `[p]tset games stages  \"Super Smash Bros. Ultimate\" Battlefield \"Final Destination\" \"Pokémon Stadium 2\"`"
+msgstr ""
 
 #: tournaments/settings.py:723 tournaments/settings.py:742
 msgid "The stages were successfully set."
@@ -1381,9 +1352,7 @@ msgid "\n"
 "        Give the stages one after another, with quotes if there are spaces.\n\n"
 "        Example : `[p]tset games counters \"Super Smash Bros. Ultimate\" Battlefield \"Final Destination\" \"Pokémon Stadium 2\"`\n"
 "        "
-msgstr "Définissez la liste des counterpicks autorisées.\n\n"
-"Donnez les stages les uns après l'autre, avec des guillemets s'il y a des espaces.\n\n"
-"Exemple : `[p]tset games counters  \"Super Smash Bros. Ultimate\" Battlefield \"Final Destination\" \"Pokémon Stadium 2\"`"
+msgstr ""
 
 #: tournaments/settings.py:754
 #, docstring
@@ -1413,9 +1382,7 @@ msgid "\n"
 "        This delay is in minutes.\n"
 "        Give 0 minutes to disable.\n"
 "        "
-msgstr "Définit le délai avant de disqualifier automatiquement un joueur inactif.\n\n"
-"Ce délai est en minutes.\n"
-"Donnez 0 minutes pour désactiver."
+msgstr ""
 
 #: tournaments/settings.py:787
 msgid "This can't be negative!"
@@ -1427,7 +1394,7 @@ msgstr "Le DQ automatique est maintenant désactivé."
 
 #: tournaments/settings.py:794
 msgid "Done. If a player doesn't respond in his channel {delay} minutes after its creation, he will automatically be disqualified."
-msgstr "Réglé. Si un joueur ne répond pas dans son salon {delay} minutes après sa création, il sera automatiquement disqualifié."
+msgstr ""
 
 #: tournaments/settings.py:808
 #, docstring
@@ -1441,14 +1408,7 @@ msgid "\n"
 "        `[p]tset warntime 30 10`: will warn the players 30 minutes after the start of their match, then warn the T.O.s 10 minutes after the first warn (so 40 minutes in total).\n"
 "        `[p]tset warntime 40 10 bo5`: same as above, but for bo5 matches instead, and with 40 minutes before the first one instead of 30.\n"
 "        "
-msgstr "Règle le temps avant avertissement pour les matchs trop longs.\n\n"
-"Vous définissez deux délais : le délai jusqu'à avertissement aux joueurs de la longueur de leur match, puis le délai jusqu'à l'avertissement aux T.O. à propos de ce match, les deux en minutes.\n"
-"Le second délai est en addition du premier.\n"
-"Vous devez également définir le mode, soit \"bo3\" soit \"bo5\". Sera \"bo3\" par défaut.\n"
-"Mettez 0 à une des valeurs (ou les deux) pour désactiver cet avertissement.\n\n"
-"Exemples :\n"
-"`[p]tset warntime 30 10` : avertira les joueurs 30 minutes après le début de leur match, puis avertir les T.O. 10 minutes après le premier avertissement (40 minutes au total).\n"
-"`[p]tset warntime 40 10 bo5`: identique au précédent, mais pour les matchs en bo5 à la place, et avec 40 minutes avant le premier avertissement au lieu de 30."
+msgstr ""
 
 #: tournaments/settings.py:825
 msgid "The mode must either be \"bo3\" or \"bo5\"."
@@ -1468,12 +1428,7 @@ msgid "\n"
 "        To disable the automatic opening/closing of the registration, give 0 for its corresponding value.\n\n"
 "        Example: `[p]tset register 2880 10` = Opening of the registration 2880 minutes (2 days) before the opening of the tournament, then closing 10 minutes before.\n"
 "        "
-msgstr "Définit les heures d'ouverture et de fermeture des inscriptions.\n\n"
-"Vous devez donner le nombre de minutes avant le début du tournoi pour chaque valeur.\n"
-"D'abord l'heure d'ouverture, puis l'heure de fermeture.\n\n"
-"La date et l'heure du début du tournoi est celle définie sur Challonge.\n\n"
-"Pour désactiver l'ouverture/fermeture automatique des inscriptions, donnez 0 pour sa valeur correspondante.\n\n"
-"Exemple: `[p]tset register 2880 10` = Ouverture de l'inscription 2880 minutes (2 jours) avant l'ouverture du tournoi, puis fermant 10 minutes avant."
+msgstr ""
 
 #: tournaments/settings.py:850
 msgid "Opening must occur before closing time."
@@ -1489,7 +1444,7 @@ msgstr "L'inscription automatique est maintenant désactivée."
 
 #: tournaments/settings.py:864
 msgid "Registration will now open {opening} minutes before the start and close {closing} minutes before the start of the tournament."
-msgstr "L'inscription va maintenant ouvrir {opening} minutes avant le début et fermer {closing} minutes avant le début du tournoi."
+msgstr ""
 
 #: tournaments/settings.py:872
 #, docstring
@@ -1535,15 +1490,7 @@ msgid "\n"
 "        Provide a number of **minutes** before tournament start for this second opening.\n"
 "        Set 0 to disable.\n"
 "        "
-msgstr "Règle une seconde heure d'ouverture pour les inscriptions.\n\n"
-"Ceci doit être inférieur à l'heure d'ouverture de base que vous avez définie.\n"
-"Le bot essaiera d'ouvrir les inscriptions une seconde fois. Si elles sont déjà ouvertes et en cours, rien ne se passera.\n\n"
-"Combinez ceci avec le paramètre d'arrêt automatique (voir `[p]help tfix autostopregister`), et vous pourrez avoir des inscriptions qui peuvent ressembler à ceci :\n"
-"- Inscriptions ouvertes jusqu'à ce que la limite soit atteinte, puis fermeture\n"
-"- Le check-in est terminé, les participants non check sont retirés\n"
-"- **Inscriptions de dernière minute configurés**, où les membres n'ont pas à check et remplissent le bracket.\n\n"
-"Donnez un nombre de **minutes** avant le début du tournoi pour cette seconde ouverture.\n"
-"Mettez 0 pour désactiver."
+msgstr ""
 
 #: tournaments/settings.py:925
 msgid "Second opening must occur after first opening."
@@ -1571,20 +1518,15 @@ msgid "\n"
 "        To disable the check-in, give 0 for both values.\n\n"
 "        Example: `[p]tset checkin 60 15` = Opening of the check-in 60 minutes before the start of the tournament, then closing 15 minutes before.\n"
 "        "
-msgstr "Définit l'heure d'ouverture et de fermeture du check-in.\n\n"
-"Vous devez donner le nombre de minutes avant le début du tournoi pour chaque valeur.\n"
-"D'abord l'heure d'ouverture, puis l'heure de fermeture.\n\n"
-"La date et l'heure du début du tournoi est celle définie sur Challonge.\n\n"
-"Pour désactiver l'ouverture/fermeture automatique du check-in, donnez 0 pour sa valeur correspondante.\n\n"
-"Exemple: `[p]tset checkin 60 10` = Ouverture du check-in 60 minutes avant le début du tournois, puis fermeture 15 minutes avant."
+msgstr ""
 
 #: tournaments/settings.py:954
 msgid "The check-in is now disabled."
-msgstr "Le check-in est maintenant désactivé."
+msgstr ""
 
 #: tournaments/settings.py:957
 msgid "Check-in will now open {opening} minutes before the start and closed {closing} minutes before the start of the tournament."
-msgstr "Le check-in sera maintenant ouvert {opening} minutes avant le début et fermé {closing} minutes avant le début du tournoi."
+msgstr ""
 
 #: tournaments/settings.py:965
 #, docstring
@@ -1612,7 +1554,7 @@ msgstr "Le niveau a été défini avec succès."
 msgid "\n"
 "        Show all settings for this server.\n"
 "        "
-msgstr "Afficher tous les paramètres de ce serveur."
+msgstr ""
 
 #: tournaments/settings.py:993 tournaments/settings.py:1270
 #: tournaments/settings.py:1271 tournaments/settings.py:1429
@@ -1622,11 +1564,11 @@ msgstr "Désactivé"
 
 #: tournaments/settings.py:994
 msgid "First warn: after {} minutes\n"
-msgstr "Première alerte : au bout de {} minutes\n"
+msgstr ""
 
 #: tournaments/settings.py:996
 msgid "T.O. warn: {} minutes after first warn"
-msgstr "Avertissement des T.O: {} minutes après le premier avertissement"
+msgstr ""
 
 #: tournaments/settings.py:998
 msgid "T.O. warn: disabled"
@@ -1634,7 +1576,7 @@ msgstr "Avertissement des T.O. : désactivé"
 
 #: tournaments/settings.py:1003
 msgid "Configured"
-msgstr "Configuré"
+msgstr ""
 
 #: tournaments/settings.py:1005
 msgid "Not configured. Use `{prefix}challongeset`"
@@ -1644,7 +1586,7 @@ msgstr "Non configuré. Utilisez `{prefix}challongeset`"
 #: tournaments/settings.py:1023 tournaments/settings.py:1029
 #: tournaments/settings.py:1035
 msgid "{time} minutes before the start of the tournament."
-msgstr "{time} minutes avant le début du tournoi."
+msgstr ""
 
 #: tournaments/settings.py:1015 tournaments/settings.py:1027
 #: tournaments/settings.py:1033
@@ -1657,7 +1599,7 @@ msgstr "désactivé."
 
 #: tournaments/settings.py:1039
 msgid "Manual."
-msgstr "Manuel."
+msgstr ""
 
 #: tournaments/settings.py:1040
 msgid "enabled"
@@ -1686,38 +1628,25 @@ msgid "Category : {category}\n\n"
 "Stream : {stream}\n"
 "T.O. : {to}\n"
 "VIP Registration : {vipregister}"
-msgstr "Catégorie : {category}\n\n"
-"Annonces : {announcements}\n"
-"Inscriptions : {register}\n"
-"Check-in : {checkin}\n"
-"Annonce des sets : {queue}\n"
-"Scores : {scores}\n"
-"Stream : {stream}\n"
-"T.O. : {to}\n"
-"Inscriptions VIP : {vipregister}"
+msgstr ""
 
 #: tournaments/settings.py:1076
 msgid "Participant : {participant}\n"
 "Streamer : {streamer}\n"
 "T.O. : {to}\n"
 "Tester : {tester}\n"
-msgstr "Participant : {participant}\n"
-"Streamer : {streamer}\n"
-"T.O. : {to}\n"
+msgstr ""
 
 #: tournaments/settings.py:1083
 msgid "Parameters"
-msgstr "Paramètres"
+msgstr ""
 
 #: tournaments/settings.py:1084
 msgid "Challonge credentials : {challonge}\n"
 "Number of configured games : {games}\n"
 "Delay before DQ : {delay} minutes\n"
 "Begin of BO5 : {bo5} *(see `{prefix}help tset startbo5`)*"
-msgstr "Identifiants Challonge : {challonge}\n"
-"Nombre de jeux configurés : {games}\n"
-"Délai avant DQ : {delay} minutes\n"
-"Début de BO5 : {bo5} *(voir `{prefix}help tset startbo5`)*"
+msgstr ""
 
 #: tournaments/settings.py:1097 tournaments/settings.py:1260
 #: tournaments/settings.py:1417
@@ -1729,10 +1658,7 @@ msgid "Opening : {opening}\n"
 "Second opening : {secondopening}\n"
 "Closing : {closing}\n"
 "Auto-stop : {stop}"
-msgstr "Ouverture : {opening}\n"
-"Deuxième ouverture : {secondopening}\n"
-"Fermeture : {closing}\n"
-"Arrêt automatique : {stop}"
+msgstr ""
 
 #: tournaments/settings.py:1111 tournaments/settings.py:1276
 #: tournaments/settings.py:1436
@@ -1755,7 +1681,7 @@ msgstr "Avertissement des matchs longs"
 
 #: tournaments/settings.py:1126
 msgid "Settings"
-msgstr "Réglages"
+msgstr ""
 
 #: tournaments/settings.py:1127
 msgid "Channels"
@@ -1804,15 +1730,7 @@ msgid ":warning: **The game {game} isn't registered on this bot !**\n\n"
 "- List of starters/counters stages\n"
 "- Ranking and seeding with Braacket\n\n"
 "Would you like to continue or cancel?"
-msgstr ":warning: **Le jeu {game} n'est pas enregistrée sur le bot ! *\n\n"
-"Vous pouvez configurer les différents paramètres de ce jeu en tapant la commande suivante : `{prefix}tset games add {game}`\n"
-"Sinon, vous pouvez continuer sans configuration, mais les fonctions suivantes ne seront pas disponibles :\n"
-"- Indication d'un salon de règles\n"
-"- Utilisation d'un rôle pour les permissions des inscriptions (le rôle @everyone sera utilisé à la place)\n"
-"- Précision d'un mode de ban\n"
-"- Liste des stages/counters légaux\n"
-"- Classement et seeding avec Braacket\n\n"
-"Souhaitez-vous continuer ou annuler ?"
+msgstr ""
 
 #: tournaments/settings.py:1224
 msgid "You need to define a start date and time on your tournament."
@@ -1863,19 +1781,17 @@ msgstr "Ouverture : {opening}\n"
 
 #: tournaments/settings.py:1287
 msgid "Game options"
-msgstr "Options du jeu"
+msgstr ""
 
 #: tournaments/settings.py:1288
 msgid "Rules: {rules}\n"
 "Player role: {role}\n"
 "Ban mode: {ban}"
-msgstr "Règles : {rules}\n"
-"Rôle de participant : {role}\n"
-"Mode de ban : {ban}"
+msgstr ""
 
 #: tournaments/settings.py:1303
 msgid "Time zone: {tz}"
-msgstr "Fuseau horaire : {tz}"
+msgstr ""
 
 #: tournaments/settings.py:1305
 msgid "Is this correct?"
