@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2021-02-12 19:56+0100\n"
+"POT-Creation-Date: 2021-03-01 00:28+0000\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "MIME-Version: 1.0\n"
@@ -21,59 +21,59 @@ msgstr ""
 
 #: codmw/codmw.py:50 codmw/codmw.py:189
 msgid "year"
-msgstr ""
+msgstr "año"
 
 #: codmw/codmw.py:50 codmw/codmw.py:189
 msgid "years"
-msgstr ""
+msgstr "años"
 
 #: codmw/codmw.py:51 codmw/codmw.py:190
 msgid "month"
-msgstr ""
+msgstr "mes"
 
 #: codmw/codmw.py:51 codmw/codmw.py:190
 msgid "months"
-msgstr ""
+msgstr "meses"
 
 #: codmw/codmw.py:52 codmw/codmw.py:191
 msgid "week"
-msgstr ""
+msgstr "semana"
 
 #: codmw/codmw.py:52 codmw/codmw.py:191
 msgid "weeks"
-msgstr ""
+msgstr "semanas"
 
 #: codmw/codmw.py:53 codmw/codmw.py:192
 msgid "day"
-msgstr ""
+msgstr "día"
 
 #: codmw/codmw.py:53 codmw/codmw.py:192
 msgid "days"
-msgstr ""
+msgstr "días"
 
 #: codmw/codmw.py:54 codmw/codmw.py:193
 msgid "hour"
-msgstr ""
+msgstr "hora"
 
 #: codmw/codmw.py:54 codmw/codmw.py:193
 msgid "hours"
-msgstr ""
+msgstr "horas"
 
 #: codmw/codmw.py:55 codmw/codmw.py:194
 msgid "minute"
-msgstr ""
+msgstr "minuto"
 
 #: codmw/codmw.py:55 codmw/codmw.py:194
 msgid "minutes"
-msgstr ""
+msgstr "minutos"
 
 #: codmw/codmw.py:56 codmw/codmw.py:195
 msgid "second"
-msgstr ""
+msgstr "segundo"
 
 #: codmw/codmw.py:56 codmw/codmw.py:195
 msgid "seconds"
-msgstr ""
+msgstr "segundos"
 
 #: codmw/codmw.py:66
 msgid "just now"
@@ -117,7 +117,7 @@ msgstr ""
 
 #: codmw/codmw.py:204
 msgid " and "
-msgstr ""
+msgstr " y "
 
 #: codmw/codmw.py:208
 msgid "None."

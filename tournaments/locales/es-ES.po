@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2021-02-12 19:56+0100\n"
+"POT-Creation-Date: 2021-04-01 02:36+0000\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "MIME-Version: 1.0\n"
@@ -1147,7 +1147,7 @@ msgstr ""
 #: tournaments/settings.py:621 tournaments/settings.py:640
 #: tournaments/settings.py:1336
 msgid "Not set."
-msgstr ""
+msgstr "Sin configurar."
 
 #: tournaments/settings.py:622
 msgid "Settings of game {game}"
@@ -1489,16 +1489,16 @@ msgstr ""
 
 #: tournaments/settings.py:1040
 msgid "enabled"
-msgstr ""
+msgstr "activado"
 
 #: tournaments/settings.py:1040
 msgid "disabled"
-msgstr ""
+msgstr "desactivado"
 
 #: tournaments/settings.py:1044 tournaments/settings.py:1069
 #: tournaments/settings.py:1283 tournaments/settings.py:1285
 msgid "Not set"
-msgstr ""
+msgstr "Sin configurar"
 
 #: tournaments/settings.py:1048 tournaments/settings.py:1073
 msgid "Lost"

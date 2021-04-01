@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2021-02-12 19:56+0100\n"
+"POT-Creation-Date: 2021-04-01 02:36+0000\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "MIME-Version: 1.0\n"
@@ -159,7 +159,7 @@ msgid "{player1} {player2}\n"
 ":warning: Your match was just added to {channel}'s stream queue ({link})\n"
 "**You must stop playing now and wait for your turn.** Sorry for this sudden change, please contact a T.O. if you have a question."
 msgstr "{player1} {player2}\n"
-":warning: Votre match vient d'être ajouté à la file d'attente du streamer {channel}({link})\n"
+":warning: Votre match vient d'être ajouté à la file d'attente du streamer {channel} ({link})\n"
 "**Vous devez arrêter de jouer maintenant et attendre votre tour.** Désolé pour ce changement soudain, veuillez contacter un T.O. si vous avez une question."
 
 #: tournaments/objects/base.py:574
@@ -240,8 +240,7 @@ msgstr " dans {channel}"
 #: tournaments/objects/base.py:831
 msgid "\n"
 "T.O.s will be warned if this match is still ongoing in {time} minutes."
-msgstr "\n"
-"Les T.O.s seront avertis si ce match est toujours en cours dans {time} minutes."
+msgstr ""
 
 #: tournaments/objects/base.py:845
 msgid ":warning: The set {set} is taking a lot of time (now open since {time} minutes)."
@@ -325,11 +324,11 @@ msgstr "{date} à {time}"
 
 #: tournaments/objects/base.py:1654
 msgid "The tournament's date has already passed."
-msgstr "La date du tournoi est déjà dépassée."
+msgstr ""
 
 #: tournaments/objects/base.py:1655
 msgid "Start date"
-msgstr "Date de début"
+msgstr ""
 
 #: tournaments/objects/base.py:1658
 msgid "Registration start"
@@ -575,7 +574,7 @@ msgstr ":white_small_square: Le ruleset est disponible dans {channel}.\n"
 
 #: tournaments/objects/base.py:2524
 msgid ":timer: **You will automatically be disqualified if you don't talk in your channel within the first {delay} minutes.**"
-msgstr ":timer: **Vous serez automatiquement disqualifié si vous ne parlez pas dans votre salon dans les {delay} premières minutes.**"
+msgstr ""
 
 #: tournaments/objects/base.py:2532
 msgid ":information_source: Management of the scores for the tournament **{tournament}** is automated:\n"
@@ -603,7 +602,7 @@ msgstr ":information_source: **Le lancement des sets est automatisé.** Veuillez
 
 #: tournaments/objects/base.py:2552
 msgid ":timer: **You will be disqualified if you were not active in your channel** within the {delay} first minutes after the set launch."
-msgstr ":timer: **Vous serez disqualifié si vous n'êtes pas actif dans votre salon** dans les {delay} premières minutes après le lancement du set."
+msgstr ""
 
 #: tournaments/objects/base.py:2649
 msgid "5 minutes passed after set end."
