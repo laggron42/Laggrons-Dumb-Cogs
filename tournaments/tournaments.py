@@ -5,12 +5,13 @@ import discord
 import shutil
 
 from abc import ABC
-from typing import Mapping
+from typing import Mapping, Optional
 from laggron_utils.logging import close_logger
 
 from redbot.core import commands
 from redbot.core import Config
 from redbot.core.bot import Red
+from redbot.core.config import Group
 from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import Translator, cog_i18n
 
@@ -36,6 +37,19 @@ class CompositeMetaClass(type(commands.Cog), type(ABC)):
     pass
 
 
+class TournamentsConfig(Config):
+    """
+    Just a shortcut for custom groups.
+
+    This solution is NOT recommanded for Red. Object proxying is recommanded instead.
+    However, I'm annoying af and want proper type hints, which is not possible with a proxy,
+    so I go for the ugly method, sorry
+    """
+
+    def settings(self, *args, **kwargs) -> Group:
+        return self.custom("SETTINGS", *args, *kwargs)
+
+
 @cog_i18n(_)
 class Tournaments(
     Games,
@@ -47,31 +61,14 @@ class Tournaments(
     metaclass=CompositeMetaClass,
 ):
 
+    default_global = {
+        "data_version": "0.0"  # will be edited after config update, current version is 1.0
+    }
+
     default_guild_settings = {
         "credentials": {"username": None, "api": None},  # challonge login info
-        "current_phase": None,  # possible values are "setup", "register", "checkin", "run"
-        "delay": 10,
-        "time_until_warn": {  # warn brackets taking too much time
-            "bo3": (25, 10),  # time until warn in channel, then time until warning the T.O.s
-            "bo5": (30, 10),  # in minutes
-        },
-        "autostop_register": False,
-        "register": {"opening": 0, "second_opening": 0, "closing": 10},
-        "checkin": {"opening": 60, "closing": 15},
-        "start_bo5": 0,
-        "channels": {
-            "announcements": None,
-            "category": None,
-            "checkin": None,
-            "queue": None,
-            "register": None,
-            "scores": None,
-            "stream": None,
-            "to": None,
-            "vipregister": None,
-        },
-        "roles": {"participant": None, "streamer": None, "to": None, "tester": None},
         "tournament": {
+            "config": None,
             "name": None,
             "game": None,
             "url": None,
@@ -94,23 +91,53 @@ class Tournaments(
         },
     }
 
-    default_game_settings = {
-        "ruleset": None,
-        "role": None,
+    default_settings = {
+        "delay": None,
+        "time_until_warn": {  # warn brackets taking too much time
+            "bo3": None,  # time until warn in channel, then time until warning the T.O.s
+            "bo5": None,  # in minutes
+        },
+        "autostop_register": None,
+        "register": {"opening": None, "second_opening": None, "closing": None},
+        "checkin": {"opening": None, "closing": None},
+        "start_bo5": None,
+        "channels": {
+            "announcements": None,
+            "ruleset": None,
+            "category": None,
+            "checkin": None,
+            "queue": None,
+            "register": None,
+            "scores": None,
+            "stream": None,
+            "to": None,
+            "lag": None,
+            "vipregister": None,
+        },
+        "roles": {
+            "participant": None,
+            "player": None,
+            "streamer": None,
+            "tester": None,
+            "to": None,
+        },
         "baninfo": None,
         "ranking": {"league_name": None, "league_id": None},
-        "stages": [],
-        "counterpicks": [],
+        "stages": None,
+        "counterpicks": None,
     }
 
     def __init__(self, bot: Red):
         self.bot = bot
-        self.data = Config.get_conf(cog_instance=self, identifier=260, force_registration=True)
+        self.data: TournamentsConfig = TournamentsConfig.get_conf(
+            cog_instance=self, identifier=260, force_registration=True
+        )
         self.tournaments: Mapping[int, Tournament] = {}
 
+        self.data.register_global(**self.default_global)
         self.data.register_guild(**self.default_guild_settings)
-        self.data.init_custom("GAME", 2)  # guild ID > game name
-        self.data.register_custom("GAME", **self.default_game_settings)
+        self.data.init_custom("SETTINGS", 2)  # guild ID > config name
+        self.data.register_custom("SETTINGS", **self.default_settings)
 
         # see registration.py
         self.registration_loop.start()
@@ -129,7 +156,7 @@ class Tournaments(
         except Exception as e:
             log.error("Couldn't load dev env values.", exc_info=e)
 
-    __version__ = "1.0.1"
+    __version__ = "1.1.0"
     __author__ = ["retke (El Laggron)", "Wonderfall", "Xyleff"]
 
     @commands.command(hidden=True)
@@ -150,18 +177,56 @@ class Tournaments(
             ).format(self)
         )
 
-    async def _restore_tournament(self, guild: discord.Guild, data: dict = None) -> Tournament:
-        if data is None:
-            data = await self.data.guild(guild).all()
-        game_data = await self.data.custom("GAME", guild.id, data["tournament"]["game"]).all()
-        if data["tournament"]["tournament_type"] == "challonge":
+    async def _get_settings(self, guild_id: int, config: Optional[str]) -> dict:
+        def overwrite_dict(default: dict, new: dict) -> dict:
+            for key, value in new.items():
+                if key not in default:
+                    continue
+                if value is None:
+                    new[key] = default[key]
+                elif isinstance(value, dict):
+                    new[key] = overwrite_dict(default[key], value)
+            return new
+
+        cog_default = {
+            "delay": 10,
+            "time_until_warn": {  # warn brackets taking too much time
+                "bo3": (
+                    1500,
+                    600,
+                ),  # time until warn in channel, then time until warning the T.O.s
+                "bo5": (1800, 600),  # in minutes
+            },
+            "autostop_register": False,
+            "register": {"opening": 0, "second_opening": 0, "closing": 600},
+            "checkin": {"opening": 3600, "closing": 900},
+            "start_bo5": 0,
+            "stages": [],
+            "counterpicks": [],
+        }
+        credentials = await self.data.guild_from_id(guild_id).credentials()
+        default = await self.data.settings(guild_id, None).all()
+        default["credentials"] = credentials
+        default = overwrite_dict(cog_default, default)
+        if config is None:
+            return default
+        config = await self.data.settings(guild_id, config).all()
+        config["credentials"] = credentials
+        return overwrite_dict(default, config)
+
+    async def _restore_tournament(
+        self, guild: discord.Guild, tournament_data: dict = None
+    ) -> Tournament:
+        if tournament_data is None:
+            tournament_data = await self.data.guild(guild).tournament()
+        data = await self._get_settings(guild.id, tournament_data["config"])
+        if tournament_data["tournament_type"] == "challonge":
             if any([x is None for x in data["credentials"].values()]):
                 raise RuntimeError(
                     _("The challonge credentials were lost. Can't resume tournament.")
                 )
-            data.update(game_data)
             tournament = await ChallongeTournament.from_saved_data(
-                self.bot, guild, self.data, self.__version__, data["tournament"], data
+                self.bot, guild, self.data, self.__version__, tournament_data, data
             )
             if tournament.phase == "ongoing":
                 await tournament.start_loop_task()
@@ -177,7 +242,7 @@ class Tournaments(
             if not guild:
                 continue
             try:
-                tournament = await self._restore_tournament(guild, data)
+                tournament = await self._restore_tournament(guild, data["tournament"])
             except Exception as e:
                 log.error(f"[Guild {guild_id}] Failed to resume tournament.", exc_info=e)
             else:

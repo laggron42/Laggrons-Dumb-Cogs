@@ -267,6 +267,7 @@ class Games(MixinMeta):
                     tournament.queue_channel,
                     tournament.register_channel,
                     tournament.scores_channel,
+                    tournament.lag_channel,
                 ],
             )
         )
@@ -779,6 +780,7 @@ you want the bot to override the previous list of participants, type `[p]upload 
         await ctx.tick()
 
     @only_phase("ongoing")
+    @mod_or_to()
     @commands.command()
     @commands.guild_only()
     @commands.cooldown(1, 1, commands.BucketType.user)
@@ -923,7 +925,8 @@ Else you can specify the set you want to update as the first argument.
             mentions = discord.AllowedMentions(roles=[tournament.tester_role])
         else:
             mentions = None
-        await tournament.to_channel.send(msg, allowed_mentions=mentions)
+        lag_channel = tournament.lag_channel or tournament.to_channel
+        await lag_channel.send(msg, allowed_mentions=mentions)
         await ctx.send(_("TOs were called. Prepare a new arena for them..."))
 
     @only_phase()

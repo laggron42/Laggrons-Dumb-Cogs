@@ -43,5 +43,5 @@ msgstr ""
 #: instantcmd/instantcmd.py:404
 #, docstring
 msgid "\\n        Get informations about the cog.\\n        "
-msgstr "\\n        Erhalte Informationen über den Cog.\\n        "
+msgstr ""
 

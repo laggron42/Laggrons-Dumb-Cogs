@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2021-04-01 02:36+0000\n"
+"POT-Creation-Date: 2021-03-01 00:28+0000\n"
 "Last-Translator: \n"
 "Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
@@ -387,9 +387,7 @@ msgstr " Boyunca {time}"
 msgid "\n"
 "        WarnSystem automod configuration.\n"
 "        "
-msgstr "\n"
-"        WarnSystem Automod ayarları.\n"
-"        "
+msgstr ""
 
 #: warnsystem/automod.py:112
 #, docstring
@@ -409,8 +407,7 @@ msgstr "Automod şimdi kapalı."
 #: warnsystem/automod.py:130
 msgid "Automod is currently {state}.\n"
 "Type `{prefix}automod enable {arg}` to {action} it."
-msgstr "AutoMod şu anda {state}.\n"
-"Açmak için `{prefix}automod enable {arg}` yazarak {action} yapabilirsin."
+msgstr ""
 
 #: warnsystem/automod.py:134 warnsystem/automod.py:525
 #: warnsystem/automod.py:549
@@ -458,9 +455,7 @@ msgstr "Regex tetikleyicisi eklendi!"
 msgid "\n"
 "        Delete a Regex trigger.\n"
 "        "
-msgstr "\n"
-"        Bir regex tetikleyicisi sil.\n"
-"        "
+msgstr ""
 
 #: warnsystem/automod.py:193 warnsystem/automod.py:230
 msgid "That Regex trigger doesn't exist."
@@ -513,9 +508,7 @@ msgstr "Uyarı"
 msgid "**Level:** {level}\n"
 "**Reason:** {reason}\n"
 "**Duration:** {time}"
-msgstr "**Seviye:** {level}\n"
-"**Sebep:** {reason}\n"
-"**Süre:** {time}"
+msgstr ""
 
 #: warnsystem/automod.py:252
 #, docstring
@@ -617,10 +610,7 @@ msgid "\n"
 "        Delete an automated warning.\n\n"
 "        You can find the index with the `[p]automod warn list` command.\n"
 "        "
-msgstr "\n"
-"        Otomatik uyarları sil.\n\n"
-"        Uyarı listesini bu komut ile  `[p]automod warn list` görebilirsin.\n"
-"        "
+msgstr ""
 
 #: warnsystem/automod.py:413 warnsystem/automod.py:484
 msgid "Invalid index, must be positive."
@@ -651,9 +641,7 @@ msgstr "Otomatik uyarı başarıyla silindi."
 msgid "\n"
 "        Lists automated warnings on this server.\n"
 "        "
-msgstr "\n"
-"        Bu sunucudaki otomatik uyarı listesi.\n"
-"        "
+msgstr ""
 
 #: warnsystem/automod.py:456
 msgid "No automatic warn registered."
@@ -661,17 +649,16 @@ msgstr "Daha önce hiç otomatik uyarı kayıt edilmemiş."
 
 #: warnsystem/automod.py:460
 msgid "{index}. level {level} warn (need {number} warns to trigger)\n"
-msgstr "{index}. seviye {level} uyarı (tetiklenmek için {number} ihtiyacı olan)\n"
+msgstr ""
 
 #: warnsystem/automod.py:467
 msgid "Page {i}/{total}\n\n"
-msgstr "Sayfa {i}/{total}\n\n"
+msgstr ""
 
 #: warnsystem/automod.py:469
 msgid "\n"
 "*Type `{prefix}automod warn show` to view details.*"
-msgstr "\n"
-"* `{prefix}automod warn show` daha fazla detay görmek için bunu yazın.*"
+msgstr ""
 
 #: warnsystem/automod.py:477
 #, docstring
@@ -679,10 +666,7 @@ msgid "\n"
 "        Shows the contents of an automatic warn.\n\n"
 "        Index is shown by the `[p]automod warn list` command.\n"
 "        "
-msgstr "\n"
-"        Otomatik uyarı içeriğini gösterir.\n\n"
-"        Bunu kullanarak `[p]automod warn list` görüntüleyebilirsiniz.\n"
-"        "
+msgstr ""
 
 #: warnsystem/automod.py:492
 msgid "Settings of auto warn {index}"
@@ -701,9 +685,7 @@ msgstr ""
 msgid "\n"
 "        Enable WarnSystem's antispam.\n"
 "        "
-msgstr "\n"
-"        WarnSystem AntiSpam'ı aç.\n"
-"        "
+msgstr ""
 
 #: warnsystem/automod.py:526
 msgid "Disable"
@@ -1105,13 +1087,13 @@ msgstr "`Modlog` veya `user ' belirtmeniz gerekir. Daha fazla ayrıntı için ko
 msgid "The new description for {destination} (warn {level}) was successfully set!"
 msgstr "Bunun için yeni açıklama {destination} (warn {level}) başarıyla ayarlandı!"
 
-#: warnsystem/settings.py:397
-msgid "modlog"
-msgstr "modlog"
-
 #: warnsystem/settings.py:397 warnsystem/warnsystem.py:389
 msgid "user"
 msgstr "kullanıcı"
+
+#: warnsystem/settings.py:397
+msgid "modlog"
+msgstr "modlog"
 
 #: warnsystem/settings.py:403
 #, docstring
@@ -1689,7 +1671,7 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:411
 msgid "Not set"
-msgstr "Ayarlı değil"
+msgstr ""
 
 #: warnsystem/warnsystem.py:412
 msgid ":warning: You're about to warn a lot of members! Avoid doing this to prevent being rate limited by Discord, especially if you enabled DMs.\n\n"

@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2021-04-01 02:36+0000\n"
+"POT-Creation-Date: 2021-03-01 00:28+0000\n"
 "Last-Translator: \n"
 "Language-Team: Chinese Traditional\n"
 "MIME-Version: 1.0\n"
@@ -1084,12 +1084,12 @@ msgstr ""
 msgid "The new description for {destination} (warn {level}) was successfully set!"
 msgstr ""
 
-#: warnsystem/settings.py:397
-msgid "modlog"
-msgstr ""
-
 #: warnsystem/settings.py:397 warnsystem/warnsystem.py:389
 msgid "user"
+msgstr ""
+
+#: warnsystem/settings.py:397
+msgid "modlog"
 msgstr ""
 
 #: warnsystem/settings.py:403

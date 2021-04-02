@@ -1,11 +1,11 @@
-from abc import ABC
 import discord
-from typing import TYPE_CHECKING, Mapping
+from abc import ABC
+from typing import TYPE_CHECKING, Mapping, Optional
 from .objects import Tournament
 
 if TYPE_CHECKING:
-    from redbot.core import Config
     from redbot.core.bot import Red
+    from .tournaments import TournamentsConfig
 
 
 class MixinMeta(ABC):
@@ -19,9 +19,12 @@ class MixinMeta(ABC):
 
     def __init__(self):
         self.bot: Red
-        self.data: Config
+        self.data: TournamentsConfig
         self.tournaments: Mapping[int, Tournament]
         self.__version__: str
 
     def _restore_tournament(self, guild: discord.Guild, data: dict = None) -> Tournament:
+        pass
+
+    async def _get_settings(self, guild_id: int, config: Optional[str]) -> dict:
         pass

@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2021-04-01 02:36+0000\n"
+"POT-Creation-Date: 2021-02-12 19:56+0100\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "MIME-Version: 1.0\n"
@@ -513,7 +513,7 @@ msgstr ""
 
 #: tournaments/games.py:1058
 msgid "Page {len}/{total}"
-msgstr "Seite {len}/{total}"
+msgstr ""
 
 #: tournaments/registration.py:96
 #, docstring
@@ -835,7 +835,7 @@ msgstr ""
 
 #: tournaments/settings.py:174 tournaments/utils.py:153
 msgid "Request timed out."
-msgstr "Die Anfrage ist abgelaufen."
+msgstr ""
 
 #: tournaments/settings.py:181
 #, docstring
@@ -1149,7 +1149,7 @@ msgstr ""
 #: tournaments/settings.py:621 tournaments/settings.py:640
 #: tournaments/settings.py:1336
 msgid "Not set."
-msgstr "Nicht festgelegt."
+msgstr ""
 
 #: tournaments/settings.py:622
 msgid "Settings of game {game}"
@@ -1448,7 +1448,7 @@ msgstr ""
 #: tournaments/settings.py:1271 tournaments/settings.py:1429
 #: tournaments/settings.py:1431
 msgid "Disabled"
-msgstr "deaktiviert"
+msgstr ""
 
 #: tournaments/settings.py:994
 msgid "First warn: after {} minutes\n"
@@ -1483,7 +1483,7 @@ msgstr ""
 
 #: tournaments/settings.py:1021
 msgid "disabled."
-msgstr "deaktiviert."
+msgstr ""
 
 #: tournaments/settings.py:1039
 msgid "Manual."
@@ -1491,20 +1491,20 @@ msgstr ""
 
 #: tournaments/settings.py:1040
 msgid "enabled"
-msgstr "aktiviert"
+msgstr ""
 
 #: tournaments/settings.py:1040
 msgid "disabled"
-msgstr "deaktiviert"
+msgstr ""
 
 #: tournaments/settings.py:1044 tournaments/settings.py:1069
 #: tournaments/settings.py:1283 tournaments/settings.py:1285
 msgid "Not set"
-msgstr "Nicht gesetzt"
+msgstr ""
 
 #: tournaments/settings.py:1048 tournaments/settings.py:1073
 msgid "Lost"
-msgstr "Verloren"
+msgstr ""
 
 #: tournaments/settings.py:1055
 msgid "Category : {category}\n\n"
@@ -1651,7 +1651,7 @@ msgstr ""
 
 #: tournaments/settings.py:1271 tournaments/settings.py:1431
 msgid "Enabled"
-msgstr "aktiviert"
+msgstr ""
 
 #: tournaments/settings.py:1277
 msgid "Opening: {opening}\n"
@@ -1776,7 +1776,7 @@ msgstr ""
 
 #: tournaments/settings.py:1414
 msgid "Done"
-msgstr "Erledigt"
+msgstr ""
 
 #: tournaments/settings.py:1418
 msgid "Current status: **{status}**\n\n"
