@@ -8,13 +8,14 @@ import textwrap
 import logging
 import os
 import sys
-import redbot
 
+from typing import Optional
 from laggron_utils.logging import close_logger, DisabledConsoleOutput
 
 from redbot.core import commands
 from redbot.core import checks
 from redbot.core import Config
+from redbot.core.bot import Red
 from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.chat_formatting import pagify
@@ -59,28 +60,19 @@ class InstantCommands(BaseCog):
     Documentation https://laggron.red/instantcommands.html
     """
 
-    def __init__(self, bot):
+    def __init__(self, bot: Red):
         self.bot = bot
         self.data = Config.get_conf(self, 260)
 
-        def_global = {"commands": {}, "updated_body": False}
+        def_global = {"commands": {}, "dev_values": {}, "updated_body": False}
         self.data.register_global(**def_global)
         self.listeners = {}
 
-        # these are the availables values when creating an instant cmd
-        self.env = {
-            "bot": self.bot,
-            "discord": discord,
-            "commands": commands,
-            "checks": checks,
-            "asyncio": asyncio,
-            "redbot": redbot,
-        }
         # resume all commands and listeners
         bot.loop.create_task(self.resume_commands())
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.2.2"
+    __version__ = "1.3.0"
 
     # def get_config_identifier(self, name):
     # """
@@ -99,11 +91,18 @@ class InstantCommands(BaseCog):
         # self.get_config_identifier(name)
         to_compile = "def func():\n%s" % textwrap.indent(command, "  ")
         sys.path.append(os.path.dirname(__file__))
-        exec(to_compile, self.env)
+        env = {
+            "bot": self.bot,
+            "discord": discord,
+            "commands": commands,
+            "checks": checks,
+            "asyncio": asyncio,
+        }
+        exec(to_compile, env)
         sys.path.remove(os.path.dirname(__file__))
-        result = self.env["func"]()
+        result = env["func"]()
         if not result:
-            raise RuntimeError("Nothing detected. Make sure to return a command or a listener")
+            raise RuntimeError("Nothing detected. Make sure to return something")
         return result
 
     def load_command_or_listener(self, function):
@@ -137,6 +136,13 @@ class InstantCommands(BaseCog):
         for name, command_string in _commands.items():
             function = self.get_function_from_str(command_string, name)
             self.load_command_or_listener(function)
+        if self.bot.get_cog("Dev") is None:
+            return
+        dev_values = await self.data.dev_values()
+        for name, code in dev_values.items():
+            function = self.get_function_from_str(code, name)
+            self.bot.add_dev_env_value(name, function)
+            log.debug(f"Added dev value {name}")
 
     async def remove_commands(self):
         async with self.data.commands() as _commands:
@@ -150,6 +156,10 @@ class InstantCommands(BaseCog):
                     # remove a command
                     self.bot.remove_command(command)
                     log.debug(f"Removed command {command} due to cog unload.")
+        async with self.data.dev_values() as values:
+            for name in values:
+                self.bot.remove_dev_env_value(name)
+                log.debug(f"Removed dev value {name} due to cog unload.")
 
     # from DEV cog, made by Cog Creators (tekulvw)
     @staticmethod
@@ -179,47 +189,45 @@ class InstantCommands(BaseCog):
             return False
         return True
 
-    @checks.is_owner()
-    @commands.group(aliases=["instacmd", "instantcommand"])
-    async def instantcmd(self, ctx):
-        """Instant Commands cog management"""
-        pass
+    async def _read_from_file(self, ctx: commands.Context, msg: discord.Message):
+        content = await msg.attachments[0].read()
+        try:
+            function_string = content.decode()
+        except UnicodeDecodeError as e:
+            log.error("Failed to decode file for instant command.", exc_info=e)
+            await ctx.send(
+                ":warning: Failed to decode the file, all invalid characters will be replaced."
+            )
+            function_string = content.decode(errors="replace")
+        finally:
+            return self.cleanup_code(function_string)
 
-    @instantcmd.command(aliases=["add"])
-    async def create(self, ctx, *, command: str = None):
-        """
-        Instantly generate a new command from a code snippet.
-
-        If you want to make a listener, give its name instead of the command name.
-        You can upload a text file if the command is too long, but you should consider coding a\
-cog at this point.
-        """
-
-        async def read_from_file(msg: discord.Message):
-            content = await msg.attachments[0].read()
-            try:
-                function_string = content.decode()
-            except UnicodeDecodeError as e:
-                log.error(f"Failed to decode file for instant command.", exc_info=e)
-                await ctx.send(
-                    ":warning: Failed to decode the file, all invalid characters will be replaced."
-                )
-                function_string = content.decode(errors="replace")
-            finally:
-                return self.cleanup_code(function_string)
-
+    async def _extract_code(
+        self, ctx: commands.Context, command: Optional[str] = None, is_instantcmd=True
+    ):
         if ctx.message.attachments:
-            function_string = await read_from_file(ctx.message)
+            function_string = await self.read_from_file(ctx, ctx.message)
         elif command:
             function_string = self.cleanup_code(command)
         else:
-            await ctx.send(
-                "You're about to create a new command. \n"
-                "Your next message will be the code of the command. \n\n"
-                "If this is the first time you're adding instant commands, "
-                "please read the wiki:\n"
-                "https://laggron.red/instantcommands.html#usage"
+            message = (
+                (
+                    "You're about to create a new command.\n"
+                    "Your next message will be the code of the command.\n\n"
+                    "If this is the first time you're adding instant commands, "
+                    "please read the wiki:\n"
+                    "https://laggron.red/instantcommands.html#usage"
+                )
+                if is_instantcmd
+                else (
+                    "You're about to add a new value to the dev environment.\n"
+                    "Your next message will be the code returning that value.\n\n"
+                    "If this is the first time you're editing the dev environment "
+                    "with InstantCommands, please read the wiki:\n"
+                    "https://laggron.red/instantcommands.html#usage"
+                )
             )
+            await ctx.send(message)
             pred = MessagePredicate.same_context(ctx)
             try:
                 response: discord.Message = await self.bot.wait_for(
@@ -230,7 +238,7 @@ cog at this point.
                 return
 
             if response.content == "" and response.attachments:
-                function_string = await read_from_file(response)
+                function_string = await self.read_from_file(ctx, response)
             else:
                 function_string = self.cleanup_code(response.content)
 
@@ -244,8 +252,28 @@ cog at this point.
             for page in pagify(message):
                 await ctx.send(page)
             return
-        # if the user used the command correctly, we should have one async function
+        return function, function_string
 
+    @checks.is_owner()
+    @commands.group(aliases=["instacmd", "instantcommand"])
+    async def instantcmd(self, ctx):
+        """Instant Commands cog management"""
+        pass
+
+    @instantcmd.command(aliases=["add"])
+    async def create(self, ctx, *, command: str = None):
+        """
+        Instantly generate a new command from a code snippet.
+
+        If you want to make a listener, give its name instead of the command name.
+        You can upload a text file if the command is too long, but you should consider coding a \
+cog at this point.
+        """
+        function = await self._extract_code(ctx, command)
+        if function is None:
+            return
+        function, function_string = function
+        # if the user used the command correctly, we should have one async function
         if isinstance(function, commands.Command):
             async with self.data.commands() as _commands:
                 if function.name in _commands:
@@ -337,8 +365,6 @@ cog at this point.
     async def _list(self, ctx):
         """
         List all existing commands made using Instant Commands.
-
-        If a command name is given and found in the Instant commands list, the code will be shown.
         """
         message = "List of instant commands:\n" "```Diff\n"
         _commands = await self.data.commands()
@@ -353,7 +379,7 @@ cog at this point.
             await ctx.send("No instant command created.")
             return
         for page in pagify(message):
-            await ctx.send(message)
+            await ctx.send(page)
 
     @instantcmd.command()
     async def source(self, ctx: commands.Context, command: str):
@@ -368,6 +394,112 @@ cog at this point.
         await ctx.send_interactive(
             pagify(_commands[command], shorten_by=10), box_lang="py", timeout=60
         )
+
+    @instantcmd.group()
+    async def env(self, ctx: commands.Context):
+        """
+        Manage Red's dev environment
+
+        This allows you to add custom values to the developer's environement used by the \
+core dev commands (debug, eval, repl).
+        Note that this cannot be used inside instantcommands due to the context requirement. 
+        """
+        pass
+
+    @env.command(name="add")
+    async def env_add(self, ctx: commands.Context, name: str, *, code: str = None):
+        """
+        Add a new value to Red's dev environement.
+
+        The code is in the form of an eval (like instantcmds) and must return a callable that \
+takes the context as its sole parameter.
+        """
+        function = await self._extract_code(ctx, code, False)
+        if function is None:
+            return
+        function, function_string = function
+        # if the user used the command correctly, we should have one async function
+        async with self.data.dev_values() as values:
+            if name in values:
+                response = await self._ask_for_edit(ctx, "dev value")
+                if response is False:
+                    return
+                self.bot.remove_dev_env_value(name)
+                log.debug(f"Removed dev value {name} due to incoming overwrite (edit).")
+        try:
+            self.bot.add_dev_env_value(name, function)
+        except Exception as e:
+            exception = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+            message = (
+                "An expetion has occured while adding the value to Red:\n"
+                f"```py\n{exception}\n```"
+            )
+            for page in pagify(message):
+                await ctx.send(page)
+            return
+        else:
+            async with self.data.dev_values() as values:
+                values[name] = function_string
+            await ctx.send(f"The dev value `{name}` was successfully added.")
+            log.debug(f"Added dev value {name}")
+
+    @env.command(name="delete", aliases=["del", "remove"])
+    async def env_delete(self, ctx: commands.Context, name: str):
+        """
+        Unload and remove a dev value from the registered ones with instantcmd.
+        """
+        async with self.data.dev_values() as values:
+            if name not in values:
+                await ctx.send("That value doesn't exist")
+                return
+            self.bot.remove_dev_env_value(name)
+            values.pop(name)
+        await ctx.send(f"The dev env value `{name}` was successfully removed.")
+
+    @env.command(name="list")
+    async def env_list(self, ctx: commands.Context):
+        """
+        List all dev env values registered.
+        """
+        embed = discord.Embed(name="List of dev env values")
+        dev_cog = self.bot.get_cog("Dev")
+        values = await self.data.dev_values()
+        if not values:
+            message = "Nothing set yet."
+        else:
+            message = "- " + "\n- ".join(values)
+            embed.set_footer(
+                text=(
+                    "You can show the command source code by typing "
+                    f"`{ctx.prefix}instacmd env source <name>`"
+                )
+            )
+        embed.add_field(name="Registered with InstantCommands", value=message, inline=False)
+        if dev_cog:
+            embed.description = "Dev mode is currently enabled"
+            other_values = [x for x in dev_cog.env_extensions if x not in values]
+            if other_values:
+                embed.add_field(
+                    name="Other dev env values",
+                    value="- " + "\n- ".join(other_values),
+                    inline=False,
+                )
+        else:
+            embed.description = "Dev mode is currently disabled"
+        embed.colour = await ctx.embed_colour()
+        await ctx.send(embed=embed)
+
+    @env.command(name="source")
+    async def env_source(self, ctx: commands.Context, name: str):
+        """
+        Show the code of a dev env value.
+        """
+        values = await self.data.dev_values()
+        if name not in values:
+            await ctx.send("Value not found.")
+            return
+        await ctx.send(f"Source code for `{name}`:")
+        await ctx.send_interactive(pagify(values[name], shorten_by=10), box_lang="py", timeout=60)
 
     @commands.command(hidden=True)
     @checks.is_owner()
