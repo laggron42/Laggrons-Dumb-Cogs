@@ -295,6 +295,8 @@ class Games(MixinMeta):
                     messages = await channel.history(limit=None, after=two_weeks_ago).flatten()
                     if messages:
                         await mass_purge(messages, channel)
+                    if channel == tournament.lag_channel:
+                        continue
                     if tournament.game_role:
                         await channel.set_permissions(
                             tournament.game_role, read_messages=True, send_messages=False
