@@ -24,7 +24,9 @@ from .utils import credentials_check, async_http_retry, mod_or_to, prompt_yes_or
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
 
-CHALLONGE_URL_RE = re.compile(r"(?:https?://challonge\.com/)(\S{1,2}/)?(?P<id>\S[^/]+)(/.*)?")
+CHALLONGE_URL_RE = re.compile(
+    r"(?:https?://challonge\.com/)(\S{1,2}/)?(?P<id>\S[^/?]+)(/.[^?]*)?(\?.*)?"
+)
 
 
 class ChallongeURLConverter(commands.Converter):
