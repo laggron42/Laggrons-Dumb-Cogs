@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2021-02-12 19:56+0100\n"
+"POT-Creation-Date: 2021-03-01 00:28+0000\n"
 "Last-Translator: \n"
 "Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
@@ -21,7 +21,10 @@ msgid "\n"
 "    Server autorole following the invite the user used to join the server\n\n"
 "    Documentation: https://laggron.red/roleinvite.html\n"
 "    "
-msgstr ""
+msgstr "\n"
+"    Kullanıcının sunucuya katılmak için kullandığı davetiyeyi takip eder\n\n"
+"    Döküman: https://laggron.red/roleinvite.html\n"
+"    "
 
 #: roleinvite/roleinvite.py:79
 msgid "Request timed out."
@@ -34,7 +37,11 @@ msgid "\n"
 "        For a clear explaination of how the cog works, read the documentation.\n"
 "        https://laggrons-dumb-cogs.readthedocs.io/\n"
 "        "
-msgstr ""
+msgstr "\n"
+"        Roleinvite cog ayarları\n\n"
+"        Nasıl kullanıldığını öğrenmek istiyorsanız, dökümanı okuyunuz.\n"
+"        https://laggrons-dumb-cogs.readthedocs.io/\n"
+"        "
 
 #: roleinvite/roleinvite.py:96
 #, docstring
