@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2021-03-01 00:28+0000\n"
+"POT-Creation-Date: 2021-05-01 00:42+0000\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "MIME-Version: 1.0\n"
@@ -1714,7 +1714,7 @@ msgstr ""
 
 #: warnsystem/warnsystem.py:411
 msgid "Not set"
-msgstr ""
+msgstr "Non réglé"
 
 #: warnsystem/warnsystem.py:412
 msgid ":warning: You're about to warn a lot of members! Avoid doing this to prevent being rate limited by Discord, especially if you enabled DMs.\n\n"
@@ -2108,7 +2108,7 @@ msgstr ""
 msgid "\n"
 "        Get informations about the cog.\n"
 "        "
-msgstr ""
+msgstr "Affiche des informations sur le cog."
 
 #: warnsystem/warnsystem.py:1311
 msgid "Laggron's Dumb Cogs V3 - warnsystem\n\n"
