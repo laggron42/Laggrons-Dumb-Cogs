@@ -1363,7 +1363,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         if not role:
             return
         try:
-            channel.set_permissions(
+            await channel.set_permissions(
                 role,
                 send_messages=False,
                 add_reactions=False,
