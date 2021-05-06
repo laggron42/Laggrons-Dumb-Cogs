@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2021-03-01 00:28+0000\n"
+"POT-Creation-Date: 2021-05-01 00:42+0000\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "MIME-Version: 1.0\n"
@@ -278,7 +278,8 @@ msgstr "[WarnSystem] {action} angefragt von {author} (ID: {author.id}) gegen {me
 #: warnsystem/api.py:1079
 msgid "\n\n"
 "Duration: {time} "
-msgstr ""
+msgstr "\n\n"
+"Dauer: {time} "
 
 #: warnsystem/api.py:1082
 msgid "Reason: {reason}"
@@ -291,7 +292,8 @@ msgstr "Grund zu lange, um angezeigt zu werden."
 #: warnsystem/api.py:1122
 msgid "You were unbanned from {guild}, your temporary ban (reason: {reason}) just ended after {duration}.\n"
 "You can join back using this invite: {invite}"
-msgstr ""
+msgstr "Du wurdest von dem Server {guild} entbannt, dein temporärer Bann (Grund: {reason}) ist nach {duration} zu Ende.\n"
+" Du kannst dem Server wieder beitreten, indem du diesen Link nutzt: {invite}"
 
 #: warnsystem/api.py:1167
 msgid "End of timed {action} of {member} requested by {author} that lasted for {time}. Reason of the {action}: {reason}"
@@ -409,7 +411,7 @@ msgstr ""
 #: warnsystem/automod.py:134 warnsystem/automod.py:525
 #: warnsystem/automod.py:549
 msgid "enabled"
-msgstr ""
+msgstr "aktiviert"
 
 #: warnsystem/automod.py:137
 msgid "enable"
@@ -475,7 +477,7 @@ msgstr "Nichts registriert."
 
 #: warnsystem/automod.py:217
 msgid "Page {i}/{total}"
-msgstr ""
+msgstr "Seite {i}/{total}"
 
 #: warnsystem/automod.py:223
 #, docstring
@@ -1366,7 +1368,7 @@ msgstr "WarnSystem-Einstellungen. Seite 1/2"
 
 #: warnsystem/settings.py:784
 msgid "WarnSystem settings. Page 2/2"
-msgstr ""
+msgstr "WarnSystem-Einstellungen. Seite 2/2"
 
 #: warnsystem/settings.py:791
 msgid "You can change all of these values with {prefix}warnset"
