@@ -224,7 +224,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
 
         self.task: asyncio.Task
 
-    __version__ = "1.3.16"
+    __version__ = "1.3.17"
     __author__ = ["retke (El Laggron)"]
 
     # helpers
@@ -1363,7 +1363,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         if not role:
             return
         try:
-            channel.set_permissions(
+            await channel.set_permissions(
                 role,
                 send_messages=False,
                 add_reactions=False,
