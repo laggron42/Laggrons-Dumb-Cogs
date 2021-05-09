@@ -29,6 +29,26 @@ _ = Translator("WarnSystem", __file__)
 id_pattern = re.compile(r"([0-9]{15,21})$")
 
 
+class SafeMember:
+    def __init__(self, member: discord.Member) -> None:
+        self.name = str(member.name)
+        self.display_name = str(member.display_name)
+        self.nick = str(member.nick)
+        self.id = str(member.id)
+        self.mention = str(member.mention)
+        self.discriminator = str(member.discriminator)
+        self.color = str(member.color)
+        self.colour = str(member.colour)
+        self.created_at = str(member.created_at)
+        self.joined_at = str(member.joined_at)
+
+    def __str__(self):
+        return self.name
+
+    def __getattr__(self, name):
+        return self
+
+
 class FakeRole:
     """
     We need to fake some attributes of roles for the class UnavailableMember
@@ -622,9 +642,22 @@ class API:
             duration = self._format_timedelta(time)
         else:
             duration = _("*[No time given]*")
-        format_description = lambda x: x.format(
-            invite=invite, member=member, mod=author, duration=duration, time=today
-        )
+
+        def format_description(text):
+            try:
+                return text.format(
+                    invite=invite,
+                    member=SafeMember(member),
+                    mod=SafeMember(author),
+                    duration=duration,
+                    time=today,
+                )
+            except Exception:
+                log.error(
+                    f"[Guild {guild.id}] Failed to format description in embed", exc_info=True
+                )
+                return "Failed to format field."
+
         link = re.search(r"(https?://)\S+\.(jpg|jpeg|png|gif|webm)", reason)
 
         # embed for the modlog
