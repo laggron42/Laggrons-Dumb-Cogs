@@ -65,7 +65,7 @@ def mod_or_to():
     async def check(ctx: commands.Context):
         if ctx.guild is None:
             return False
-        if ctx.author.id == ctx.guild.owner.id:
+        if ctx.author.id == ctx.guild.owner_id:
             return True
         if ctx.author.guild_permissions.administrator:
             return True
