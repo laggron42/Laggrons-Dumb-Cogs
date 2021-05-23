@@ -23,6 +23,8 @@ TWITCH_CHANNEL_RE = re.compile(r"(https://(www\.)?twitch.tv/)?(?P<channel_name>\
 async def mod_or_streamer(ctx: commands.Context):
     if ctx.author.id == ctx.guild.owner.id:
         return True
+    if ctx.author.guild_permissions.administrator:
+        return True
     is_mod = await ctx.bot.is_mod(ctx.author)
     if is_mod is True:
         return True
