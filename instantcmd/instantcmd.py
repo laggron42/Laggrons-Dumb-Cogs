@@ -72,7 +72,7 @@ class InstantCommands(BaseCog):
         bot.loop.create_task(self.resume_commands())
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.3.0"
+    __version__ = "1.3.1"
 
     # def get_config_identifier(self, name):
     # """
@@ -390,7 +390,9 @@ cog at this point.
         if command not in _commands:
             await ctx.send("Command not found.")
             return
-        await ctx.send(f"Source code for `{ctx.clean_prefix}{command}`:")
+        _function = self.get_function_from_str(_commands[command])
+        prefix = ctx.clean_prefix if isinstance(_function, commands.Command) else ""
+        await ctx.send(f"Source code for `{prefix}{command}`:")
         await ctx.send_interactive(
             pagify(_commands[command], shorten_by=10), box_lang="py", timeout=60
         )
