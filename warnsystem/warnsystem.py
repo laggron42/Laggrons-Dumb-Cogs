@@ -224,7 +224,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
 
         self.task: asyncio.Task
 
-    __version__ = "1.3.18"
+    __version__ = "1.3.19"
     __author__ = ["retke (El Laggron)"]
 
     # helpers
@@ -1418,6 +1418,8 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                     if entry.user.id != guild.me.id:
                         # Don't create modlog entires for the bot's own bans, cogs do this.
                         mod, reason, date = entry.user, entry.reason, entry.created_at
+                        if isinstance(member, discord.User):
+                            member = UnavailableMember(self.bot, guild._state, member.id)
                         try:
                             await self.api.warn(
                                 guild,
