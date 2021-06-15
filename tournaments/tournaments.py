@@ -156,7 +156,7 @@ class Tournaments(
         except Exception as e:
             log.error("Couldn't load dev env values.", exc_info=e)
 
-    __version__ = "1.1.5"
+    __version__ = "1.1.6"
     __author__ = ["retke (El Laggron)", "Wonderfall", "Xyleff"]
 
     @commands.command(hidden=True)
@@ -189,7 +189,7 @@ class Tournaments(
             return new
 
         cog_default = {
-            "delay": 10,
+            "delay": 600,
             "time_until_warn": {  # warn brackets taking too much time
                 "bo3": (
                     1500,
