@@ -68,6 +68,15 @@ class ConfigSelector(commands.Converter):
             raise commands.BadArgument(_("That config doesn't exist."))
 
     async def convert(self, ctx: commands.Context, argument: str):
+        try:
+            await self._convert(ctx, argument)
+        finally:
+            # the class is instanciated at runtime, so we have to clean it up manually
+            # else the next time a command is ran, there will be leftovers
+            self.config = None
+            self.arg = None
+
+    async def _convert(self, ctx: commands.Context, argument: str):
         # we use dpy's tools for parsing quoted strings
         # check the source of StringView if you want details
         # pro-tip: ws=whitespace (took me a while to figure out)
