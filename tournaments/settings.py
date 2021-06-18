@@ -1,3 +1,4 @@
+from collections import namedtuple
 import discord
 import logging
 import re
@@ -55,7 +56,7 @@ class ConfigSelector(commands.Converter):
 
     def __init__(self, converter=str):
         self.converter = converter
-        self.config: str = None
+        self.config = None
         self.arg = None
 
     def __repr__(self) -> str:
@@ -73,6 +74,7 @@ class ConfigSelector(commands.Converter):
         # pro-tip: ws=whitespace (took me a while to figure out)
         view = StringView(argument)
         config = None
+        arg = None
         start, stop = 0, view.end
 
         while view.eof is False and config is None:
@@ -86,14 +88,14 @@ class ConfigSelector(commands.Converter):
                 config = view.get_quoted_word()
                 # and look for an existing config
                 await self.config_exists(ctx, config)
-                self.config = config
+                config = config
                 view.skip_ws()
                 # we registered start and stop so we know the range of our flag in the string
                 stop = view.index
                 # we stop here, only need one flag
                 break
 
-        if self.config is not None:
+        if config is not None:
             # we found a config, now we need to transform the base argument.
             # using start and stop, representing the index where the flag is, we can
             # strip the flag text from the original argument
@@ -111,7 +113,7 @@ class ConfigSelector(commands.Converter):
 
             else:
                 # there is a default value, param is optional, we send that default and continue
-                self.arg = None if param.default.__class__ == self.__class__ else param.default
+                arg = None if param.default.__class__ == self.__class__ else param.default
 
                 # that condition is important due to discord.py's behaviour with default values
                 #
@@ -124,9 +126,11 @@ class ConfigSelector(commands.Converter):
 
         else:
             # we process the conversion with the cleaned argument
-            self.arg = await ctx.command.do_conversion(ctx, self.converter, argument, param)
+            arg = await ctx.command.do_conversion(ctx, self.converter, argument, param)
 
-        return self
+        ConfigSelector = namedtuple("ConfigSelector", ["config", "arg"])
+        data = ConfigSelector(config=config, arg=arg)
+        return data
 
 
 class Settings(MixinMeta):

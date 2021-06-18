@@ -189,7 +189,7 @@ class Tournaments(
             return new
 
         cog_default = {
-            "delay": 10,
+            "delay": 600,
             "time_until_warn": {  # warn brackets taking too much time
                 "bo3": (
                     1500,

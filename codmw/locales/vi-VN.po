@@ -3,17 +3,17 @@ msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
 "POT-Creation-Date: 2021-03-01 00:28+0000\n"
 "Last-Translator: \n"
-"Language-Team: Dutch\n"
+"Language-Team: Vietnamese\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: redgettext 3.3\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 "X-Crowdin-Project: laggrons-dumb-cogs\n"
 "X-Crowdin-Project-ID: 409698\n"
-"X-Crowdin-Language: nl\n"
+"X-Crowdin-Language: vi\n"
 "X-Crowdin-File-ID: 26\n"
-"Language: nl_NL\n"
+"Language: vi_VN\n"
 
 #: codmw/codmw.py:47
 msgid "{amount} {unit} ago."
@@ -21,59 +21,59 @@ msgstr ""
 
 #: codmw/codmw.py:50 codmw/codmw.py:189
 msgid "year"
-msgstr "jaar"
+msgstr ""
 
 #: codmw/codmw.py:50 codmw/codmw.py:189
 msgid "years"
-msgstr "jaren"
+msgstr ""
 
 #: codmw/codmw.py:51 codmw/codmw.py:190
 msgid "month"
-msgstr "maand"
+msgstr ""
 
 #: codmw/codmw.py:51 codmw/codmw.py:190
 msgid "months"
-msgstr "maanden"
+msgstr ""
 
 #: codmw/codmw.py:52 codmw/codmw.py:191
 msgid "week"
-msgstr "week"
+msgstr ""
 
 #: codmw/codmw.py:52 codmw/codmw.py:191
 msgid "weeks"
-msgstr "weken"
+msgstr ""
 
 #: codmw/codmw.py:53 codmw/codmw.py:192
 msgid "day"
-msgstr "dag"
+msgstr ""
 
 #: codmw/codmw.py:53 codmw/codmw.py:192
 msgid "days"
-msgstr "dagen"
+msgstr ""
 
 #: codmw/codmw.py:54 codmw/codmw.py:193
 msgid "hour"
-msgstr "uur"
+msgstr ""
 
 #: codmw/codmw.py:54 codmw/codmw.py:193
 msgid "hours"
-msgstr "uren"
+msgstr ""
 
 #: codmw/codmw.py:55 codmw/codmw.py:194
 msgid "minute"
-msgstr "minuut"
+msgstr ""
 
 #: codmw/codmw.py:55 codmw/codmw.py:194
 msgid "minutes"
-msgstr "minuten"
+msgstr ""
 
 #: codmw/codmw.py:56 codmw/codmw.py:195
 msgid "second"
-msgstr "seconde"
+msgstr ""
 
 #: codmw/codmw.py:56 codmw/codmw.py:195
 msgid "seconds"
-msgstr "seconden"
+msgstr ""
 
 #: codmw/codmw.py:66
 msgid "just now"
@@ -117,7 +117,7 @@ msgstr ""
 
 #: codmw/codmw.py:204
 msgid " and "
-msgstr " en "
+msgstr ""
 
 #: codmw/codmw.py:208
 msgid "None."
