@@ -2265,7 +2265,7 @@ class Tournament:
                 pass
             to_remove.append(member)
         for member in to_remove:
-            self.participants.remove(member)
+            await self.unregister_participant(member, send_dm=False)
         text = _(":information_source: Check-in was ended. {removed}").format(
             removed=_("{} participants didn't check and were unregistered.").format(len(to_remove))
             if to_remove
@@ -2318,7 +2318,10 @@ class Tournament:
         if self.checkin_phase != "pending":
             # registering during check-in, count as already checked
             participant.checked_in = True
-        if self.participants and self.participants[-1].player_id is not None:
+        if not (self.ranking["league_name"] and self.ranking["league_id"]) or (
+            self.participants and self.participants[-1].player_id is not None
+        ):
+            # either there's no ranking, in which case we always upload on register, or
             # last registered participant has a player ID, so we should upload him to the bracket
             await self.add_participant(participant)
         self.participants.append(participant)
