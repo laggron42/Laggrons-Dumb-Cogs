@@ -118,7 +118,10 @@ async def prompt_yes_or_no(
     negative_response: bool = True,
 ) -> bool:
     """
-    Sends a message and waits for used confirmation, using ReactionPredicate.yes_or_no.
+    Sends a message and waits for used confirmation, using buttons.
+
+    Credit to TrustyJAID for the stuff with buttons. Source:
+    https://github.com/TrustyJAID/Trusty-cogs/blob/f6ceb28ff592f664070a89282288452d615d7dc5/eventposter/eventposter.py#L750-L777
 
     Parameters
     ----------
@@ -139,23 +142,38 @@ async def prompt_yes_or_no(
         False if the user declined, if the request timed out, or if there are insufficient
         permissions, else True.
     """
-    if not ctx.channel.permissions_for(ctx.guild.me).add_reactions:
-        await ctx.send(_('I need the "Add reactions" permission in this channel to continue.'))
-        return False
-    message = await ctx.send(content, embed=embed)
-    pred = ReactionPredicate.yes_or_no(message, ctx.author)
-    start_adding_reactions(message, ReactionPredicate.YES_OR_NO_EMOJIS)
+    view = discord.ui.View()
+    approve_button = discord.ui.Button(
+        style=discord.ButtonStyle.green,
+        emoji="\N{HEAVY CHECK MARK}\N{VARIATION SELECTOR-16}",
+        custom_id=f"yes-{ctx.message.id}",
+    )
+    deny_button = discord.ui.Button(
+        style=discord.ButtonStyle.red,
+        emoji="\N{HEAVY MULTIPLICATION X}\N{VARIATION SELECTOR-16}",
+        custom_id=f"no-{ctx.message.id}",
+    )
+    view.add_item(approve_button)
+    view.add_item(deny_button)
+    message = await ctx.send(content, embed=embed, view=view)
+
+    def check_same_user(interaction):
+        return interaction.user.id == ctx.author.id
+
     try:
-        await ctx.bot.wait_for("reaction_add", check=pred, timeout=timeout)
+        x = await ctx.bot.wait_for("interaction", check=check_same_user, timeout=timeout)
     except asyncio.TimeoutError:
-        if delete_after:
-            await message.delete()
         await ctx.send(_("Request timed out."))
         return False
-    if pred.result is False:
+    else:
+        custom_id = x.data.get("custom_id")
+        if custom_id == f"yes-{ctx.message.id}":
+            return True
         if negative_response:
             await ctx.send(_("Cancelled."))
         return False
-    if delete_after:
-        await message.delete()
-    return True
+    finally:
+        if delete_after:
+            await message.delete()
+        else:
+            await message.edit(content=message.content, embed=embed, view=None)
