@@ -126,7 +126,7 @@ class ConfigSelector(commands.Converter):
 
         else:
             # we process the conversion with the cleaned argument
-            arg = await ctx.command.do_conversion(ctx, self.converter, argument, param)
+            arg = await commands.run_converters(ctx, self.converter, argument, param)
 
         ConfigSelector = namedtuple("ConfigSelector", ["config", "arg"])
         data = ConfigSelector(config=config, arg=arg)
