@@ -1419,6 +1419,8 @@ class Tournament:
         # self.debug_task = asyncio.get_event_loop().create_task(self.debug_loop_task())
         self.matches_to_announce: List[str] = []  # matches to announce in the queue channel
         self.cancelling = False  # see Tournament.__del__ and Match.__del__
+        # 5 min cooldown on ranking fetch (use saved one instead)
+        self.last_ranking_fetch: Optional[datetime] = None
 
     def __repr__(self):
         return (
@@ -2323,6 +2325,11 @@ class Tournament:
         ):
             # either there's no ranking, in which case we always upload on register, or
             # last registered participant has a player ID, so we should upload him to the bracket
+            # first we seed him, if possible
+            try:
+                await self.seed_participants()
+            except Exception:
+                pass  # any exception will roll back the list of participants so we're safe
             await self.add_participant(participant)
         self.participants.append(participant)
         log.debug(f"[Guild {self.guild.id}] Player {member} registered.")
@@ -2385,6 +2392,11 @@ class Tournament:
     # 95% of this code is made by Wonderfall, from ATOS bot (original)
     # https://github.com/Wonderfall/ATOS/blob/master/utils/seeding.py
     async def _fetch_braacket_ranking_info(self):
+        if self.last_ranking_fetch and self.last_ranking_fetch + timedelta(
+            minutes=5
+        ) < datetime.now(self.tz):
+            # 5 min cooldown on ranking fetch
+            return
         league_name, league_id = self.ranking["league_name"], self.ranking["league_id"]
         headers = {
             "User-Agent": (
@@ -2411,6 +2423,7 @@ class Tournament:
                 if page != 1 and filecmp.cmp(file_path, path / f"page{page-1}.csv"):
                     await aiofiles.os.remove(file_path)
                     break
+        self.last_ranking_fetch = datetime.now(self.tz)
 
     async def _seed_participants(self):
         ranking = {}

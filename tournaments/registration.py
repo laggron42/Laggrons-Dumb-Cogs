@@ -272,7 +272,7 @@ there are spaces).
         async with ctx.typing():
             for member in members:
                 try:
-                    await tournament.unregister_participant(member)
+                    await tournament.unregister_participant(member, send_dm=False)
                 except discord.HTTPException:
                     if len(members) == 1:
                         raise  # single members should raise exceptions

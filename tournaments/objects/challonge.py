@@ -3,7 +3,7 @@ import discord
 import logging
 
 from copy import copy
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from redbot.core import Config
 from redbot.core.bot import Red
@@ -380,6 +380,9 @@ class ChallongeTournament(Tournament):
         participants = copy(participants or self.participants)
         if not participants:
             raise RuntimeError("No participant provided")
+        participants: List[Tuple[ChallongeParticipant, int]] = [
+            (x, i) for i, x in enumerate(participants, start=1)
+        ]
         if force is True:
             # remove previous participants
             await self.request(achallonge.participants.clear, self.id)
@@ -388,18 +391,22 @@ class ChallongeTournament(Tournament):
             raw_participants = await self.list_participants()
             if raw_participants:
                 raw_ids = [x.get("id") for x in raw_participants]
-                participants = [x for x in participants if x.player_id not in raw_ids]
+                participants = [x for x in participants if x[0].player_id not in raw_ids]
             if not participants:
                 return
                 # raise RuntimeError("No new participant to add")
-        participants = [str(x) for x in participants]
+        seed = all(x.elo is not None for x, i in participants)
         size = len(participants)
         # make a composite list (to avoid "414 Request-URI Too Large")
         participants = [participants[x : x + (50)] for x in range(0, size, 50)]
         # Send to Challonge and assign IDs
         for chunk_participants in participants:
+            params = {}
+            if seed:
+                params.update({"seed": [i for x, i in chunk_participants]})
+            participants = [str(x) for x in chunk_participants]
             challonge_players = await self.request(
-                achallonge.participants.bulk_add, self.id, chunk_participants
+                achallonge.participants.bulk_add, self.id, participants, **params
             )
             for player in challonge_players:
                 participant = self.find_participant(discord_name=player["name"])[1]
