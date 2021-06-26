@@ -404,7 +404,7 @@ class ChallongeTournament(Tournament):
             params = {}
             if seed:
                 params.update({"seed": [i for x, i in chunk_participants]})
-            participants = [str(x) for x in chunk_participants]
+            participants = [str(x[0]) for x in chunk_participants]
             challonge_players = await self.request(
                 achallonge.participants.bulk_add, self.id, participants, **params
             )
