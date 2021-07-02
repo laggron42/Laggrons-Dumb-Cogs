@@ -2317,7 +2317,7 @@ class Tournament:
             raise RuntimeError("Limit reached.")
         await member.add_roles(self.participant_role, reason=_("Registering to tournament."))
         participant = self.participant_object(member, self)
-        if self.checkin_phase == "ongoing" or "done":
+        if self.checkin_phase == "ongoing" or self.checkin_phase == "done":
             # registering during or after check-in, count as already checked
             participant.checked_in = True
         if not (self.ranking["league_name"] and self.ranking["league_id"]) or (
