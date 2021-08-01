@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2021-05-01 00:42+0000\n"
+"POT-Creation-Date: 2021-07-01 00:24+0000\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "MIME-Version: 1.0\n"
@@ -232,8 +232,8 @@ msgid ":warning: This match is taking a lot of time!\n"
 msgstr ":warning: Ce match prend beaucoup de temps!\n"
 "Dès que cela est terminé, définissez votre score avec `{prefix}win`{channel}."
 
-#: tournaments/objects/base.py:825 tournaments/objects/base.py:2012
-#: tournaments/objects/base.py:2498
+#: tournaments/objects/base.py:825 tournaments/objects/base.py:2014
+#: tournaments/objects/base.py:2514
 msgid " in {channel}"
 msgstr " dans {channel}"
 
@@ -311,59 +311,59 @@ msgid "Your opponent forfeited.\n"
 msgstr "Votre adversaire a déclaré forfait.\n"
 "Vous avez gagné ce set !"
 
-#: tournaments/objects/base.py:1531
+#: tournaments/objects/base.py:1533
 msgid ":information_source: Set {match} cancelled, both players left."
 msgstr ":information_source: Set {match} annulé, les deux joueurs ont quitté."
 
-#: tournaments/objects/base.py:1542
+#: tournaments/objects/base.py:1544
 msgid ":information_source: Set {set} finished, player with ID {player} can't be found."
 msgstr ":information_source: Set {set} terminé, le joueur avec l'ID {player} est introuvable."
 
-#: tournaments/objects/base.py:1634
+#: tournaments/objects/base.py:1636
 msgid "{date} at {time}"
 msgstr "{date} à {time}"
 
-#: tournaments/objects/base.py:1669
+#: tournaments/objects/base.py:1671
 msgid "Registration start"
 msgstr "Début des inscriptions"
 
-#: tournaments/objects/base.py:1670
+#: tournaments/objects/base.py:1672
 msgid "Registration second start"
 msgstr "Deuxième début des inscriptions"
 
-#: tournaments/objects/base.py:1671
+#: tournaments/objects/base.py:1673
 msgid "Registration stop"
 msgstr "Fin des inscriptions"
 
-#: tournaments/objects/base.py:1672
+#: tournaments/objects/base.py:1674
 msgid "Check-in start"
 msgstr "Début du check-in"
 
-#: tournaments/objects/base.py:1673
+#: tournaments/objects/base.py:1675
 msgid "Check-in stop"
 msgstr "Fin du check-in"
 
-#: tournaments/objects/base.py:1677
+#: tournaments/objects/base.py:1679
 msgid "Some dates are passed."
 msgstr "Certaines dates sont dépassées."
 
-#: tournaments/objects/base.py:1684
+#: tournaments/objects/base.py:1686
 msgid "Registration start and stop times conflict."
 msgstr "Le début et la fin des inscriptions sont en conflit."
 
-#: tournaments/objects/base.py:1690
+#: tournaments/objects/base.py:1692
 msgid "Second registration start time conflict."
 msgstr "La date de début de la deuxième ouverture des inscriptions est en conflit."
 
-#: tournaments/objects/base.py:1693
+#: tournaments/objects/base.py:1695
 msgid "Check-in start and stop times conflict."
 msgstr "Les dates de début et de fin du check-in sont en conflit."
 
-#: tournaments/objects/base.py:1710
+#: tournaments/objects/base.py:1712
 msgid "New category of sets."
 msgstr "Nouvelle catégorie de sets."
 
-#: tournaments/objects/base.py:1780
+#: tournaments/objects/base.py:1782
 msgid ":information_source: Changes were detected on the upstream bracket.\n"
 "This may result in multiple sets ending, relaunch or cancellation.\n"
 "Affected sets: {sets}"
@@ -371,23 +371,23 @@ msgstr ":information_source: Des changements ont été détectés sur le bracket
 "Cela peut entraîner la fin, le relancement ou l'annulation de plusieurs sets.\n"
 "Sets affectés: {sets}"
 
-#: tournaments/objects/base.py:1941 tournaments/objects/base.py:2032
+#: tournaments/objects/base.py:1943 tournaments/objects/base.py:2034
 msgid ":white_small_square: __Check-in:__ From {begin} to {end}\n"
 msgstr ":white_small_square: __Check-in:__ De {begin} à {end}\n"
 
-#: tournaments/objects/base.py:1948
+#: tournaments/objects/base.py:1950
 msgid "{registered}/{limit} participants registered"
 msgstr "{registered}/{limit} participants inscrits"
 
-#: tournaments/objects/base.py:1952
+#: tournaments/objects/base.py:1954
 msgid "{registered} participants registered *(no limit set)*"
 msgstr "{registered} participants inscrits *(sans limite définie)*"
 
-#: tournaments/objects/base.py:1956 tournaments/objects/base.py:2049
+#: tournaments/objects/base.py:1958 tournaments/objects/base.py:2051
 msgid ":white_small_square: __Ruleset:__ See {channel}\n"
 msgstr ":white_small_square: __Ruleset :__ Voir {channel}\n"
 
-#: tournaments/objects/base.py:1961
+#: tournaments/objects/base.py:1963
 msgid "**{t.name}** | *{t.game}*\n\n"
 ":white_small_square: __Date:__ {date}\n"
 ":white_small_square: __Register:__ Closing at {time}\n"
@@ -405,25 +405,25 @@ msgstr "**{t.name}** | *{t.game}*\n\n"
 "Vous pouvez vous inscrire/désinscrire à ce tournoi avec les commandes `{t.bot_prefix}in` et `{t.bot_prefix}out`.\n"
 "*Note : votre nom d'utilisateur Discord sera utilisé sur le bracket.*"
 
-#: tournaments/objects/base.py:2004
+#: tournaments/objects/base.py:2006
 msgid "{role} Registrations for the tournament **{tournament}** are now re-opened{channel} until {date}!"
 msgstr "{role} Les inscriptions pour le tournoi **{tournament}** sont maintenant réouvertes{channel} jusqu'à {date}!"
 
-#: tournaments/objects/base.py:2018
+#: tournaments/objects/base.py:2020
 msgid "{role} Registrations for the tournament **{tournament}** are now opened in {channel}! See the pinned message there for details.\n"
 ":calendar_spiral: This tournament will take place on **{date}**."
 msgstr "{role} Les inscriptions pour le tournoi **{tournament}** sont maintenant ouvertes dans {channel} ! Consultez le message épinglé pour plus de détails.\n"
 ":calendar_spiral: Ce tournoi aura lieu le **{date}**."
 
-#: tournaments/objects/base.py:2043
+#: tournaments/objects/base.py:2045
 msgid "Limited to {limit} particiapants."
 msgstr "Limité à {limit} participants."
 
-#: tournaments/objects/base.py:2047
+#: tournaments/objects/base.py:2049
 msgid "No limit set."
 msgstr "Aucune limite définie."
 
-#: tournaments/objects/base.py:2054
+#: tournaments/objects/base.py:2056
 msgid "{role} Registrations for the tournament **{t.name}** are now opened!\n"
 ":calendar_spiral: This tournament will take place on **{date}**.\n\n"
 ":white_small_square: __Register:__ Closing at {time}\n"
@@ -441,19 +441,19 @@ msgstr "{role} Les inscriptions pour le tournoi **{t.name}** sont maintenant ouv
 "Vous pouvez vous inscrire/désinscrire à ce tournoi avec les commandes `{t.bot_prefix}in` et `{t.bot_prefix}out`.\n"
 "*Note : votre nom d'utilisateur Discord sera utilisé pour le bracket.*"
 
-#: tournaments/objects/base.py:2104 tournaments/objects/base.py:2106
+#: tournaments/objects/base.py:2106 tournaments/objects/base.py:2108
 msgid "Registration ended."
 msgstr "Inscriptions terminées."
 
-#: tournaments/objects/base.py:2121
+#: tournaments/objects/base.py:2123
 msgid "Cancelled check-in start since there are currently no participants. "
 msgstr "Check-in annulé car il n'y a actuellement aucun participant. "
 
-#: tournaments/objects/base.py:2126
+#: tournaments/objects/base.py:2128
 msgid "Registrations are still ongoing, and new participants are pre-checked."
 msgstr "Les inscriptions sont toujours en cours et les nouveaux participants sont check automatiquement."
 
-#: tournaments/objects/base.py:2133
+#: tournaments/objects/base.py:2135
 msgid "{role} The check-in for **{t.name}** has started!\n"
 "You have to confirm your presence by typing `{t.bot_prefix}in` here{end_time}.\n"
 "If you want to unregister, type `{t.bot_prefix}out` instead.\n\n"
@@ -463,21 +463,21 @@ msgstr "{role} Le check-in pour **{t.name}** a commencé !\n"
 "Si vous voulez vous désinscrire, tapez `{t.bot_prefix}out` à la place.\n\n"
 ":warning: Si vous ne checkez pas à temps, vous serez désinscrit !"
 
-#: tournaments/objects/base.py:2141
+#: tournaments/objects/base.py:2143
 msgid " until {}"
 msgstr " jusqu'à {}"
 
-#: tournaments/objects/base.py:2158
+#: tournaments/objects/base.py:2160
 msgid ":information_source: Check-in started{channel}!\n"
 "You can still register here until {end_time}. Anyone registering as of now will already be checked in."
 msgstr ":information_source: Le check-in a commencé{channel}!\n"
 "Vous pouvez toujours vous inscrire ici jusqu'à {end_time}. Toute personne s'inscrivant dès maintenant sera déjà check."
 
-#: tournaments/objects/base.py:2163
+#: tournaments/objects/base.py:2165
 msgid " in {}"
 msgstr " dans {}"
 
-#: tournaments/objects/base.py:2204
+#: tournaments/objects/base.py:2206
 msgid ":clock1: **Check-in reminder!**\n\n"
 "- {members}\n\n"
 "You have until {end_time} to check-in, or you'll be unregistered."
@@ -485,61 +485,61 @@ msgstr ":clock1: **Rappel de check-in !**\n\n"
 "- {members}\n\n"
 "Vous avez jusqu'à {end_time} pour vous check, ou vous serez désinscrit."
 
-#: tournaments/objects/base.py:2216
+#: tournaments/objects/base.py:2218
 msgid ":warning: **Attention!** You have **{time} minutes** left for checking-in to the tournament **{tournament}**."
 msgstr ":warning: **Attention!** Il vous reste **{time} minutes** pour check au tournoi **{tournament}**."
 
-#: tournaments/objects/base.py:2248
+#: tournaments/objects/base.py:2250
 msgid "Participant not checked."
 msgstr "Participant non check."
 
-#: tournaments/objects/base.py:2259
+#: tournaments/objects/base.py:2261
 msgid "You didn't check-in on time. You are therefore unregistered from the tournament **{tournament}**."
 msgstr "Vous n'avez pas check à temps. Vous êtes donc désinscrits du tournoi **{tournament}**."
 
-#: tournaments/objects/base.py:2269
+#: tournaments/objects/base.py:2271
 msgid ":information_source: Check-in was ended. {removed}"
 msgstr ":information_source: Le check-in est terminé. {removed}"
 
-#: tournaments/objects/base.py:2270
+#: tournaments/objects/base.py:2272
 msgid "{} participants didn't check and were unregistered."
 msgstr "{} participants n'ont pas check et ont étés désinscrits."
 
-#: tournaments/objects/base.py:2272
+#: tournaments/objects/base.py:2274
 msgid "No participant was unregistered."
 msgstr "Aucun participant n'a été désinscrit."
 
-#: tournaments/objects/base.py:2275
+#: tournaments/objects/base.py:2277
 msgid "\n\n"
 ":warning: {} participants couldn't have their roles removed:\n"
 msgstr "\n\n"
 ":warning: {} participants n'ont pas pu avoir leurs rôles supprimés :\n"
 
-#: tournaments/objects/base.py:2284 tournaments/objects/base.py:2288
+#: tournaments/objects/base.py:2286 tournaments/objects/base.py:2290
 msgid "Check-in ended. Participants who didn't check are unregistered."
 msgstr "Check-in terminé. Les participants qui n'ont pas check sont désinscrits."
 
-#: tournaments/objects/base.py:2316
+#: tournaments/objects/base.py:2318
 msgid "Registering to tournament."
 msgstr "Inscription au tournoi."
 
-#: tournaments/objects/base.py:2338
+#: tournaments/objects/base.py:2348
 msgid "You are now registered to the tournament **{name}**!"
 msgstr "Vous êtes maintenant inscrit au tournoi **{name}** !"
 
-#: tournaments/objects/base.py:2370
+#: tournaments/objects/base.py:2380
 msgid "Unregistering from tournament."
 msgstr "Désinscription du tournoi."
 
-#: tournaments/objects/base.py:2377
+#: tournaments/objects/base.py:2387
 msgid "You were unregistered from the tournament."
 msgstr "Vous avez été désinscrit du tournoi."
 
-#: tournaments/objects/base.py:2479
+#: tournaments/objects/base.py:2495
 msgid ":warning: An issue occured when trying to seed and upload participants after registration/checkin close. Try running it manually with `{prefix}upload`, and contact admins if the issue persists."
 msgstr ":warning: Un problème est survenu lors de la tentative de seed et d'upload des participants après la fermeture des inscriptions/check-in. Essayez de l'exécuter manuellement avec `{prefix}upload`, et contactez les administrateurs si le problème persiste."
 
-#: tournaments/objects/base.py:2503
+#: tournaments/objects/base.py:2519
 msgid "The tournament **{tournament}** has started! Bracket: {bracket}\n"
 ":white_small_square: You can access it anytime with the `{prefix}bracket` command.\n"
 ":white_small_square: You can check the current streams with the `{prefix}streams` command.\n\n"
@@ -557,19 +557,19 @@ msgstr "Le tournoi **{tournament}** a commencé ! Bracket: {bracket}\n"
 ":white_small_square: En cas de lag rendant le jeu injouable, utilisez la commande `{prefix}lag` pour appeler le T.O.\n"
 "{delay}."
 
-#: tournaments/objects/base.py:2524
+#: tournaments/objects/base.py:2540
 msgid ":white_small_square: Your sets are announced in {channel}.\n"
 msgstr ":white_small_square: Vos sets sont annoncés dans {channel}.\n"
 
-#: tournaments/objects/base.py:2529
+#: tournaments/objects/base.py:2545
 msgid ":white_small_square: The ruleset is available in {channel}.\n"
 msgstr ":white_small_square: Le ruleset est disponible dans {channel}.\n"
 
-#: tournaments/objects/base.py:2535
+#: tournaments/objects/base.py:2551
 msgid ":timer: **You will automatically be disqualified if you don't talk in your channel within the first {delay}.**"
 msgstr ":timer: **Vous serez automatiquement disqualifié si vous n'avez pas parlé dans votre salon {delay} après sa création.**"
 
-#: tournaments/objects/base.py:2543
+#: tournaments/objects/base.py:2559
 msgid ":information_source: Management of the scores for the tournament **{tournament}** is automated:\n"
 ":white_small_square: Only **the winner of the set** sends his score with the `{prefix}win` command.\n"
 ":white_small_square: You must follow this format: `{prefix}win 2-0, 3-2, 3-1, ...`.\n"
@@ -581,7 +581,7 @@ msgstr ":information_source: La gestion des scores pour le tournoi **{tournament
 ":white_small_square: Regardez le bracket pour **vérifier** les informations : {url}\n"
 ":white_small_square: En cas de mauvais score, contactez un T.O. pour une correction manuelle."
 
-#: tournaments/objects/base.py:2553
+#: tournaments/objects/base.py:2569
 msgid ":information_source: **Set launch is automated.** Please follow the instructions in this channel.\n"
 ":white_small_square: Any streamed set will be announced here, and in your channel.\n"
 ":white_small_square: Any BO5 set will be precised here and in your channel.\n"
@@ -593,15 +593,15 @@ msgstr ":information_source: **Le lancement des sets est automatisé.** Veuillez
 ":white_small_square: Le joueur commençant les bannissements est sélectionné et annoncé dans votre salon (vous pouvez également utiliser `{prefix}flip`).\n\n"
 "{dq}"
 
-#: tournaments/objects/base.py:2563
+#: tournaments/objects/base.py:2579
 msgid ":timer: **You will be disqualified if you were not active in your channel** within {delay} after the set launch."
 msgstr ":timer: **Vous serez disqualifié si vous n'êtes pas actif dans votre salon** au bout de {delay} après le lancement du set."
 
-#: tournaments/objects/base.py:2660
+#: tournaments/objects/base.py:2676
 msgid "5 minutes passed after set end."
 msgstr "5 minutes se sont écoulées depuis la fin du set."
 
-#: tournaments/objects/base.py:2693
+#: tournaments/objects/base.py:2709
 msgid ":warning: **Attention**\n"
 "Multiple bugs occured within the loop task. It is therefore stopped. The bot will stop refreshing informations and launching matches.\n"
 "If you believe the issue is fixed, resume the tournament with `{prefix}tfix resumetask`, else contact bot administrators."
@@ -609,19 +609,19 @@ msgstr ":warning: **Attention**\n"
 "Plusieurs bugs sont survenus dans la tâche de fond. Elle est donc stoppée. Le bot arrêtera de rafraîchir les informations et de lancer les nouveaux matchs.\n"
 "Si vous pensez que le problème est résolu, reprenez le tournoi avec `{prefix}tfix resumetask`, sinon contactez les administrateurs du bot."
 
-#: tournaments/objects/base.py:2801
+#: tournaments/objects/base.py:2817
 msgid ":information_source: Task is being resumed after some time. To prevent participants being incorrectly marked as AFK, {len} matches' AFK check are disabled."
 msgstr ":information_source: La tâche de fond est en train d'être relancée après un certain temps. Pour éviter que les participants ne soient incorrectement marqués comme étant AFK, la vérification AFK de {len} matchs est désactivée."
 
-#: tournaments/objects/base.py:3220
+#: tournaments/objects/base.py:3236
 msgid "You already have that set in your queue."
 msgstr "Vous avez déjà ce set dans votre file d'attente."
 
-#: tournaments/objects/base.py:3224
+#: tournaments/objects/base.py:3240
 msgid "That set already has a streamer defined *(<{streamer}>)*."
 msgstr "Ce set a déjà un streamer assigné *(<{streamer}>)*."
 
-#: tournaments/objects/base.py:3231
+#: tournaments/objects/base.py:3247
 msgid "That match is finished."
 msgstr "Ce match est terminé."
 
