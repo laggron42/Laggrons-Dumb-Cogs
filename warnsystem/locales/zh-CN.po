@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: laggrons-dumb-cogs\n"
-"POT-Creation-Date: 2021-06-01 01:58+0000\n"
+"POT-Creation-Date: 2021-07-01 00:24+0000\n"
 "Last-Translator: \n"
 "Language-Team: Chinese Simplified\n"
 "MIME-Version: 1.0\n"
@@ -2079,7 +2079,7 @@ msgstr ""
 msgid "Updating channel settings so the mute role will work here. Disable the auto-update with [p]warnset autoupdate"
 msgstr ""
 
-#: warnsystem/warnsystem.py:1451
+#: warnsystem/warnsystem.py:1453
 msgid "I need the `Add reactions` and `Manage messages` in the current channel if you want to use this command."
 msgstr ""
 
