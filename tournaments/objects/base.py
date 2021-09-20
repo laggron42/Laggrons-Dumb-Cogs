@@ -2172,13 +2172,17 @@ class Tournament:
             )
         if self.checkin_stop:
             duration = (self.checkin_stop - datetime.now(self.tz)).total_seconds()
-            duration //= 60  # number of minutes
-            if duration >= 10:
-                self.checkin_reminders.append((5, False))
-            if duration >= 20:
-                self.checkin_reminders.append((10, True))
-            if duration >= 40:
-                self.checkin_reminders.append((15, False))
+            if duration < 60:
+                # don't start the check-in only to end it within a minute
+                self.ignored_events.append("checkin_stop")
+            else:
+                duration //= 60  # number of minutes
+                if duration >= 10:
+                    self.checkin_reminders.append((5, False))
+                if duration >= 20:
+                    self.checkin_reminders.append((10, True))
+                if duration >= 40:
+                    self.checkin_reminders.append((15, False))
         await self.save()
 
     async def call_check_in(self, with_dm: bool = False):
