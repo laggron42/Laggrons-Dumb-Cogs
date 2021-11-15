@@ -834,6 +834,7 @@ class API:
         reason: Optional[str] = None,
         time: Optional[timedelta] = None,
         date: Optional[datetime] = None,
+        ban_days: Optional[int] = None,
         log_modlog: Optional[bool] = True,
         log_dm: Optional[bool] = True,
         take_action: Optional[bool] = True,
@@ -876,6 +877,9 @@ class API:
             The time before cancelling the action. This only works for a mute or a ban.
         date: Optional[datetime]
             When the action was taken. Only use if you want to overwrite the current date and time.
+        ban_days: Optional[int]
+            Overwrite number of days of messages to delete for a ban. Only used for warnings
+            level 4 or 5. If this is omitted, the bot will fall back to the user defined setting.
         log_modlog: Optional[bool]
             Specify if an embed should be posted to the modlog channel. Default to :py:obj:`True`.
         log_dm: Optional[bool]
@@ -1012,7 +1016,8 @@ class API:
                         await guild.ban(
                             member,
                             reason=audit_reason,
-                            delete_message_days=await self.data.guild(guild).bandays.softban(),
+                            delete_message_days=ban_days
+                            or await self.data.guild(guild).bandays.softban(),
                         )
                         await guild.unban(
                             member,
@@ -1024,7 +1029,8 @@ class API:
                         await guild.ban(
                             member,
                             reason=audit_reason,
-                            delete_message_days=await self.data.guild(guild).bandays.ban(),
+                            delete_message_days=ban_days
+                            or await self.data.guild(guild).bandays.ban(),
                         )
                 except discord.errors.HTTPException as e:
                     log.warn(
