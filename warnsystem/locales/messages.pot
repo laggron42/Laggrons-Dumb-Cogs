@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2021-09-01 00:41+0000\n"
+"POT-Creation-Date: 2021-11-15 18:41+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -92,7 +92,7 @@ msgid ""
 "If you're trying to hackban, the user ID is not valid."
 msgstr ""
 
-#: warnsystem/api.py:592 warnsystem/api.py:1103
+#: warnsystem/api.py:592 warnsystem/api.py:1109
 msgid "warn"
 msgstr ""
 
@@ -100,7 +100,7 @@ msgstr ""
 msgid "warns"
 msgstr ""
 
-#: warnsystem/api.py:593 warnsystem/api.py:1103 warnsystem/api.py:1192
+#: warnsystem/api.py:593 warnsystem/api.py:1109 warnsystem/api.py:1198
 msgid "mute"
 msgstr ""
 
@@ -108,7 +108,7 @@ msgstr ""
 msgid "mutes"
 msgstr ""
 
-#: warnsystem/api.py:594 warnsystem/api.py:1103
+#: warnsystem/api.py:594 warnsystem/api.py:1109
 msgid "kick"
 msgstr ""
 
@@ -116,7 +116,7 @@ msgstr ""
 msgid "kicks"
 msgstr ""
 
-#: warnsystem/api.py:595 warnsystem/api.py:1103
+#: warnsystem/api.py:595 warnsystem/api.py:1109
 msgid "softban"
 msgstr ""
 
@@ -124,7 +124,7 @@ msgstr ""
 msgid "softbans"
 msgstr ""
 
-#: warnsystem/api.py:596 warnsystem/api.py:1103 warnsystem/api.py:1192
+#: warnsystem/api.py:596 warnsystem/api.py:1109 warnsystem/api.py:1198
 msgid "ban"
 msgstr ""
 
@@ -132,7 +132,7 @@ msgstr ""
 msgid "bans"
 msgstr ""
 
-#: warnsystem/api.py:597 warnsystem/api.py:1104 warnsystem/warnsystem.py:820
+#: warnsystem/api.py:597 warnsystem/api.py:1110 warnsystem/warnsystem.py:820
 msgid "unknown"
 msgstr ""
 
@@ -214,7 +214,7 @@ msgid ""
 "***The message could not be delivered to the user. They may have DMs disabled, blocked the bot, or may not have a mutual server.***"
 msgstr ""
 
-#: warnsystem/api.py:740 warnsystem/api.py:1081 warnsystem/settings.py:484
+#: warnsystem/api.py:740 warnsystem/api.py:1087 warnsystem/settings.py:484
 msgid "I can't manage roles, please give me this permission to continue."
 msgstr ""
 
@@ -248,81 +248,81 @@ msgid ""
 "error."
 msgstr ""
 
-#: warnsystem/api.py:952
+#: warnsystem/api.py:956
 msgid ""
 "Cannot take actions on this member, they are above me in the roles "
 "hierarchy. Modify the hierarchy so my top role ({bot_role}) is above "
 "{member_role}."
 msgstr ""
 
-#: warnsystem/api.py:967
+#: warnsystem/api.py:971
 msgid "I can't take actions on the owner of the guild."
 msgstr ""
 
-#: warnsystem/api.py:971
+#: warnsystem/api.py:975
 msgid ""
 "Why would you warn me? I did nothing wrong :c\n"
 "(use a manual kick/ban instead, warning the bot will cause issues)"
 msgstr ""
 
-#: warnsystem/api.py:1019
+#: warnsystem/api.py:1024
 msgid "Unbanning the softbanned member after cleaning up the messages."
 msgstr ""
 
-#: warnsystem/api.py:1072
+#: warnsystem/api.py:1078
 msgid ""
 "I need the `Send messages` and `Embed links` permissions in {channel} to do "
 "this."
 msgstr ""
 
-#: warnsystem/api.py:1085
+#: warnsystem/api.py:1091
 msgid ""
 "The mute role `{mute_role}` was moved above my top role `{my_role}`. Please "
 "move the roles so my top role is above the mute role."
 msgstr ""
 
-#: warnsystem/api.py:1094
+#: warnsystem/api.py:1100
 msgid "I can't kick members, please give me this permission to continue."
 msgstr ""
 
-#: warnsystem/api.py:1100
+#: warnsystem/api.py:1106
 msgid "I can't ban members, please give me this permission to continue."
 msgstr ""
 
-#: warnsystem/api.py:1106
+#: warnsystem/api.py:1112
 msgid ""
 "[WarnSystem] {action} requested by {author} (ID: {author.id}) against "
 "{member}. "
 msgstr ""
 
-#: warnsystem/api.py:1112
+#: warnsystem/api.py:1118
 msgid ""
 "\n"
 "\n"
 "Duration: {time} "
 msgstr ""
 
-#: warnsystem/api.py:1115
+#: warnsystem/api.py:1121
 msgid "Reason: {reason}"
 msgstr ""
 
-#: warnsystem/api.py:1117
+#: warnsystem/api.py:1123
 msgid "Reason too long to be shown."
 msgstr ""
 
-#: warnsystem/api.py:1155
+#: warnsystem/api.py:1161
 msgid ""
 "You were unbanned from {guild}, your temporary ban (reason: {reason}) just ended after {duration}.\n"
 "You can join back using this invite: {invite}"
 msgstr ""
 
-#: warnsystem/api.py:1200
+#: warnsystem/api.py:1206
 msgid ""
 "End of timed {action} of {member} requested by {author} that lasted for "
 "{time}. Reason of the {action}: {reason}"
 msgstr ""
 
-#: warnsystem/api.py:1463
+#: warnsystem/api.py:1469
 msgid "{member} you're sending messages too fast!"
 msgstr ""
 
@@ -1240,12 +1240,12 @@ msgid ""
 "The new description for {destination} (warn {level}) was successfully set!"
 msgstr ""
 
-#: warnsystem/settings.py:397 warnsystem/warnsystem.py:389
-msgid "user"
-msgstr ""
-
 #: warnsystem/settings.py:397
 msgid "modlog"
+msgstr ""
+
+#: warnsystem/settings.py:397 warnsystem/warnsystem.py:389
+msgid "user"
 msgstr ""
 
 #: warnsystem/settings.py:403
