@@ -1,6 +1,7 @@
 import achallonge
 import discord
 import logging
+import string
 
 from copy import copy
 from typing import List, Optional, Tuple
@@ -66,6 +67,23 @@ class ChallongeMatch(Match):
         data: dict
             Data as provided by the API.
         """
+
+        def get_set_number(identifier: str):
+            """
+            Challonge stopped providing the match number in their API (the one displayed on the
+            bracket). After some emails, we were told to use the identifier, which represents the
+            suggested play order in the form of letter (eg: 'C', 'AB', 'CF'...).
+
+            This recursive function will get the match number back.
+            """
+            if not identifier:
+                return 0
+            char = identifier[-1]
+            pos = string.ascii_uppercase.index(char) + 1
+            return pos + get_set_number(char[:-1]) * 26
+
+        set_number = str(get_set_number(data["identifier"]))
+
         player1 = tournament.find_participant(player_id=data["player1_id"])[1]
         player2 = tournament.find_participant(player_id=data["player2_id"])[1]
         # here we will be looking for a very special case where the match and
@@ -90,7 +108,7 @@ class ChallongeMatch(Match):
                 )
                 log.info(
                     f"[Guild {tournament.guild.id}] Forced Challonge player with ID "
-                    f"{data[f'player{i}_id']} losing match {data['suggested_play_order']} (ID: "
+                    f"{data[f'player{i}_id']} losing match {set_number} (ID: "
                     f"{data['id']}), the player is already disqualified (Challonge bug for "
                     "listing this match as open and pending)."
                 )
@@ -100,7 +118,7 @@ class ChallongeMatch(Match):
                         "still listed in an open match, Challonge bug). The bot attempted "
                         "a fix by forcing a winner, but you might want to check the bracket "
                         "and make sure everything is fine."
-                    ).format(set=data["suggested_play_order"])
+                    ).format(set=set_number)
                 )
                 return
         # if both players are disqualified, we set only the first one as the winner, but
@@ -109,7 +127,7 @@ class ChallongeMatch(Match):
         cls = cls(
             tournament=tournament,
             round=data["round"],
-            set=str(data["suggested_play_order"]),
+            set=set_number,
             id=data["id"],
             underway=bool(data["underway_at"]),
             player1=player1,
@@ -290,10 +308,6 @@ class ChallongeTournament(Tournament):
                 if match["state"] != "open" or match["winner_id"]:
                     # still empty, or finished (and we don't want to load finished sets into cache)
                     continue
-                if match["suggested_play_order"] is None:
-                    # the last set, corresponding to a bracket reset (LB winner won in grand final)
-                    # somehow returns null for its number, so we assign it ourselves
-                    match["suggested_play_order"] = len(raw_matches)
                 match_object = await self.match_object.build_from_api(self, match)
                 if match_object:
                     matches.append(match_object)
