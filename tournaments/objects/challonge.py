@@ -80,7 +80,7 @@ class ChallongeMatch(Match):
                 return 0
             char = identifier[-1]
             pos = string.ascii_uppercase.index(char) + 1
-            return pos + get_set_number(char[:-1]) * 26
+            return pos + get_set_number(identifier[:-1]) * 26
 
         set_number = str(get_set_number(data["identifier"]))
 
