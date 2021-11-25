@@ -228,7 +228,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
     __author__ = ["retke (El Laggron)"]
 
     # helpers
-    async def call_warn(self, ctx, level, member, reason=None, time=None):
+    async def call_warn(self, ctx, level, member, reason=None, time=None, ban_days=None):
         """No need to repeat, let's do what's common to all 5 warnings."""
         reason = await self.api.format_reason(ctx.guild, reason)
         if reason and len(reason) > 2000:  # embed limits
@@ -243,7 +243,15 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             )
             return
         try:
-            fail = await self.api.warn(ctx.guild, [member], ctx.author, level, reason, time)
+            fail = await self.api.warn(
+                guild=ctx.guild,
+                members=[member],
+                author=ctx.author,
+                level=level,
+                reason=reason,
+                time=time,
+                ban_days=ban_days,
+            )
             if fail:
                 raise fail[0]
         except errors.MissingPermissions as e:
