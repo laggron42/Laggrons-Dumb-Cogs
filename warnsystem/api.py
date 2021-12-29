@@ -29,6 +29,26 @@ _ = Translator("WarnSystem", __file__)
 id_pattern = re.compile(r"([0-9]{15,21})$")
 
 
+class SafeMember:
+    def __init__(self, member: discord.Member) -> None:
+        self.name = str(member.name)
+        self.display_name = str(member.display_name)
+        self.nick = str(member.nick)
+        self.id = str(member.id)
+        self.mention = str(member.mention)
+        self.discriminator = str(member.discriminator)
+        self.color = str(member.color)
+        self.colour = str(member.colour)
+        self.created_at = str(member.created_at)
+        self.joined_at = str(member.joined_at)
+
+    def __str__(self):
+        return self.name
+
+    def __getattr__(self, name):
+        return self
+
+
 class FakeRole:
     """
     We need to fake some attributes of roles for the class UnavailableMember
@@ -622,9 +642,22 @@ class API:
             duration = self._format_timedelta(time)
         else:
             duration = _("*[No time given]*")
-        format_description = lambda x: x.format(
-            invite=invite, member=member, mod=author, duration=duration, time=today
-        )
+
+        def format_description(text):
+            try:
+                return text.format(
+                    invite=invite,
+                    member=SafeMember(member),
+                    mod=SafeMember(author),
+                    duration=duration,
+                    time=today,
+                )
+            except Exception:
+                log.error(
+                    f"[Guild {guild.id}] Failed to format description in embed", exc_info=True
+                )
+                return "Failed to format field."
+
         link = re.search(r"(https?://)\S+\.(jpg|jpeg|png|gif|webm)", reason)
 
         # embed for the modlog
@@ -801,6 +834,7 @@ class API:
         reason: Optional[str] = None,
         time: Optional[timedelta] = None,
         date: Optional[datetime] = None,
+        ban_days: Optional[int] = None,
         log_modlog: Optional[bool] = True,
         log_dm: Optional[bool] = True,
         take_action: Optional[bool] = True,
@@ -843,6 +877,9 @@ class API:
             The time before cancelling the action. This only works for a mute or a ban.
         date: Optional[datetime]
             When the action was taken. Only use if you want to overwrite the current date and time.
+        ban_days: Optional[int]
+            Overwrite number of days of messages to delete for a ban. Only used for warnings
+            level 4 or 5. If this is omitted, the bot will fall back to the user defined setting.
         log_modlog: Optional[bool]
             Specify if an embed should be posted to the modlog channel. Default to :py:obj:`True`.
         log_dm: Optional[bool]
@@ -923,13 +960,13 @@ class API:
                     ).format(bot_role=guild.me.top_role.name, member_role=member.top_role.name)
                 )
             if await self.data.guild(guild).respect_hierarchy() and (
-                not (await self.bot.is_owner(author) or author == guild.owner)
+                not (await self.bot.is_owner(author) or author.id == guild.owner_id)
                 and member.top_role.position >= author.top_role.position
             ):
                 return errors.NotAllowedByHierarchy(
                     "The moderator is lower than the member in the servers's role hierarchy."
                 )
-            if level > 2 and member == guild.owner:
+            if level > 2 and member.id == guild.owner_id:
                 return errors.MissingPermissions(
                     _("I can't take actions on the owner of the guild.")
                 )
@@ -979,7 +1016,8 @@ class API:
                         await guild.ban(
                             member,
                             reason=audit_reason,
-                            delete_message_days=await self.data.guild(guild).bandays.softban(),
+                            delete_message_days=ban_days
+                            or await self.data.guild(guild).bandays.softban(),
                         )
                         await guild.unban(
                             member,
@@ -991,7 +1029,8 @@ class API:
                         await guild.ban(
                             member,
                             reason=audit_reason,
-                            delete_message_days=await self.data.guild(guild).bandays.ban(),
+                            delete_message_days=ban_days
+                            or await self.data.guild(guild).bandays.ban(),
                         )
                 except discord.errors.HTTPException as e:
                     log.warn(
@@ -1162,7 +1201,7 @@ class API:
                     if level == 2:
                         to_remove.append(member)
                         continue
-                roles = [guild.get_role(x) for x in action.get("roles") or []]
+                roles = list(filter(None, [guild.get_role(x) for x in action.get("roles") or []]))
 
                 reason = _(
                     "End of timed {action} of {member} requested by {author} that lasted "
@@ -1271,7 +1310,7 @@ class API:
             return False
         if member.bot:
             return False
-        if guild.owner.id == member.id:
+        if guild.owner_id == member.id:
             return False
         if not self.cache.is_automod_enabled(guild):
             return False
@@ -1551,7 +1590,7 @@ class API:
             # we increase this value until reaching the given limit
             time = autowarn["time"]
             if time:
-                until = datetime.now() - timedelta(seconds=time)
+                until = datetime.utcnow() - timedelta(seconds=time)
                 autowarns[i]["until"] = until
         del time
         found_warnings = {}  # we fill this list with the valid autowarns, there can be more than 1
@@ -1572,7 +1611,7 @@ class API:
                     # value exceeded, no need to continue, it's already done for this one warn
                     to_remove.append(i)
                     del found_warnings[i]
-            for index in to_remove:
+            for index in reversed(to_remove):
                 autowarns.pop(index)
             if not autowarns:
                 # we could be out of autowarns to check after a certain time

@@ -1,0 +1,77 @@
+name: Bug Report
+description: Report a bug with a cog.
+labels: ["Type: Bug", "Status: Pending"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+        If you need help with using the cogs instead, please join the [support server](https://discord.gg/GET4DVk).
+  - type: input
+    id: red-version
+    attributes:
+      label: Red's version
+      description: |
+        What is the version of Red you're using?
+        Use `[p]info` or `redbot --debuginfo` to see this.
+      placeholder: 3.5.0
+    validations:
+      required: true
+  - type: dropdown
+    id: cog-name
+    attributes:
+      label: The cog you're using.
+      description: If the problem is global to the repo (like logging), leave this blank
+      options:
+        - CodMW
+        - InstantCommands
+        - RoleInvite
+        - Say
+        - Tournaments
+        - WarnSystem
+  - type: input
+    id: cog-version
+    attributes:
+      label: The cog's version
+      description: |
+        What is the version of the cog? This is required if the problem isn't global.
+        To get the version of your cog, use the `[p]<cogname>info` command. (ex: `[p]sayinfo`, `[p]warnsysteminfo`, `[p]tournamentsinfo`...)
+      placeholder: 1.4.0
+  - type: input
+    id: command
+    attributes:
+      label: The command you're using
+      description: If this isn't bounded to a specific command, leave this blank
+      placeholder: "warn"
+  - type: textarea
+    id: expectations
+    attributes:
+      label: "What did you expect to happen?"
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: "What actually happened?"
+      description: |
+        A clear and concise description of what the bug is.
+        If the issue is visual in nature, consider posting a screenshot.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: "How can we reproduce this error?"
+      description: "List of steps required to reproduce this error."
+      value: |
+        1.
+        2.
+        3.
+        ...
+    validations:
+      required: true
+  - type: textarea
+    id: anything-else
+    attributes:
+      label: Anything else?
+      description: Let us know if you have anything else to share.

@@ -23,14 +23,21 @@ TWITCH_CHANNEL_RE = re.compile(r"(https://(www\.)?twitch.tv/)?(?P<channel_name>\
 async def mod_or_streamer(ctx: commands.Context):
     if ctx.author.id == ctx.guild.owner.id:
         return True
+    if ctx.author.guild_permissions.administrator:
+        return True
     is_mod = await ctx.bot.is_mod(ctx.author)
     if is_mod is True:
         return True
     is_owner = await ctx.bot.is_owner(ctx.author)
     if is_owner is True:
         return True
-    tournament = ctx.cog.tournaments[ctx.guild.id]
+    try:
+        tournament: Tournament = ctx.cog.tournaments[ctx.guild.id]
+    except KeyError:
+        return False
     if tournament.streamer_role and tournament.streamer_role in ctx.author.roles:
+        return True
+    if tournament.to_role and tournament.to_role in ctx.author.roles:
         return True
     return False
 

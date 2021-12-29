@@ -65,7 +65,7 @@ def mod_or_to():
     async def check(ctx: commands.Context):
         if ctx.guild is None:
             return False
-        if ctx.author.id == ctx.guild.owner.id:
+        if ctx.author.id == ctx.guild.owner_id:
             return True
         if ctx.author.guild_permissions.administrator:
             return True
@@ -77,7 +77,7 @@ def mod_or_to():
             tournament: Tournament = ctx.cog.tournaments[ctx.guild.id]
         except KeyError:
             return False
-        if tournament.to_role in ctx.author.roles:
+        if tournament.to_role and tournament.to_role in ctx.author.roles:
             return True
         return False
 

@@ -17,14 +17,14 @@ from random import choice, shuffle
 from itertools import islice
 from datetime import datetime, timedelta, timezone
 from babel.dates import format_date, format_time
-from typing import Optional, Tuple, List, Union
+from typing import Mapping, Optional, Tuple, List, Union
 
 from redbot import __version__ as red_version
 from redbot.core import Config
 from redbot.core.bot import Red
 from redbot.core.i18n import Translator, get_babel_locale, set_contextual_locales_from_guild
 from redbot.core.data_manager import cog_data_path
-from redbot.core.utils.chat_formatting import pagify
+from redbot.core.utils.chat_formatting import humanize_timedelta, pagify
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -91,8 +91,8 @@ class Participant(discord.Member):
 
     def __repr__(self):
         return (
-            "<Participant player_id={0.player_id} tournament_name={0.tournament.name} "
-            "tournament_id={0.tournament.id} spoke={0.spoke} id={1.id} name={1.name!r}>"
+            "<Participant name={1.name!r} id={1.id} player_id={0.player_id} tournament_name={0.tournament.name} "
+            "tournament_id={0.tournament.id} spoke={0.spoke}>"
         ).format(self, self._user)
 
     @classmethod
@@ -829,8 +829,8 @@ class Match:
         time = self.tournament.time_until_warn["bo5" if self.is_bo5 else "bo3"][1]
         if time:
             message += _(
-                "\nT.O.s will be warned if this match is still ongoing in {time} minutes."
-            ).format(time=time)
+                "\nT.O.s will be warned if this match is still ongoing in {time}."
+            ).format(time=humanize_timedelta(timedelta=time))
         try:
             await target(message)
         except discord.NotFound:
@@ -1267,6 +1267,7 @@ class Tournament:
         bot: Red,
         guild: discord.Guild,
         config: Config,
+        custom_config: str,
         name: str,
         game: str,
         url: str,
@@ -1281,6 +1282,7 @@ class Tournament:
         self.bot = bot
         self.guild = guild
         self.data = config
+        self.config = custom_config
         self.name = name
         self.game = game
         self.url = url
@@ -1316,22 +1318,28 @@ class Tournament:
             data["channels"].get("stream")
         )
         self.to_channel: discord.TextChannel = guild.get_channel(data["channels"].get("to"))
+        self.lag_channel: discord.TextChannel = guild.get_channel(data["channels"].get("lag"))
         self.vip_register_channel: discord.TextChannel = guild.get_channel(
             data["channels"].get("vipregister")
         )
         self.participant_role: discord.Role = guild.get_role(data["roles"].get("participant"))
         self.streamer_role: discord.Role = guild.get_role(data["roles"].get("streamer"))
         self.to_role: discord.Role = guild.get_role(data["roles"].get("to"))
-        # self.tester_role: discord.Role = guild.get_role(data["roles"].get("tester"))
-        self.tester_role = None
+        self.tester_role: discord.Role = guild.get_role(data["roles"].get("tester"))
         self.credentials = data["credentials"]
         # fitting to achallonge's requirements
         self.credentials["login"] = self.credentials.pop("username")
         self.credentials["password"] = self.credentials.pop("api")
-        self.delay: int = data["delay"]
-        self.time_until_warn = {
-            "bo3": data["time_until_warn"].get("bo3", (25, 10)),
-            "bo5": data["time_until_warn"].get("bo5", (30, 10)),
+        self.delay: timedelta = timedelta(seconds=data["delay"]) or None
+        self.time_until_warn: Mapping[str, Tuple[timedelta]] = {
+            "bo3": tuple(
+                timedelta(seconds=x) or None
+                for x in data["time_until_warn"].get("bo3", (1500, 600))
+            ),
+            "bo5": tuple(
+                timedelta(seconds=x) or None
+                for x in data["time_until_warn"].get("bo5", (1800, 600))
+            ),
         }  # the default values are somehow not loaded into the dict sometimes
         self.register: dict = data["register"]
         self.checkin: dict = data["checkin"]
@@ -1341,41 +1349,43 @@ class Tournament:
         # works with next_scheduled_event, used for manual early starts/stops
         if data["register"]["second_opening"] != 0:
             self.register_second_start: datetime = tournament_start - timedelta(
-                minutes=data["register"]["second_opening"]
+                seconds=data["register"]["second_opening"]
             )
         else:
             self.register_second_start = None
             self.ignored_events.append("register_second_start")
         if data["register"]["opening"] != 0:
             self.register_start: datetime = tournament_start - timedelta(
-                minutes=data["register"]["opening"]
+                seconds=data["register"]["opening"]
             )
         else:
             self.register_start = None
             self.ignored_events.append("register_start")
         if data["register"]["closing"] != 0:
             self.register_stop: datetime = tournament_start - timedelta(
-                minutes=data["register"]["closing"]
+                seconds=data["register"]["closing"]
             )
         else:
             self.register_stop = None
             self.ignored_events.append("register_stop")
         if data["checkin"]["opening"] != 0:
             self.checkin_start: datetime = tournament_start - timedelta(
-                minutes=data["checkin"]["opening"]
+                seconds=data["checkin"]["opening"]
             )
         else:
             self.checkin_start = None
             self.ignored_events.append("checkin_start")
         if data["checkin"]["closing"] != 0:
             self.checkin_stop: datetime = tournament_start - timedelta(
-                minutes=data["checkin"]["closing"]
+                seconds=data["checkin"]["closing"]
             )
         else:
             self.checkin_stop = None
             self.ignored_events.append("checkin_stop")
-        self.ruleset_channel: discord.TextChannel = guild.get_channel(data["ruleset"])
-        self.game_role: discord.Role = guild.get_role(data["role"]) or guild.default_role
+        self.ruleset_channel: discord.TextChannel = guild.get_channel(data["channels"]["ruleset"])
+        self.game_role: discord.Role = (
+            guild.get_role(data["roles"]["player"]) or guild.default_role
+        )
         self.baninfo: str = data["baninfo"]
         self.ranking: dict = data["ranking"]
         self.stages: list = data["stages"]
@@ -1409,6 +1419,8 @@ class Tournament:
         # self.debug_task = asyncio.get_event_loop().create_task(self.debug_loop_task())
         self.matches_to_announce: List[str] = []  # matches to announce in the queue channel
         self.cancelling = False  # see Tournament.__del__ and Match.__del__
+        # 5 min cooldown on ranking fetch (use saved one instead)
+        self.last_ranking_fetch: Optional[datetime] = None
 
     def __repr__(self):
         return (
@@ -1460,6 +1472,7 @@ class Tournament:
             int(data["tournament_start"][0]),
             tz=timezone(timedelta(seconds=data["tournament_start"][1])),
         )
+        custom_config = data.pop("config")
         participants = data.pop("participants")
         matches = data.pop("matches")
         streamers = data.pop("streamers")
@@ -1476,6 +1489,7 @@ class Tournament:
             bot,
             guild,
             config,
+            custom_config,
             **data,
             tournament_start=tournament_start,
             cog_version=cog_version,
@@ -1565,6 +1579,7 @@ class Tournament:
         else:
             offset = 0
         data = {
+            "config": self.config,
             "name": self.name,
             "game": self.game,
             "url": self.url,
@@ -1606,6 +1621,8 @@ class Tournament:
             allowed_roles.append(self.to_role)
         if self.streamer_role is not None:
             allowed_roles.append(self.streamer_role)
+        if self.tester_role is not None:
+            allowed_roles.append(self.tester_role)
         return allowed_roles
 
     # some common utils
@@ -1650,21 +1667,16 @@ class Tournament:
 
     def _valid_dates(self):
         now = datetime.now(self.tz)
-        if now > self.tournament_start:
-            raise RuntimeError(
-                _("The tournament's date has already passed."),
-                [(_("Start date"), self.tournament_start)],
-            )
         dates = [
-            (_("Registration start"), self.register_start),
-            (_("Registration second start"), self.register_second_start),
-            (_("Registration stop"), self.register_stop),
-            (_("Check-in start"), self.checkin_start),
-            (_("Check-in stop"), self.checkin_stop),
+            (_("Registration start"), self.register_start, "register_start"),
+            (_("Registration second start"), self.register_second_start, "register_second_start"),
+            (_("Registration stop"), self.register_stop, "register_stop"),
+            (_("Check-in start"), self.checkin_start, "checkin_start"),
+            (_("Check-in stop"), self.checkin_stop, "checkin_stop"),
         ]
-        passed = {x: y for x, y in dates if y and now > y}
+        passed = [(x, y, z) for x, y, z in dates if y and now > y]
         if passed:
-            raise RuntimeError(_("Some dates are passed."), dates)
+            raise RuntimeError(_("Some dates are passed."), passed)
         if (
             self.register_start
             and self.register_stop
@@ -2160,13 +2172,17 @@ class Tournament:
             )
         if self.checkin_stop:
             duration = (self.checkin_stop - datetime.now(self.tz)).total_seconds()
-            duration //= 60  # number of minutes
-            if duration >= 10:
-                self.checkin_reminders.append((5, False))
-            if duration >= 20:
-                self.checkin_reminders.append((10, True))
-            if duration >= 40:
-                self.checkin_reminders.append((15, False))
+            if duration < 60:
+                # don't start the check-in only to end it within a minute
+                self.ignored_events.append("checkin_stop")
+            else:
+                duration //= 60  # number of minutes
+                if duration >= 10:
+                    self.checkin_reminders.append((5, False))
+                if duration >= 20:
+                    self.checkin_reminders.append((10, True))
+                if duration >= 40:
+                    self.checkin_reminders.append((15, False))
         await self.save()
 
     async def call_check_in(self, with_dm: bool = False):
@@ -2255,7 +2271,7 @@ class Tournament:
                 pass
             to_remove.append(member)
         for member in to_remove:
-            self.participants.remove(member)
+            await self.unregister_participant(member, send_dm=False)
         text = _(":information_source: Check-in was ended. {removed}").format(
             removed=_("{} participants didn't check and were unregistered.").format(len(to_remove))
             if to_remove
@@ -2305,11 +2321,19 @@ class Tournament:
             raise RuntimeError("Limit reached.")
         await member.add_roles(self.participant_role, reason=_("Registering to tournament."))
         participant = self.participant_object(member, self)
-        if self.checkin_phase != "pending":
-            # registering during check-in, count as already checked
+        if self.checkin_phase == "ongoing" or self.checkin_phase == "done":
+            # registering during or after check-in, count as already checked
             participant.checked_in = True
-        if self.participants and self.participants[-1].player_id is not None:
+        if not (self.ranking["league_name"] and self.ranking["league_id"]) or (
+            self.participants and self.participants[-1].player_id is not None
+        ):
+            # either there's no ranking, in which case we always upload on register, or
             # last registered participant has a player ID, so we should upload him to the bracket
+            # first we seed him, if possible
+            try:
+                await self.seed_participants()
+            except Exception:
+                pass  # any exception will roll back the list of participants so we're safe
             await self.add_participant(participant)
         self.participants.append(participant)
         log.debug(f"[Guild {self.guild.id}] Player {member} registered.")
@@ -2372,6 +2396,11 @@ class Tournament:
     # 95% of this code is made by Wonderfall, from ATOS bot (original)
     # https://github.com/Wonderfall/ATOS/blob/master/utils/seeding.py
     async def _fetch_braacket_ranking_info(self):
+        if self.last_ranking_fetch and self.last_ranking_fetch + timedelta(
+            minutes=5
+        ) < datetime.now(self.tz):
+            # 5 min cooldown on ranking fetch
+            return
         league_name, league_id = self.ranking["league_name"], self.ranking["league_id"]
         headers = {
             "User-Agent": (
@@ -2398,6 +2427,7 @@ class Tournament:
                 if page != 1 and filecmp.cmp(file_path, path / f"page{page-1}.csv"):
                     await aiofiles.os.remove(file_path)
                     break
+        self.last_ranking_fetch = datetime.now(self.tz)
 
     async def _seed_participants(self):
         ranking = {}
@@ -2524,9 +2554,9 @@ class Tournament:
                 scores_channel=scores_channel,
                 delay=_(
                     ":timer: **You will automatically be disqualified if you don't talk in your "
-                    "channel within the first {delay} minutes.**"
-                ).format(delay=self.delay)
-                if self.delay != 0
+                    "channel within the first {delay}.**"
+                ).format(delay=humanize_timedelta(timedelta=self.delay))
+                if self.delay
                 else "",
                 prefix=self.bot_prefix,
             ),
@@ -2552,9 +2582,9 @@ class Tournament:
                 prefix=self.bot_prefix,
                 dq=_(
                     ":timer: **You will be disqualified if you were not active in your channel** "
-                    "within the {delay} first minutes after the set launch."
-                ).format(delay=self.delay)
-                if self.delay > 0
+                    "within {delay} after the set launch."
+                ).format(delay=humanize_timedelta(timedelta=self.delay))
+                if self.delay
                 else "",
             ),
         }
@@ -2637,8 +2667,8 @@ class Tournament:
             lambda x: x[1].status != "pending" and x[1].channel is not None,
             enumerate(self.matches),
         ):
-            if self.delay > 0 and match.status == "ongoing":
-                if not match.checked_dq and match.duration > timedelta(minutes=self.delay):
+            if self.delay and match.status == "ongoing":
+                if not match.checked_dq and match.duration > self.delay:
                     log.debug(f"Checking inactivity for match {match.set}")
                     await match.check_inactive()
             elif match.status == "finished":
@@ -2670,11 +2700,9 @@ class Tournament:
             if not max_length[0]:
                 continue
             if match.warned is None:
-                if match.duration > timedelta(minutes=max_length[0]):
+                if match.duration > max_length[0]:
                     await match.warn_length()
-            elif max_length[1] and datetime.now(self.tz) > match.warned + timedelta(
-                minutes=max_length[1]
-            ):
+            elif max_length[1] and datetime.now(self.tz) > match.warned + max_length[1]:
                 await match.warn_to_length()
 
     async def _loop_task(self):
@@ -2770,7 +2798,7 @@ class Tournament:
         so this function will cancel all AFK checks for the matches that are going to have
         players DQed.
         """
-        if self.delay == 0:
+        if self.delay is None:
             return
         to_timeout = [
             x
@@ -2778,7 +2806,7 @@ class Tournament:
             if x.status == "ongoing"
             and x.checked_dq is False
             and x.duration is not None
-            and x.duration > timedelta(minutes=self.delay)
+            and x.duration > self.delay
             and (x.player1.spoke is False or x.player2.spoke is False)
         ]
         if not to_timeout:

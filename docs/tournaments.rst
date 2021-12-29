@@ -134,6 +134,8 @@ Then you can set the following channels with ``[p]tset channels``:
     message with the count of participants updated in real time).
     If this isn't set, members will be able to register everywhere.
 
+*   ``ruleset``, a channel given for the rules of the tournament.
+
 *   ``scores``, where participants will use the ``[p]win`` command to set their
     score. If this isn't set, participants will be able to
     use this command everywhere.
@@ -149,6 +151,9 @@ Next step, the roles with ``[p]tset roles``:
 
 *   ``participant``, the role given to all participants when they register.
     **Setting this is required.**
+
+*   ``player``, the role pinged when the registrations are opened. If you set
+    up a registrations channel, it will be unlocked for that role.
 
 *   ``streamer``, the role that gives access to the streamer commands.
 
@@ -186,21 +191,12 @@ Some additional settings you can set:
 *   ``[p]tset twostageregister`` defines a second start for registrations.
     See details in the :ref:`registrations section <register-checkin>`.
 
-----
+*   ``[p]tset ranking`` uses a Braacket ranking for seeding the participants.
 
-Finally, we can add our first game!
+*   ``[p]tset stages/counters`` defines a list of legal stages or counters.
 
-Some settings are dependant to a specific game, and this is where you set them.
-
-Use ``[p]tset games add <name>`` to start. The name of the game must be the
-same as the one provided by Challonge.
-
-The bot will then give you the next commands to use. You can also type
-``[p]help tset games``.
-
-You will be able to define the legal stage list, list of counters, channel of
-rules, role allowed to register (also pinged on registration start), info on
-the mode of bans (like 3-4-1), and even braacket informations for seeding.
+*   ``[p]tset baninfo`` define a ban mode (ex: 2-4-1) given to the participants
+    in addition to a player picked for beginning the bans.
 
 .. _register-checkin:
 
@@ -251,10 +247,10 @@ Here's an example situation:
 
 You will have to run the following commands:
 
-*   ``[p]tset register 1200 15``: opens 1200 minutes (20 hours) and closes 15
+*   ``[p]tset register 20h 15m``: opens 20 hours and closes 15
     minutes before tournament's start time.
 
-*   ``[p]tset checkin 60 20``: opens 60 minutes (1 hour) and closes 20
+*   ``[p]tset checkin 1h 20m``: opens 1 hour and closes 20
     minutes before tournament's start time.
 
 .. tip:: If you're unsure, the bot will give you the exact date and time
@@ -292,15 +288,47 @@ number of participants, but you want to have last-minute registrations for
 the places left by check-in. So, as soon as the check-in ends, registrations
 are re-opened. Then type this :
 
-*   ``[p]tset twostageregister 20`` reopens 20 minutes before tournament
+*   ``[p]tset twostageregister 20m`` reopens 20 minutes before tournament
     start.
 
 The configured closing time is still applied.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Manage multiple configurations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can decide to save multiple configurations for the same server, useful if
+you need different roles, channels, delays or other settings for specific
+games or rulesets.
+
+You can do that with the ``[p]tset config`` group command.
+
+Create a config with ``[p]tset config add "Your config"``, then you can edit
+settings for that config with the ``--config`` or ``-c`` "flag" at the end
+of your command.
+
+Examples:
+
+*   ``[p]tset delay 20m --config "Super Smash Bros."``
+*   ``[p]tset roles player League player --config LoL``
+*   ``[p]tset channels ruleset #2v2-smash -c "Smash 2v2"``
+
+See the other commands under ``[p]tset config`` for managing them.
+
+See those settings with ``[p]tset settings --config "Config name"``. If there
+are settings not set, the bot will fall back to the default config.
+
+Then, to use that config with your tournament, use ``[p]setup`` with the same
+flag as usual.
+
+.. tip:: If you use the exact name of the game for your config, it will be
+    automatically used when you add the tournament if the name on Challonge
+    matches.
+
 ----
 
 All good! We went across all settings, you can check those with the
-``[p]tset settings`` and ``[p]tset games show`` commands.
+``[p]tset settings`` command.
 
 ^^^^^^^^^^^^^^^^
 Add a tournament

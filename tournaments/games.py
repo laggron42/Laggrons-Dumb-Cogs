@@ -68,7 +68,6 @@ class Games(MixinMeta):
     @mod_or_to()
     @commands.command()
     @commands.guild_only()
-    @checks.mod_or_permissions(administrator=True)
     async def start(self, ctx: commands.Context):
         """
         Starts the tournament.
@@ -267,6 +266,7 @@ class Games(MixinMeta):
                     tournament.queue_channel,
                     tournament.register_channel,
                     tournament.scores_channel,
+                    tournament.lag_channel,
                 ],
             )
         )
@@ -294,6 +294,8 @@ class Games(MixinMeta):
                     messages = await channel.history(limit=None, after=two_weeks_ago).flatten()
                     if messages:
                         await mass_purge(messages, channel)
+                    if channel == tournament.lag_channel:
+                        continue
                     if tournament.game_role:
                         await channel.set_permissions(
                             tournament.game_role, read_messages=True, send_messages=False
@@ -605,6 +607,7 @@ you want the bot to override the previous list of participants, type `[p]upload 
                 "Or did someone edit the limit? Check the settings on Challonge."
             ),
         }
+        seeded = tournament.ranking["league_name"] and tournament.ranking["league_id"]
         try:
             async with ctx.typing():
                 await tournament.seed_participants(tournament.checkin_phase == "done")
@@ -621,6 +624,7 @@ you want the bot to override the previous list of participants, type `[p]upload 
             )
             if result is False:
                 return
+            seeded = False
         try:
             async with ctx.typing():
                 added = await tournament.add_participants(force=force)
@@ -658,7 +662,6 @@ you want the bot to override the previous list of participants, type `[p]upload 
                     ).format(prefix=ctx.clean_prefix)
                 )
                 return
-            seeded = tournament.ranking["league_name"] and tournament.ranking["league_id"]
             text = _("{len} participants successfully seeded{upload} to the bracket!").format(
                 len=added, upload=_(" and uploaded") if seeded else ""
             )
@@ -778,6 +781,7 @@ you want the bot to override the previous list of participants, type `[p]upload 
         await ctx.tick()
 
     @only_phase("ongoing")
+    @mod_or_to()
     @commands.command()
     @commands.guild_only()
     @commands.cooldown(1, 1, commands.BucketType.user)
@@ -922,7 +926,8 @@ Else you can specify the set you want to update as the first argument.
             mentions = discord.AllowedMentions(roles=[tournament.tester_role])
         else:
             mentions = None
-        await tournament.to_channel.send(msg, allowed_mentions=mentions)
+        lag_channel = tournament.lag_channel or tournament.to_channel
+        await lag_channel.send(msg, allowed_mentions=mentions)
         await ctx.send(_("TOs were called. Prepare a new arena for them..."))
 
     @only_phase()

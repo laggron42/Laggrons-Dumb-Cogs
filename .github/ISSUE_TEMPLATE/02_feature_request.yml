@@ -1,0 +1,63 @@
+name: Feature Request
+description: For feature requests.
+labels: ["Status: Pending", "Type: Suggestion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to fill out an issue, this template is meant for any feature suggestions.
+        If you need help with using the cogs instead, please join the [support server](https://discord.gg/GET4DVk).
+  - type: dropdown
+    id: feature-name
+    attributes:
+      label: "Type of feature request"
+      description: "What type of feature would you like to request?"
+      multiple: true
+      options:
+        - API functionality
+        - Cog
+        - Command
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: cog-name
+    attributes:
+      label: The cog your feature request is for.
+      description: If the suggestion is global to the repo (like a new cog), leave this blank
+      options:
+        - CodMW
+        - InstantCommands
+        - RoleInvite
+        - Say
+        - Tournaments
+        - WarnSystem
+  - type: textarea
+    id: proposal
+    attributes:
+      label: "Description of the feature you're suggesting"
+      description: |
+        Feel free to describe in as much detail as you wish.
+
+        If you are requesting a command:
+          - Include what cog it should be in and a name for the command
+          - Describe the intended functionality for the command
+          - Note any restrictions on who can use the command or where it can be used
+
+        If you are requesting API functionality:
+          - Describe what it should do
+          - Note whether it is to extend existing functionality or introduce new functionality
+
+        If you are requesting a new cog: 
+          - Describe the functionality in as much detail as possible
+          - Include the command structure, if possible
+          - Please note that there are few chances I actually make new cogs
+            based on suggestions (but could always happen).
+          - If you're asking for a commission, DM me (El Laggron) or use the [cogboard](https://cogboard.discord.red/)
+    validations:
+      required: true
+  - type: textarea
+    id: anything-else
+    attributes:
+      label: Anything else?
+      description: Let us know if you have anything else to share.

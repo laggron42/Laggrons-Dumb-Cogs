@@ -1,9 +1,10 @@
 import achallonge
 import discord
 import logging
+import string
 
 from copy import copy
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from redbot.core import Config
 from redbot.core.bot import Red
@@ -66,6 +67,23 @@ class ChallongeMatch(Match):
         data: dict
             Data as provided by the API.
         """
+
+        def get_set_number(identifier: str):
+            """
+            Challonge stopped providing the match number in their API (the one displayed on the
+            bracket). After some emails, we were told to use the identifier, which represents the
+            suggested play order in the form of letter (eg: 'C', 'AB', 'CF'...).
+
+            This recursive function will get the match number back.
+            """
+            if not identifier:
+                return 0
+            char = identifier[-1]
+            pos = string.ascii_uppercase.index(char) + 1
+            return pos + get_set_number(identifier[:-1]) * 26
+
+        set_number = str(get_set_number(data["identifier"]))
+
         player1 = tournament.find_participant(player_id=data["player1_id"])[1]
         player2 = tournament.find_participant(player_id=data["player2_id"])[1]
         # here we will be looking for a very special case where the match and
@@ -90,7 +108,7 @@ class ChallongeMatch(Match):
                 )
                 log.info(
                     f"[Guild {tournament.guild.id}] Forced Challonge player with ID "
-                    f"{data[f'player{i}_id']} losing match {data['suggested_play_order']} (ID: "
+                    f"{data[f'player{i}_id']} losing match {set_number} (ID: "
                     f"{data['id']}), the player is already disqualified (Challonge bug for "
                     "listing this match as open and pending)."
                 )
@@ -100,7 +118,7 @@ class ChallongeMatch(Match):
                         "still listed in an open match, Challonge bug). The bot attempted "
                         "a fix by forcing a winner, but you might want to check the bracket "
                         "and make sure everything is fine."
-                    ).format(set=data["suggested_play_order"])
+                    ).format(set=set_number)
                 )
                 return
         # if both players are disqualified, we set only the first one as the winner, but
@@ -109,7 +127,7 @@ class ChallongeMatch(Match):
         cls = cls(
             tournament=tournament,
             round=data["round"],
-            set=str(data["suggested_play_order"]),
+            set=set_number,
             id=data["id"],
             underway=bool(data["underway_at"]),
             player1=player1,
@@ -161,6 +179,7 @@ class ChallongeTournament(Tournament):
         bot: Red,
         guild: discord.Guild,
         config: Config,
+        custom_config: str,
         prefix: str,
         cog_version: str,
         data: dict,
@@ -191,6 +210,7 @@ class ChallongeTournament(Tournament):
             bot=bot,
             guild=guild,
             config=config,
+            custom_config=custom_config,
             name=data["name"],
             game=data["game_name"].title(),
             url=data["full_challonge_url"],
@@ -288,10 +308,6 @@ class ChallongeTournament(Tournament):
                 if match["state"] != "open" or match["winner_id"]:
                     # still empty, or finished (and we don't want to load finished sets into cache)
                     continue
-                if match["suggested_play_order"] is None:
-                    # the last set, corresponding to a bracket reset (LB winner won in grand final)
-                    # somehow returns null for its number, so we assign it ourselves
-                    match["suggested_play_order"] = len(raw_matches)
                 match_object = await self.match_object.build_from_api(self, match)
                 if match_object:
                     matches.append(match_object)
@@ -378,6 +394,9 @@ class ChallongeTournament(Tournament):
         participants = copy(participants or self.participants)
         if not participants:
             raise RuntimeError("No participant provided")
+        participants: List[Tuple[ChallongeParticipant, int]] = [
+            (x, i) for i, x in enumerate(participants, start=1)
+        ]
         if force is True:
             # remove previous participants
             await self.request(achallonge.participants.clear, self.id)
@@ -386,18 +405,22 @@ class ChallongeTournament(Tournament):
             raw_participants = await self.list_participants()
             if raw_participants:
                 raw_ids = [x.get("id") for x in raw_participants]
-                participants = [x for x in participants if x.player_id not in raw_ids]
+                participants = [x for x in participants if x[0].player_id not in raw_ids]
             if not participants:
                 return
                 # raise RuntimeError("No new participant to add")
-        participants = [str(x) for x in participants]
+        seed = all(x.elo is not None for x, i in participants)
         size = len(participants)
         # make a composite list (to avoid "414 Request-URI Too Large")
         participants = [participants[x : x + (50)] for x in range(0, size, 50)]
         # Send to Challonge and assign IDs
         for chunk_participants in participants:
+            params = {}
+            if seed:
+                params.update({"seed": [i for x, i in chunk_participants]})
+            participants = [str(x[0]) for x in chunk_participants]
             challonge_players = await self.request(
-                achallonge.participants.bulk_add, self.id, chunk_participants
+                achallonge.participants.bulk_add, self.id, participants, **params
             )
             for player in challonge_players:
                 participant = self.find_participant(discord_name=player["name"])[1]

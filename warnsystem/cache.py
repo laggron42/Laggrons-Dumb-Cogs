@@ -29,11 +29,14 @@ class MemoryCache:
         self.automod_regex_edited = []
 
     async def init_automod_enabled(self):
-        for guild_id, data in await self.data.all_guilds():
-            if data["automod"]["enabled"]:
-                self.automod_enabled.append(guild_id)
-            if data["automod"]["regex_edited_messages"]:
-                self.automod_regex_edited.append(guild_id)
+        for guild_id, data in (await self.data.all_guilds()).items():
+            try:
+                if data["automod"]["enabled"] is True:
+                    self.automod_enabled.append(guild_id)
+                if data["automod"]["regex_edited_messages"] is True:
+                    self.automod_regex_edited.append(guild_id)
+            except KeyError:
+                pass
 
     async def _debug_info(self) -> str:
         """

@@ -1,4 +1,5 @@
 import argparse
+from typing import List
 import discord
 import re
 import logging
@@ -83,6 +84,11 @@ class AdvancedMemberSelect:
     --below <role>
     """
 
+    def non_lurker_members(self, members: List[discord.Member]):
+        if not self._non_lurker_members:
+            self._non_lurker_members = [x for x in members if x.joined_at]
+        return self._non_lurker_members
+
     def parse_arguments(self, arguments: str):
         parser = NoExitParser(
             description="Mass member selection in a server for WarnSystem.", add_help=False
@@ -137,8 +143,8 @@ class AdvancedMemberSelect:
 
     async def process_arguments(self, args: argparse.Namespace):
         guild = self.ctx.guild
-        members = []
-        unavailable_members = []
+        members: List[discord.Member] = []
+        unavailable_members: List[UnavailableMember] = []
 
         if not args.take_action and not args.send_dm and not args.send_modlog:
             raise BadArgument(
@@ -166,13 +172,17 @@ class AdvancedMemberSelect:
         if args.only_bots:
             members = list(filter(lambda x: x.bot, members))
         if args.joined_before:
-            members = self._join(members, " ".join(args.joined_before), "before")
+            members = self._join(
+                self.non_lurker_members(members), " ".join(args.joined_before), "before"
+            )
         if args.joined_after:
-            members = self._join(members, " ".join(args.joined_after), "after")
+            members = self._join(
+                self.non_lurker_members(members), " ".join(args.joined_after), "after"
+            )
         if args.last_njoins:
-            members = self._last_njoins(members, args.last_njoins)
+            members = self._last_njoins(self.non_lurker_members(members), args.last_njoins)
         if args.first_njoins:
-            members = self._first_njoins(members, args.first_njoins)
+            members = self._first_njoins(self.non_lurker_members(members), args.first_njoins)
 
         if args.has_perm:
             members = self._perms(members, [args.has_perm], "perm")
@@ -221,7 +231,7 @@ class AdvancedMemberSelect:
             raise BadArgument(_("The search could't find any member."))
         return members, unavailable_members
 
-    def _name_regex(self, members: list, pattern: str, attribute: str):
+    def _name_regex(self, members: List[discord.Member], pattern: str, attribute: str):
         pattern = re.compile(pattern)
 
         def member_filter(member: discord.Member):
@@ -231,7 +241,7 @@ class AdvancedMemberSelect:
 
         return list(filter(member_filter, members))
 
-    def _status_regex(self, members: list, pattern: str):
+    def _status_regex(self, members: List[discord.Member], pattern: str):
         pattern = re.compile(pattern)
 
         def member_filter(member: discord.Member):
@@ -246,7 +256,7 @@ class AdvancedMemberSelect:
 
         return list(filter(member_filter, members))
 
-    def _join(self, members: list, date: str, when: str):
+    def _join(self, members: List[discord.Member], date: str, when: str):
         try:
             date = parse_time(date)
         except Exception:
@@ -269,7 +279,7 @@ class AdvancedMemberSelect:
 
         return list(filter(member_filter, members))
 
-    def _last_njoins(self, members: list, number: int):
+    def _last_njoins(self, members: List[discord.Member], number: int):
         try:
             last_member = sorted(members, key=lambda x: x.joined_at, reverse=True)[number]
         except IndexError:
@@ -284,7 +294,7 @@ class AdvancedMemberSelect:
 
         return list(filter(member_filter, members))
 
-    def _first_njoins(self, members: list, number: int):
+    def _first_njoins(self, members: List[discord.Member], number: int):
         try:
             last_member = sorted(members, key=lambda x: x.joined_at)[number]
         except IndexError:
@@ -297,7 +307,7 @@ class AdvancedMemberSelect:
 
         return list(filter(member_filter, members))
 
-    def _perms(self, members: list, permissions: list, requires: str):
+    def _perms(self, members: List[discord.Member], permissions: list, requires: str):
         allowed_permissions = dir(discord.Permissions)
         for permission in permissions:
             if permission not in allowed_permissions:
@@ -327,7 +337,7 @@ class AdvancedMemberSelect:
 
         return list(filter(member_filter, members))
 
-    def _perm_int(self, members: list, permissions: int):
+    def _perm_int(self, members: List[discord.Member], permissions: int):
         def member_filter(member: discord.Member):
             if member.guild_permissions.value == permissions:
                 return True
@@ -335,9 +345,11 @@ class AdvancedMemberSelect:
 
         return list(filter(member_filter, members))
 
-    async def _role(self, members: list, _roles: list, requires: str):
+    async def _role(
+        self, members: List[discord.Member], _roles: List[discord.Role], requires: str
+    ):
         if _roles:
-            roles = []
+            roles: List[discord.Role] = []
             for role in _roles:
                 try:
                     roles.append(await RoleConverter().convert(self.ctx, role))
@@ -369,7 +381,7 @@ class AdvancedMemberSelect:
 
         return list(filter(member_filter, members))
 
-    def _nroles(self, members: list, number: int, condition: str):
+    def _nroles(self, members: List[discord.Member], number: int, condition: str):
         number += 1  # do not count @everyone role
 
         def member_filter(member: discord.Member):
@@ -421,6 +433,7 @@ class AdvancedMemberSelect:
 
     async def convert(self, ctx, arguments):
         self.ctx = ctx
+        self._non_lurker_members = None
         async with ctx.typing():
             args = self.parse_arguments(arguments)
             self.reason = " ".join(args.reason or "")

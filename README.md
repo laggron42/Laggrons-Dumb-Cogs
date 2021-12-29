@@ -11,7 +11,7 @@
 
 ![Artwork](https://github.com/retke/Laggrons-Dumb-Cogs/blob/master/.github/RESSOURCES/BANNERS/Base_banner.png)
 
-Hello and welcome there, this is the repository for the **Laggron's Dumb Cogs**, a bunch of modules for [Red, the modular Discord bot](https://github.com/Cog-Creators/Red-DiscordBot/tree/V3/master) version 3. This is using the rewrite of [Discord.py library](https://github.com/Rapptz/discord.py/tree/rewrite).
+Hello and welcome there, this is the repository for the **Laggron's Dumb Cogs**, a bunch of modules for [Red, the modular Discord bot](https://github.com/Cog-Creators/Red-DiscordBot/tree/V3/master) version 3. This is using the rewrite of [Discord.py library](https://github.com/Rapptz/discord.py/tree/v1.0.0).
 
 If you still don't have Red installed, I suggest you to install it [here](https://red-discordbot.readthedocs.io/en/v3-develop/), there's no coding skill required, it's the best bot you can have, it has everything (including the cogs of that repo)!
 
@@ -47,9 +47,9 @@ You can also contact be by email: `laggron42@gmail.com`.
 
 ## Commissions
 
-I am open to commissions. If you need a cog, you can suggest it on [Red's cog board](https://cogboard.red), our new forum, where you will just need to log in with your Discord account to create a post.
+I am open to commissions. If you need a cog, you can suggest it on [Red's cog board](https://cogboard.discord.red), our new forum, where you will just need to log in with your Discord account to create a post.
 
-If you want me to make your cog, you can check [my profile](https://cogboard.red/u/El_Laggron) and send me a DM or mention me in your post.
+If you want me to make your cog, you can check [my profile](https://cogboard.discord.red/u/El_Laggron) and send me a DM or mention me in your post.
 
 ## Credits
 
