@@ -1303,20 +1303,25 @@ class API:
         if hasattr(self, "automod_warn_task"):
             self.automod_warn_task.cancel()
 
-    async def automod_on_message(self, message: discord.Message):
+    async def _check_if_automod_valid(self, message: discord.Message):
         guild = message.guild
         member = message.author
         if not guild:
-            return
+            return False
         if member.bot:
-            return
+            return False
         if guild.owner_id == member.id:
-            return
+            return False
         if not self.cache.is_automod_enabled(guild):
-            return
+            return False
         if await self.bot.is_automod_immune(message):
-            return
+            return False
         if await self.bot.is_mod(member):
+            return False
+        return True
+
+    async def automod_on_message(self, message: discord.Message):
+        if not await self._check_if_automod_valid(message):
             return
         # we run all tasks concurrently
         # results are returned in the same order (either None or an exception)
@@ -1334,6 +1339,18 @@ class API:
             log.error(
                 f"[Guild {message.guild.id}] Error while processing message for antispam system.",
                 exc_info=antispam_exception,
+            )
+
+    async def automod_on_message_edit(self, before: discord.Message, after: discord.Message):
+        if not await self._check_if_automod_valid(after):
+            return
+        try:
+            await self.automod_process_regex(after)
+        except Exception as e:
+            log.error(
+                f"[Guild {after.guild.id}] Error while "
+                "processing edited message for regex automod.",
+                exc_info=e,
             )
 
     async def _safe_regex_search(self, regex: re.Pattern, message: discord.Message):
@@ -1421,6 +1438,9 @@ class API:
         antispam_data = await self.cache.get_automod_antispam(guild)
         if antispam_data is False:
             return
+        for word in antispam_data["whitelist"]:
+            if word in message.content:
+                return
 
         # we slowly go across each key, if it doesn't exist, data is created then the
         # function ends since there's no data to check

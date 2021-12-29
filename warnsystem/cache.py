@@ -26,12 +26,15 @@ class MemoryCache:
         self.automod_enabled = []
         self.automod_antispam = {}
         self.automod_regex = {}
+        self.automod_regex_edited = []
 
     async def init_automod_enabled(self):
         for guild_id, data in (await self.data.all_guilds()).items():
             try:
                 if data["automod"]["enabled"] is True:
                     self.automod_enabled.append(guild_id)
+                if data["automod"]["regex_edited_messages"] is True:
+                    self.automod_regex_edited.append(guild_id)
             except KeyError:
                 pass
 
@@ -164,3 +167,13 @@ class MemoryCache:
             del self.automod_regex[guild.id][name]
         except KeyError:
             pass
+
+    async def set_automod_regex_edited(self, guild: discord.Guild, enable: bool):
+        await self.data.guild(guild).automod.regex_edited_messages.set(enable)
+        if enable is False and guild.id in self.automod_regex_edited:
+            self.automod_regex_edited.remove(guild.id)
+        elif enable is True and guild.id not in self.automod_regex_edited:
+            self.automod_regex_edited.append(guild.id)
+
+    def is_automod_regex_edited_enabled(self, guild: discord.Guild):
+        return guild.id in self.automod_regex_edited

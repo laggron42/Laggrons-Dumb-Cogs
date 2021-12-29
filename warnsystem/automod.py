@@ -247,6 +247,33 @@ class AutomodMixin(MixinMeta):
         )
         await ctx.send(embed=embed)
 
+    @automod_regex.command(name="edited")
+    async def automod_regex_edited(self, ctx: commands.Context, enable: bool = None):
+        """
+        Defines if the bot should check edited messages.
+        """
+        guild = ctx.guild
+        if enable is not None:
+            if enable is True:
+                await self.cache.set_automod_regex_edited(guild, True)
+                await ctx.send(_("The bot will now check edited messages."))
+            else:
+                await self.cache.set_automod_regex_edited(guild, False)
+                await ctx.send(_("The bot will no longer check edited messages."))
+        else:
+            current = await self.data.guild(guild).automod.regex_edited_messages()
+            await ctx.send(
+                _(
+                    "Edited message check is currently {state}.\n"
+                    "Type `{prefix}automod regex edited {arg}` to {action} it."
+                ).format(
+                    state=_("enabled") if current else _("disabled"),
+                    prefix=ctx.clean_prefix,
+                    arg=not current,
+                    action=_("enable") if not current else _("disable"),
+                )
+            )
+
     @automod.group(name="warn")
     async def automod_warn(self, ctx: commands.Context):
         """
@@ -651,6 +678,85 @@ automod infractions, like a mute after 3 warns.
             )
         )
 
+    @automod_antispam.group(name="whitelist")
+    async def automod_antispam_whitelist(self, ctx: commands.Context):
+        """
+        Manage word whitelist ignored for antispam.
+        """
+        pass
+
+    @automod_antispam_whitelist.command(name="add")
+    async def automod_antispam_whitelist_add(self, ctx: commands.Context, *words: str):
+        """
+        Add multiple words for the whitelist.
+
+        If you want to add words with spaces, use quotes.
+        """
+        guild = ctx.guild
+        if not words:
+            await ctx.send_help()
+            return
+        async with self.data.guild(guild).automod.antispam.whitelist() as whitelist:
+            for word in words:
+                if word in whitelist:
+                    await ctx.send(_("`{word}` is already in the whitelist.").format(word=word))
+                    return
+            whitelist.extend(words)
+        await self.cache.update_automod_antispam()
+        if len(words) == 1:
+            await ctx.send(_("Added one word to the whitelist."))
+        else:
+            await ctx.send(_("Added {num} words to the whitelist.").format(num=len(words)))
+
+    @automod_antispam_whitelist.command(name="delete", aliases=["del", "remove"])
+    async def automod_antispam_whitelist_delete(self, ctx: commands.Context, *words: str):
+        """
+        Remove multiple words for the whitelist.
+
+        If you want to remove words with spaces, use quotes.
+        """
+        guild = ctx.guild
+        if not words:
+            await ctx.send_help()
+            return
+        async with self.data.guild(guild).automod.antispam.whitelist() as whitelist:
+            for word in words:
+                if word not in whitelist:
+                    await ctx.send(_("`{word}` isn't in the whitelist.").format(word=word))
+                    return
+            whitelist = [x for x in whitelist if x not in words]
+        await self.cache.update_automod_antispam()
+        if len(words) == 1:
+            await ctx.send(_("Removed one word from the whitelist."))
+        else:
+            await ctx.send(_("Removed {num} words from the whitelist.").format(num=len(words)))
+
+    @automod_antispam_whitelist.command(name="list")
+    async def automod_antispam_whitelist_list(self, ctx: commands.Context):
+        """
+        List words in the whitelist.
+        """
+        guild = ctx.guild
+        async with self.data.guild(guild).automod.antispam.whitelist() as whitelist:
+            if not whitelist:
+                await ctx.send(_("Whitelist is empty."))
+                return
+            text = _("__{num} words registered in the whitelist__\n").format(
+                num=len(whitelist)
+            ) + ", ".join(whitelist)
+        for page in pagify(text, delims=[", ", "\n"]):
+            await ctx.send(page)
+
+    @automod_antispam_whitelist.command(name="clear")
+    async def automod_antispam_whitelist_clear(self, ctx: commands.Context):
+        """
+        Clear the whitelist.
+        """
+        guild = ctx.guild
+        await self.data.guild(guild).automod.antispam.whitelist.set([])
+        await self.cache.update_automod_antispam()
+        await ctx.tick()
+
     @automod_antispam.command(name="info")
     async def automod_antispam_info(self, ctx: commands.Context):
         """
@@ -679,12 +785,14 @@ automod infractions, like a mute after 3 warns.
                 "Max messages allowed within the threshold: **{max_messages}**\n"
                 "Threshold: **{delay} seconds**\n"
                 "Delay before reset: **{reset_delay} seconds**  "
-                "*(see `{prefix}automod antispam delay` for details about this)*"
+                "*(see `{prefix}automod antispam delay` for details about this)*\n"
+                "Number of whitelisted words: {whitelist}"
             ).format(
                 max_messages=antispam_settings["max_messages"],
                 delay=antispam_settings["delay"],
                 reset_delay=antispam_settings["delay_before_action"],
                 prefix=ctx.clean_prefix,
+                whitelist=len(antispam_settings["whitelist"]),
             ),
             inline=False,
         )

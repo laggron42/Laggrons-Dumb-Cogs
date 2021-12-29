@@ -4,6 +4,7 @@ import logging
 import asyncio
 import re
 
+from io import BytesIO
 from typing import Optional
 from asyncio import TimeoutError as AsyncTimeoutError
 from abc import ABC
@@ -200,7 +201,9 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                     "reason": "Sending messages too fast!",
                     "time": None,
                 },
+                "whitelist": [],
             },
+            "regex_edited_messages": False,  # if the bot should check message edits
             "regex": {},  # all regex expressions
             "warnings": [],  # all automatic warns
         },
@@ -224,7 +227,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
 
         self.task: asyncio.Task
 
-    __version__ = "1.3.22"
+    __version__ = "1.4.0"
     __author__ = ["retke (El Laggron)"]
 
     # helpers
@@ -1481,6 +1484,105 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                 f"Exception in command '{ctx.command.qualified_name}'.\n\n",
                 exc_info=error.original,
             )
+
+    async def _red_get_data_for_user(self, *, user_id: int):
+        readme = (
+            "--- WarnSystem user data ---\n\n\n"
+            "This cog is a tool for moderators and administrators for taking actions against "
+            "members of their server and log it. You can read more about this cog here:\n"
+            "https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3/warnsystem#warnsystem\n\n"
+            "As soon as a member is warned, the cog will store the following data:\n"
+            "- User ID\n"
+            "- Warn level (from 1 to 5: warn, mute, kick, softban, ban)\n"
+            "- Warn reason\n"
+            "- Warn author (responsible moderator. can be the bot in case of automated warns)\n"
+            "- Date and time of the warn\n"
+            "- Duration of the warn (only in case of a temporary mute/ban)\n"
+            "- List of the roles the member had when he was muted "
+            "(only for mutes since version 1.2)\n\n"
+            "A list of files is provided, one for each server. The ID of the server is the name "
+            "of the file. Servers without registered warnings are not included.\n\n"
+            "Additonal notes:\n"
+            "- The timezone for date and time is UTC.\n"
+            "- For durations, the raw number of seconds is included.\n"
+            "- The end date of a temp warn is obtained by adding the duration to the date.\n"
+            "- The responsible moderator of a warn is not included, as this is private data.\n\n\n"
+            "Author of WarnSystem: retke (El Laggron)\n"
+            "Repo: https://github.com/retke/Laggrons-Dumb-Cogs\n"
+            "Contact info is in the README of that repo.\n"
+        )
+        file = BytesIO()
+        file.write(readme.encode("utf-8"))
+        files = {"README": file}
+        all_modlogs = await self.data.custom("MODLOGS").all()
+        for guild_id, modlogs in all_modlogs.items():
+            if str(user_id) not in modlogs:
+                files[guild_id] = BytesIO()
+            guild = self.bot.get_guild(int(guild_id))
+            text = "Modlogs registered for server {guild}\n".format(
+                guild=guild.name if guild else f"{guild_id} (not found)"
+            )
+            for i, modlog in enumerate(modlogs[str(user_id)]["x"]):
+                text += (
+                    "\n\n\n--- Case {number} ---\nLevel:     {level}\nReason:    {reason}\n"
+                ).format(number=i + 1, **modlog)
+                text += "Date:      {date}\n".format(
+                    date=self.api._format_datetime(self.api._get_datetime(modlog["time"]))
+                )
+                if modlog["duration"]:
+                    duration = self.api._get_timedelta(modlog["duration"])
+                    text += "Duration:  {duration} (raw: {raw}s)\n".format(
+                        duration=self.api._format_timedelta(duration),
+                        raw=modlog["duration"],
+                    )
+                if modlog["roles"]:
+                    text += "Roles:     {roles}\n".format(roles=", ".join(modlog["roles"]))
+            file = BytesIO()
+            file.write(text.encode("utf-8"))
+            files[guild_id] = file
+        return files
+
+    async def red_get_data_for_user(self, *, user_id: int):
+        try:
+            data = await self._red_get_data_for_user(user_id=user_id)
+        except Exception as e:
+            log.error(
+                f"User {user_id} has requested end user data but an exception occured!", exc_info=e
+            )
+            raise
+        else:
+            log.info(
+                f"User {user_id} has requested end user data, which was successfully provided."
+            )
+            return data
+
+    async def _red_delete_data_for_user(self, *, requester: str, user_id: int):
+        allowed_requesters = ("discord_deleted_user",)
+        if requester not in allowed_requesters:
+            return False
+        async with self.data.custom("MODLOGS").all() as all_modlogs:
+            for guild_id, modlogs in all_modlogs.items():
+                try:
+                    del all_modlogs[guild_id][str(user_id)]
+                except KeyError:
+                    pass
+        return True
+
+    async def red_delete_data_for_user(self, *, requester: str, user_id: int):
+        try:
+            result = await self._red_delete_data_for_user(requester=requester, user_id=user_id)
+        except Exception as e:
+            log.error(
+                f"User {user_id} has requested end user data deletion but an exception occured!",
+                exc_info=e,
+            )
+            raise
+        else:
+            if result is True:
+                log.info(
+                    f"User {user_id} has requested end user data "
+                    "deletion, which was successfully done."
+                )
 
     # correctly unload the cog
     def __unload(self):
