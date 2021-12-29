@@ -401,11 +401,12 @@ class SettingsMixin(MixinMeta):
     @warnset.command(name="detectmanual")
     async def warnset_detectmanual(self, ctx: commands.Context, enable: bool = None):
         """
-        Defines if the bot should log manual bans to WarnSystem.
+        Defines if the bot should log manual kicks/bans with WarnSystem.
 
         If enabled, manually banning a member will make the bot log the action in the modlog and\
 save it, as if it was performed with WarnSystem. **However, the member will not receive a DM**.
-        
+        This also works with kicks, but not timeouts *yet*.
+
         Invoke the command without arguments to get the current status.
         """
         guild = ctx.guild
@@ -413,7 +414,7 @@ save it, as if it was performed with WarnSystem. **However, the member will not 
         if enable is None:
             await ctx.send(
                 _(
-                    "The bot currently {detect} manual bans. If you want to change this, "
+                    "The bot currently {detect} manual actions. If you want to change this, "
                     "type `{prefix}warnset detectmanual {opposite}`."
                 ).format(
                     detect=_("detects") if current else _("doesn't detect"),
@@ -423,10 +424,10 @@ save it, as if it was performed with WarnSystem. **However, the member will not 
             )
         elif enable:
             await self.data.guild(guild).log_manual.set(True)
-            await ctx.send(_("Done. The bot will now listen for manual bans and log them."))
+            await ctx.send(_("Done. The bot will now listen for manual actions and log them."))
         else:
             await self.data.guild(guild).log_manual.set(False)
-            await ctx.send(_("Done. The bot won't listen for manual bans anymore."))
+            await ctx.send(_("Done. The bot won't listen for manual actions anymore."))
 
     @warnset.command(name="hierarchy")
     async def warnset_hierarchy(self, ctx: commands.Context, enable: bool = None):
@@ -798,7 +799,7 @@ channels, and prevented from talking in all voice channels.
             embeds[0].add_field(name=_("Respect hierarchy"), value=hierarchy)
             embeds[0].add_field(name=_("Reinvite unbanned members"), value=reinvite)
             embeds[0].add_field(name=_("Show responsible moderator"), value=show_mod)
-            embeds[0].add_field(name=_("Detect manual bans"), value=manual_bans)
+            embeds[0].add_field(name=_("Detect manual actions"), value=manual_bans)
             embeds[0].add_field(name=_("Update new channels for mute role"), value=update_mute)
             embeds[0].add_field(name=_("Remove roles on mute"), value=remove_roles)
             embeds[0].add_field(name=_("Days of messages to delete"), value=bandays)

@@ -224,7 +224,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
 
         self.task: asyncio.Task
 
-    __version__ = "1.3.21"
+    __version__ = "1.3.22"
     __author__ = ["retke (El Laggron)"]
 
     # helpers
@@ -1394,6 +1394,13 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
 
     @listener()
     async def on_member_ban(self, guild: discord.Guild, member: discord.Member):
+        await self.on_manual_action(guild, member, 5)
+
+    @listener()
+    async def on_member_remove(self, guild: discord.Guild, member: discord.Member):
+        await self.on_manual_action(guild, member, 3)
+
+    async def on_manual_action(self, guild: discord.Guild, member: discord.Member, level: int):
         # most of this code is from Cog-Creators, modlog cog
         # https://github.com/Cog-Creators/Red-DiscordBot/blob/bc21f779762ec9f460aecae525fdcd634f6c2d85/redbot/core/modlog.py#L68
         if not guild.me.guild_permissions.view_audit_log:
@@ -1402,7 +1409,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             return
         # check for that before doing anything else, means WarnSystem isn't setup
         try:
-            await self.api.get_modlog_channel(guild, 5)
+            await self.api.get_modlog_channel(guild, level)
         except errors.NotFound:
             return
         when = datetime.utcnow()
@@ -1410,13 +1417,17 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         after = when - timedelta(minutes=1)
         await asyncio.sleep(10)  # prevent small delays from causing a 5 minute delay on entry
         attempts = 0
-        # wait up to an hour to find a matching case
-        while attempts < 12:
+        action = {
+            3: discord.AuditLogAction.kick,
+            5: discord.AuditLogAction.ban,
+        }[level]
+        # wait up to 15 min to find a matching case
+        while attempts < 3:
             attempts += 1
             try:
-                entry = await guild.audit_logs(
-                    action=discord.AuditLogAction.ban, before=before, after=after
-                ).find(lambda e: e.target.id == member.id and after < e.created_at < before)
+                entry = await guild.audit_logs(action=action, before=before, after=after).find(
+                    lambda e: e.target.id == member.id and after < e.created_at < before
+                )
             except discord.Forbidden:
                 break
             except discord.HTTPException:
@@ -1433,15 +1444,16 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                                 guild,
                                 [member],
                                 mod,
-                                5,
+                                level,
                                 reason,
                                 date=date,
-                                log_dm=False,
+                                log_dm=True if level <= 2 else False,
                                 take_action=False,
                             )
                         except Exception as e:
                             log.error(
-                                f"[Guild {guild.id}] Failed to create a case based on manual ban. "
+                                f"[Guild {guild.id}] Failed to create a case "
+                                "based on manual action. "
                                 f"Member: {member} ({member.id}). Author: {mod} ({mod.id}). "
                                 f"Reason: {reason}",
                                 exc_info=e,
