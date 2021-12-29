@@ -28,6 +28,7 @@ body:
         - RoleInvite
         - Say
         - Tournaments
+        - WarnSystem
   - type: input
     id: cog-version
     attributes:
