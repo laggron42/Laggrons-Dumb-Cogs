@@ -46,6 +46,7 @@ class Say(BaseCog):
         files: list,
         mentions: discord.AllowedMentions = None,
         delete: int = None,
+        message: discord.Message = None,
     ):
         if not channel:
             channel = ctx.channel
@@ -62,6 +63,11 @@ class Say(BaseCog):
             )
         else:
             error_message = "Has files: no"
+
+        # editing a message of bot
+        if message is not None:
+            await message.edit(content=text, delete_after=delete, allowed_mentions=mentions)
+            return
 
         # sending the message
         try:
@@ -99,7 +105,7 @@ class Say(BaseCog):
     @commands.command(name="say")
     @checks.admin_or_permissions(administrator=True)
     async def _say(
-        self, ctx: commands.Context, channel: Optional[discord.TextChannel], *, text: str = ""
+        self, ctx: commands.Context, channel: Optional[discord.TextChannel], message: Optional[discord.Message]=None, *, text: str = ""
     ):
         """
         Make the bot say what you want in the desired channel.
@@ -111,9 +117,17 @@ class Say(BaseCog):
         - `!say #general hello there`
         - `!say owo I have a file` (a file is attached to the command message)
         """
+        if message is not None:
+            if message.guild:
+                if message.guild is not ctx.guild:
+                    await ctx.send("You can't modify a message from another server.")
+                    return
+            if message.author is not message.guild.me:
+                await ctx.send("You can't edit a message I haven't sent.")
+                return
 
         files = await Tunnel.files_from_attatch(ctx.message)
-        await self.say(ctx, channel, text, files)
+        await self.say(ctx, channel, text, files, message=message)
 
     @commands.command(name="sayad")
     @checks.admin_or_permissions(administrator=True)
@@ -122,26 +136,43 @@ class Say(BaseCog):
         ctx: commands.Context,
         channel: Optional[discord.TextChannel],
         delete_delay: int,
+        message: Optional[discord.Message]=None,
         *,
         text: str = "",
     ):
         """
         Same as say command, except it deletes the said message after a set number of seconds.
         """
+        if message is not None:
+            if message.guild:
+                if message.guild is not ctx.guild:
+                    await ctx.send("You can't modify a message from another server.")
+                    return
+            if message.author is not message.guild.me:
+                await ctx.send("You can't edit a message I haven't sent.")
+                return
 
         files = await Tunnel.files_from_attatch(ctx.message)
-        await self.say(ctx, channel, text, files, delete=delete_delay)
+        await self.say(ctx, channel, text, files, delete=delete_delay, message=message)
 
     @commands.command(name="sayd", aliases=["sd"])
     @checks.admin_or_permissions(administrator=True)
     async def _saydelete(
-        self, ctx: commands.Context, channel: Optional[discord.TextChannel], *, text: str = ""
+        self, ctx: commands.Context, channel: Optional[discord.TextChannel], message: Optional[discord.Message]=None, *, text: str = ""
     ):
         """
         Same as say command, except it deletes your message.
 
         If the message wasn't removed, then I don't have enough permissions.
         """
+        if message is not None:
+            if message.guild:
+                if message.guild is not ctx.guild:
+                    await ctx.send("You can't modify a message from another server.")
+                    return
+            if message.author is not message.guild.me:
+                await ctx.send("You can't edit a message I haven't sent.")
+                return
 
         # download the files BEFORE deleting the message
         author = ctx.author
@@ -155,7 +186,7 @@ class Say(BaseCog):
             except discord.errors.Forbidden:
                 await author.send(_("Not enough permissions to delete messages."), delete_after=15)
 
-        await self.say(ctx, channel, text, files)
+        await self.say(ctx, channel, text, files, message=message)
 
     @commands.command(name="saym", aliases=["sm"])
     @checks.admin_or_permissions(administrator=True)
