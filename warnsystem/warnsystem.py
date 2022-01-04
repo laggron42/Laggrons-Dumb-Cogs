@@ -1400,8 +1400,8 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         await self.on_manual_action(guild, member, 5)
 
     @listener()
-    async def on_member_remove(self, guild: discord.Guild, member: discord.Member):
-        await self.on_manual_action(guild, member, 3)
+    async def on_member_remove(self, member: discord.Member):
+        await self.on_manual_action(member.guild, member, 3)
 
     async def on_manual_action(self, guild: discord.Guild, member: discord.Member, level: int):
         # most of this code is from Cog-Creators, modlog cog
