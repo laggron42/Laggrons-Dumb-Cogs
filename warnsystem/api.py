@@ -7,7 +7,7 @@ import functools
 from copy import deepcopy
 from collections import namedtuple
 from typing import Union, Optional, Iterable, Callable, Awaitable
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from multiprocessing import TimeoutError
 from multiprocessing.pool import Pool
 
@@ -58,6 +58,10 @@ class FakeRole:
     colour = discord.Embed.Empty
 
 
+class FakeAsset:
+    url = ""
+
+
 class UnavailableMember(discord.abc.User, discord.abc.Messageable):
     """
     A class that reproduces the behaviour of a discord.Member instance, except
@@ -70,6 +74,7 @@ class UnavailableMember(discord.abc.User, discord.abc.Messageable):
         self._state = state
         self.id = user_id
         self.top_role = FakeRole()
+        self.avatar = FakeAsset()
 
     @classmethod
     def _check_id(cls, member_id):
@@ -107,10 +112,6 @@ class UnavailableMember(discord.abc.User, discord.abc.Messageable):
     @property
     def mention(self):
         return f"<@{self.id}>"
-
-    @property
-    def avatar_url(self):
-        return ""
 
     def __str__(self):
         return "Unknown#0000"
@@ -637,7 +638,7 @@ class API:
         if date:
             today = date.strftime("%a %d %B %Y %H:%M")
         else:
-            today = datetime.utcnow()
+            today = datetime.now(timezone.utc)
         if time:
             duration = self._format_timedelta(time)
         else:
@@ -662,7 +663,7 @@ class API:
 
         # embed for the modlog
         log_embed = discord.Embed()
-        log_embed.set_author(name=f"{member.name} | {member.id}", icon_url=member.avatar_url)
+        log_embed.set_author(name=f"{member.name} | {member.id}", icon_url=member.avatar.url)
         log_embed.title = _("Level {level} warning ({action})").format(
             level=level, action=action[0]
         )
@@ -1123,7 +1124,7 @@ class API:
             else:
                 audit_reason += _("Reason too long to be shown.")
         if not date:
-            date = datetime.utcnow()
+            date = datetime.now(timezone.utc)
 
         i = 0
         fails = [await warn_member(x, audit_reason) for x in members if x]
@@ -1172,7 +1173,7 @@ class API:
                         f"(ID: {member.id}) after its temporary ban."
                     )
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         for guild in self.bot.guilds:
             data = await self.cache.get_temp_action(guild)
             if not data:
@@ -1592,7 +1593,7 @@ class API:
             # we increase this value until reaching the given limit
             time = autowarn["time"]
             if time:
-                until = datetime.utcnow() - timedelta(seconds=time)
+                until = datetime.now(timezone.utc) - timedelta(seconds=time)
                 autowarns[i]["until"] = until
         del time
         found_warnings = {}  # we fill this list with the valid autowarns, there can be more than 1
