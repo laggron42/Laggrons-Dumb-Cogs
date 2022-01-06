@@ -269,7 +269,7 @@ class Say(BaseCog):
                 embed = discord.Embed()
                 embed.set_author(
                     name="{} | {}".format(str(message.author), message.author.id),
-                    icon_url=message.author.avatar_url,
+                    icon_url=message.author.avatar.url,
                 )
                 embed.set_footer(text=message.created_at.strftime("%d %b %Y %H:%M"))
                 embed.description = message.content

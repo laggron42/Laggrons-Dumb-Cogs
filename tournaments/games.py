@@ -4,7 +4,7 @@ import discord
 import logging
 import re
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from copy import deepcopy
 from typing import List, Mapping, Optional
 
@@ -288,7 +288,7 @@ class Games(MixinMeta):
         async def clear_channels():
             nonlocal failed, i
             # This isn't actually two weeks ago to allow some wiggle room on API limits
-            two_weeks_ago = datetime.utcnow() - timedelta(days=14, minutes=-5)
+            two_weeks_ago = datetime.now(timezone.utc) - timedelta(days=14, minutes=-5)
             for channel in channels:
                 try:
                     messages = await channel.history(limit=None, after=two_weeks_ago).flatten()

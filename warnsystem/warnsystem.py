@@ -8,7 +8,7 @@ from io import BytesIO
 from typing import Optional
 from asyncio import TimeoutError as AsyncTimeoutError
 from abc import ABC
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from laggron_utils.logging import close_logger, DisabledConsoleOutput
 
 from redbot.core import commands, Config, checks
@@ -852,7 +852,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             else:
                 warn_list.append(text)
         embed = discord.Embed(description=_("User modlog summary."))
-        embed.set_author(name=f"{user} | {user.id}", icon_url=user.avatar_url)
+        embed.set_author(name=f"{user} | {user.id}", icon_url=user.avatar.url)
         embed.add_field(
             name=_("Total number of warnings: ") + str(len(cases)), value=warn_field, inline=False
         )
@@ -876,7 +876,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             embed = discord.Embed(
                 description=_("Case #{number} informations").format(number=i + 1)
             )
-            embed.set_author(name=f"{user} | {user.id}", icon_url=user.avatar_url)
+            embed.set_author(name=f"{user} | {user.id}", icon_url=user.avatar.url)
             embed.add_field(
                 name=_("Level"), value=f"{warning_str(level, False)} ({level})", inline=True
             )
@@ -1415,7 +1415,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             await self.api.get_modlog_channel(guild, level)
         except errors.NotFound:
             return
-        when = datetime.utcnow()
+        when = datetime.now(timezone.utc)
         before = when + timedelta(minutes=1)
         after = when - timedelta(minutes=1)
         await asyncio.sleep(10)  # prevent small delays from causing a 5 minute delay on entry
