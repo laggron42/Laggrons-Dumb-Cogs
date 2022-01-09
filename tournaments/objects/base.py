@@ -34,6 +34,10 @@ TIME_UNTIL_CHANNEL_DELETION = 300
 TIME_UNTIL_TIMEOUT_DQ = 300
 
 
+def channel_link(channel: discord.TextChannel) -> str:
+    return f"https://discord.com/channels/{channel.guild.id}/{channel.id}"
+
+
 class Participant(discord.Member):
     """
     Defines a participant in the tournament.
@@ -378,11 +382,13 @@ class Match:
                 max_round + 2: _("Losers Quarter-Final"),
             }.get(self.round, _("Losers round {round}").format(round=self.round))
 
-    async def _dm_players(self, message: str):
+    async def _dm_players(
+        self, message: str, *, embed: discord.Embed = None, view: discord.ui.View = None
+    ):
         players = (self.player1, self.player2)
         for player in players:
             try:
-                await player.send(message)
+                await player.send(message, embed=embed, view=view)
             except discord.HTTPException as e:
                 log.warning(f"Can't send a DM to {str(player)} for his set.", exc_info=e)
 
@@ -400,6 +406,7 @@ class Match:
         bool
             ``False`` if the message couldn't be sent, and was sent in DM instead.
         """
+        view = discord.ui.View()
         if reset is True:
             message = _(
                 ":warning: **The bracket was modified!** This results in this match having to be "
@@ -412,9 +419,23 @@ class Match:
             ":arrow_forward: **{0.set}** : {0.player1.mention} vs {0.player2.mention} {top8}\n"
         ).format(self, top8=top8)
         if self.tournament.ruleset_channel:
-            message += _(
-                ":white_small_square: The rules must follow the ones given in {channel}\n"
-            ).format(channel=self.tournament.ruleset_channel.mention)
+            view.add_item(
+                discord.ui.Button(
+                    style=discord.ButtonStyle.link,
+                    label=_("Ruleset"),
+                    emoji="\N{BLUE BOOK}",
+                    url=channel_link(self.tournament.ruleset_channel),
+                )
+            )
+        if self.tournament.scores_channel:
+            view.add_item(
+                discord.ui.Button(
+                    style=discord.ButtonStyle.link,
+                    label=_("Score entry"),
+                    emoji="\N{MEMO}",
+                    url=channel_link(self.tournament.scores_channel),
+                )
+            )
         if self.tournament.stages:
             message += _(
                 ":white_small_square: The list of legal stages "
@@ -460,14 +481,14 @@ class Match:
                 "\n\n**You channel can't be created because of a problem. "
                 "Do your set in DM and come back to set the result.**"
             )
-            await self._dm_players(message)
+            await self._dm_players(message, view=view)
 
         if self.channel is None:
             await send_in_dm()
             result = False
         else:
             try:
-                await self.channel.send(message)
+                await self.channel.send(message, view=view)
             except discord.HTTPException as e:
                 log.error(
                     f"[Guild {self.guild.id}] Can't create a channel for the set {self.set}",
@@ -2519,80 +2540,108 @@ class Tournament:
             if self.scores_channel
             else ""
         )
+        announcements_view = discord.ui.View()
+        scores_view = discord.ui.View()
+        bracket_button = discord.ui.Button(
+            style=discord.ButtonStyle.link,
+            label=_("Bracket"),
+            emoji="\N{LINK SYMBOL}",
+            url=self.url,
+        )
+        announcements_view.add_item(bracket_button)
+        scores_view.add_item(bracket_button)
+        if self.ruleset_channel:
+            ruleset_button = discord.ui.Button(
+                style=discord.ButtonStyle.link,
+                label=_("Ruleset"),
+                emoji="\N{BLUE BOOK}",
+                url=channel_link(self.ruleset_channel),
+            )
+            announcements_view.add_item(ruleset_button)
+            scores_view.add_item(ruleset_button)
+        if self.scores_channel:
+            scores_button = discord.ui.Button(
+                style=discord.ButtonStyle.link,
+                label=_("Score entry"),
+                emoji="\N{MEMO}",
+                url=channel_link(self.scores_channel),
+            )
+            announcements_view.add_item(scores_button)
+        if self.queue_channel:
+            queue_button = discord.ui.Button(
+                style=discord.ButtonStyle.link,
+                label=_("Sets"),
+                emoji="\N{CLIPBOARD}\N{VARIATION SELECTOR-16}",
+                url=channel_link(self.queue_channel),
+            )
+            announcements_view.add_item(queue_button)
         messages = {
-            self.announcements_channel: _(
-                "The tournament **{tournament}** has started! Bracket: {bracket}\n"
-                ":white_small_square: You can access it "
-                "anytime with the `{prefix}bracket` command.\n"
-                ":white_small_square: You can check the current "
-                "streams with the `{prefix}streams` command.\n\n"
-                "{participant} Please read the instructions :\n"
-                "{queue_channel}"
-                "{rules_channel}"
-                ":white_small_square: The winner of a set must report the score **as soon as "
-                "possible**{scores_channel} with the `{prefix}win` command.\n"
-                ":white_small_square: You can disqualify from the tournament with the "
-                "`{prefix}dq` command, or just abandon your current set with the `{prefix}ff` "
-                "command.\n"
-                ":white_small_square: In case of lag making the game unplayable, use the `{prefix}"
-                "lag` command to call the T.O.\n"
-                "{delay}."
-            ).format(
-                tournament=self.name,
-                bracket=self.url,
-                participant=self.participant_role.mention,
-                queue_channel=_(
-                    ":white_small_square: Your sets are announced in {channel}.\n"
-                ).format(channel=self.queue_channel.mention)
-                if self.queue_channel
-                else "",
-                rules_channel=_(
-                    ":white_small_square: The ruleset is available in {channel}.\n"
-                ).format(channel=self.ruleset_channel.mention)
-                if self.ruleset_channel
-                else "",
-                scores_channel=scores_channel,
-                delay=_(
-                    ":timer: **You will automatically be disqualified if you don't talk in your "
-                    "channel within the first {delay}.**"
-                ).format(delay=humanize_timedelta(timedelta=self.delay))
-                if self.delay
-                else "",
-                prefix=self.bot_prefix,
+            self.announcements_channel: (
+                _(
+                    "The tournament **{tournament}** has started!\n\n"
+                    ":white_small_square: Bracket link:`{prefix}bracket`\n"
+                    ":white_small_square: List of streams:`{prefix}streams`\n\n"
+                    "{participant} Please read the instructions :\n"
+                    ":white_small_square: The winner of a set must report the score **as soon as "
+                    "possible**{scores_channel} with the `{prefix}win` command.\n"
+                    ":white_small_square: You can disqualify from the tournament with the "
+                    "`{prefix}dq` command, or just abandon your current set with the `{prefix}ff` "
+                    "command.\n"
+                    ":white_small_square: In case of lag making the game unplayable, "
+                    "use the `{prefix}lag` command to call the T.O.\n"
+                    "{delay}."
+                ).format(
+                    tournament=self.name,
+                    bracket=self.url,
+                    participant=self.participant_role.mention,
+                    scores_channel=scores_channel,
+                    delay=_(
+                        ":timer: **You will automatically be disqualified if "
+                        "you don't talk in your channel within the first {delay}.**"
+                    ).format(delay=humanize_timedelta(timedelta=self.delay))
+                    if self.delay
+                    else "",
+                    prefix=self.bot_prefix,
+                ),
+                announcements_view,
             ),
-            self.scores_channel: _(
-                ":information_source: Management of the scores for the "
-                "tournament **{tournament}** is automated:\n"
-                ":white_small_square: Only **the winner of the set** "
-                "sends his score with the `{prefix}win` command.\n"
-                ":white_small_square: You must follow this "
-                "format: `{prefix}win 2-0, 3-2, 3-1, ...`.\n"
-                ":white_small_square: Look at the bracket to **check** the informations: {url}\n"
-                ":white_small_square: In case of a wrong input, contact a T.O. for a manual fix."
-            ).format(tournament=self.name, url=self.url, prefix=self.bot_prefix),
-            self.queue_channel: _(
-                ":information_source: **Set launch is automated.** "
-                "Please follow the instructions in this channel.\n"
-                ":white_small_square: Any streamed set will be "
-                "announced here, and in your channel.\n"
-                ":white_small_square: Any BO5 set will be precised here and in your channel.\n"
-                ":white_small_square: The player beginning the bans is picked and "
-                "annonced in your channel (you can also use `{prefix}flip`).\n\n{dq}"
-            ).format(
-                prefix=self.bot_prefix,
-                dq=_(
-                    ":timer: **You will be disqualified if you were not active in your channel** "
-                    "within {delay} after the set launch."
-                ).format(delay=humanize_timedelta(timedelta=self.delay))
-                if self.delay
-                else "",
+            self.scores_channel: (
+                _(
+                    ":information_source: Management of the scores for the "
+                    "tournament **{tournament}** is automated:\n"
+                    ":white_small_square: Only **the winner of the set** "
+                    "sends his score with the `{prefix}win` command.\n"
+                    ":white_small_square: You must follow this "
+                    "format: `{prefix}win 2-0, 3-2, 3-1, ...`."
+                ).format(tournament=self.name, url=self.url, prefix=self.bot_prefix),
+                scores_view,
+            ),
+            self.queue_channel: (
+                _(
+                    ":information_source: **Set launch is automated.** "
+                    "Please follow the instructions in this channel.\n"
+                    ":white_small_square: Any streamed set will be "
+                    "announced here, and in your channel.\n"
+                    ":white_small_square: Any BO5 set will be precised here and in your channel.\n"
+                    ":white_small_square: The player beginning the bans is picked and "
+                    "annonced in your channel (you can also use `{prefix}flip`).\n\n{dq}"
+                ).format(
+                    prefix=self.bot_prefix,
+                    dq=_(
+                        ":timer: **You will be disqualified if you were not "
+                        "active in your channel** within {delay} after the set launch."
+                    ).format(delay=humanize_timedelta(timedelta=self.delay))
+                    if self.delay
+                    else "",
+                ),
+                None,
             ),
         }
         for channel, message in messages.items():
             if channel is None:
                 continue
             try:
-                await channel.send(message)
+                await channel.send(message[0], view=message[1])
             except discord.HTTPException as e:
                 log.error(f"[Guild {self.guild.id}] Can't send message in {channel}.", exc_info=e)
 
