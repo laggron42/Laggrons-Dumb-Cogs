@@ -2,13 +2,14 @@
 import discord
 import logging
 import asyncio
-import re
 
 from io import BytesIO
 from typing import Optional
+from discord.ui import View
 from asyncio import TimeoutError as AsyncTimeoutError
 from abc import ABC
 from datetime import datetime, timedelta, timezone
+
 from laggron_utils.logging import close_logger, DisabledConsoleOutput
 
 from redbot.core import commands, Config, checks
@@ -16,6 +17,8 @@ from redbot.core.commands.converter import TimedeltaConverter
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils import predicates, menus, mod
 from redbot.core.utils.chat_formatting import pagify
+
+from warnsystem.components import WarningsList
 
 from . import errors
 from .api import API, UnavailableMember
@@ -34,62 +37,6 @@ if listener is None:
 
     def listener(name=None):
         return lambda x: x
-
-
-def pretty_date(time: datetime):
-    """
-    Get a datetime object and return a pretty string like 'an hour ago',
-    'Yesterday', '3 months ago', 'just now', etc
-
-    This is based on this answer, modified for i18n compatibility:
-    https://stackoverflow.com/questions/1551382/user-friendly-time-format-in-python
-    """
-
-    def text(amount: float, unit: tuple):
-        amount = round(amount)
-        if amount > 1:
-            unit = unit[1]
-        else:
-            unit = unit[0]
-        return _("{amount} {unit} ago.").format(amount=amount, unit=unit)
-
-    units_name = {
-        0: (_("year"), _("years")),
-        1: (_("month"), _("months")),
-        2: (_("week"), _("weeks")),
-        3: (_("day"), _("days")),
-        4: (_("hour"), _("hours")),
-        5: (_("minute"), _("minutes")),
-        6: (_("second"), _("seconds")),
-    }
-    now = datetime.now()
-    diff = now - time
-    second_diff = diff.seconds
-    day_diff = diff.days
-    if day_diff < 0:
-        return ""
-    if day_diff == 0:
-        if second_diff < 10:
-            return _("Just now")
-        if second_diff < 60:
-            return text(second_diff, units_name[6])
-        if second_diff < 120:
-            return _("A minute ago")
-        if second_diff < 3600:
-            return text(second_diff / 60, units_name[5])
-        if second_diff < 7200:
-            return _("An hour ago")
-        if second_diff < 86400:
-            return text(second_diff / 3600, units_name[4])
-    if day_diff == 1:
-        return _("Yesterday")
-    if day_diff < 7:
-        return text(day_diff, units_name[3])
-    if day_diff < 31:
-        return text(day_diff / 7, units_name[2])
-    if day_diff < 365:
-        return text(day_diff / 30, units_name[1])
-    return text(day_diff / 365, units_name[0])
 
 
 # Red 3.1 backwards compatibility
@@ -790,7 +737,6 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
 
     @commands.command()
     @commands.guild_only()
-    @commands.bot_has_permissions(add_reactions=True, manage_messages=True)
     @commands.cooldown(1, 3, commands.BucketType.member)
     async def warnings(
         self, ctx: commands.Context, user: UnavailableMember = None, index: int = 0
@@ -830,355 +776,22 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             5: (_("Ban"), _("Bans")),
         }.get(level, _("unknown"))[1 if plural else 0]
 
-        embeds = []
         msg = []
         for i in range(6):
             total_warns = total(i)
             if total_warns > 0:
                 msg.append(f"{warning_str(i, total_warns > 1)}: {total_warns}")
         warn_field = "\n".join(msg) if len(msg) > 1 else msg[0]
-        warn_list = []
-        for case in cases[:-10:-1]:
-            level = case["level"]
-            reason = str(case["reason"]).splitlines()
-            if len(reason) > 1:
-                reason = reason[0] + "..."
-            else:
-                reason = reason[0]
-            date = pretty_date(self.api._get_datetime(case["time"]))
-            text = f"**{warning_str(level, False)}:** {reason} • *{date}*\n"
-            if len("".join(warn_list + [text])) > 1024:  # embed limits
-                break
-            else:
-                warn_list.append(text)
         embed = discord.Embed(description=_("User modlog summary."))
         embed.set_author(name=f"{user} | {user.id}", icon_url=user.avatar.url)
         embed.add_field(
             name=_("Total number of warnings: ") + str(len(cases)), value=warn_field, inline=False
         )
-        embed.add_field(
-            name=_("{len} last warnings").format(len=len(warn_list))
-            if len(warn_list) > 1
-            else _("Last warning"),
-            value="".join(warn_list),
-            inline=False,
-        )
-        embed.set_footer(text=_("Click on the reactions to scroll through the warnings"))
         embed.colour = user.top_role.colour
-        embeds.append(embed)
 
-        for i, case in enumerate(cases):
-            level = case["level"]
-            moderator = ctx.guild.get_member(case["author"])
-            moderator = "ID: " + str(case["author"]) if not moderator else moderator.mention
-
-            time = self.api._get_datetime(case["time"])
-            embed = discord.Embed(
-                description=_("Case #{number} informations").format(number=i + 1)
-            )
-            embed.set_author(name=f"{user} | {user.id}", icon_url=user.avatar.url)
-            embed.add_field(
-                name=_("Level"), value=f"{warning_str(level, False)} ({level})", inline=True
-            )
-            embed.add_field(name=_("Moderator"), value=moderator, inline=True)
-            if case["duration"]:
-                duration = self.api._get_timedelta(case["duration"])
-                embed.add_field(
-                    name=_("Duration"),
-                    value=_("{duration}\n(Until {date})").format(
-                        duration=self.api._format_timedelta(duration),
-                        date=self.api._format_datetime(time + duration),
-                    ),
-                )
-            embed.add_field(name=_("Reason"), value=case["reason"], inline=False),
-            embed.timestamp = time
-            embed.colour = await self.data.guild(ctx.guild).colors.get_raw(level)
-            embeds.append(embed)
-
-        controls = {"⬅": menus.prev_page, "❌": menus.close_menu, "➡": menus.next_page}
-        if await mod.is_mod_or_superior(self.bot, ctx.author):
-            controls.update({"✏": self._edit_case, "🗑": self._delete_case})
-
-        await menus.menu(
-            ctx=ctx, pages=embeds, controls=controls, message=None, page=index, timeout=60
-        )
-
-    async def _edit_case(
-        self,
-        ctx: commands.Context,
-        pages: list,
-        controls: dict,
-        message: discord.Message,
-        page: int,
-        timeout: float,
-        emoji: str,
-    ):
-        """
-        Edit a case, this is linked to the warnings menu system.
-        """
-
-        async def edit_message(channel_id: int, message_id: int, new_reason: str):
-            channel: discord.TextChannel = guild.get_channel(channel_id)
-            if channel is None:
-                log.warn(
-                    f"[Guild {guild.id}] Failed to edit modlog message. "
-                    f"Channel {channel_id} not found."
-                )
-                return False
-            try:
-                message: discord.Message = await channel.fetch_message(message_id)
-            except discord.errors.NotFound:
-                log.warn(
-                    f"[Guild {guild.id}] Failed to edit modlog message. "
-                    f"Message {message_id} in channel {channel.id} not found."
-                )
-                return False
-            except discord.errors.Forbidden:
-                log.warn(
-                    f"[Guild {guild.id}] Failed to edit modlog message. "
-                    f"No permissions to fetch messages in channel {channel.id}."
-                )
-                return False
-            except discord.errors.HTTPException as e:
-                log.error(
-                    f"[Guild {guild.id}] Failed to edit modlog message. API exception raised.",
-                    exc_info=e,
-                )
-                return False
-            try:
-                embed: discord.Embed = message.embeds[0]
-                embed.set_field_at(
-                    len(embed.fields) - 2, name=_("Reason"), value=new_reason, inline=False
-                )
-            except IndexError as e:
-                log.error(
-                    f"[Guild {guild.id}] Failed to edit modlog message. Embed is malformed.",
-                    exc_info=e,
-                )
-                return False
-            try:
-                await message.edit(embed=embed)
-            except discord.errors.HTTPException as e:
-                log.error(
-                    f"[Guild {guild.id}] Failed to edit modlog message. "
-                    "Unknown error when attempting message edition.",
-                    exc_info=e,
-                )
-                return False
-            return True
-
-        guild = ctx.guild
-        if page == 0:
-            # first page, no case to edit
-            await message.remove_reaction(emoji, ctx.author)
-            return await menus.menu(
-                ctx, pages, controls, message=message, page=page, timeout=timeout
-            )
-        await message.clear_reactions()
-        try:
-            old_embed = message.embeds[0]
-        except IndexError:
-            return
-        embed = discord.Embed()
-        member_id = int(
-            re.match(r"(?:.*#[0-9]{4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1)
-        )
-        member = self.bot.get_user(member_id) or UnavailableMember(
-            self.bot, guild._state, member_id
-        )
-        embed.clear_fields()
-        embed.description = _(
-            "Case #{number} edition.\n\n**Please type the new reason to set**"
-        ).format(number=page)
-        embed.set_footer(text=_("You have two minutes to type your text in the chat."))
-        case = (await self.data.custom("MODLOGS", guild.id, member.id).x())[page - 1]
-        await message.edit(embed=embed)
-        try:
-            response = await self.bot.wait_for(
-                "message", check=predicates.MessagePredicate.same_context(ctx), timeout=120
-            )
-        except AsyncTimeoutError:
-            await message.delete()
-            return
-        case = (await self.data.custom("MODLOGS", guild.id, member.id).x())[page - 1]
-        new_reason = await self.api.format_reason(guild, response.content)
-        embed.description = _("Case #{number} edition.").format(number=page)
-        embed.add_field(name=_("Old reason"), value=case["reason"], inline=False)
-        embed.add_field(name=_("New reason"), value=new_reason, inline=False)
-        embed.set_footer(text=_("Click on ✅ to confirm the changes."))
-        await message.edit(embed=embed)
-        menus.start_adding_reactions(message, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
-        pred = predicates.ReactionPredicate.yes_or_no(message, ctx.author)
-        try:
-            await ctx.bot.wait_for("reaction_add", check=pred, timeout=30)
-        except AsyncTimeoutError:
-            await message.clear_reactions()
-            await message.edit(content=_("Question timed out."), embed=None)
-            return
-        if pred.result:
-            async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
-                logs[page - 1]["reason"] = new_reason
-                try:
-                    channel_id, message_id = logs[page - 1]["modlog_message"].values()
-                except KeyError:
-                    result = None
-                else:
-                    result = await edit_message(channel_id, message_id, new_reason)
-            await message.clear_reactions()
-            text = _("The reason was successfully edited!\n")
-            if result is False:
-                text += _("*The modlog message couldn't be edited. Check your logs for details.*")
-            await message.edit(content=text, embed=None)
-        else:
-            await message.clear_reactions()
-            await message.edit(content=_("The reason was not edited."), embed=None)
-
-    async def _delete_case(
-        self,
-        ctx: commands.Context,
-        pages: list,
-        controls: dict,
-        message: discord.Message,
-        page: int,
-        timeout: float,
-        emoji: str,
-    ):
-        """
-        Remove a case, this is linked to the warning system.
-        """
-
-        async def delete_message(channel_id: int, message_id: int):
-            channel: discord.TextChannel = guild.get_channel(channel_id)
-            if channel is None:
-                log.warn(
-                    f"[Guild {guild.id}] Failed to delete modlog message. "
-                    f"Channel {channel_id} not found."
-                )
-                return False
-            try:
-                message: discord.Message = await channel.fetch_message(message_id)
-            except discord.errors.NotFound:
-                log.warn(
-                    f"[Guild {guild.id}] Failed to delete modlog message. "
-                    f"Message {message_id} in channel {channel.id} not found."
-                )
-                return False
-            except discord.errors.Forbidden:
-                log.warn(
-                    f"[Guild {guild.id}] Failed to delete modlog message. "
-                    f"No permissions to fetch messages in channel {channel.id}."
-                )
-                return False
-            except discord.errors.HTTPException as e:
-                log.error(
-                    f"[Guild {guild.id}] Failed to delete modlog message. API exception raised.",
-                    exc_info=e,
-                )
-                return False
-            try:
-                await message.delete()
-            except discord.errors.HTTPException as e:
-                log.error(
-                    f"[Guild {guild.id}] Failed to delete modlog message. "
-                    "Unknown error when attempting message deletion.",
-                    exc_info=e,
-                )
-                return False
-            return True
-
-        guild = ctx.guild
-        await message.clear_reactions()
-        try:
-            old_embed = message.embeds[0]
-        except IndexError:
-            return
-        embed = discord.Embed()
-        member_id = int(
-            re.match(r"(?:.*#[0-9]{4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1)
-        )
-        member = self.bot.get_user(member_id) or UnavailableMember(
-            self.bot, guild._state, member_id
-        )
-        if page == 0:
-            # no warning specified, mod wants to completly clear the member
-            embed.colour = 0xEE2B2B
-            embed.description = _(
-                "Member {member}'s clearance. By selecting ❌ on the user modlog summary, you can "
-                "remove all warnings given to {member}. __All levels and notes are affected.__\n"
-                "**Click on the reaction to confirm the removal of the entire user's modlog. "
-                "This cannot be undone.**"
-            ).format(member=str(member))
-        else:
-            level = int(re.match(r".*\(([0-9]*)\)", old_embed.fields[0].value).group(1))
-            can_unmute = False
-            add_roles = False
-            if level == 2:
-                mute_role = guild.get_role(await self.cache.get_mute_role(guild))
-                member = guild.get_member(member.id)
-                if member:
-                    if mute_role and mute_role in member.roles:
-                        can_unmute = True
-                    add_roles = await self.data.guild(guild).remove_roles()
-            description = _(
-                "Case #{number} deletion.\n**Click on the reaction to confirm your action.**"
-            ).format(number=page)
-            if can_unmute or add_roles:
-                description += _("\nNote: Deleting the case will also do the following:")
-                if can_unmute:
-                    description += _("\n- unmute the member")
-                if add_roles:
-                    description += _("\n- add all roles back to the member")
-            embed.description = description
-        await message.edit(embed=embed)
-        menus.start_adding_reactions(message, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
-        pred = predicates.ReactionPredicate.yes_or_no(message, ctx.author)
-        try:
-            await ctx.bot.wait_for("reaction_add", check=pred, timeout=30)
-        except AsyncTimeoutError:
-            await message.clear_reactions()
-            await message.edit(content=_("Question timed out."), embed=None)
-            return
-        if not pred.result:
-            await message.clear_reactions()
-            await message.edit(content=_("Nothing was removed."), embed=None)
-            return
-        if page == 0:
-            # removing entire modlog
-            await self.data.custom("MODLOGS", guild.id, member.id).x.set([])
-            log.debug(f"[Guild {guild.id}] Cleared modlog of member {member} (ID: {member.id}).")
-            await message.clear_reactions()
-            await message.edit(content=_("User modlog cleared."), embed=None)
-            return
-        async with self.data.custom("MODLOGS", guild.id, member.id).x() as logs:
-            try:
-                roles = logs[page - 1]["roles"]
-            except KeyError:
-                roles = []
-            try:
-                channel_id, message_id = logs[page - 1]["modlog_message"].values()
-            except KeyError:
-                result = None
-            else:
-                result = await delete_message(channel_id, message_id)
-            logs.remove(logs[page - 1])
-        log.debug(
-            f"[Guild {guild.id}] Removed case #{page} from member {member} (ID: {member.id})."
-        )
-        await message.clear_reactions()
-        if can_unmute:
-            await member.remove_roles(
-                mute_role,
-                reason=_("Warning deleted by {author}").format(
-                    author=f"{str(ctx.author)} (ID: {ctx.author.id})"
-                ),
-            )
-        if roles:
-            roles = [guild.get_role(x) for x in roles]
-            await member.add_roles(*roles, reason=_("Adding removed roles back after unmute."))
-        text = _("The case was successfully deleted!")
-        if result is False:
-            text += _("*The modlog message couldn't be deleted. Check your logs for details.*")
-        await message.edit(content=_("The case was successfully deleted!"), embed=None)
+        view = View()
+        view.add_item(WarningsList(self.bot, user, cases))
+        await ctx.send(embed=embed, view=view)
 
     @commands.command()
     @checks.mod_or_permissions(kick_members=True)
