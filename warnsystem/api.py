@@ -569,9 +569,10 @@ class API:
                 return False
             return True
 
+        case = await self.get_case(guild, user, index)
         can_unmute = False
         add_roles = False
-        if self.case["level"] == 2:
+        if case["level"] == 2:
             mute_role = guild.get_role(await self.cache.get_mute_role(guild))
             member = guild.get_member(self.user)
             if member:
