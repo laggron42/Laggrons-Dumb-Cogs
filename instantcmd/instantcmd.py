@@ -131,18 +131,24 @@ class InstantCommands(BaseCog):
         Load all instant commands made.
         This is executed on load with __init__
         """
+        dev_values = await self.data.dev_values()
+        for name, code in dev_values.items():
+            try:
+                function = self.get_function_from_str(code, name)
+            except Exception as e:
+                log.exception("An exception occurred while trying to resume dev value %s", name)
+            else:
+                self.bot.add_dev_env_value(name, function)
+                log.debug(f"Added dev value %s", name)
 
         _commands = await self.data.commands()
         for name, command_string in _commands.items():
-            function = self.get_function_from_str(command_string, name)
-            self.load_command_or_listener(function)
-        if self.bot.get_cog("Dev") is None:
-            return
-        dev_values = await self.data.dev_values()
-        for name, code in dev_values.items():
-            function = self.get_function_from_str(code, name)
-            self.bot.add_dev_env_value(name, function)
-            log.debug(f"Added dev value {name}")
+            try:
+                function = self.get_function_from_str(command_string, name)
+            except Exception as e:
+                log.exception("An exception occurred while trying to resume command %s", name)
+            else:
+                self.load_command_or_listener(function)
 
     async def remove_commands(self):
         async with self.data.commands() as _commands:
