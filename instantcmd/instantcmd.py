@@ -72,7 +72,7 @@ class InstantCommands(BaseCog):
         bot.loop.create_task(self.resume_commands())
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.3.1"
+    __version__ = "1.3.2"
 
     # def get_config_identifier(self, name):
     # """
