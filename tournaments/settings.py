@@ -1,4 +1,5 @@
 from collections import namedtuple
+import contextlib
 import discord
 import logging
 import re
@@ -141,7 +142,7 @@ class Settings(MixinMeta):
         guild = ctx.guild
         not_set = {"channels": [], "roles": []}
         lost = {"channels": [], "roles": []}
-        required_channels = ["to"]
+        required_channels = ["to", "register", "announcements"]
         required_roles = ["participant"]
         for name, channel_id in data["channels"].items():
             if name not in required_channels:
@@ -152,6 +153,13 @@ class Settings(MixinMeta):
             channel = guild.get_channel(channel_id)
             if channel is None:
                 lost["channels"].append(name)
+        # user can have either register or announcements channel
+        # if both are absent, raise error, else just pass
+        if bool("register" in not_set["channels"]) != bool("announcements" in not_set["channels"]):
+            # bool(a) != bool(b) is equivalent to the XOR operator
+            with contextlib.suppress(KeyError):
+                del not_set["channels"]["register"]
+                del not_set["channels"]["announcements"]
         for name, role_id in data["roles"].items():
             if name not in required_roles:
                 continue
@@ -409,6 +417,8 @@ it directly.
         - Start of registration
         - Tournament launch
         - Tournament end
+
+        You must have this or the register channel setup.
         """
         config = channel.config
         channel = channel.arg
@@ -425,7 +435,8 @@ it directly.
             await self.data.settings(guild.id, config).channels.announcements.set(channel.id)
             await ctx.send(_("The channel was successfully set."))
 
-    @tournamentset_channels.command(name="checkin")
+    # This is not useful anymore with the usage of buttons
+    @tournamentset_channels.command(name="checkin", disabled=True)
     async def tournamentset_channels_checkin(
         self,
         ctx: commands.Context,
@@ -470,10 +481,10 @@ command to confirm their registration.
         """
         Set the registration channel.
 
-        The start of the registration will be announced there, and participants will have to \
-enter a command to register or unregister.
+        The start of the registration and check-in will be announced there.
+        Channel should be closed, as an interactive message with buttons will be sent.
 
-        Don't set this to keep the command channel unrestricted (can be typed anywhere).
+        You must have this or the announcements channel setup.
         """
         guild = ctx.guild
         config = channel.config
@@ -1483,10 +1494,10 @@ the start of the tournament, then closing 15 minutes before.
             tournament.phase = "ongoing"
             if send_announcement:
                 await tournament.send_start_messages()
-            channels = list(filter(None, [tournament.queue_channel, tournament.scores_channel]))
+            channels = list(filter(None, [tournament.queue_channel, tournament.channels.scores]))
             for channel in channels:
                 await channel.set_permissions(
-                    tournament.participant_role,
+                    tournament.roles.participant,
                     read_messages=True,
                     send_messages=True,
                     reason=_("Tournament starting..."),
@@ -1629,21 +1640,21 @@ the start of the tournament, then closing 15 minutes before.
                 "Close when complete: {autostop}\n"
                 "Closing : {closing}"
             ).format(
-                opening=format_datetime(tournament.register_start, "register_start"),
+                opening=format_datetime(tournament.register.start, "register_start"),
                 secondopening=format_datetime(
-                    tournament.register_second_start, "register_second_start"
+                    tournament.register.second_start, "register_second_start"
                 )
-                if tournament.register_second_start
+                if tournament.register.second_start
                 else _("Disabled"),
-                autostop=_("Enabled") if tournament.autostop_register else _("Disabled"),
-                closing=format_datetime(tournament.register_stop, "register_stop"),
+                autostop=_("Enabled") if tournament.settings.autostop_register else _("Disabled"),
+                closing=format_datetime(tournament.register.stop, "register_stop"),
             ),
         )
         embed.add_field(
             name=_("Check-in"),
             value=_("Opening: {opening}\nClosing : {closing}").format(
-                opening=format_datetime(tournament.checkin_start, "checkin_start"),
-                closing=format_datetime(tournament.checkin_stop, "checkin_stop"),
+                opening=format_datetime(tournament.checkin.start, "checkin_start"),
+                closing=format_datetime(tournament.checkin.stop, "checkin_stop"),
             ),
         )
         embed.set_footer(
@@ -1774,13 +1785,13 @@ the start of the tournament, then closing 15 minutes before.
                     "Closing : {closing}\n"
                     "Auto-stop : {stop}"
                 ).format(
-                    status=status.get(t.register_phase),
-                    opening=get_time(t.register_start),
-                    secondopening=get_time(t.register_second_start)
-                    if t.register_second_start
+                    status=status.get(t.register.phase.name.lower()),
+                    opening=get_time(t.register.start),
+                    secondopening=get_time(t.register.second_start)
+                    if t.register.second_start
                     else _("Disabled"),
-                    closing=get_time(t.register_stop),
-                    stop=_("Enabled") if t.autostop_register else _("Disabled"),
+                    closing=get_time(t.register.stop),
+                    stop=_("Enabled") if t.settings.autostop_register else _("Disabled"),
                 ),
                 inline=True,
             )
@@ -1789,9 +1800,9 @@ the start of the tournament, then closing 15 minutes before.
                 value=_(
                     "Current status: **{status}**\n\n" "Opening: {start}\n" "Closing: {stop}"
                 ).format(
-                    status=status.get(t.checkin_phase),
-                    start=get_time(t.checkin_start),
-                    stop=get_time(t.checkin_stop),
+                    status=status.get(t.checkin.phase.name.lower()),
+                    start=get_time(t.checkin.start),
+                    stop=get_time(t.checkin.stop),
                 ),
                 inline=True,
             )

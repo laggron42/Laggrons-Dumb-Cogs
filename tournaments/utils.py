@@ -77,7 +77,7 @@ def mod_or_to():
             tournament: Tournament = ctx.cog.tournaments[ctx.guild.id]
         except KeyError:
             return False
-        if tournament.to_role and tournament.to_role in ctx.author.roles:
+        if tournament.roles.to and tournament.roles.to in ctx.author.roles:
             return True
         return False
 

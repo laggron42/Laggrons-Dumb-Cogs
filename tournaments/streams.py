@@ -12,7 +12,7 @@ from redbot.core.utils.chat_formatting import pagify
 
 from .abc import MixinMeta
 from .utils import only_phase, prompt_yes_or_no
-from .objects import Streamer
+from .objects import Tournament, Streamer
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -35,9 +35,9 @@ async def mod_or_streamer(ctx: commands.Context):
         tournament: Tournament = ctx.cog.tournaments[ctx.guild.id]
     except KeyError:
         return False
-    if tournament.streamer_role and tournament.streamer_role in ctx.author.roles:
+    if tournament.roles.streamer and tournament.roles.streamer in ctx.author.roles:
         return True
-    if tournament.to_role and tournament.to_role in ctx.author.roles:
+    if tournament.roles.to and tournament.roles.to in ctx.author.roles:
         return True
     return False
 

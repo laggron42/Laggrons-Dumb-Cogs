@@ -12,12 +12,13 @@ import filecmp
 import csv
 import shutil
 
+from discord.ui import View
 from discord.ext import tasks
 from random import choice, shuffle
 from itertools import islice
 from datetime import datetime, timedelta, timezone
 from babel.dates import format_date, format_time
-from typing import Mapping, Optional, Tuple, List, Union
+from typing import Optional, Tuple, List, Union
 
 from redbot import __version__ as red_version
 from redbot.core import Config
@@ -25,6 +26,16 @@ from redbot.core.bot import Red
 from redbot.core.i18n import Translator, get_babel_locale, set_contextual_locales_from_guild
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.chat_formatting import humanize_timedelta, pagify
+
+from .enums import Phase, EventPhase, MatchPhase
+from .dataclass import (
+    Buttons,
+    Channels,
+    Roles,
+    RegisterEvent,
+    CheckinEvent,
+    Settings,
+)
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -222,12 +233,8 @@ class Match:
         End time of this match, or time of the latest message. `None` if it hasn't started or
         ended yet. This is updated as soon as a message is sent in the channel. Used for knowing
         when to delete the channel (5 min after last message).
-    status: str
+    phase: MatchPhase
         Defines the current state of the match.
-
-        *   ``"pending"``: Waiting to be launched (no channel or stream pending)
-        *   ``"ongoing"``: Match started
-        *   ``"finished"``: Score set, awaiting channel deletion
     warned: Optional[Union[datetime, bool]]
         Defines if there was a warn for duration. `None` if no warn was sent, `datetime.datetime`
         if there was one first warn sent (correspond to the time when it was send, we rely on that
@@ -235,9 +242,6 @@ class Match:
         (to the T.O.s).
     streamer: Optional[Streamer]
         The streamer assigned to this match, if any.
-    on_hold: bool
-        `True` if the match is not started but on hold, awaiting something (most likely inside a
-        stream queue, waiting for its turn)
     is_top8: bool
         `True` if the match is in the top 8 of the tournament
     is_bo5: bool
@@ -270,11 +274,10 @@ class Match:
         self.channel: Optional[discord.TextChannel] = None
         self.start_time: Optional[datetime] = None
         self.end_time: Optional[datetime] = None
-        self.status = "pending"  # can be "pending" "ongoing" "finished"
+        self.phase = MatchPhase.PENDING
         self.warned: Optional[Union[datetime, bool]] = None
         # time of the first warn for duration, if any. if a second warn was sent, set to True
         self.streamer: Optional[Streamer] = None
-        self.on_hold = False  # True if this is match is awaiting for a stream
         # one or more players can be None
         # if this is the case, the bot will most likely close the match right after this
         with contextlib.suppress(AttributeError):
@@ -331,8 +334,7 @@ class Match:
             match.warned = warned
         else:
             match.warned = datetime.fromtimestamp(warned, tz=tournament.tz)
-        match.on_hold = bool(data["on_hold"])
-        match.status = data["status"]
+        match.phase = MatchPhase(data["phase"])
         match.checked_dq = data["checked_dq"]
         match.start_time = (
             datetime.fromtimestamp(data["start_time"], tz=tournament.tz)
@@ -357,12 +359,11 @@ class Match:
             "channel": self.channel.id if self.channel else None,
             "start_time": self.start_time.timestamp() if self.start_time else None,
             "end_time": self.end_time.timestamp() if self.end_time else None,
-            "status": self.status,
+            "phase": self.phase,
             "checked_dq": self.checked_dq,
             "warned": self.warned.timestamp()
             if isinstance(self.warned, datetime)
             else self.warned,
-            "on_hold": self.on_hold,
         }
 
     def _get_name(self) -> str:
@@ -418,37 +419,37 @@ class Match:
         message += _(
             ":arrow_forward: **{0.set}** : {0.player1.mention} vs {0.player2.mention} {top8}\n"
         ).format(self, top8=top8)
-        if self.tournament.ruleset_channel:
+        if self.tournament.channels.ruleset:
             view.add_item(
                 discord.ui.Button(
                     style=discord.ButtonStyle.link,
                     label=_("Ruleset"),
                     emoji="\N{BLUE BOOK}",
-                    url=channel_link(self.tournament.ruleset_channel),
+                    url=channel_link(self.tournament.channels.ruleset),
                 )
             )
-        if self.tournament.scores_channel:
+        if self.tournament.channels.scores:
             view.add_item(
                 discord.ui.Button(
                     style=discord.ButtonStyle.link,
                     label=_("Score entry"),
                     emoji="\N{MEMO}",
-                    url=channel_link(self.tournament.scores_channel),
+                    url=channel_link(self.tournament.channels.scores),
                 )
             )
-        if self.tournament.stages:
+        if self.tournament.settings.stages:
             message += _(
                 ":white_small_square: The list of legal stages "
                 "is available with `{prefix}stages` command.\n"
             ).format(prefix=self.tournament.bot_prefix)
-        if self.tournament.counterpicks:
+        if self.tournament.settings.counterpicks:
             message += _(
                 ":white_small_square: The list of counter stages "
                 "is available with `{prefix}counters` command.\n"
             ).format(prefix=self.tournament.bot_prefix)
         score_channel = (
-            _("in {channel}").format(channel=self.tournament.scores_channel.mention)
-            if self.tournament.scores_channel
+            _("in {channel}").format(channel=self.tournament.channels.scores.mention)
+            if self.tournament.channels.scores
             else ""
         )
         message += _(
@@ -462,11 +463,11 @@ class Match:
             score_channel=score_channel,
             type=_("**BO5** *(best of 5)*") if self.is_bo5 else _("**BO3** *(best of 3)*"),
         )
-        if self.tournament.baninfo:
+        if self.tournament.settings.baninfo:
             chosen_player = choice([self.player1, self.player2])
             message += _(
                 ":game_die: **{player}** was picked to begin the bans *({baninfo})*.\n"
-            ).format(player=chosen_player.mention, baninfo=self.tournament.baninfo)
+            ).format(player=chosen_player.mention, baninfo=self.tournament.settings.baninfo)
         if self.streamer is not None and self.on_hold is True:
             message += _(
                 "**\nYou will be on stream on {streamer}!**\n"
@@ -527,17 +528,16 @@ class Match:
             )
         else:
             access = ""
-        if self.status != "ongoing":
+        if self.phase != MatchPhase.ONGOING:
             await self._start()
-        self.on_hold = False
         self.checked_dq = True
         await destination(
             _("You can go on stream on {channel} !{access}").format(
                 channel=self.streamer.link, access=access
             )
         )
-        if self.tournament.stream_channel:
-            await self.tournament.stream_channel.send(
+        if self.tournament.channels.stream:
+            await self.tournament.channels.stream.send(
                 _(
                     ":arrow_forward: Sending set {set} ({name}) on stream "
                     "with **{streamer}**: {player1} vs {player2}"
@@ -568,8 +568,7 @@ class Match:
         """
         destination = self.channel.send if self.channel else self._dm_players
         self.checked_dq = True
-        if self.on_hold is True:
-            self.status = "pending"
+        if self.phase == MatchPhase.ON_HOLD:
             self.start_time = None
             self.underway = False
             await destination(
@@ -591,7 +590,7 @@ class Match:
                 log.warning(
                     f"[Guild {self.guild.id}] Can't unmark set {self.set} as underway.", exc_info=e
                 )
-                await self.tournament.to_channel.send(
+                await self.tournament.channels.to.send(
                     _(
                         "There was an issue unmarking set {set} as underway. The bracket may not "
                         "display correct informations, but this isn't critical at all.\n"
@@ -636,7 +635,6 @@ class Match:
         """
         destination = self.channel.send if self.channel else self._dm_players
         self.streamer = None
-        self.on_hold = False
         await self._start()
         await destination(
             _(
@@ -672,7 +670,7 @@ class Match:
 
     async def _start(self):
         target = self.channel.send if self.channel else self._dm_players
-        self.status = "ongoing"
+        self.phase = MatchPhase.ONGOING
         self.underway = True
         self.checked_dq = False
         self.start_time = datetime.now(self.tournament.tz)
@@ -682,7 +680,7 @@ class Match:
             log.warning(
                 f"[Guild {self.guild.id}] Can't mark set {self.set} as underway.", exc_info=e
             )
-            await self.tournament.to_channel.send(
+            await self.tournament.channels.to.send(
                 _(
                     "There was an issue marking set {set} as underway. The bracket may not "
                     "display correct informations, but this isn't critical at all.\n"
@@ -741,7 +739,7 @@ class Match:
         else:
             self.channel = channel
         await self.send_message(reset=restart)
-        if self.on_hold is False:
+        if self.phase != MatchPhase.ON_HOLD:
             await self._start()
             if self.streamer is not None:
                 await self.start_stream()
@@ -755,7 +753,7 @@ class Match:
         """
         if self.channel is not None:
             await self.mark_as_underway()
-            self.status = "ongoing"
+            self.phase = MatchPhase.ONGOING
             await self.channel.send(
                 _(
                     "{player1} {player2}\n"
@@ -792,7 +790,7 @@ class Match:
                 log.warn(
                     f"[Guild {self.guild.id}] Can't delete set channel #{self.set}.", exc_info=e
                 )
-            await self.tournament.to_channel.send(
+            await self.tournament.channels.to.send(
                 _(
                     ":information_source: **Automatic DQ** of {player1} and {player2} for "
                     "inactivity, the set #{set} is cancelled."
@@ -813,7 +811,7 @@ class Match:
                         player=player.mention
                     )
                 )
-                await self.tournament.to_channel.send(
+                await self.tournament.channels.to.send(
                     _(
                         ":information_source: **Automatic DQ** of {player} "
                         "for inactivity, set #{set}."
@@ -843,11 +841,11 @@ class Match:
             "As soon as this is finished, set your score with `{prefix}win`{channel}."
         ).format(
             prefix=self.tournament.bot_prefix,
-            channel=_(" in {channel}").format(channel=self.tournament.scores_channel.mention)
-            if self.tournament.scores_channel
+            channel=_(" in {channel}").format(channel=self.tournament.channels.scores.mention)
+            if self.tournament.channels.scores
             else "",
         )
-        time = self.tournament.time_until_warn["bo5" if self.is_bo5 else "bo3"][1]
+        time = self.tournament.settings.time_until_warn["bo5" if self.is_bo5 else "bo3"][1]
         if time:
             message += _(
                 "\nT.O.s will be warned if this match is still ongoing in {time}."
@@ -862,7 +860,7 @@ class Match:
         """
         Warn T.O.s because of the duration of this match. Also tell the players
         """
-        await self.tournament.to_channel.send(
+        await self.tournament.channels.to.send(
             _(
                 ":warning: The set {set} is taking a lot of time (now open since {time} minutes)."
             ).format(
@@ -1027,7 +1025,7 @@ class Match:
         with contextlib.suppress(AttributeError):
             self.player1.reset()
             self.player2.reset()
-        self.status = "finished"
+        self.phase = MatchPhase.DONE
         self.end_time = datetime.now(self.tournament.tz)
 
     async def set_scores(
@@ -1162,6 +1160,7 @@ class Tournament:
         A prefix to use for displaying commands without context.
     cog_version: str
         Current version of Tournaments
+
     participants: List[Participant]
         List of participants in the tournament
     matches: List[Match]
@@ -1172,100 +1171,31 @@ class Tournament:
         List of categories created for the winner bracket
     loser_categories: List[discord.CategoryChannel]
         List of categories created for the loser bracket
-    category: Optional[discord.CategoryChannel]
-        The category defined (our categories will be created below)
-    announcements_channel: Optional[discord.TextChannel]
-        The channel for announcements
-    checkin_channel: Optional[discord.TextChannel]
-        The channel for check-in
-    queue_channel: Optional[discord.TextChannel]
-        The channel for match queue
-    register_channel: Optional[discord.TextChannel]
-        The channel for registrations
-    scores_channel: Optional[discord.TextChannel]
-        The channel for score setting
-    stream_channel: Optional[discord.TextChannel]
-        The channel for announcing matches on stream
-    to_channel: discord.TextChanne]
-        The channel for tournament organizers. Send warnings there.
-    vip_register_channel: Optional[discord.TextChannel]
-        A channel where registrations are always open
-    participant_role: discord.Role
-        The role given to participants
-    streamer_role: Optional[discord.Role]
-        Role giving access to stream commands
-    to_role: Optional[discord.Role]
-        Role giving access to T.O. commands
-    credentials: dict
-        Credentials for connecting to the bracket
-    delay: int
-        Time in minutes until disqualifying a participant for AFK
-    time_until_warn: dict
-        Represents the different warn times for duration
-    autostop_register: bool
-        Should the bot close registrations when it's full?
     ignored_events: list
         A list of events to ignore (checkin/register start/stop)
-    register_start: Optional[datetime.datetime]
-        When we should open the registrations automatically
-    register_second_start: Optional[datetime.datetime]
-        When we should open the registrations a second time automatically
-    register_stop: Optional[datetime.datetime]
-        When we should close the registrations automatically
-    checkin_start: Optional[datetime.datetime]
-        When we should open the checkin automatically
-    checkin_stop: Optional[datetime.datetime]
-        When we should close the checkin automatically
-    ruleset_channel: Optional[discord.TextChannel]
-        Channel for the rules
-    game_role: Optional[discord.Role]
-        Role targeted at players for this game. Basically we use that role when opening the
-        registrations, for opening the channel and pinging.
-    baninfo: Optional[str]
-        Baninfo set (ex: 3-4-2)
-    ranking: dict
-        Data for braacket ranking
-    stages: List[str]
-        List of allowed stages
-    counterpicks: List[str]
-        List of allowed counterpicks
-    phase: str
-        Something very important! Used for knowing what is the current phase of the tournament.
-        It is also used by commands to know if it is allowed to run.
+    matches_to_announce: List[str]
+        A list of strings to announce in the defined queue channel. This is done to prevent
+        sending too many messages at once and hitting ratelimits, so we wrap them together.
+    last_ranking_fetch: Optional[datetime]
+        The last time when ranking data was fetched. There is a 5 min cooldown between requests.
 
-        Can be the following values:
+    roles: Roles
+        An object that stores all roles for the tournament.
+    channels: Channels
+        An object that stores all channels for the tournament.
 
-        *   ``"pending"``: Tournament just setup, nothing open yet
-        *   ``"register"``: Registrations or check-in started and are not finished
-        *   ``"awaiting"``: Registrations and check-in done, awaiting upload and start
-        *   ``"ongoing"``: Tournament is started and ongoing
-        *   ``"finished"``: Tournament done. Should be immediatly deleted unless there's an issue
-    register_phase: str
-        Defines the current status of registration.
+    credentials: dict
+        Credentials for connecting to the bracket
 
-        Can be the following values:
+    settings: Settings
+        An object that stores misc settings for the tournament.
 
-        *   ``"manual"``: No start date setup, waiting for manual start
-        *   ``"pending"``: Start date setup, awaiting automatic start
-        *   ``"ongoing"``: Registrations active
-        *   ``"onhold"``: Registrations started and ended once, but awaiting a second start
-        *   ``"done"``: Registrations ended
-    checkin_phase: str
-        Defines the current status of check-in.
+    register: RegisterEvent
+        Data about registrations, such as start and stop time, or the current phase.
+    checkin: CheckinEvent
+        Data about check-in, such as start and stop time, current phase and reminders.
 
-        Can be the following values:
 
-        *   ``"manual"``: No start date setup, waiting for manual start
-        *   ``"pending"``: Start date setup, awaiting automatic start
-        *   ``"ongoing"``: Check-in active
-        *   ``"onhold"``: Check-in started and ended once, but awaiting a second start
-        *   ``"done"``: Check-in ended
-    register_message: Optional[discord.Message]
-        The pinned message in the registrations channel
-    checkin_reminders: List[Tuple[int, bool]]
-        A list of reminders to send for the check-in. Contains tuples of two items: when to send
-        the reminder (minutes before check-in end date), and if the bot should DM members. This is
-        calculated on check-in start.
     lock: asyncio.Lock
         A lock acquired when the tournament is being refreshed by the loop task, to prevent
         commands like win or dq from being run at the same time.
@@ -1276,11 +1206,17 @@ class Tournament:
         The task for the `loop_task` function (`discord.ext.tasks.Loop` object)
     task_errors: int
         Number of errors that occured within the loop task. If it reaches 5, task is cancelled.
+
+    phase: Phase
+        Something very important! Used for knowing what is the current phase of the tournament.
+        It is also used by commands to know if it is allowed to run.
     top_8: dict
         Represents when the top 8 and bo5 begins in the bracket.
-    matches_to_announce: List[str]
-        A list of strings to announce in the defined queue channel. This is done to prevent sending
-        too many messages at once and hitting ratelimits, so we wrap messages together.
+    buttons: Buttons
+        A collection of buttons that will be used during the tournament, prevents building them
+        multiple times.
+    mentions: discord.AllowedMentions
+        The allowed mentions object for the bot announcements.
     """
 
     def __init__(
@@ -1300,6 +1236,7 @@ class Tournament:
         cog_version: str,
         data: dict,
     ):
+        # Basic attributes
         self.bot = bot
         self.guild = guild
         self.data = config
@@ -1314,134 +1251,54 @@ class Tournament:
         self.tournament_start = tournament_start
         self.bot_prefix = bot_prefix
         self.cog_version = cog_version
+
+        # Initialize empty attributes
         self.participants: List[Participant] = []
         self.matches: List[Match] = []
         self.streamers: List[Streamer] = []
         self.winner_categories: List[discord.CategoryChannel] = []
         self.loser_categories: List[discord.CategoryChannel] = []
-        self.category: discord.CategoryChannel = guild.get_channel(
-            data["channels"].get("category")
-        )
-        self.announcements_channel: discord.TextChannel = guild.get_channel(
-            data["channels"].get("announcements")
-        )
-        self.checkin_channel: discord.TextChannel = guild.get_channel(
-            data["channels"].get("checkin")
-        )
-        self.queue_channel: discord.TextChannel = guild.get_channel(data["channels"].get("queue"))
-        self.register_channel: discord.TextChannel = guild.get_channel(
-            data["channels"].get("register")
-        )
-        self.scores_channel: discord.TextChannel = guild.get_channel(
-            data["channels"].get("scores")
-        )
-        self.stream_channel: discord.TextChannel = guild.get_channel(
-            data["channels"].get("stream")
-        )
-        self.to_channel: discord.TextChannel = guild.get_channel(data["channels"].get("to"))
-        self.lag_channel: discord.TextChannel = guild.get_channel(data["channels"].get("lag"))
-        self.vip_register_channel: discord.TextChannel = guild.get_channel(
-            data["channels"].get("vipregister")
-        )
-        self.participant_role: discord.Role = guild.get_role(data["roles"].get("participant"))
-        self.streamer_role: discord.Role = guild.get_role(data["roles"].get("streamer"))
-        self.to_role: discord.Role = guild.get_role(data["roles"].get("to"))
-        self.tester_role: discord.Role = guild.get_role(data["roles"].get("tester"))
-        self.credentials = data["credentials"]
+        self.ignored_events = []  # list of scheduled events to skip (register_start/checkin_stop)
+        self.matches_to_announce: List[str] = []  # matches to announce in the queue channel
+        self.last_ranking_fetch: Optional[datetime] = None  # 5 min cooldown on ranking fetch
+
+        # Loading roles and channels
+        self.roles = Roles(guild, data)
+        self.channels = Channels(guild, data)
+
         # fitting to achallonge's requirements
+        self.credentials = data["credentials"]
         self.credentials["login"] = self.credentials.pop("username")
         self.credentials["password"] = self.credentials.pop("api")
-        self.delay: timedelta = timedelta(seconds=data["delay"]) or None
-        self.time_until_warn: Mapping[str, Tuple[timedelta]] = {
-            "bo3": tuple(
-                timedelta(seconds=x) or None
-                for x in data["time_until_warn"].get("bo3", (1500, 600))
-            ),
-            "bo5": tuple(
-                timedelta(seconds=x) or None
-                for x in data["time_until_warn"].get("bo5", (1800, 600))
-            ),
-        }  # the default values are somehow not loaded into the dict sometimes
-        self.register: dict = data["register"]
-        self.checkin: dict = data["checkin"]
-        self.start_bo5: int = data["start_bo5"]
-        self.autostop_register: bool = data["autostop_register"]
-        self.ignored_events = []  # list of scheduled events to skip (register_start/checkin_stop)
-        # works with next_scheduled_event, used for manual early starts/stops
-        if data["register"]["second_opening"] != 0:
-            self.register_second_start: datetime = tournament_start - timedelta(
-                seconds=data["register"]["second_opening"]
-            )
-        else:
-            self.register_second_start = None
-            self.ignored_events.append("register_second_start")
-        if data["register"]["opening"] != 0:
-            self.register_start: datetime = tournament_start - timedelta(
-                seconds=data["register"]["opening"]
-            )
-        else:
-            self.register_start = None
-            self.ignored_events.append("register_start")
-        if data["register"]["closing"] != 0:
-            self.register_stop: datetime = tournament_start - timedelta(
-                seconds=data["register"]["closing"]
-            )
-        else:
-            self.register_stop = None
-            self.ignored_events.append("register_stop")
-        if data["checkin"]["opening"] != 0:
-            self.checkin_start: datetime = tournament_start - timedelta(
-                seconds=data["checkin"]["opening"]
-            )
-        else:
-            self.checkin_start = None
-            self.ignored_events.append("checkin_start")
-        if data["checkin"]["closing"] != 0:
-            self.checkin_stop: datetime = tournament_start - timedelta(
-                seconds=data["checkin"]["closing"]
-            )
-        else:
-            self.checkin_stop = None
-            self.ignored_events.append("checkin_stop")
-        self.ruleset_channel: discord.TextChannel = guild.get_channel(data["channels"]["ruleset"])
-        self.game_role: discord.Role = (
-            guild.get_role(data["roles"]["player"]) or guild.default_role
+
+        # Misc settings
+        self.settings = Settings(data)
+
+        # Registrations and check-in events
+        self.register = RegisterEvent(
+            self,
+            data["register"]["opening"],
+            data["register"]["second_opening"],
+            data["register"]["closing"],
         )
-        self.baninfo: str = data["baninfo"]
-        self.ranking: dict = data["ranking"]
-        self.stages: list = data["stages"]
-        self.counterpicks: list = data["counterpicks"]
-        self.phase = "pending"  # can be multiple values:
-        # "pending": initial value, when the tournament is registered
-        # "register": when registration/checkin is active
-        # "awaiting": registration is done, participants are ready, waiting for upload and start
-        # "ongoing": tournament started, also called the "high panic and RAM usage moment"
-        # "finished": tournament ended. not even sure if it's possible, since tournament is deleted
-        self.register_phase = "pending" if self.register_start else "manual"  # can be:
-        # "manual": no opening time provided, waiting for user
-        # "pending": awaiting first registration start
-        # "ongoing": active, first or second phase, or even manual
-        # "onhold": done once, but there's still a scheduled opening time (most likely two-stage)
-        # "done": ended, no more opening scheduled
-        self.checkin_phase = "pending" if self.checkin_start else "manual"
-        # same as above (yes "onhold" too, there could be a first manual start)
-        self.register_message: Optional[discord.Message] = None  # message being updated
-        # list of timedeltas for checkin reminders, associated to whether we should send DMs or not
-        # timedeltas are substracted from checkin_end (ex: 10 min before checkin ending)
-        self.checkin_reminders: List[Tuple[int, bool]] = []
+        self.checkin = CheckinEvent(self, data["checkin"]["opening"], data["checkin"]["closing"])
+
         # loop task things
         self.lock = asyncio.Lock()
         self.task: Optional[asyncio.Task] = None
         self.task_errors = 0
+
+        # Other values that have to be initialized
+        self.phase = Phase.PENDING  # main tournament phase
         self.top_8 = {
             "winner": {"top8": None, "bo5": None},
             "loser": {"top8": None, "bo5": None},
         }
-        # self.debug_task = asyncio.get_event_loop().create_task(self.debug_loop_task())
-        self.matches_to_announce: List[str] = []  # matches to announce in the queue channel
         self.cancelling = False  # see Tournament.__del__ and Match.__del__
-        # 5 min cooldown on ranking fetch (use saved one instead)
-        self.last_ranking_fetch: Optional[datetime] = None
+        self.buttons = Buttons(self)  # Register message buttons, saves times to build them once
+        self.mentions = (
+            discord.AllowedMentions(roles=[self.roles.game]) if self.roles.game else None
+        )
 
     def __repr__(self):
         return (
@@ -1460,10 +1317,6 @@ class Tournament:
         self.cancelling = True
         if self.task:
             self.stop_loop_task()
-        # try:
-        #     self.debug_task.cancel()
-        # except AttributeError:
-        #     pass
         shutil.rmtree(
             cog_data_path(None, raw_name="Tournaments") / "ranking" / str(self.guild.id),
             ignore_errors=True,
@@ -1499,7 +1352,7 @@ class Tournament:
         streamers = data.pop("streamers")
         winner_categories = data.pop("winner_categories")
         loser_categories = data.pop("loser_categories")
-        phase = data.pop("phase")
+        phase = Phase(data.pop("phase"))
         register = data.pop("register")
         checkin = data.pop("checkin")
         ignored_events = data.pop("ignored_events")
@@ -1516,7 +1369,7 @@ class Tournament:
             cog_version=cog_version,
             data=config_data,
         )
-        if phase == "ongoing":
+        if phase == Phase.ONGOING:
             await tournament._get_top8()
         tournament.participants = list(
             filter(
@@ -1550,7 +1403,7 @@ class Tournament:
                             f"[Guild {guild.id}] Can't delete set channel #{match.set}.",
                             exc_info=e,
                         )
-                    await tournament.to_channel.send(
+                    await tournament.channels.to.send(
                         _(":information_source: Set {match} cancelled, both players left.").format(
                             set=match.set
                         )
@@ -1561,7 +1414,7 @@ class Tournament:
                 if player is None:
                     await tournament.destroy_player(data[f"player{i}"])
                     await match.disqualify(data[f"player{i}"])
-                    await tournament.to_channel.send(
+                    await tournament.channels.to.send(
                         _(
                             ":information_source: Set {set} finished, "
                             "player with ID {player} can't be found."
@@ -1579,17 +1432,28 @@ class Tournament:
             filter(None, [guild.get_channel(x) for x in loser_categories])
         )
         tournament.phase = phase
-        tournament.register_phase = register
-        tournament.checkin_phase = checkin
+        tournament.register.phase = EventPhase(register)
+        tournament.checkin.phase = EventPhase(checkin)
+        tournament.checkin.reminders = checkin_reminders
         tournament.ignored_events = ignored_events
-        tournament.checkin_reminders = checkin_reminders
-        if register_message_id and tournament.register_channel:
-            try:
-                message = await tournament.register_channel.fetch_message(register_message_id)
-            except discord.NotFound:
-                pass
-            else:
-                tournament.register_message = message
+        if register_message_id:
+            for channel in (tournament.channels.register, tournament.channels.announcements):
+                if not channel:
+                    continue
+                try:
+                    message = await channel.fetch_message(register_message_id)
+                except discord.NotFound:
+                    pass
+                else:
+                    tournament.register.message = message
+                    break
+        if len(tournament.participants) > 0:
+            tournament.buttons.unregister.disabled = False
+        if tournament.register.phase == EventPhase.ONGOING:
+            tournament.buttons.register.disabled = False
+            tournament.buttons.unregister.disabled = False
+        if tournament.checkin.phase == EventPhase.ONGOING:
+            tournament.buttons.checkin.disabled = False
         return tournament
 
     def to_dict(self) -> dict:
@@ -1616,11 +1480,11 @@ class Tournament:
             "loser_categories": [x.id for x in self.loser_categories],
             "phase": self.phase,
             "tournament_type": self.tournament_type,
-            "register": self.register_phase,
-            "checkin": self.checkin_phase,
-            "checkin_reminders": self.checkin_reminders,
+            "register": self.register.phase,
+            "checkin": self.checkin.phase,
+            "checkin_reminders": self.checkin.reminders,
             "ignored_events": self.ignored_events,
-            "register_message_id": self.register_message.id if self.register_message else None,
+            "register_message_id": self.register.message.id if self.register.message else None,
         }
         return data
 
@@ -1638,12 +1502,12 @@ class Tournament:
         Return a list of roles that should have access to the temporary channels.
         """
         allowed_roles = []
-        if self.to_role is not None:
-            allowed_roles.append(self.to_role)
-        if self.streamer_role is not None:
-            allowed_roles.append(self.streamer_role)
-        if self.tester_role is not None:
-            allowed_roles.append(self.tester_role)
+        if self.roles.to is not None:
+            allowed_roles.append(self.roles.to)
+        if self.roles.streamer is not None:
+            allowed_roles.append(self.roles.streamer)
+        if self.roles.tester is not None:
+            allowed_roles.append(self.roles.tester)
         return allowed_roles
 
     # some common utils
@@ -1665,11 +1529,14 @@ class Tournament:
         # it's pretty common to have some events with the same datetime, and the loop only runs
         # one event per iteration, so we place them in a logical order here
         events = {
-            "register_start": (self.register_start, self.register_phase == "pending"),
-            "checkin_stop": (self.checkin_stop, self.checkin_phase == "ongoing"),
-            "checkin_start": (self.checkin_start, self.checkin_phase == "pending"),
-            "register_second_start": (self.register_second_start, self.register_phase == "onhold"),
-            "register_stop": (self.register_stop, self.register_phase == "ongoing"),
+            "register_start": (self.register.start, self.register.phase == EventPhase.PENDING),
+            "checkin_stop": (self.checkin.stop, self.checkin.phase == EventPhase.ONGOING),
+            "checkin_start": (self.checkin.start, self.checkin.phase == EventPhase.PENDING),
+            "register_second_start": (
+                self.register.second_start,
+                self.register.phase == EventPhase.ON_HOLD,
+            ),
+            "register_stop": (self.register.stop, self.register.phase == EventPhase.ONGOING),
         }
         for name, (date, condition) in events.items():
             if date is None:
@@ -1689,34 +1556,38 @@ class Tournament:
     def _valid_dates(self):
         now = datetime.now(self.tz)
         dates = [
-            (_("Registration start"), self.register_start, "register_start"),
-            (_("Registration second start"), self.register_second_start, "register_second_start"),
-            (_("Registration stop"), self.register_stop, "register_stop"),
-            (_("Check-in start"), self.checkin_start, "checkin_start"),
-            (_("Check-in stop"), self.checkin_stop, "checkin_stop"),
+            (_("Registration start"), self.register.start, "register_start"),
+            (_("Registration second start"), self.register.second_start, "register_second_start"),
+            (_("Registration stop"), self.register.stop, "register_stop"),
+            (_("Check-in start"), self.checkin.start, "checkin_start"),
+            (_("Check-in stop"), self.checkin.stop, "checkin_stop"),
         ]
         passed = [(x, y, z) for x, y, z in dates if y and now > y]
         if passed:
             raise RuntimeError(_("Some dates are passed."), passed)
         if (
-            self.register_start
-            and self.register_stop
-            and not self.register_start < self.register_stop
+            self.register.start
+            and self.register.stop
+            and not self.register.start < self.register.stop
         ):
             dates = [dates[0] + dates[2]]
             raise RuntimeError(_("Registration start and stop times conflict."), dates)
-        if self.register_second_start and (
-            (self.register_start and not self.register_start < self.register_second_start)
-            or (self.register_stop and not self.register_second_start < self.register_stop)
+        if self.register.second_start and (
+            (self.register.start and not self.register.start < self.register.second_start)
+            or (self.register.stop and not self.register.second_start < self.register.stop)
         ):
             dates = dates[:3]
             raise RuntimeError(_("Second registration start time conflict."), dates)
-        if self.checkin_start and self.checkin_stop and not self.checkin_start < self.checkin_stop:
+        if self.checkin.start and self.checkin.stop and not self.checkin.start < self.checkin.stop:
             dates = dates[3:]
             raise RuntimeError(_("Check-in start and stop times conflict."), dates)
 
     async def _get_available_category(self, dest: str, inc: int = 0):
-        position = self.category.position + 1 if self.category else len(self.guild.categories)
+        position = (
+            self.channels.category.position + 1
+            if self.channels.category
+            else len(self.guild.categories)
+        )
         if dest == "winner":
             categories = self.winner_categories
         else:
@@ -1770,16 +1641,16 @@ class Tournament:
         if top8["loser"]["top8"] > -1:
             top8["loser"]["top8"] = -1
         # calculate bo5 start
-        if self.start_bo5 > 0:
-            top8["winner"]["bo5"] = top8["winner"]["top8"] + self.start_bo5 - 1
-        elif self.start_bo5 in (0, 1):
-            top8["winner"]["bo5"] = top8["winner"]["top8"] + self.start_bo5
+        if self.settings.start_bo5 > 0:
+            top8["winner"]["bo5"] = top8["winner"]["top8"] + self.settings.start_bo5 - 1
+        elif self.settings.start_bo5 in (0, 1):
+            top8["winner"]["bo5"] = top8["winner"]["top8"] + self.settings.start_bo5
         else:
-            top8["winner"]["bo5"] = top8["winner"]["top8"] + self.start_bo5 + 1
-        if self.start_bo5 > 1:
+            top8["winner"]["bo5"] = top8["winner"]["top8"] + self.settings.start_bo5 + 1
+        if self.settings.start_bo5 > 1:
             top8["loser"]["bo5"] = min(rounds)  # top 3 is loser final anyway
         else:
-            top8["loser"]["bo5"] = top8["loser"]["top8"] - self.start_bo5
+            top8["loser"]["bo5"] = top8["loser"]["top8"] - self.settings.start_bo5
         # avoid aberrant values
         if top8["winner"]["bo5"] > max(rounds):
             top8["winner"]["bo5"] = max(rounds)
@@ -1799,7 +1670,7 @@ class Tournament:
         *sets: str
             The list of affected sets.
         """
-        await self.to_channel.send(
+        await self.channels.to.send(
             _(
                 ":information_source: Changes were detected on the upstream bracket.\n"
                 "This may result in multiple sets ending, relaunch or cancellation.\n"
@@ -1959,11 +1830,16 @@ class Tournament:
         raise RuntimeError("Provide either channel or discord_id")
 
     # registration and check-in related methods
-    def _prepare_register_message(self):
-        if self.checkin_start:
+    def _prepare_register_message(self) -> Union[str, View]:
+        view = View()
+        view.add_item(self.buttons.register)
+        view.add_item(self.buttons.unregister)
+        view.add_item(self.buttons.checkin)
+        view.add_item(self.buttons.bracket)
+        if self.checkin.start:
             checkin = _(":white_small_square: __Check-in:__ From {begin} to {end}\n").format(
-                begin=self._format_datetime(self.checkin_start, True),
-                end=self._format_datetime(self.checkin_stop or self.tournament_start, True),
+                begin=self._format_datetime(self.checkin.start, True),
+                end=self._format_datetime(self.checkin.stop or self.tournament_start, True),
             )
         else:
             checkin = ""
@@ -1975,31 +1851,67 @@ class Tournament:
             limit = _("{registered} participants registered *(no limit set)*").format(
                 registered=len(self.participants)
             )
-        if self.ruleset_channel:
+        if self.channels.ruleset:
             ruleset = _(":white_small_square: __Ruleset:__ See {channel}\n").format(
-                channel=self.ruleset_channel.mention
+                channel=self.channels.ruleset.mention
             )
         else:
             ruleset = ""
-        return _(
+        register_status = _("Registrations are currently **{status}**.").format(
+            status=_("open") if self.register.phase == EventPhase.ONGOING else _("closed")
+        )
+        checkin_status = _("Check-in is currently **{status}**.").format(
+            status=_("open") if self.checkin.phase == EventPhase.ONGOING else _("closed")
+        )
+        content = _(
+            "{role}\n"
             "**{t.name}** | *{t.game}*\n\n"
             ":white_small_square: __Date:__ {date}\n"
             ":white_small_square: __Register:__ Closing at {time}\n"
             "{checkin}"
             ":white_small_square: __Participants:__ {limit}\n"
-            ":white_small_square: __Bracket:__ {t.url}\n"
             "{ruleset}\n"
-            "You can register/unregister to this tournament with "
-            "the `{t.bot_prefix}in` and `{t.bot_prefix}out` commands.\n"
+            "{register_status}\n"
+            "{checkin_status}\n\n"
+            "You can register/unregister to this tournament using the buttons below.\n"
             "*Note: your Discord username will be used in the bracket.*"
         ).format(
+            role=self.roles.game.mention if self.roles.game != self.guild.default_role else "",
             t=self,
             date=self._format_datetime(self.tournament_start),
-            time=self._format_datetime(self.register_stop or self.tournament_start, True),
+            time=self._format_datetime(self.register.stop or self.tournament_start, True),
             checkin=checkin,
             limit=limit,
             ruleset=ruleset,
+            register_status=register_status,
+            checkin_status=checkin_status,
         )
+        return content, view
+
+    async def _update_register_message(self):
+        new_content = self._prepare_register_message()
+        if not self.register.message:
+            channel = self.channels.register or self.channels.announcements
+            try:
+                self.register.message = await channel.send(
+                    content=new_content[0], allowed_mentions=self.mentions, view=new_content[1]
+                )
+            except discord.HTTPException:
+                log.error(f"[Guild {self.guild.id}] Cannot send register message", exc_info=True)
+            await self.save()
+            return
+        if new_content != self.register.message.content:
+            try:
+                await self.register.message.edit(content=new_content[0], view=new_content[1])
+            except discord.NotFound as e:
+                log.warning(
+                    f"[Guild {self.guild.id}] Regiser message lost. Recovering...",
+                    exc_info=e,
+                )
+                self.register.message = None
+                await self._update_register_message()
+            else:
+                await self.save()
 
     async def start_registration(self, second=False):
         """
@@ -2011,94 +1923,36 @@ class Tournament:
             If this is the second time registrations are started (will not annouce the same
             message, and keep updating the same pinned message). Defaults to `False`.
         """
-        self.phase = "register"
-        self.register_phase = "ongoing"
-        if self.register_channel:
-            if not second:
-                self.register_message = await self.register_channel.send(
-                    self._prepare_register_message()
-                )
-                await self.register_message.pin()
-            await self.register_channel.set_permissions(
-                self.game_role, read_messages=True, send_messages=True
-            )
-        if self.announcements_channel:
+        self.phase = Phase.REGISTER
+        self.register.phase = EventPhase.ONGOING
+        self.buttons.register.disabled = False
+        self.buttons.unregister.disabled = False
+        await self._update_register_message()
+        if self.channels.announcements and self.channels.register:
+            # Let's send a second message anyway
             if second:
                 message = _(
                     "{role} Registrations for the tournament **{tournament}** "
-                    "are now re-opened{channel} until {date}!"
+                    "are now re-opened in {channel} until {date}!"
                 ).format(
-                    role=self.game_role.mention
-                    if self.game_role != self.guild.default_role
+                    role=self.roles.game.mention
+                    if self.roles.game != self.guild.default_role
                     else "",
                     tournament=self.name,
-                    channel=_(" in {channel}").format(channel=self.register_channel.mention)
-                    if self.register_channel
-                    else "",
-                    date=self._format_datetime(self.register_stop or self.tournament_start),
+                    channel=self.channels.register.mention,
+                    date=self._format_datetime(self.register.stop or self.tournament_start),
                 )
-            elif self.register_channel:
+            else:
                 message = _(
-                    "{role} Registrations for the tournament **{tournament}** are now opened "
-                    "in {channel}! See the pinned message there for details.\n"
+                    "Registrations for the tournament **{tournament}** are now opened "
+                    "in {channel}! Click on the buttons there to register.\n"
                     ":calendar_spiral: This tournament will take place on **{date}**."
                 ).format(
                     tournament=self.name,
-                    channel=self.register_channel.mention,
-                    role=self.game_role.mention
-                    if self.game_role != self.guild.default_role
-                    else "",
+                    channel=self.channels.register.mention,
                     date=self._format_datetime(self.tournament_start),
                 )
-            else:
-                if self.checkin_start:
-                    checkin = _(
-                        ":white_small_square: __Check-in:__ From {begin} to {end}\n"
-                    ).format(
-                        begin=self._format_datetime(self.checkin_start, True),
-                        end=self._format_datetime(
-                            self.checkin_stop or self.tournament_start, True
-                        ),
-                    )
-                else:
-                    checkin = ""
-                if self.limit:
-                    limit = _("Limited to {limit} particiapants.").format(
-                        registered=len(self.participants), limit=self.limit
-                    )
-                else:
-                    limit = _("No limit set.")
-                if self.ruleset_channel:
-                    ruleset = _(":white_small_square: __Ruleset:__ See {channel}\n").format(
-                        channel=self.ruleset_channel.mention
-                    )
-                else:
-                    ruleset = ""
-                message = _(
-                    "{role} Registrations for the tournament **{t.name}** are now opened!\n"
-                    ":calendar_spiral: This tournament will take place on **{date}**.\n\n"
-                    ":white_small_square: __Register:__ Closing at {time}\n"
-                    "{checkin}"
-                    ":white_small_square: __Participants:__ {limit}\n"
-                    ":white_small_square: __Bracket:__ {t.url}\n"
-                    "{ruleset}\n"
-                    "You can register/unregister to this tournament with "
-                    "the `{t.bot_prefix}in` and `{t.bot_prefix}out` commands.\n"
-                    "*Note: your Discord username will be used in the bracket.*"
-                ).format(
-                    t=self,
-                    role=self.game_role.mention
-                    if self.game_role != self.guild.default_role
-                    else "",
-                    date=self._format_datetime(self.tournament_start),
-                    time=self._format_datetime(self.register_stop or self.tournament_start, True),
-                    register=self._format_datetime(self.register_start or self.tournament_start),
-                    checkin=checkin,
-                    limit=limit,
-                    ruleset=ruleset,
-                )
-            mentions = discord.AllowedMentions(roles=[self.game_role]) if self.game_role else None
-            await self.announcements_channel.send(message, allowed_mentions=mentions)
+            await self.channels.announcements.send(message, allowed_mentions=self.mentions)
         await self.save()
 
     async def end_registration(self):
@@ -2106,30 +1960,18 @@ class Tournament:
         Close the registrations and save.
 
         If the check-in is also done, participants will be seeded and uploaded.
-
-        Parameters
-        ----------
-        background: bool
-            If the function is called in a background loop. If `True`, the bot will do actions
-            knowing there's no context command (for now, means a background seed and upload).
-            Defaults to `False`.
         """
-        if self.register_second_start and self.register_second_start > datetime.now(self.tz):
-            self.register_phase = "onhold"
+        if self.register.second_start and self.register.second_start > datetime.now(self.tz):
+            self.register.phase = EventPhase.ON_HOLD
         else:
-            self.register_phase = "done"
-        if self.register_channel:
-            if self.register_message:
-                await self.register_message.edit(content=self._prepare_register_message())
-            await self.register_channel.set_permissions(
-                self.game_role, read_messages=True, send_messages=False
-            )
-            await self.register_channel.send(_("Registration ended."))
-        elif self.announcements_channel:  # no registration channel, so we announce somewhere else
-            await self.announcements_channel.send(_("Registration ended."))
+            self.register.phase = EventPhase.DONE
+        self.buttons.register.disabled = True
+        await self._update_register_message()
+        channel = self.channels.register or self.channels.announcements
+        await channel.send(_("Registration ended."))
         if not self.next_scheduled_event():
             # no more scheduled events, upload and wait for start
-            self.phase = "awaiting"
+            self.phase = Phase.AWAITING
             await self._background_seed_and_upload()
         await self.save()
 
@@ -2139,8 +1981,9 @@ class Tournament:
 
         This will also calculate and fill the `checkin_reminders` list.
         """
+        self.buttons.checkin.disabled = False
         if not self.participants:
-            self.checkin_phase = "done"
+            self.checkin.phase = EventPhase.DONE
             message = _("Cancelled check-in start since there are currently no participants. ")
             if not self.next_scheduled_event:
                 # no more scheduled events, upload and wait for start
@@ -2149,61 +1992,41 @@ class Tournament:
                 message += _(
                     "Registrations are still ongoing, and new participants are pre-checked."
                 )
-            await self.to_channel.send(message)
+            await self.channels.to.send(message)
             return
         self.phase = "register"
-        self.checkin_phase = "ongoing"
+        self.checkin.phase = EventPhase.ONGOING
         message = _(
             "{role} The check-in for **{t.name}** has started!\n"
-            "You have to confirm your presence by typing `{t.bot_prefix}in` here{end_time}.\n"
-            "If you want to unregister, type `{t.bot_prefix}out` instead.\n\n"
+            "You have to confirm your presence by clicking the button above{end_time}.\n"
+            'If you want to unregister, click the "Unregister" button instead.\n\n'
             ":warning: If you don't check in time, you will be unregistered!"
         ).format(
             t=self,
-            role=self.participant_role.mention,
+            role=self.roles.participant.mention,
             end_time=_(" until {}").format(
-                self._format_datetime(self.checkin_stop, only_time=True)
+                self._format_datetime(self.checkin.stop, only_time=True)
             )
-            if self.checkin_stop
+            if self.checkin.stop
             else "",
         )
-        mentions = discord.AllowedMentions(roles=[self.participant_role])
-        if self.checkin_channel:
-            message = await self.checkin_channel.send(message, allowed_mentions=mentions)
-            await message.pin()
-            await self.checkin_channel.set_permissions(
-                self.participant_role, read_messages=True, send_messages=True
-            )
-        elif self.announcements_channel:
-            await self.announcements_channel.send(message, allowed_mentions=mentions)
-        if self.register_channel and self.register_phase == "ongoing":
-            await self.register_channel.send(
-                _(
-                    ":information_source: Check-in started{channel}!\n"
-                    "You can still register here until {end_time}. "
-                    "Anyone registering as of now will already be checked in."
-                ).format(
-                    channel=_(" in {}").format(self.checkin_channel.mention)
-                    if self.checkin_channel
-                    else "",
-                    end_time=self._format_datetime(
-                        self.register_stop or self.tournament_start, only_time=True
-                    ),
-                )
-            )
-        if self.checkin_stop:
-            duration = (self.checkin_stop - datetime.now(self.tz)).total_seconds()
+        await self._update_register_message()
+        mentions = discord.AllowedMentions(roles=[self.roles.participant])
+        channel = self.channels.register or self.channels.announcements
+        message = await channel.send(message, allowed_mentions=mentions)
+        if self.checkin.stop:
+            duration = (self.checkin.stop - datetime.now(self.tz)).total_seconds()
             if duration < 60:
                 # don't start the check-in only to end it within a minute
                 self.ignored_events.append("checkin_stop")
             else:
                 duration //= 60  # number of minutes
                 if duration >= 10:
-                    self.checkin_reminders.append((5, False))
+                    self.checkin.reminders.append((5, False))
                 if duration >= 20:
-                    self.checkin_reminders.append((10, True))
+                    self.checkin.reminders.append((10, True))
                 if duration >= 40:
-                    self.checkin_reminders.append((15, False))
+                    self.checkin.reminders.append((15, False))
         await self.save()
 
     async def call_check_in(self, with_dm: bool = False):
@@ -2220,20 +2043,27 @@ class Tournament:
             .. caution:: Prevent using this if there are too many unchecked members, as Discord
                 started to ban bots sending too many DMs.
         """
-        if not self.checkin_channel:
-            return
-        if not self.checkin_stop:
+        channel = self.channels.register or self.channels.announcements
+        if not self.checkin.stop:
             return
         members = [x for x in self.participants if not x.checked_in]
         if not members:
             return
-        await self.checkin_channel.send(
+        if self.checkin.last_reminder_message:
+            try:
+                await self.checkin.last_reminder_message.delete()
+            except discord.HTTPException:
+                log.error(
+                    f"Can't remove last check-in call message for guild {self.guild.id}",
+                    exc_info=True,
+                )
+        self.checkin.last_reminder_message = await channel.send(
             _(
                 ":clock1: **Check-in reminder!**\n\n- {members}\n\n"
                 "You have until {end_time} to check-in, or you'll be unregistered."
             ).format(
                 members="\n- ".join([x.mention for x in members]),
-                end_time=self._format_datetime(self.checkin_stop, only_time=True),
+                end_time=self._format_datetime(self.checkin.stop, only_time=True),
             )
         )
         if with_dm:
@@ -2245,7 +2075,7 @@ class Tournament:
                             "for checking-in to the tournament **{tournament}**."
                         ).format(
                             time=round(
-                                (self.checkin_stop - datetime.now(self.tz)).total_seconds() / 60
+                                (self.checkin.stop - datetime.now(self.tz)).total_seconds() / 60
                             ),
                             tournament=self.name,
                         )
@@ -2258,21 +2088,15 @@ class Tournament:
         Close the check-in, unregister unchecked members (attempts to DM) and save.
 
         If the registrations are also done, participants will be seeded and uploaded.
-
-        Parameters
-        ----------
-        background: bool
-            If the function is called in a background loop. If `True`, the bot will do actions
-            knowing there's no context command (for now, means a background seed and upload).
-            Defaults to `False`.
         """
-        self.checkin_phase = "done"
+        self.checkin.phase = EventPhase.DONE
+        self.buttons.checkin.disabled = True
         to_remove = []
         failed = []
         for member in filter(lambda x: x.checked_in is False, self.participants):
             try:
                 await member.remove_roles(
-                    self.participant_role, reason=_("Participant not checked.")
+                    self.roles.participant, reason=_("Participant not checked.")
                 )
             except discord.HTTPException as e:
                 log.warn(
@@ -2302,16 +2126,11 @@ class Tournament:
             text += _("\n\n:warning: {} participants couldn't have their roles removed:\n")
             text += " ".join([x.mention for x in failed])
         for page in pagify(text):
-            await self.to_channel.send(page)
-        if self.checkin_channel:
-            await self.checkin_channel.set_permissions(
-                self.game_role, read_messages=True, send_messages=False
-            )
-            await self.checkin_channel.send(
-                _("Check-in ended. Participants who didn't check are unregistered.")
-            )
-        elif self.announcements_channel:
-            await self.announcements_channel.send(
+            await self.channels.to.send(page)
+        await self._update_register_message()
+        channel = self.channels.register or self.channels.announcements
+        if channel:
+            await channel.send(
                 _("Check-in ended. Participants who didn't check are unregistered.")
             )
         if not self.next_scheduled_event:
@@ -2340,12 +2159,12 @@ class Tournament:
         """
         if self.limit and len(self.participants) >= self.limit:
             raise RuntimeError("Limit reached.")
-        await member.add_roles(self.participant_role, reason=_("Registering to tournament."))
+        await member.add_roles(self.roles.participant, reason=_("Registering to tournament."))
         participant = self.participant_object(member, self)
-        if self.checkin_phase == "ongoing" or self.checkin_phase == "done":
+        if self.checkin.phase == EventPhase.ONGOING or self.checkin.phase == EventPhase.DONE:
             # registering during or after check-in, count as already checked
             participant.checked_in = True
-        if not (self.ranking["league_name"] and self.ranking["league_id"]) or (
+        if not (self.settings.ranking["league_name"] and self.settings.ranking["league_id"]) or (
             self.participants and self.participants[-1].player_id is not None
         ):
             # either there's no ranking, in which case we always upload on register, or
@@ -2360,20 +2179,14 @@ class Tournament:
         log.debug(f"[Guild {self.guild.id}] Player {member} registered.")
         if (
             self.limit
-            and self.autostop_register
-            and self.register_phase == "ongoing"
+            and self.settings.autostop_register
+            and self.register.phase == EventPhase.ONGOING
             and len(self.participants) >= self.limit
         ):
             await self.end_registration()
         await self.save()
         if not send_dm:
             return
-        try:
-            await member.send(
-                _("You are now registered to the tournament **{name}**!").format(name=self.name)
-            )
-        except discord.HTTPException:
-            pass
 
     async def unregister_participant(self, member: discord.Member, send_dm: bool = True):
         """
@@ -2402,7 +2215,7 @@ class Tournament:
             if participant.match is not None:
                 await participant.match.disqualify(participant)
         await participant.remove_roles(
-            self.participant_role, reason=_("Unregistering from tournament.")
+            self.roles.participant, reason=_("Unregistering from tournament.")
         )
         del self.participants[i]
         await self.save()
@@ -2422,7 +2235,10 @@ class Tournament:
         ) < datetime.now(self.tz):
             # 5 min cooldown on ranking fetch
             return
-        league_name, league_id = self.ranking["league_name"], self.ranking["league_id"]
+        league_name, league_id = (
+            self.settings.ranking["league_name"],
+            self.settings.ranking["league_id"],
+        )
         headers = {
             "User-Agent": (
                 f"Red-DiscordBot {red_version} Laggrons-Dumb-Cogs/tournaments {self.cog_version}"
@@ -2491,7 +2307,7 @@ class Tournament:
         """
         prev_participants = copy(self.participants)
         try:
-            if self.ranking["league_name"] and self.ranking["league_id"]:
+            if self.settings.ranking["league_name"] and self.settings.ranking["league_id"]:
                 await self._fetch_braacket_ranking_info()
                 await self._seed_participants()
             if remove_unchecked is True:
@@ -2516,7 +2332,7 @@ class Tournament:
                 f"[Guild {self.guild.id}] Can't seed and upload participants (background).",
                 exc_info=e,
             )
-            await self.to_channel.send(
+            await self.channels.to.send(
                 _(
                     ":warning: An issue occured when trying to seed and upload participants "
                     "after registration/checkin close. Try running it manually with `{prefix}"
@@ -2536,8 +2352,8 @@ class Tournament:
         *   The queue channel
         """
         scores_channel = (
-            _(" in {channel}").format(channel=self.scores_channel.mention)
-            if self.scores_channel
+            _(" in {channel}").format(channel=self.channels.scores.mention)
+            if self.channels.scores
             else ""
         )
         announcements_view = discord.ui.View()
@@ -2550,33 +2366,33 @@ class Tournament:
         )
         announcements_view.add_item(bracket_button)
         scores_view.add_item(bracket_button)
-        if self.ruleset_channel:
+        if self.channels.ruleset:
             ruleset_button = discord.ui.Button(
                 style=discord.ButtonStyle.link,
                 label=_("Ruleset"),
                 emoji="\N{BLUE BOOK}",
-                url=channel_link(self.ruleset_channel),
+                url=channel_link(self.channels.ruleset),
             )
             announcements_view.add_item(ruleset_button)
             scores_view.add_item(ruleset_button)
-        if self.scores_channel:
+        if self.channels.scores:
             scores_button = discord.ui.Button(
                 style=discord.ButtonStyle.link,
                 label=_("Score entry"),
                 emoji="\N{MEMO}",
-                url=channel_link(self.scores_channel),
+                url=channel_link(self.channels.scores),
             )
             announcements_view.add_item(scores_button)
-        if self.queue_channel:
+        if self.channels.queue:
             queue_button = discord.ui.Button(
                 style=discord.ButtonStyle.link,
                 label=_("Sets"),
                 emoji="\N{CLIPBOARD}\N{VARIATION SELECTOR-16}",
-                url=channel_link(self.queue_channel),
+                url=channel_link(self.channels.queue),
             )
             announcements_view.add_item(queue_button)
         messages = {
-            self.announcements_channel: (
+            self.channels.announcements: (
                 _(
                     "The tournament **{tournament}** has started!\n\n"
                     ":white_small_square: Bracket link:`{prefix}bracket`\n"
@@ -2593,19 +2409,19 @@ class Tournament:
                 ).format(
                     tournament=self.name,
                     bracket=self.url,
-                    participant=self.participant_role.mention,
+                    participant=self.roles.participant.mention,
                     scores_channel=scores_channel,
                     delay=_(
                         ":timer: **You will automatically be disqualified if "
                         "you don't talk in your channel within the first {delay}.**"
-                    ).format(delay=humanize_timedelta(timedelta=self.delay))
-                    if self.delay
+                    ).format(delay=humanize_timedelta(timedelta=self.settings.delay))
+                    if self.settings.delay
                     else "",
                     prefix=self.bot_prefix,
                 ),
                 announcements_view,
             ),
-            self.scores_channel: (
+            self.channels.scores: (
                 _(
                     ":information_source: Management of the scores for the "
                     "tournament **{tournament}** is automated:\n"
@@ -2616,7 +2432,7 @@ class Tournament:
                 ).format(tournament=self.name, url=self.url, prefix=self.bot_prefix),
                 scores_view,
             ),
-            self.queue_channel: (
+            self.channels.queue: (
                 _(
                     ":information_source: **Set launch is automated.** "
                     "Please follow the instructions in this channel.\n"
@@ -2630,8 +2446,8 @@ class Tournament:
                     dq=_(
                         ":timer: **You will be disqualified if you were not "
                         "active in your channel** within {delay} after the set launch."
-                    ).format(delay=humanize_timedelta(timedelta=self.delay))
-                    if self.delay
+                    ).format(delay=humanize_timedelta(timedelta=self.settings.delay))
+                    if self.settings.delay
                     else "",
                 ),
                 None,
@@ -2648,16 +2464,16 @@ class Tournament:
     # now this is the loop task stuff, the one that runs during the tournament (not other phases)
     async def announce_sets(self):
         """
-        Wraps the messages stored in `matches_to_announce` and sends them in the `queue_channel`.
+        Wraps the messages stored in `matches_to_announce` and sends them in the `channels.queue`.
         """
-        if not self.queue_channel:
+        if not self.channels.queue:
             return
         message = ""
         for match in self.matches_to_announce:
             message += match + "\n"
         self.matches_to_announce = []
         for page in pagify(message):
-            await self.queue_channel.send(
+            await self.channels.queue.send(
                 page, allowed_mentions=discord.AllowedMentions(users=False)
             )
 
@@ -2673,7 +2489,12 @@ class Tournament:
         coros = []
         # islice will limit the output to 20. see this as list[:20] but with a generator
         for i, match in enumerate(
-            islice(filter(lambda x: x.status == "pending" and x.channel is None, self.matches), 20)
+            islice(
+                filter(
+                    lambda x: x.phase == MatchPhase.PENDING and x.channel is None, self.matches
+                ),
+                20,
+            )
         ):
             # we get the category in the iteration instead of the gather
             # because if all functions call _get_available_category at the same time,
@@ -2702,7 +2523,7 @@ class Tournament:
         You must call `update_streamer_list` first.
         """
         match: Match
-        for match in filter(lambda x: x.streamer and x.on_hold, self.matches):
+        for match in filter(lambda x: x.streamer and x.phase == MatchPhase.ON_HOLD, self.matches):
             if match.streamer.current_match and match.streamer.current_match.id == match.id:
                 await match.start_stream()
 
@@ -2713,14 +2534,14 @@ class Tournament:
         """
         match: Match
         for i, match in filter(
-            lambda x: x[1].status != "pending" and x[1].channel is not None,
+            lambda x: x[1].phase != MatchPhase.PENDING and x[1].channel is not None,
             enumerate(self.matches),
         ):
-            if self.delay and match.status == "ongoing":
-                if not match.checked_dq and match.duration > self.delay:
+            if self.settings.delay and match.phase == MatchPhase.ONGOING:
+                if not match.checked_dq and match.duration > self.settings.delay:
                     log.debug(f"Checking inactivity for match {match.set}")
                     await match.check_inactive()
-            elif match.status == "finished":
+            elif match.phase == MatchPhase.DONE:
                 if match.channel and (match.end_time + timedelta(minutes=5)) < datetime.now(
                     self.tz
                 ):
@@ -2740,10 +2561,10 @@ class Tournament:
         """
         match: Match
         for match in filter(
-            lambda x: x.status == "ongoing" and x.channel and not x.on_hold and x.streamer is None,
+            lambda x: x.phase == MatchPhase.ONGOING and x.channel and x.streamer is None,
             self.matches,
         ):
-            max_length = self.time_until_warn["bo5" if match.is_bo5 else "bo3"]
+            max_length = self.settings.time_until_warn["bo5" if match.is_bo5 else "bo3"]
             if match.warned is True:
                 continue
             if not max_length[0]:
@@ -2758,7 +2579,7 @@ class Tournament:
         if self.task_errors >= MAX_ERRORS:
             log.critical(f"[Guild {self.guild.id}] Reached 5 errors, closing the task...")
             try:
-                await self.to_channel.send(
+                await self.channels.to.send(
                     _(
                         ":warning: **Attention**\nMultiple bugs occured within the loop task. "
                         "It is therefore stopped. The bot will stop refreshing informations "
@@ -2847,15 +2668,15 @@ class Tournament:
         so this function will cancel all AFK checks for the matches that are going to have
         players DQed.
         """
-        if self.delay is None:
+        if self.settings.delay is None:
             return
         to_timeout = [
             x
             for x in self.matches
-            if x.status == "ongoing"
+            if x.phase == MatchPhase.ONGOING
             and x.checked_dq is False
             and x.duration is not None
-            and x.duration > self.delay
+            and x.duration > self.settings.delay
             and (x.player1.spoke is False or x.player2.spoke is False)
         ]
         if not to_timeout:
@@ -2866,7 +2687,7 @@ class Tournament:
         )
         for match in to_timeout:
             match.checked_dq = True
-        await self.to_channel.send(
+        await self.channels.to.send(
             _(
                 ":information_source: Task is being resumed after some time. To prevent "
                 "participants being incorrectly marked as AFK, {len} matches' AFK check are "
@@ -3296,20 +3117,17 @@ class Streamer:
                     continue
             match = self.tournament.find_match(match_set=str(_set))[1]
             if match:
-                if match.status == "finished":
+                if match.phase == MatchPhase.DONE:
                     errors[_set] = _("That match is finished.")
                     continue
                 if add is False:
                     continue
                 match.streamer = self
-                if match.status == "ongoing":
+                if match.phase == MatchPhase.ONGOING:
                     # match is ongoing, we have to tell players
-                    if not self.matches:
-                        # first match in the list, no need to interrupt, just send info
-                        match.on_hold = False
-                    else:
+                    if self.matches:
                         # match has to be paused
-                        match.on_hold = True
+                        match.phase = MatchPhase.ON_HOLD
                     await match.stream_queue_add()
             if add:
                 self.matches.append(match or _set)
@@ -3440,16 +3258,15 @@ class Streamer:
                 continue
             match_object = self.tournament.find_match(match_set=str(match))[1]
             if match_object:
-                if match_object.status != "pending":
+                if match_object.phase != MatchPhase.PENDING:
                     continue
                 match_object.streamer = self
-                match_object.on_hold = True
                 matches.append(match_object)
             else:
                 matches.append(match)
         self.matches = matches
         if self.current_match:
-            if self.current_match.status != "finished":
+            if self.current_match.phase != MatchPhase.DONE:
                 return  # wait for it to end
             try:
                 self.matches.remove(self.current_match)

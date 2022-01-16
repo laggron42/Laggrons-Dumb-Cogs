@@ -7,6 +7,7 @@ from redbot.core.i18n import Translator, cog_i18n
 
 from .abc import MixinMeta
 from .utils import only_phase, mod_or_to, prompt_yes_or_no
+from .objects import Phase
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -136,7 +137,7 @@ setup" on most commands. If your tournament is ongoing, it is your job to tell t
         log.info(f"[Guild {guild.id}] Hard reset of the tournament, requested by {ctx.author}.")
         await ctx.send(_("Everything was successfully internally reset."))
 
-    @only_phase("ongoing")
+    @only_phase(Phase.ONGOING)
     @tournamentfix.command(name="resetmatches")
     async def tournamentfix_resetmatches(self, ctx: commands.Context, try_delete: bool = False):
         """
@@ -171,7 +172,7 @@ excluded) by calling the command like this: `[p]tfix resetmatches yes`
             + (_("\n{num} channels couldn't be deleted.").format(num=failed) if failed else "")
         )
 
-    @only_phase("pending", "register", "awaiting")
+    @only_phase(Phase.PENDING, Phase.REGISTER, Phase.AWAITING)
     @tournamentfix.command(name="resetparticipants")
     async def tournamentfix_resetparticipants(
         self, ctx: commands.Context, try_remove: bool = False
@@ -185,7 +186,7 @@ excluded) by calling the command like this: `[p]tfix resetmatches yes`
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
         if try_remove is True:
-            participants = tournament.participants if tournament.participant_role else []
+            participants = tournament.participants if tournament.roles.participant else []
         tournament.participants = []
         await tournament.save()
         if try_remove is False:
@@ -196,7 +197,7 @@ excluded) by calling the command like this: `[p]tfix resetmatches yes`
         async with ctx.typing():
             for participant in participants:
                 try:
-                    await participant.remove_roles(tournament.participant_role)
+                    await participant.remove_roles(tournament.roles.participant)
                 except discord.HTTPException:
                     failed_participants += 1
         await ctx.send(
@@ -210,7 +211,7 @@ excluded) by calling the command like this: `[p]tfix resetmatches yes`
             )
         )
 
-    @only_phase("pending", "register", "awaiting")
+    @only_phase(Phase.PENDING, Phase.REGISTER, Phase.AWAITING)
     @tournamentfix.command(name="registerfromrole")
     async def tournamentfix_registerfromrole(self, ctx: commands.Context, *, role: discord.Role):
         """
@@ -238,7 +239,7 @@ members of that role.
                 ).format(register=len(to_register), total=total, limit=tournament.limit)
             )
             return
-        pre_check = tournament.checkin_phase in ("ongoing", "done")
+        pre_check = tournament.checkin.phase.name.lower() in ("ongoing", "done")
         if not to_register:
             if pre_check is False:
                 await ctx.send(_("No new member to register."))
@@ -314,7 +315,7 @@ to check if this changes, depending on the current phase)
         tournament.limit = data["limit"]
         await ctx.send(_("Tournament name and limit of participants updated."))
 
-    @only_phase("ongoing")
+    @only_phase(Phase.ONGOING)
     @tournamentfix.command(name="pausetask")
     async def tournamentfix_pausetask(self, ctx: commands.Context):
         """
@@ -348,7 +349,7 @@ will be disabled for all ongoing matches at the time of the task pause.
             )
         )
 
-    @only_phase("ongoing")
+    @only_phase(Phase.ONGOING)
     @tournamentfix.command(name="resumetask")
     async def tournamentfix_resumetask(self, ctx: commands.Context):
         """
@@ -385,7 +386,7 @@ will be disabled for all ongoing matches at the time of the task pause.
             await tournament.start_loop_task()
             await ctx.send(_("The loop task was successfully resumed."))
 
-    @only_phase("ongoing")
+    @only_phase(Phase.ONGOING)
     @tournamentfix.command(name="runtaskonce")
     async def tournamentfix_runtaskonce(self, ctx: commands.Context):
         """
@@ -410,7 +411,7 @@ will be disabled for all ongoing matches at the time of the task pause.
         else:
             await ctx.tick()
 
-    @only_phase("ongoing")
+    @only_phase(Phase.ONGOING)
     @tournamentfix.command(name="unlock")
     async def tournamentfix_unlock(self, ctx: commands.Context):
         """

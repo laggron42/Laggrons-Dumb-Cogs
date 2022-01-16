@@ -9,6 +9,7 @@ from redbot.core.i18n import Translator
 
 from .abc import MixinMeta
 from .utils import only_phase, mod_or_to, prompt_yes_or_no
+from .objects import Phase, EventPhase
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -27,30 +28,19 @@ class Registration(MixinMeta):
             if tournament.phase in ("ongoing", "finished"):
                 continue  # Tournament has its own loop for that part
             need_saving = False  # prevent saving each 5 seconds
-            if tournament.register_message:
-                new_content = tournament._prepare_register_message()
-                if new_content != tournament.register_message.content:
-                    try:
-                        await tournament.register_message.edit(content=new_content)
-                    except discord.NotFound as e:
-                        log.error(
-                            f"[Guild {tournament.guild.id}] Regiser message lost. "
-                            "Removing from memory...",
-                            exc_info=e,
-                        )
-                        tournament.register_message = None
-                        need_saving = True
+            if tournament.register.message:
+                await tournament._update_register_message()
             if (
-                tournament.checkin_phase == "ongoing"
-                and tournament.checkin_stop
-                and tournament.checkin_reminders
+                tournament.checkin.phase == EventPhase.ONGOING
+                and tournament.checkin.stop
+                and tournament.checkin.reminders
             ):
-                duration = (tournament.checkin_stop - datetime.now(tournament.tz)).total_seconds()
+                duration = (tournament.checkin.stop - datetime.now(tournament.tz)).total_seconds()
                 duration //= 60  # only minutes
-                next_call, should_dm = data = max(tournament.checkin_reminders, key=lambda x: x[0])
+                next_call, should_dm = data = max(tournament.checkin.reminders, key=lambda x: x[0])
                 if next_call >= duration + 1:
                     await tournament.call_check_in(should_dm)
-                    tournament.checkin_reminders.remove(data)
+                    tournament.checkin.reminders.remove(data)
                     need_saving = True
             try:
                 name, time = tournament.next_scheduled_event()
@@ -89,8 +79,8 @@ class Registration(MixinMeta):
             else:
                 log.error("Error in loop task. Resuming ...", exc_info=e)
 
-    @only_phase("pending", "register", "awaiting")
-    @commands.command(name="in")
+    @only_phase(Phase.PENDING, Phase.REGISTER, Phase.AWAITING)
+    @commands.command(name="in", hidden=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def _in(self, ctx: commands.Context):
         """
@@ -103,36 +93,16 @@ class Registration(MixinMeta):
             if participant.checked_in:
                 await ctx.send(_("You are already checked in."))
                 return
-            if tournament.checkin_channel and ctx.channel.id != tournament.checkin_channel.id:
-                await ctx.send(_("You cannot check in this channel."))
-                return
-            if tournament.checkin_phase != "ongoing":
+            if tournament.checkin.phase != EventPhase.ONGOING:
                 await ctx.send(_("The check-in isn't active."))
                 return
             await participant.check()
         else:
             # participant registering
-            if tournament.register_channel and (
-                ctx.channel.id != tournament.register_channel.id
-                and not (
-                    tournament.vip_register_channel
-                    and ctx.channel.id == tournament.vip_register_channel.id
-                )
-            ):
-                await ctx.send(_("You cannot register in this channel."))
-                return
             if tournament.limit and len(tournament.participants) + 1 > tournament.limit:
                 await ctx.send(_("No more places for this tournament."))
                 return
-            if (
-                tournament.vip_register_channel
-                and ctx.channel.id == tournament.vip_register_channel.id
-            ):
-                # VIP registrations are valid as long as registrations aren't explicitly closed
-                if tournament.register_phase == "done":
-                    await ctx.send(_("Registrations aren't active."))
-                    return
-            elif tournament.register_phase != "ongoing":
+            elif tournament.register.phase != EventPhase.ONGOING:
                 await ctx.send(_("Registrations aren't active."))
                 return
             async with tournament.lock:
@@ -149,7 +119,7 @@ class Registration(MixinMeta):
                     return
         await ctx.tick()
 
-    @only_phase("pending", "register", "awaiting")
+    @only_phase(Phase.PENDING, Phase.REGISTER, Phase.AWAITING)
     @commands.command(name="out")
     async def _out(self, ctx: commands.Context):
         """
@@ -166,7 +136,7 @@ class Registration(MixinMeta):
         log.debug(f"[Guild {ctx.guild.id}] Player {ctx.author} unregistered.")
         await ctx.tick()
 
-    @only_phase("pending", "register", "awaiting")
+    @only_phase(Phase.PENDING, Phase.REGISTER, Phase.AWAITING)
     @mod_or_to()
     @commands.command()
     async def add(self, ctx: commands.Context, *members: discord.Member):
@@ -216,7 +186,7 @@ there are spaces).
                         raise  # single members should raise exceptions
                     failed += 1
         succeed = len(members) - failed
-        if tournament.checkin_phase != "pending":
+        if tournament.checkin.phase != EventPhase.PENDING:
             if succeed == 1:
                 check = _(" He is pre-checked.")
             else:
@@ -297,7 +267,7 @@ there are spaces).
                 )
             )
 
-    @only_phase("pending", "register", "awaiting")
+    @only_phase(Phase.PENDING, Phase.REGISTER, Phase.AWAITING)
     @mod_or_to()
     @commands.group()
     async def register(self, ctx: commands.Context):
@@ -314,10 +284,10 @@ there are spaces).
         Starts the registration phase.
         """
         tournament = self.tournaments[ctx.guild.id]
-        if tournament.register_phase == "ongoing":
+        if tournament.register.phase == EventPhase.ONGOING:
             await ctx.send(_("Registrations are already ongoing."))
             return
-        elif tournament.register_phase == "pending":
+        elif tournament.register.phase == EventPhase.PENDING:
             result = await prompt_yes_or_no(
                 ctx,
                 _(
@@ -330,7 +300,7 @@ there are spaces).
             )
             if result:
                 tournament.ignored_events.append("register_start")
-        elif tournament.register_phase == "onhold":
+        elif tournament.register.phase == EventPhase.ON_HOLD:
             result = await prompt_yes_or_no(
                 ctx,
                 _(
@@ -352,13 +322,13 @@ there are spaces).
         Ends the registration phase.
         """
         tournament = self.tournaments[ctx.guild.id]
-        if tournament.register_phase != "ongoing":
+        if tournament.register.phase != EventPhase.ONGOING:
             await ctx.send(_("Registrations are not active."))
             return
         if (
-            not tournament.register_second_start
-            and tournament.register_stop
-            and tournament.register_stop > datetime.now(tournament.tz)
+            not tournament.register.second_start
+            and tournament.register.stop
+            and tournament.register.stop > datetime.now(tournament.tz)
         ):
             result = await prompt_yes_or_no(
                 ctx,
@@ -372,7 +342,7 @@ there are spaces).
             )
             if result:
                 tournament.ignored_events.append("register_stop")
-        elif tournament.register_second_start and tournament.register_second_start > datetime.now(
+        elif tournament.register.second_start and tournament.register.second_start > datetime.now(
             tournament.tz
         ):
             result = await prompt_yes_or_no(
@@ -389,7 +359,7 @@ there are spaces).
         await tournament.end_registration()
         await ctx.tick()
 
-    @only_phase("pending", "register", "awaiting")
+    @only_phase(Phase.PENDING, Phase.REGISTER, Phase.AWAITING)
     @mod_or_to()
     @commands.group()
     async def checkin(self, ctx: commands.Context):
@@ -406,11 +376,12 @@ there are spaces).
         Starts the check-in phase.
         """
         tournament = self.tournaments[ctx.guild.id]
-        if tournament.checkin_phase == "ongoing":
+        if tournament.checkin.phase == EventPhase.ONGOING:
             await ctx.send(_("Check-in is already ongoing."))
             return
-        elif tournament.checkin_phase == "pending" and tournament.checkin_start > datetime.now(
-            tournament.tz
+        elif (
+            tournament.checkin.phase == EventPhase.PENDING
+            and tournament.checkin.start > datetime.now(tournament.tz)
         ):
             result = await prompt_yes_or_no(
                 ctx,
@@ -424,7 +395,7 @@ there are spaces).
             if not result:
                 return
             tournament.ignored_events.append("checkin_start")
-        elif tournament.checkin_phase == "done":
+        elif tournament.checkin.phase == EventPhase.DONE:
             result = await prompt_yes_or_no(
                 ctx,
                 _(
@@ -447,10 +418,10 @@ there are spaces).
         Ends the check-in phase.
         """
         tournament = self.tournaments[ctx.guild.id]
-        if tournament.checkin_phase != "ongoing":
+        if tournament.checkin.phase != EventPhase.ONGOING:
             await ctx.send(_("Check-in is not active."))
             return
-        if tournament.checkin_stop and tournament.checkin_stop > datetime.now(tournament.tz):
+        if tournament.checkin.stop and tournament.checkin.stop > datetime.now(tournament.tz):
             result = await prompt_yes_or_no(
                 ctx,
                 _(
@@ -466,25 +437,25 @@ there are spaces).
         await tournament.end_checkin()
         await ctx.tick()
 
-    @checkin.command(name="call")
+    @checkin.command(name="call")  # hopefully temporary
     async def checkin_call(self, ctx: commands.Context, should_dm: bool = False):
         """
-        Send a message in the check-in channel pinging all members not checked yet.
+        Send a message in the registrations channel pinging all members not checked yet.
 
-        You need a check-in channel and an end date configured before using this.
+        You need a registrations or announcements channel with an end date configured to use this.
         If you want the bot to also DM members, type `[p]checkin call yes`
         """
         tournament = self.tournaments[ctx.guild.id]
-        if tournament.checkin_phase != "ongoing":
+        if tournament.checkin.phase != EventPhase.ONGOING:
             await ctx.send(_("Check-in is not active."))
             return
-        if not tournament.checkin_channel:
+        if not tournament.channels.register or tournament.channels.announcements:
             await ctx.send(_("There is no check-in channel currently configured."))
             return
-        if not tournament.checkin_stop:
+        if not tournament.checkin.stop:
             await ctx.send(_("This feature is only available with a configured stop time."))
             return
-        if tournament.checkin_stop < datetime.now(tournament.tz):
+        if tournament.checkin.stop < datetime.now(tournament.tz):
             await ctx.send(_("The configured check-in end time has already passed."))
             return
         if should_dm is True:

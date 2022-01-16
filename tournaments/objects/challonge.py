@@ -112,7 +112,7 @@ class ChallongeMatch(Match):
                     f"{data['id']}), the player is already disqualified (Challonge bug for "
                     "listing this match as open and pending)."
                 )
-                await tournament.to_channel.send(
+                await tournament.channels.to.send(
                     _(
                         ":warning: A bug occured on set {set} (one player disqualified but "
                         "still listed in an open match, Challonge bug). The bot attempted "
@@ -263,7 +263,7 @@ class ChallongeTournament(Tournament):
                 participants.append(cached)
         if removed:
             if len(removed) == 1:
-                await self.to_channel.send(
+                await self.channels.to.send(
                     _(
                         ':warning: Challonge participant with name "{name}" can\'t be found '
                         "in this server. This can be due to a name change, or the "
@@ -282,7 +282,7 @@ class ChallongeTournament(Tournament):
                         "If this is the case, you may want to roll back the tournament's start "
                         "with the `{prefix}resetbracket` command, and retry.\n"
                     ).format(prefix=self.bot_prefix)
-                await self.to_channel.send(
+                await self.channels.to.send(
                     _(
                         ":warning: Multiple Challonge participants can't be found "
                         "in this server. This can be due to name changes, or the members left.\n"

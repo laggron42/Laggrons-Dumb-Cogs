@@ -105,7 +105,6 @@ class Tournaments(
             "announcements": None,
             "ruleset": None,
             "category": None,
-            "checkin": None,
             "queue": None,
             "register": None,
             "scores": None,

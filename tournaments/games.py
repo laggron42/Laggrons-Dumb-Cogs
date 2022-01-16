@@ -16,7 +16,7 @@ from redbot.core.utils.mod import mass_purge
 from redbot.core.utils.chat_formatting import pagify
 
 from .abc import MixinMeta
-from .objects import Tournament, Match, Participant
+from .objects import Tournament, Match, Participant, Phase, EventPhase, MatchPhase
 from .utils import credentials_check, only_phase, mod_or_to, prompt_yes_or_no
 
 log = logging.getLogger("red.laggron.tournaments")
@@ -81,10 +81,10 @@ class Games(MixinMeta):
                 )
             )
             return
-        if tournament.register_phase == "ongoing":
+        if tournament.register.phase == EventPhase.ONGOING:
             await ctx.send(_("Registration is still ongoing, please end it first."))
             return
-        if tournament.checkin_phase == "ongoing":
+        if tournament.checkin.phase == EventPhase.ONGOING:
             await ctx.send(_("Check-in is still ongoing, please end it first."))
             return
         need_upload = False
@@ -132,10 +132,10 @@ class Games(MixinMeta):
             await tournament.add_participants()
 
         async def open_channels():
-            channels = list(filter(None, [tournament.queue_channel, tournament.scores_channel]))
+            channels = list(filter(None, [tournament.channels.queue, tournament.channels.scores]))
             for channel in channels:
                 await channel.set_permissions(
-                    tournament.participant_role,
+                    tournament.roles.participant,
                     read_messages=True,
                     send_messages=True,
                     reason=_("Tournament starting..."),
@@ -244,7 +244,7 @@ class Games(MixinMeta):
                 await update_embed(i + 1)
         await ctx.send(_("The tournament has now started!"))
 
-    @only_phase("ongoing", "finished")
+    @only_phase(Phase.ONGOING, Phase.DONE)
     @mod_or_to()
     @commands.command()
     @commands.guild_only()
@@ -262,11 +262,10 @@ class Games(MixinMeta):
             filter(
                 None,
                 [
-                    tournament.checkin_channel,
-                    tournament.queue_channel,
-                    tournament.register_channel,
-                    tournament.scores_channel,
-                    tournament.lag_channel,
+                    tournament.channels.queue,
+                    tournament.channels.register,
+                    tournament.channels.scores,
+                    tournament.channels.lag,
                 ],
             )
         )
@@ -294,13 +293,15 @@ class Games(MixinMeta):
                     messages = await channel.history(limit=None, after=two_weeks_ago).flatten()
                     if messages:
                         await mass_purge(messages, channel)
-                    if channel == tournament.lag_channel:
+                    if channel == tournament.channels.lag:
                         continue
-                    if tournament.game_role:
+                    if tournament.roles.game:
                         await channel.set_permissions(
-                            tournament.game_role, read_messages=True, send_messages=False
+                            tournament.roles.game, read_messages=True, send_messages=False
                         )
-                    await channel.set_permissions(tournament.participant_role, send_messages=False)
+                    await channel.set_permissions(
+                        tournament.roles.participant, send_messages=False
+                    )
                 except discord.HTTPException as e:
                     log.warning(
                         f"[Guild {ctx.guild.id}] Failed editing channel "
@@ -343,7 +344,7 @@ class Games(MixinMeta):
             for member in members:
                 try:
                     await member.remove_roles(
-                        tournament.participant_role, reason=_("Tournament ending")
+                        tournament.roles.participant, reason=_("Tournament ending")
                     )
                 except discord.HTTPException as e:
                     log.warn(
@@ -467,16 +468,16 @@ class Games(MixinMeta):
         if errored:
             message += _("\n\nCheck your console or logs for more informations.")
         await ctx.send_interactive(pagify(message))
-        if tournament.announcements_channel:
+        if tournament.channels.announcements:
             # TODO: actually show top 8
-            await tournament.announcements_channel.send(
+            await tournament.channels.announcements.send(
                 _(
                     "The tournament is now ended, congratulations to all participants!\n"
                     "Results and ranking: {url}"
                 ).format(url=tournament.url)
             )
 
-    @only_phase("ongoing", "finished")
+    @only_phase(Phase.ONGOING, Phase.DONE)
     @mod_or_to()
     @commands.command()
     @commands.guild_only()
@@ -562,7 +563,7 @@ class Games(MixinMeta):
         await self.data.guild(guild).tournament.set({})
         await ctx.send(_("Tournament removed!"))
 
-    @only_phase("pending", "register", "awaiting")
+    @only_phase(Phase.PENDING, Phase.REGISTER, Phase.AWAITING)
     @mod_or_to()
     @commands.command()
     @commands.guild_only()
@@ -583,11 +584,11 @@ you want the bot to override the previous list of participants, type `[p]upload 
         if not tournament.participants:
             await ctx.send(_(":warning: No participant registered."))
             return
-        if tournament.checkin_phase == "ongoing":
+        if tournament.checkin.phase == EventPhase.ONGOING:
             message = _(
                 "Check-in is still ongoing. Participants not checked yet won't be uploaded."
             )
-        elif tournament.checkin_phase == "pending":
+        elif tournament.checkin.phase == EventPhase.PENDING:
             message = _("Check-in was not done. All participants will be uploaded.")
         elif force:
             message = _(
@@ -607,10 +608,12 @@ you want the bot to override the previous list of participants, type `[p]upload 
                 "Or did someone edit the limit? Check the settings on Challonge."
             ),
         }
-        seeded = tournament.ranking["league_name"] and tournament.ranking["league_id"]
+        seeded = (
+            tournament.settings.ranking["league_name"] and tournament.settings.ranking["league_id"]
+        )
         try:
             async with ctx.typing():
-                await tournament.seed_participants(tournament.checkin_phase == "done")
+                await tournament.seed_participants(tournament.checkin.phase == EventPhase.DONE)
         except Exception as e:
             log.error(f"[Guild {ctx.guild.id}] Failed seeding participants.", exc_info=e)
             result = await prompt_yes_or_no(
@@ -691,7 +694,7 @@ you want the bot to override the previous list of participants, type `[p]upload 
                 ).format(prefix=ctx.clean_prefix)
             await ctx.send(text)
 
-    @only_phase("ongoing")
+    @only_phase(Phase.ONGOING)
     @commands.command()
     @commands.guild_only()
     @commands.cooldown(1, 3, commands.BucketType.user)
@@ -701,7 +704,7 @@ you want the bot to override the previous list of participants, type `[p]upload 
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
-        scores_channel = tournament.scores_channel
+        scores_channel = tournament.channels.scores
         player = tournament.find_participant(discord_id=ctx.author.id)[1]
         if player is None:
             await ctx.send(_("You are not a member of this tournament."))
@@ -780,7 +783,7 @@ you want the bot to override the previous list of participants, type `[p]upload 
         await player.match.end(*score)
         await ctx.tick()
 
-    @only_phase("ongoing")
+    @only_phase(Phase.ONGOING)
     @mod_or_to()
     @commands.command()
     @commands.guild_only()
@@ -837,7 +840,7 @@ Else you can specify the set you want to update as the first argument.
         await match.end(*score)
         await ctx.tick()
 
-    @only_phase("ongoing")
+    @only_phase(Phase.ONGOING)
     @commands.command(aliases=["ff"])
     @commands.guild_only()
     async def forfeit(self, ctx: commands.Context):
@@ -867,7 +870,7 @@ Else you can specify the set you want to update as the first argument.
         await player.match.forfeit(player)
         await ctx.tick()
 
-    @only_phase("ongoing")
+    @only_phase(Phase.ONGOING)
     @commands.command(aliases=["dq"])
     @commands.guild_only()
     async def disqualify(self, ctx: commands.Context):
@@ -894,7 +897,7 @@ Else you can specify the set you want to update as the first argument.
             await player.match.disqualify(player)
         await ctx.tick()
 
-    @only_phase("ongoing")
+    @only_phase(Phase.ONGOING)
     @commands.command()
     @commands.guild_only()
     @commands.cooldown(1, 60, commands.BucketType.user)
@@ -921,12 +924,12 @@ Else you can specify the set you want to update as the first argument.
         msg = _(":satellite: **Lag report** : TOs are invited to {target}.").format(
             channel=ctx.channel.mention, target=target
         )
-        if tournament.tester_role:
-            msg = f"{tournament.tester_role.mention} {msg}"
-            mentions = discord.AllowedMentions(roles=[tournament.tester_role])
+        if tournament.roles.tester:
+            msg = f"{tournament.roles.tester.mention} {msg}"
+            mentions = discord.AllowedMentions(roles=[tournament.roles.tester])
         else:
             mentions = None
-        lag_channel = tournament.lag_channel or tournament.to_channel
+        lag_channel = tournament.channels.lag or tournament.channels.to
         await lag_channel.send(msg, allowed_mentions=mentions)
         await ctx.send(_("TOs were called. Prepare a new arena for them..."))
 
@@ -939,11 +942,11 @@ Else you can specify the set you want to update as the first argument.
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
-        if not tournament.ruleset_channel:
+        if not tournament.channels.ruleset:
             await ctx.send(_("There's no ruleset channel defined."))
         else:
             await ctx.send(
-                _("Ruleset: {channel}").format(channel=tournament.ruleset_channel.mention)
+                _("Ruleset: {channel}").format(channel=tournament.channels.ruleset.mention)
             )
 
     @only_phase()
@@ -966,10 +969,10 @@ Else you can specify the set you want to update as the first argument.
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
-        if not tournament.stages:
+        if not tournament.settings.stages:
             await ctx.send(_("There are no legal stages specified for this game."))
         else:
-            text = _("__Legal stages:__") + "\n\n- " + "\n- ".join(tournament.stages)
+            text = _("__Legal stages:__") + "\n\n- " + "\n- ".join(tournament.settings.stages)
             for page in pagify(text):
                 await ctx.send(page)
 
@@ -982,15 +985,15 @@ Else you can specify the set you want to update as the first argument.
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
-        if not tournament.counterpicks:
+        if not tournament.settings.counterpicks:
             await ctx.send(_("There are no counter stages specified for this game."))
         else:
-            text = _("__Counters:__") + "\n\n- " + "\n- ".join(tournament.counterpicks)
+            text = _("__Counters:__") + "\n\n- " + "\n- ".join(tournament.settings.counterpicks)
             for page in pagify(text):
                 await ctx.send(page)
 
     @mod_or_to()
-    @only_phase("ongoing")
+    @only_phase(Phase.ONGOING)
     @commands.command()
     @commands.guild_only()
     async def lsmatches(self, ctx: commands.Context):
@@ -1001,7 +1004,8 @@ Else you can specify the set you want to update as the first argument.
         tournament = self.tournaments[guild.id]
         # sort by suggested play order first
         matches = sorted(
-            filter(lambda x: x.status == "ongoing", tournament.matches), key=lambda m: m.set
+            filter(lambda x: x.phase == MatchPhase.ONGOING, tournament.matches),
+            key=lambda m: m.set,
         )
         if not matches:
             await ctx.send(_("No match currently ongoing."))
