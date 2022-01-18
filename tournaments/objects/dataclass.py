@@ -4,8 +4,8 @@ from discord.ui import Button
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, List, Mapping, Optional, Tuple
 
-from .enums import EventPhase
-from .components import RegisterButton, UnregisterButton, CheckInButton
+from .enums import EventPhase, StageListType
+from .components import RegisterButton, StageListButton, UnregisterButton, CheckInButton
 
 if TYPE_CHECKING:
     from .base import Tournament
@@ -45,6 +45,24 @@ class Buttons:
         self.unregister = UnregisterButton(tournament)
         self.checkin = CheckInButton(tournament)
         self.bracket = Button(style=discord.ButtonStyle.link, label="Bracket", url=tournament.url)
+        if tournament.channels.ruleset:
+            self.ruleset = Button(
+                style=discord.ButtonStyle.link,
+                label="Ruleset",
+                emoji="\N{BLUE BOOK}",
+                url="https://discord.com/channels/"
+                f"{tournament.guild.id}/{tournament.channels.ruleset.id}",
+            )
+        else:
+            self.ruleset = None
+        if tournament.settings.stages:
+            self.stages = StageListButton(tournament, StageListType.STAGES)
+        else:
+            self.stages = None
+        if tournament.settings.counterpicks:
+            self.counters = StageListButton(tournament, StageListType.COUNTERPICKS)
+        else:
+            self.counters = None
 
 
 class Channels:
@@ -84,7 +102,6 @@ class Channels:
         )
         self.queue: discord.TextChannel = guild.get_channel(data["channels"].get("queue"))
         self.register: discord.TextChannel = guild.get_channel(data["channels"].get("register"))
-        self.scores: discord.TextChannel = guild.get_channel(data["channels"].get("scores"))
         self.stream: discord.TextChannel = guild.get_channel(data["channels"].get("stream"))
         self.to: discord.TextChannel = guild.get_channel(data["channels"].get("to"))
         self.lag: discord.TextChannel = guild.get_channel(data["channels"].get("lag"))

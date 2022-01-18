@@ -22,3 +22,8 @@ class EventPhase(enum.IntEnum):
     ONGOING = 2
     ON_HOLD = 3
     DONE = 4
+
+
+class StageListType(enum.IntEnum):
+    STAGES = 0
+    COUNTERPICKS = 1

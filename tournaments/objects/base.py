@@ -27,6 +27,8 @@ from redbot.core.i18n import Translator, get_babel_locale, set_contextual_locale
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.chat_formatting import humanize_timedelta, pagify
 
+from tournaments.objects.components import LagTestButton, ScoreEntryButton
+
 from .enums import Phase, EventPhase, MatchPhase
 from .dataclass import (
     Buttons,
@@ -43,10 +45,6 @@ _ = Translator("Tournaments", __file__)
 MAX_ERRORS = 5
 TIME_UNTIL_CHANNEL_DELETION = 300
 TIME_UNTIL_TIMEOUT_DQ = 300
-
-
-def channel_link(channel: discord.TextChannel) -> str:
-    return f"https://discord.com/channels/{channel.guild.id}/{channel.id}"
 
 
 class Participant(discord.Member):
@@ -293,6 +291,20 @@ class Match:
         self.round_name = self._get_name()
         self.checked_dq = True if self.is_top8 else False
 
+        self.message: Optional[discord.Message] = None
+        self.score_entry_button = ScoreEntryButton(self)
+        self.lag_test_button = LagTestButton(self)
+        self.view = View()
+        if self.tournament.buttons.stages:
+            self.view.add_item(self.tournament.buttons.stages)
+        if self.tournament.buttons.counters:
+            self.view.add_item(self.tournament.buttons.counters)
+        if self.tournament.buttons.ruleset:
+            self.view.add_item(self.tournament.buttons.ruleset)
+        self.view.add_item(self.tournament.buttons.bracket)
+        self.view.add_item(self.score_entry_button)
+        self.view.add_item(self.lag_test_button)
+
     def __repr__(self):
         return (
             "<Match status={0.status} round={0.round} set={0.set} id={0.id} underway={0.underway} "
@@ -324,11 +336,12 @@ class Match:
             return datetime.now(self.tournament.tz) - self.start_time
 
     @classmethod
-    def from_saved_data(cls, tournament: Tournament, player1, player2, data: dict) -> Match:
+    async def from_saved_data(cls, tournament: Tournament, player1, player2, data: dict) -> Match:
         match = cls(
             tournament, data["round"], data["set"], data["id"], data["underway"], player1, player2
         )
         match.channel = tournament.guild.get_channel(data["channel"])
+        match.message = await match.channel.fetch_message(data["message"])
         warned = data["warned"]
         if isinstance(warned, bool) or warned is None:
             match.warned = warned
@@ -359,12 +372,27 @@ class Match:
             "channel": self.channel.id if self.channel else None,
             "start_time": self.start_time.timestamp() if self.start_time else None,
             "end_time": self.end_time.timestamp() if self.end_time else None,
-            "phase": self.phase,
+            "phase": self.phase.value,
             "checked_dq": self.checked_dq,
             "warned": self.warned.timestamp()
             if isinstance(self.warned, datetime)
             else self.warned,
+            "message": self.message.id if self.message else None,
         }
+
+    async def _enable_buttons(self):
+        self.score_entry_button.disabled = False
+        self.lag_test_button.disabled = False
+        if not self.message:
+            return
+        await self.message.edit(view=self.view)
+
+    async def _disable_buttons(self):
+        self.score_entry_button.disabled = True
+        self.lag_test_button.disabled = True
+        if not self.message:
+            return
+        await self.message.edit(view=self.view)
 
     def _get_name(self) -> str:
         if self.round > 0:
@@ -383,16 +411,6 @@ class Match:
                 max_round + 2: _("Losers Quarter-Final"),
             }.get(self.round, _("Losers round {round}").format(round=self.round))
 
-    async def _dm_players(
-        self, message: str, *, embed: discord.Embed = None, view: discord.ui.View = None
-    ):
-        players = (self.player1, self.player2)
-        for player in players:
-            try:
-                await player.send(message, embed=embed, view=view)
-            except discord.HTTPException as e:
-                log.warning(f"Can't send a DM to {str(player)} for his set.", exc_info=e)
-
     async def send_message(self, reset: bool = False) -> bool:
         """
         Send a message in the created channel.
@@ -407,7 +425,6 @@ class Match:
         bool
             ``False`` if the message couldn't be sent, and was sent in DM instead.
         """
-        view = discord.ui.View()
         if reset is True:
             message = _(
                 ":warning: **The bracket was modified!** This results in this match having to be "
@@ -419,48 +436,11 @@ class Match:
         message += _(
             ":arrow_forward: **{0.set}** : {0.player1.mention} vs {0.player2.mention} {top8}\n"
         ).format(self, top8=top8)
-        if self.tournament.channels.ruleset:
-            view.add_item(
-                discord.ui.Button(
-                    style=discord.ButtonStyle.link,
-                    label=_("Ruleset"),
-                    emoji="\N{BLUE BOOK}",
-                    url=channel_link(self.tournament.channels.ruleset),
-                )
-            )
-        if self.tournament.channels.scores:
-            view.add_item(
-                discord.ui.Button(
-                    style=discord.ButtonStyle.link,
-                    label=_("Score entry"),
-                    emoji="\N{MEMO}",
-                    url=channel_link(self.tournament.channels.scores),
-                )
-            )
-        if self.tournament.settings.stages:
-            message += _(
-                ":white_small_square: The list of legal stages "
-                "is available with `{prefix}stages` command.\n"
-            ).format(prefix=self.tournament.bot_prefix)
-        if self.tournament.settings.counterpicks:
-            message += _(
-                ":white_small_square: The list of counter stages "
-                "is available with `{prefix}counters` command.\n"
-            ).format(prefix=self.tournament.bot_prefix)
-        score_channel = (
-            _("in {channel}").format(channel=self.tournament.channels.scores.mention)
-            if self.tournament.channels.scores
-            else ""
-        )
         message += _(
-            ":white_small_square: In case of lag making the game unplayable, use the "
-            "`{prefix}lag` command to call the T.O. and solve the problem.\n"
-            ":white_small_square: **As soon as the set is done**, the winner sets the "
-            "score {score_channel} with the `{prefix}win` command.\n"
+            ":white_small_square: **As soon as the set is done**, the winner "
+            "sets the score with the button below.\n"
             ":arrow_forward: You will play this set as a {type}.\n"
         ).format(
-            prefix=self.tournament.bot_prefix,
-            score_channel=score_channel,
             type=_("**BO5** *(best of 5)*") if self.is_bo5 else _("**BO3** *(best of 3)*"),
         )
         if self.tournament.settings.baninfo:
@@ -468,7 +448,8 @@ class Match:
             message += _(
                 ":game_die: **{player}** was picked to begin the bans *({baninfo})*.\n"
             ).format(player=chosen_player.mention, baninfo=self.tournament.settings.baninfo)
-        if self.streamer is not None and self.on_hold is True:
+        if self.streamer is not None and self.phase == MatchPhase.ON_HOLD:
+            await self._disable_buttons()
             message += _(
                 "**\nYou will be on stream on {streamer}!**\n"
                 ":warning: **Do not play your set for now and wait for your turn.** "
@@ -476,33 +457,19 @@ class Match:
             ).format(streamer=self.streamer.link)
             # else, we're about to send another message with instructions
 
-        async def send_in_dm():
-            nonlocal message
-            message += _(
-                "\n\n**You channel can't be created because of a problem. "
-                "Do your set in DM and come back to set the result.**"
+        try:
+            self.message = await self.channel.send(message, view=self.view)
+        except discord.HTTPException as e:
+            log.error(
+                f"[Guild {self.guild.id}] Can't send messages for the set {self.set}",
+                exc_info=e,
             )
-            await self._dm_players(message, view=view)
-
-        if self.channel is None:
-            await send_in_dm()
-            result = False
-        else:
-            try:
-                await self.channel.send(message, view=view)
-            except discord.HTTPException as e:
-                log.error(
-                    f"[Guild {self.guild.id}] Can't create a channel for the set {self.set}",
-                    exc_info=e,
-                )
-                await send_in_dm()
-                result = False
-            else:
-                result = True
+            return
+        await self.message.pin()
         self.tournament.matches_to_announce.append(
             _(
                 ":arrow_forward: **{name}** ({bo_type}): {player1} vs {player2}"
-                "{on_stream} {top8} {channel}."
+                "{on_stream} {top8} in {channel}."
             ).format(
                 name=self.round_name,
                 bo_type=_("BO5") if self.is_bo5 else _("BO3"),
@@ -510,18 +477,14 @@ class Match:
                 player2=self.player2.mention,
                 on_stream=_(" **on stream!**") if self.streamer else "",
                 top8=top8,
-                channel=_("in {channel}").format(channel=self.channel.mention)
-                if result is True
-                else _("in DM"),
+                channel=self.channel.mention,
             )
         )
-        return result
 
     async def start_stream(self):
         """
         Send a pending set, awaiting for its turn, on stream. Only call this if there's a streamer.
         """
-        destination = self.channel.send if self.channel else self._dm_players
         if self.streamer.room_id:
             access = _("\n\nHere are the access codes:\nID: {id}\nPasscode: {passcode}").format(
                 id=self.streamer.room_id, passcode=self.streamer.room_code
@@ -531,7 +494,7 @@ class Match:
         if self.phase != MatchPhase.ONGOING:
             await self._start()
         self.checked_dq = True
-        await destination(
+        await self.channel.send(
             _("You can go on stream on {channel} !{access}").format(
                 channel=self.streamer.link, access=access
             )
@@ -566,12 +529,11 @@ class Match:
         *   **If the match is not the first one in the stream queue:** We mark the match as not
             underway, change the status to pending, and tell the players.
         """
-        destination = self.channel.send if self.channel else self._dm_players
         self.checked_dq = True
         if self.phase == MatchPhase.ON_HOLD:
             self.start_time = None
             self.underway = False
-            await destination(
+            await self.channel.send(
                 _(
                     "{player1} {player2}\n"
                     ":warning: Your match was just added to {channel}'s stream queue ({link})\n"
@@ -598,7 +560,7 @@ class Match:
                         "you can set that manually on the bracket."
                     ).format(set=self.channel.mention if self.channel else f"#{self.set}")
                 )
-                await destination(
+                await self.channel.send(
                     _(
                         "There was an issue unmarking your set as underway. The bracket may not "
                         "display correct informations, but this isn't critical.\n"
@@ -612,7 +574,7 @@ class Match:
                 ).format(id=self.streamer.room_id, passcode=self.streamer.room_code)
             else:
                 access = ""
-            await destination(
+            await self.channel.send(
                 _(
                     "{player1} {player2}\n"
                     ":warning: Your match was just added to {channel}'s stream ({link}).\n"
@@ -633,10 +595,9 @@ class Match:
         A message will be sent, telling players to start playing, and AFK checks will be
         re-enabled.
         """
-        destination = self.channel.send if self.channel else self._dm_players
         self.streamer = None
         await self._start()
-        await destination(
+        await self.channel.send(
             _(
                 "{player1} {player2} The stream was cancelled. You can start/continue "
                 "your match normally.\n:warning: AFK checks are re-enabled."
@@ -669,7 +630,6 @@ class Match:
         )
 
     async def _start(self):
-        target = self.channel.send if self.channel else self._dm_players
         self.phase = MatchPhase.ONGOING
         self.underway = True
         self.checked_dq = False
@@ -688,7 +648,7 @@ class Match:
                     "you can set that manually on the bracket."
                 ).format(set=self.channel.mention if self.channel else f"#{self.set}")
             )
-            await target(
+            await self.channel.send(
                 _(
                     "There was an issue marking your set as underway. The bracket may not "
                     "display correct informations, but you can play as usual for now.\n"
@@ -797,7 +757,7 @@ class Match:
                 ).format(player1=self.player1.mention, player2=self.player2.mention, set=self.set)
             )
             self.channel = None
-            self.cancel()
+            await self.cancel()
             return
         for player in players:
             if player.spoke is False:
@@ -828,30 +788,25 @@ class Match:
                 except discord.HTTPException:
                     # blocked or DMs not allowed
                     pass
-                self.cancel()
+                await self.cancel()
                 break
 
     async def warn_length(self):
         """
         Warn players in their channels because of the duration of their match.
         """
-        target = self.channel.send or self._dm_players
         message = _(
             ":warning: This match is taking a lot of time!\n"
-            "As soon as this is finished, set your score with `{prefix}win`{channel}."
-        ).format(
-            prefix=self.tournament.bot_prefix,
-            channel=_(" in {channel}").format(channel=self.tournament.channels.scores.mention)
-            if self.tournament.channels.scores
-            else "",
-        )
+            "As soon as this is finished, set your score using the button "
+            "on the pinned message or with the command `{prefix}win`."
+        ).format(prefix=self.tournament.bot_prefix)
         time = self.tournament.settings.time_until_warn["bo5" if self.is_bo5 else "bo3"][1]
         if time:
             message += _(
                 "\nT.O.s will be warned if this match is still ongoing in {time}."
             ).format(time=humanize_timedelta(timedelta=time))
         try:
-            await target(message)
+            await self.channel.send(message)
         except discord.NotFound:
             self.channel = None
         self.warned = datetime.now(self.tournament.tz)
@@ -871,8 +826,7 @@ class Match:
             )
         )
         self.warned = True
-        target = self.channel.send or self._dm_players
-        await target(_("Your match is taking too much time, T.O.s were warned."))
+        await self.channel.send(_("Your match is taking too much time, T.O.s were warned."))
 
     async def end(self, player1_score: int, player2_score: int, upload: bool = True):
         """
@@ -892,7 +846,7 @@ class Match:
         """
         if upload is True:
             await self.set_scores(player1_score, player2_score)
-        self.cancel()
+        await self.cancel()
         winner = self.player1 if player1_score > player2_score else self.player2
         score = (
             f"{player1_score}-{player2_score}"
@@ -956,7 +910,7 @@ class Match:
         player: Union[Participant, int]
             The disqualified player. Provide an `int` if the member left.
         """
-        self.cancel()
+        await self.cancel()
         if isinstance(player, int):
             winner = (
                 self.player1
@@ -1004,7 +958,7 @@ class Match:
         else:
             score = (0, -1)
         await self.set_scores(*score)
-        self.cancel()
+        await self.cancel()
         winner = self.player1 if self.player1.id != player.id else self.player2
         if self.channel is not None:
             await self.channel.send(
@@ -1018,10 +972,17 @@ class Match:
             except discord.HTTPException:
                 pass
 
-    def cancel(self):
+    async def cancel(self):
         """
         Mark a match as finished (updated `status` and `end_time` + calls `Participant.reset`)
         """
+        try:
+            await self._disable_buttons()
+        except Exception:
+            log.warn(
+                f"[Guild {self.tournament.guild.id}] Failed to disable buttons for set {self.set}",
+                exc_info=True,
+            )
         with contextlib.suppress(AttributeError):
             self.player1.reset()
             self.player2.reset()
@@ -1391,7 +1352,9 @@ class Tournament:
         for data in matches:
             player1 = tournament.find_participant(player_id=data["player1"])[1]
             player2 = tournament.find_participant(player_id=data["player2"])[1]
-            match = tournament.match_object.from_saved_data(tournament, player1, player2, data)
+            match = await tournament.match_object.from_saved_data(
+                tournament, player1, player2, data
+            )
             if player1 is None and player2 is None:
                 if match.channel:
                     await tournament.destroy_player(data["player1"])
@@ -1478,10 +1441,10 @@ class Tournament:
             "streamers": [x.to_dict() for x in self.streamers],
             "winner_categories": [x.id for x in self.winner_categories],
             "loser_categories": [x.id for x in self.loser_categories],
-            "phase": self.phase,
+            "phase": self.phase.value,
             "tournament_type": self.tournament_type,
-            "register": self.register.phase,
-            "checkin": self.checkin.phase,
+            "register": self.register.phase.value,
+            "checkin": self.checkin.phase.value,
             "checkin_reminders": self.checkin.reminders,
             "ignored_events": self.ignored_events,
             "register_message_id": self.register.message.id if self.register.message else None,
@@ -1876,7 +1839,7 @@ class Tournament:
             "You can register/unregister to this tournament using the buttons below.\n"
             "*Note: your Discord username will be used in the bracket.*"
         ).format(
-            role=self.roles.game.mention if self.roles.game != self.guild.default_role else "",
+            role=self.roles.game.mention if self.roles.game else "",
             t=self,
             date=self._format_datetime(self.tournament_start),
             time=self._format_datetime(self.register.stop or self.tournament_start, True),
@@ -1987,14 +1950,14 @@ class Tournament:
             message = _("Cancelled check-in start since there are currently no participants. ")
             if not self.next_scheduled_event:
                 # no more scheduled events, upload and wait for start
-                self.phase = "awaiting"
+                self.phase = Phase.AWAITING
             else:
                 message += _(
                     "Registrations are still ongoing, and new participants are pre-checked."
                 )
             await self.channels.to.send(message)
             return
-        self.phase = "register"
+        self.phase = Phase.REGISTER
         self.checkin.phase = EventPhase.ONGOING
         message = _(
             "{role} The check-in for **{t.name}** has started!\n"
@@ -2135,7 +2098,7 @@ class Tournament:
             )
         if not self.next_scheduled_event:
             # no more scheduled events, upload and wait for start
-            self.phase = "awaiting"
+            self.phase = Phase.AWAITING
             await self._background_seed_and_upload()
         await self.save()
 
@@ -2351,11 +2314,6 @@ class Tournament:
         *   The scores channel
         *   The queue channel
         """
-        scores_channel = (
-            _(" in {channel}").format(channel=self.channels.scores.mention)
-            if self.channels.scores
-            else ""
-        )
         announcements_view = discord.ui.View()
         scores_view = discord.ui.View()
         bracket_button = discord.ui.Button(
@@ -2391,7 +2349,7 @@ class Tournament:
                     ":white_small_square: List of streams:`{prefix}streams`\n\n"
                     "{participant} Please read the instructions :\n"
                     ":white_small_square: The winner of a set must report the score **as soon as "
-                    "possible**{scores_channel} with the `{prefix}win` command.\n"
+                    "possible** with the `{prefix}win` command.\n"
                     ":white_small_square: You can disqualify from the tournament with the "
                     "`{prefix}dq` command, or just abandon your current set with the `{prefix}ff` "
                     "command.\n"
@@ -2402,7 +2360,6 @@ class Tournament:
                     tournament=self.name,
                     bracket=self.url,
                     participant=self.roles.participant.mention,
-                    scores_channel=scores_channel,
                     delay=_(
                         ":timer: **You will automatically be disqualified if "
                         "you don't talk in your channel within the first {delay}.**"
