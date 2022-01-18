@@ -20,7 +20,7 @@ from redbot.core.commands.converter import TimedeltaConverter
 from discord.ext.commands.view import StringView
 
 from .abc import MixinMeta
-from .objects import ChallongeTournament
+from .objects import ChallongeTournament, Phase, MatchPhase
 from .utils import credentials_check, async_http_retry, mod_or_to, prompt_yes_or_no
 
 log = logging.getLogger("red.laggron.tournaments")
@@ -157,9 +157,9 @@ class Settings(MixinMeta):
         # if both are absent, raise error, else just pass
         if bool("register" in not_set["channels"]) != bool("announcements" in not_set["channels"]):
             # bool(a) != bool(b) is equivalent to the XOR operator
-            with contextlib.suppress(KeyError):
-                del not_set["channels"]["register"]
-                del not_set["channels"]["announcements"]
+            with contextlib.suppress(ValueError):
+                not_set["channels"].remove("register")
+                not_set["channels"].remove("announcements")
         for name, role_id in data["roles"].items():
             if name not in required_roles:
                 continue
@@ -1635,7 +1635,7 @@ the start of the tournament, then closing 15 minutes before.
         embed = discord.Embed(title=f"{t.name} • *{t.game}*")
         embed.url = t.url
         embed.description = _("Current phase: {phase}").format(phase=t.phase)
-        if t.phase == "ongoing":
+        if t.phase == Phase.ONGOING:
             embed.add_field(
                 name=_("Participants"),
                 value=_("Total: {total}\nIn-game: {ingame}").format(
@@ -1650,9 +1650,9 @@ the start of the tournament, then closing 15 minutes before.
                     "Scheduled: {scheduled}\nEnded (awaiting deletion): {ended}"
                 ).format(
                     total=len(t.matches),
-                    ongoing=len([x for x in t.matches if x.status == "ongoing"]),
-                    scheduled=len([x for x in t.matches if x.status == "pending"]),
-                    ended=len([x for x in t.matches if x.status == "finished"]),
+                    ongoing=len([x for x in t.matches if x.phase == MatchPhase.ONGOING]),
+                    scheduled=len([x for x in t.matches if x.phase == MatchPhase.PENDING]),
+                    ended=len([x for x in t.matches if x.phase == MatchPhase.DONE]),
                 ),
                 inline=False,
             )

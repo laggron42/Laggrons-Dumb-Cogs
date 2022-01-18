@@ -25,7 +25,7 @@ class Registration(MixinMeta):
     # update message, also scheduler for registration/checkin start/stop
     async def _registration_loop(self):
         for tournament in self.tournaments.values():
-            if tournament.phase in ("ongoing", "finished"):
+            if tournament.phase in (Phase.ONGOING, Phase.DONE):
                 continue  # Tournament has its own loop for that part
             need_saving = False  # prevent saving each 5 seconds
             if tournament.register.message:

@@ -51,17 +51,17 @@ class Games(MixinMeta):
             tournament: Tournament = self.tournaments[guild.id]
         except KeyError:
             return
-        if tournament.phase != "ongoing":
+        if tournament.phase != Phase.ONGOING:
             return
         i, match = tournament.find_match(channel_id=message.channel.id)
         if match is None:
             return
-        elif match.status == "ongoing":
+        elif match.phase == MatchPhase.ONGOING:
             if match.player1.id == message.author.id and match.player1.spoke is False:
                 self.tournaments[guild.id].matches[i].player1.spoke = True
             elif match.player2.id == message.author.id and match.player2.spoke is False:
                 self.tournaments[guild.id].matches[i].player2.spoke = True
-        elif match.status == "finished":
+        elif match.phase == MatchPhase.DONE:
             match.end_time = datetime.now(tournament.tz)
 
     @credentials_check
@@ -143,7 +143,7 @@ class Games(MixinMeta):
 
         async def start():
             await tournament.start()
-            tournament.phase = "ongoing"
+            tournament.phase = Phase.ONGOING
             tournament.register_message = None
             await tournament._get_top8()
 
@@ -254,7 +254,7 @@ class Games(MixinMeta):
         """
         guild = ctx.guild
         tournament: Tournament = self.tournaments[guild.id]
-        if any(x.status == "ongoing" for x in tournament.matches):
+        if any(x.phase == MatchPhase.ONGOING for x in tournament.matches):
             await ctx.send(_("There are still ongoing matches."))
             return
         i = 0
@@ -280,7 +280,7 @@ class Games(MixinMeta):
 
         async def stop_tournament():
             tournament.cancel()
-            if tournament.phase != "finished":
+            if tournament.phase != Phase.DONE:
                 await tournament.stop()
 
         async def clear_channels():
@@ -508,7 +508,7 @@ class Games(MixinMeta):
                 "Please wait for this to be done before trying to restart."
             )
         await ctx.send(message)
-        tournament.phase = "pending"
+        tournament.phase = Phase.PENDING
         [x.reset() for x in tournament.participants]
         tournament.streamers = []
         if not tournament.matches:
@@ -538,7 +538,7 @@ class Games(MixinMeta):
         except KeyError:
             await ctx.send(_("There's no tournament setup on this server."))
             return
-        if tournament.phase == "ongoing":
+        if tournament.phase == Phase.ONGOING:
             await ctx.send(
                 _("The tournament is ongoing. Please use `{prefix}resetbracket` first.").format(
                     prefix=ctx.clean_prefix
@@ -816,7 +816,7 @@ Else you can specify the set you want to update as the first argument.
                 ).format(prefix=ctx.clean_prefix)
             )
             return
-        if match.status == "finished":
+        if match.phase == MatchPhase.DONE:
             await ctx.send(_("This match is already finished."))
             return
         if player.id not in (match.player1.id, match.player2.id):

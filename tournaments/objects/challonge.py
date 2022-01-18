@@ -11,7 +11,7 @@ from redbot.core.bot import Red
 from redbot.core.i18n import Translator
 
 from ..utils import async_http_retry
-from .base import Tournament, Match, Participant
+from .base import Tournament, Match, Participant, MatchPhase
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -313,7 +313,7 @@ class ChallongeTournament(Tournament):
                     matches.append(match_object)
                 continue
             # we check for upstream bracket changes compared to our cache
-            if cached.status == "ongoing" and match["state"] == "complete":
+            if cached.phase == MatchPhase.ONGOING and match["state"] == "complete":
                 # score was set manually
                 try:
                     winner_score, loser_score = match["scores_csv"].split("-")
@@ -334,7 +334,7 @@ class ChallongeTournament(Tournament):
                     f"update (score {match['scores_csv']} winner {str(winner)})"
                 )
                 remote_changes.append(cached.set)
-            elif cached.status == "ongoing" and match["state"] == "pending":
+            elif cached.phase == MatchPhase.ONGOING and match["state"] == "pending":
                 # the previously open match is now pending, this means the bracket changed
                 # mostl likely due to a score change on a parent match
                 await cached.force_end()
@@ -344,7 +344,7 @@ class ChallongeTournament(Tournament):
                 )
                 remote_changes.append(cached.set)
                 continue
-            elif cached.status == "finished" and match["state"] == "open":
+            elif cached.phase == MatchPhase.DONE and match["state"] == "open":
                 # the previously finished match is now open, this means a TO manually
                 # removed the score set previously. we are therefore relaunching
                 await cached.relaunch()
