@@ -132,12 +132,12 @@ class Games(MixinMeta):
             await tournament.add_participants()
 
         async def open_channels():
-            channels = list(filter(None, [tournament.channels.queue, tournament.channels.scores]))
+            channels = list(filter(None, [tournament.channels.queue]))
             for channel in channels:
                 await channel.set_permissions(
                     tournament.roles.participant,
                     read_messages=True,
-                    send_messages=True,
+                    send_messages=False,
                     reason=_("Tournament starting..."),
                 )
 
@@ -264,7 +264,6 @@ class Games(MixinMeta):
                 [
                     tournament.channels.queue,
                     tournament.channels.register,
-                    tournament.channels.scores,
                     tournament.channels.lag,
                 ],
             )
@@ -704,7 +703,6 @@ you want the bot to override the previous list of participants, type `[p]upload 
         """
         guild = ctx.guild
         tournament = self.tournaments[guild.id]
-        scores_channel = tournament.channels.scores
         player = tournament.find_participant(discord_id=ctx.author.id)[1]
         if player is None:
             await ctx.send(_("You are not a member of this tournament."))
@@ -712,19 +710,12 @@ you want the bot to override the previous list of participants, type `[p]upload 
         if player.match is None:
             await ctx.send(_("You don't have any ongoing match."))
             return
-        if player.match.status != "ongoing":
+        if player.match.phase != MatchPhase.ONGOING:
             await ctx.send(
                 _(
                     "Your match has not started yet.\n"
                     "You're either awaiting for a stream, or an error occured internally. "
                     "You can ask a T.O. for a manual score setting."
-                )
-            )
-            return
-        if scores_channel is not None and scores_channel.id != ctx.channel.id:
-            await ctx.send(
-                _("You have to use this command in {channel}.").format(
-                    channel=scores_channel.mention
                 )
             )
             return

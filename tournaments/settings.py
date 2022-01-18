@@ -506,40 +506,6 @@ command to confirm their registration.
             await self.data.settings(guild.id, config).channels.register.set(channel.id)
             await ctx.send(_("The channel was successfully set."))
 
-    @tournamentset_channels.command(name="scores")
-    async def tournamentset_channels_scores(
-        self,
-        ctx: commands.Context,
-        *,
-        channel: ConfigSelector(discord.TextChannel) = ConfigSelector(),
-    ):
-        """
-        Set the score entry channel.
-
-        Members will have to enter a command there to register their score.
-
-        Don't set this to keep the command channel unrestricted (can be typed anywhere).
-        """
-        guild = ctx.guild
-        config = channel.config
-        channel = channel.arg
-        if channel is None:
-            await self.data.settings(guild.id, config).channels.scores.set(None)
-            await ctx.send(
-                _(
-                    "The score entry will now be available in any channel. Careful, "
-                    "Red's permissions system still applies."
-                )
-            )
-            return
-        if not channel.permissions_for(guild.me).read_messages:
-            await ctx.send(_("I don't have the permission to read messages in this channel."))
-        elif not channel.permissions_for(guild.me).send_messages:
-            await ctx.send(_("I don't have the permission to send messages in this channel."))
-        else:
-            await self.data.settings(guild.id, config).channels.scores.set(channel.id)
-            await ctx.send(_("The channel was successfully set."))
-
     @tournamentset_channels.command(name="queue")
     async def tournamentset_channels_queue(
         self,
@@ -663,35 +629,6 @@ command to confirm their registration.
             await ctx.send(_("I don't have the permission to send messages in this channel."))
         else:
             await self.data.settings(guild.id, config).channels.lag.set(channel.id)
-            await ctx.send(_("The channel was successfully set."))
-
-    @tournamentset_channels.command(name="vipregister", hidden=True)
-    async def tournamentset_channels_vipregister(
-        self,
-        ctx: commands.Context,
-        *,
-        channel: ConfigSelector(discord.TextChannel) = ConfigSelector(),
-    ):
-        """
-        Set the VIP registration channel.
-
-        This is a hidden setting that defines a channel where anyone able to send messages \
-there is able to use `[p]in` as soon as the tournament is setup, regardless of the current state \
-of the other registrations channel.
-        """
-        guild = ctx.guild
-        config = channel.config
-        channel = channel.arg
-        if channel is None:
-            await self.data.settings(guild.id, config).channels.vipregister.set(None)
-            await ctx.send(_("VIP registration channel removed."))
-            return
-        if not channel.permissions_for(guild.me).read_messages:
-            await ctx.send(_("I don't have the permission to read messages in this channel."))
-        elif not channel.permissions_for(guild.me).send_messages:
-            await ctx.send(_("I don't have the permission to send messages in this channel."))
-        else:
-            await self.data.settings(guild.id, config).channels.vipregister.set(channel.id)
             await ctx.send(_("The channel was successfully set."))
 
     @tournamentset_channels.command(name="category")
@@ -1343,13 +1280,10 @@ the start of the tournament, then closing 15 minutes before.
             "Announcements : {announcements}\n"
             "Ruleset : {ruleset}\n"
             "Registration : {register}\n"
-            "Check-in : {checkin}\n"
             "Queue : {queue}\n"
-            "Scores : {scores}\n"
             "Stream : {stream}\n"
             "T.O. : {to}\n"
             "*Lag tests : {lag}*\n"
-            "*VIP Registration : {vipregister}*"
         ).format(**channels)
         roles = {}
         for k, v in data["roles"].items():
@@ -1494,12 +1428,12 @@ the start of the tournament, then closing 15 minutes before.
             tournament.phase = "ongoing"
             if send_announcement:
                 await tournament.send_start_messages()
-            channels = list(filter(None, [tournament.queue_channel, tournament.channels.scores]))
+            channels = list(filter(None, [tournament.channels.queue]))
             for channel in channels:
                 await channel.set_permissions(
                     tournament.roles.participant,
                     read_messages=True,
-                    send_messages=True,
+                    send_messages=False,
                     reason=_("Tournament starting..."),
                 )
             await tournament._get_top8()

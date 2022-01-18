@@ -2375,14 +2375,6 @@ class Tournament:
             )
             announcements_view.add_item(ruleset_button)
             scores_view.add_item(ruleset_button)
-        if self.channels.scores:
-            scores_button = discord.ui.Button(
-                style=discord.ButtonStyle.link,
-                label=_("Score entry"),
-                emoji="\N{MEMO}",
-                url=channel_link(self.channels.scores),
-            )
-            announcements_view.add_item(scores_button)
         if self.channels.queue:
             queue_button = discord.ui.Button(
                 style=discord.ButtonStyle.link,
@@ -2420,17 +2412,6 @@ class Tournament:
                     prefix=self.bot_prefix,
                 ),
                 announcements_view,
-            ),
-            self.channels.scores: (
-                _(
-                    ":information_source: Management of the scores for the "
-                    "tournament **{tournament}** is automated:\n"
-                    ":white_small_square: Only **the winner of the set** "
-                    "sends his score with the `{prefix}win` command.\n"
-                    ":white_small_square: You must follow this "
-                    "format: `{prefix}win 2-0, 3-2, 3-1, ...`."
-                ).format(tournament=self.name, url=self.url, prefix=self.bot_prefix),
-                scores_view,
             ),
             self.channels.queue: (
                 _(
