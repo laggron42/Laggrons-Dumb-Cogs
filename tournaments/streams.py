@@ -2,7 +2,7 @@ import discord
 import logging
 import re
 
-from typing import Optional, Union
+from typing import List, Optional, Union
 from copy import deepcopy
 
 from redbot.core import commands
@@ -12,7 +12,7 @@ from redbot.core.utils.chat_formatting import pagify
 
 from .abc import MixinMeta
 from .utils import only_phase, prompt_yes_or_no
-from .objects import Tournament, Streamer
+from .objects import Tournament, Match, Streamer, Phase, MatchPhase
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -99,13 +99,13 @@ class Streams(MixinMeta):
         Initialize your stream.
         """
         tournament = self.tournaments[ctx.guild.id]
-        streamer = tournament.find_streamer(channel=url)[0]
+        streamer: Streamer = tournament.find_streamer(channel=url)[0]
         if streamer is not None:
             await ctx.send(_("A streamer with that link is already configured."))
             return
         streamer = Streamer(tournament, ctx.author, url)
         tournament.streamers.append(streamer)
-        if tournament.status != "ongoing":
+        if tournament.phase != Phase.ONGOING:
             await tournament.save()
         await ctx.tick()
 
@@ -157,11 +157,11 @@ class Streams(MixinMeta):
         - `[p]stream set https://twitch.tv/el_laggron 5RF7G 260`
         """
         tournament = self.tournaments[ctx.guild.id]
-        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        streamer: Streamer = await self._get_streamer_from_ctx(ctx, streamer)
         if not streamer:
             return
         streamer.set_room(room_id, room_code)
-        if tournament.status != "ongoing":
+        if tournament.phase != Phase.ONGOING:
             await tournament.save()
         await ctx.tick()
 
@@ -186,11 +186,11 @@ any streamer/T.O. can edit anyone's stream.
         If you want to edit someone else's stream, give its channel as the first argument.
         """
         tournament = self.tournaments[ctx.guild.id]
-        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        streamer: Streamer = await self._get_streamer_from_ctx(ctx, streamer)
         if not streamer:
             return
         streamer.member = member or ctx.author
-        if tournament.status != "ongoing":
+        if tournament.phase != Phase.ONGOING:
             await tournament.save()
         await ctx.tick()
 
@@ -218,7 +218,7 @@ any streamer/T.O. can edit anyone's stream.
         if not sets:
             await ctx.send_help()
             return
-        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        streamer: Streamer = await self._get_streamer_from_ctx(ctx, streamer)
         if not streamer:
             return
         errors = await streamer.check_integrity(sets, add=True)
@@ -256,7 +256,7 @@ any streamer/T.O. can edit anyone's stream.
             await ctx.send_help()
             return
         tournament = self.tournaments[ctx.guild.id]
-        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        streamer: Streamer = await self._get_streamer_from_ctx(ctx, streamer)
         if not streamer:
             return
         if len(sets) == 1 and sets[0] == "all":
@@ -274,7 +274,7 @@ any streamer/T.O. can edit anyone's stream.
                 await ctx.send(_("None of the sets you sent were listed in the stream."))
             else:
                 await ctx.tick()
-        if tournament.status != "ongoing":
+        if tournament.phase != Phase.ONGOING:
             await tournament.save()
 
     @only_phase()
@@ -300,7 +300,7 @@ any streamer/T.O. can edit anyone's stream.
         if not sets:
             await ctx.send_help()
             return
-        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        streamer: Streamer = await self._get_streamer_from_ctx(ctx, streamer)
         if not streamer:
             return
         tournament = self.tournaments[ctx.guild.id]
@@ -319,7 +319,7 @@ any streamer/T.O. can edit anyone's stream.
                 return None
 
         new_list = []
-        to_add = []
+        to_add: List[Match] = []
         for _set in sets:
             streamer_match = find_match(_set)
             match = tournament.find_match(match_set=str(_set))[1] or _set
@@ -357,7 +357,7 @@ any streamer/T.O. can edit anyone's stream.
 
             embed = discord.Embed(color=await ctx.embed_colour())
             embed.description = _("Please confirm the following changes")
-            if streamer.current_match and streamer.current_match.status == "ongoing":
+            if streamer.current_match and streamer.current_match.phase == MatchPhase.ONGOING:
                 if streamer.current_match in to_remove:
                     embed.set_footer(text=_("⚠ This will cancel your current set!"))
                 else:
@@ -380,16 +380,14 @@ any streamer/T.O. can edit anyone's stream.
                 if isinstance(match, int):
                     continue
                 match.streamer = streamer
-                if match.status == "ongoing":
-                    if new_list.index(match) == 0:
-                        match.on_hold = False
-                    else:
-                        match.on_hold = True
+                if match.phase == MatchPhase.ONGOING:
+                    if new_list.index(match) != 0:
+                        match.phase = MatchPhase.ON_HOLD
                     await match.stream_queue_add()
             if to_remove:
                 await streamer.remove_matches(*[streamer.get_set(x) for x in to_remove])
             streamer.matches = new_list
-        if tournament.status != "ongoing":
+        if tournament.phase != Phase.ONGOING:
             await tournament.save()
         await ctx.send(_("Stream queue successfully modified."))
 
@@ -416,7 +414,7 @@ any streamer/T.O. can edit anyone's stream.
         - `[p]stream swap https://twitch.tv/el_laggron 252 254`
         """
         tournament = self.tournaments[ctx.guild.id]
-        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        streamer: Streamer = await self._get_streamer_from_ctx(ctx, streamer)
         if not streamer:
             return
         try:
@@ -425,7 +423,7 @@ any streamer/T.O. can edit anyone's stream.
             await ctx.send(_("One of the provided sets cannot be found."))
         else:
             await ctx.tick()
-        if tournament.status != "ongoing":
+        if tournament.phase != Phase.ONGOING:
             await tournament.save()
 
     @only_phase()
@@ -454,7 +452,7 @@ already be in your stream queue.
         - `[p]stream insert https://twitch.tv/el_laggron 252 254`
         """
         tournament = self.tournaments[ctx.guild.id]
-        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        streamer: Streamer = await self._get_streamer_from_ctx(ctx, streamer)
         if not streamer:
             return
         try:
@@ -463,7 +461,7 @@ already be in your stream queue.
             await ctx.send(_("One of the provided sets cannot be found."))
         else:
             await ctx.tick()
-        if tournament.status != "ongoing":
+        if tournament.phase != Phase.ONGOING:
             await tournament.save()
 
     @only_phase()
@@ -483,7 +481,7 @@ already be in your stream queue.
         - `[p]stream info`
         - `[p]stream info https://twitch.tv/el_laggron`
         """
-        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        streamer: Streamer = await self._get_streamer_from_ctx(ctx, streamer)
         if not streamer:
             return
         sets = ""
@@ -492,7 +490,7 @@ already be in your stream queue.
                 sets += _("#{set}: *waiting for players*\n").format(set=match)
                 continue
             text = f"#{match.set}: {match.player1} vs {match.player2}"
-            if match.status == "ongoing":
+            if match.phase == MatchPhase.ONGOING:
                 text = f"**{text}**"
             else:
                 text += _(" (on hold)")
@@ -540,12 +538,12 @@ already be in your stream queue.
         - `[p]stream end`
         - `[p]stream end https://twitch.tv/el_laggron`
         """
-        streamer = await self._get_streamer_from_ctx(ctx, streamer)
+        streamer: Streamer = await self._get_streamer_from_ctx(ctx, streamer)
         if not streamer:
             return
         tournament = self.tournaments[ctx.guild.id]
         await streamer.end()
         tournament.streamers.remove(streamer)
-        if tournament.status != "ongoing":
+        if tournament.phase != Phase.ONGOING:
             await tournament.save()
         await ctx.tick()

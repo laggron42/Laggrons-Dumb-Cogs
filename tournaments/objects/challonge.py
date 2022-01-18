@@ -11,7 +11,7 @@ from redbot.core.bot import Red
 from redbot.core.i18n import Translator
 
 from ..utils import async_http_retry
-from .base import Tournament, Match, Participant, MatchPhase
+from .base import Tournament, Match, Participant, Phase, MatchPhase
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
@@ -370,12 +370,12 @@ class ChallongeTournament(Tournament):
 
     async def start(self):
         await self.request(achallonge.tournaments.start, self.id)
-        self.phase = "ongoing"
+        self.phase = Phase.ONGOING
         log.debug(f"Started Challonge tournament {self.id}")
 
     async def stop(self):
         await self.request(achallonge.tournaments.finalize, self.id)
-        self.phase = "finished"
+        self.phase = Phase.DONE
         log.debug(f"Ended Challonge tournament {self.id}")
 
     async def add_participant(self, participant: ChallongeParticipant, seed: int = None):

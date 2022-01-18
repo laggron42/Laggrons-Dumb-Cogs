@@ -1425,7 +1425,7 @@ the start of the tournament, then closing 15 minutes before.
         )
         async with ctx.typing():
             self.tournaments[ctx.guild.id] = tournament
-            tournament.phase = "ongoing"
+            tournament.phase = Phase.ONGOING
             if send_announcement:
                 await tournament.send_start_messages()
             channels = list(filter(None, [tournament.channels.queue]))

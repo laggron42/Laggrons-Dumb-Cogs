@@ -15,7 +15,7 @@ from redbot.core.config import Group
 from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import Translator, cog_i18n
 
-from .objects import Tournament, ChallongeTournament
+from .objects import Tournament, ChallongeTournament, Phase
 from .games import Games
 from .registration import Registration
 from .settings import Settings
@@ -225,7 +225,7 @@ class Tournaments(
             tournament = await ChallongeTournament.from_saved_data(
                 self.bot, guild, self.data, self.__version__, tournament_data, data
             )
-            if tournament.phase == "ongoing":
+            if tournament.phase == Phase.ONGOING:
                 await tournament.start_loop_task()
             return tournament
 
