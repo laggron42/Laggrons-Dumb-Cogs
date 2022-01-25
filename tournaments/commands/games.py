@@ -9,7 +9,6 @@ from copy import deepcopy
 from typing import List, Mapping, Optional
 
 from redbot.core import commands
-from redbot.core import checks
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
 from redbot.core.utils.mod import mass_purge
