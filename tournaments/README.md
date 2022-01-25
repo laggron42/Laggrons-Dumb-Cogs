@@ -105,26 +105,28 @@ Thanks to [Xyleff](https://github.com/Xyleff2049) too who also helped me a lot f
 
 If you're reading this from Github and want to contribute or just understand the source code, I'm gonna stop you right there. Indeed, the cog is a bit complex so let me explain a bit how each file work before source diving.
 
-To prevent having files too long, I splitted categories of commands across different files. The most important part of the code, the core of all this, is inside the `objects` folder. Indeed, you will find there 4 classes: `Tournament`, `Participant`, `Match` and `Streamer`, and most of the commands simply calls those objects' methods. More details below.
+To prevent having files too long, I splitted categories of commands across different files. The most important part of the code, the core of all this, is inside the `core` folder. Indeed, you will find there 4 classes: `Tournament`, `Participant`, `Match` and `Streamer`, and most of the commands simply calls those objects' methods. More details below.
 
 - `__init__.py` The first file invoked when loading the cog. Nothing really useful here, only checks for libs and restore previous tournaments.
 - `abc.py` Just stuff for the inheritance of some classes.
-- `games.py` The commands that are used during a tournament are located here, such as `[p]start`, `[p]resetbracket`, `[p]win`, `[p]dq`... This mostly interacts with the objects defined in the `objects` folder, few code is actually in there.
-- `registration.py` All the commands related to registration and check-in, such as `[p]in`, `[p]out`, `[p]add`, `[p]rm`... This mostly interacts with the objects defined in the `objects` folder.
-- `settings.py` All the settings commands: `[p]tset`, `[p]challongeset` and `[p]setup`. Boring file, super long because of the huge amount of settings.
-- `streams.py` Streamer related commands (`[p]stream`). This mostly interacts with the objects defined in the `objects` folder.
-- `tournaments.py` The base class of the cog. Not that interesting, as it inherits from the classes in `games.py`, `registration.py`, `settings.py` and `streams.py`. You will find here Config definition, the code for restoring tournaments from saved data, and some basic stuff for the cog.
 - `utils.py` Some utility functions, like one for calling and retrying API calls, or a decorator for specifying when a command can be used.
-
-Now the interesting part, the `objects` folder:
-
-- `__init__.py` Nothing lol
-- `base.py` The core of your tournaments. There are 4 classes :
-  - `Tournament` The first object created, it contains all the config you set, plus infos from the API. Then there are a lot of various methods, like the loop task ran during a tournament, code for launching the sets, sending messages, checking for timeout, adding a player... Then there are abstract methods, they represent API calls but just do nothing at this point, but we'll define them in the next file. There are also 3 lists for each of the objects described below. If you want to delete an object, remove it from those lists.
-  - `Participant` Represents a participant in the tournament. It inherits from `discord.Member` and adds some attributes and methods useful for our tournament, such as its player ID on the bracket, his current match, and see if he spoke (AFK check). There are once again abstract methods representing API calls, like DQing.
-  - `Match` Represents a match. It is associated to two participants, and contains the stuff for a match (setting scores, announcing changes, checking for DQ)... It is usually associated with a `discord.TextChannel` (if creating the channel failed, we move the stuff in DM). Still more abstract methods for API calls.
-  - `Streamer` Very small object that represents a streamer, and doesn't have API calls (we keep that for ourselves for now). It contains a list of the sets he will comment, and additional info.
-- `challonge.py` This file has 3 classes: `ChallongeTournament`, `ChallongeParticipant` and `ChallongeMatch`. You guessed it, they all inherit from the objects in `base.py` and will define those abstract methods with the actual API calls to Challonge. Stuff in here is specific to Challonge, it treats raw data from the Challonge API and adapts it to the structure of the base objects.
+- `tournaments.py` The base class of the cog. Not that interesting, as it inherits from the classes in `commands`. You will find here Config definition, the code for restoring tournaments from saved data, and some basic stuff for the cog.
+- `commands` folder, as you can guess, it's where the commands are
+  - `games.py` The commands that are used during a tournament are located here, such as `[p]start`, `[p]resetbracket`, `[p]win`, `[p]dq`... This mostly interacts with the objects defined in the `objects` folder, few code is actually in there.
+  - `registration.py` All the commands related to registration and check-in, such as `[p]in`, `[p]out`, `[p]add`, `[p]rm`... This mostly interacts with the objects defined in the `objects` folder.
+  - `settings.py` All the settings commands: `[p]tset`, `[p]challongeset` and `[p]setup`. Boring file, super long because of the huge amount of settings.
+  - `streams.py` Streamer related commands (`[p]stream`). This mostly interacts with the objects defined in the `objects` folder.
+- `core` folder, where the important stuff is
+  - `components.py` Discord components, such as buttons and drop down menus.
+  - `dataclass.py` Small objects used within the core. You may find data classes containing the buttons, channels and settings, and also events definition. This is mostly used in `base/tournaments.py`
+  - `enums.py` The different enums for the cog (event phases)
+  - `base` The core of your tournaments. Each file has one abstract class for its corresponding object.
+    - `tournament.py` The first object created, it contains all the config you set, plus infos from the API. Then there are a lot of various methods, like the loop task ran during a tournament, code for launching the sets, sending messages, checking for timeout, adding a player... Then there are abstract methods, they represent API calls but just do nothing at this point, but we'll define them in the next file. There are also 3 lists for each of the objects described below. If you want to delete an object, remove it from those lists.
+    - `participant.py` Represents a participant in the tournament. It inherits from `discord.Member` and adds some attributes and methods useful for our tournament, such as its player ID on the bracket, his current match, and see if he spoke (AFK check). There are once again abstract methods representing API calls, like DQing.
+    - `match.py` Represents a match. It is associated to two participants, and contains the stuff for a match (setting scores, announcing changes, checking for DQ)... It is usually associated with a `discord.TextChannel` (if creating the channel failed, we move the stuff in DM). Still more abstract methods for API calls.
+    - `streamer.py` Very small object that represents a streamer, and doesn't have API calls (we keep that for ourselves for now). It contains a list of the sets he will comment, and additional info.
+  - `interfaces` That's why we like object oriented programmation. There is one file per service provider in this folder, each file will inherit from the classes in `base` and implement the information specific about that service, and adapt it to the core of the cog. For now, there is only Challonge.
+    - `challonge.py` This file has 3 classes: `ChallongeTournament`, `ChallongeParticipant` and `ChallongeMatch`. You guessed it, they all inherit from the objects in `base` and will define those abstract methods with the actual API calls to Challonge. Stuff in here is specific to Challonge, it treats raw data from the Challonge API and adapts it to the structure of the base objects.
 
 You may have guessed it, using this structure, with base classes that are inherited, allows an easy integration for more services. If you have another great website for tournaments and brackets, create a new file, adapt the API data to the classes, and then there will be very few code to change, everything will work as intended!
 
