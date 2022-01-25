@@ -1,0 +1,41 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2022-01-25 17:19+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: redgettext 3.3\n"
+
+#: tournaments/core/interfaces/challonge.py:117
+msgid ""
+":warning: A bug occured on set {set} (one player disqualified but still "
+"listed in an open match, Challonge bug). The bot attempted a fix by forcing "
+"a winner, but you might want to check the bracket and make sure everything "
+"is fine."
+msgstr ""
+
+#: tournaments/core/interfaces/challonge.py:268
+msgid ""
+":warning: Challonge participant with name \"{name}\" can't be found in this server. This can be due to a name change, or the member left.\n"
+"Player is disqualified from this tournament."
+msgstr ""
+
+#: tournaments/core/interfaces/challonge.py:278
+msgid ""
+"\n"
+"Since this occured when starting the tournament, there may have been an error when uploading participants, or you skipped registration, relied on the existing participants in the bracket, and the names doesn't match the members' names in this server.\n"
+"If this is the case, you may want to roll back the tournament's start with the `{prefix}resetbracket` command, and retry.\n"
+msgstr ""
+
+#: tournaments/core/interfaces/challonge.py:287
+msgid ""
+":warning: Multiple Challonge participants can't be found in this server. This can be due to name changes, or the members left.\n"
+"{startup}\n"
+"The following players are disqualified from this tournament:\n"
+"{names}"
+msgstr ""
