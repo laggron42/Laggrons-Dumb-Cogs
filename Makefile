@@ -30,7 +30,7 @@ stylecheck:
 	python3 -m black -l 99 --check --diff `git ls-files "*.py"`
 
 gettext:
-	redgettext --command-docstrings --verbose --recursive --exclude-files "docs/*" --exclude-files "instantcmd/*" .
+	redgettext --command-docstrings --verbose --recursive --exclude-files "docs/*" --exclude-files "instantcmd/*" `git ls-files "*.py"`
 
 upload_translations:
 	crowdin upload sources
