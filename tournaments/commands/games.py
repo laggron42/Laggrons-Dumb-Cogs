@@ -15,9 +15,9 @@ from redbot.core.utils import menus
 from redbot.core.utils.mod import mass_purge
 from redbot.core.utils.chat_formatting import pagify
 
-from .abc import MixinMeta
-from .objects import Tournament, Match, Participant, Phase, EventPhase, MatchPhase
-from .utils import credentials_check, only_phase, mod_or_to, prompt_yes_or_no
+from ..abc import MixinMeta
+from ..core import Tournament, Match, Participant, Phase, EventPhase, MatchPhase
+from ..utils import credentials_check, only_phase, mod_or_to, prompt_yes_or_no
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)

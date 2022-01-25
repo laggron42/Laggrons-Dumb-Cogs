@@ -7,9 +7,9 @@ from discord.ext import tasks
 from redbot.core import commands
 from redbot.core.i18n import Translator
 
-from .abc import MixinMeta
-from .utils import only_phase, mod_or_to, prompt_yes_or_no
-from .objects import Phase, EventPhase
+from ..abc import MixinMeta
+from ..utils import only_phase, mod_or_to, prompt_yes_or_no
+from ..core import Phase, EventPhase
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)

@@ -1,7 +1,7 @@
 import discord
 from abc import ABC
 from typing import TYPE_CHECKING, Mapping, Optional
-from .objects import Tournament
+from .core import Tournament
 
 if TYPE_CHECKING:
     from redbot.core.bot import Red

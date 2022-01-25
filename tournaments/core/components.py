@@ -4,8 +4,7 @@ import discord
 import logging
 import re
 
-from discord.components import SelectOption
-from discord.ui import Button, Select, View
+from discord.ui import Button, View
 
 from typing import TYPE_CHECKING
 

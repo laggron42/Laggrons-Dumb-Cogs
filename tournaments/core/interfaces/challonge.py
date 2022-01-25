@@ -10,8 +10,9 @@ from redbot.core import Config
 from redbot.core.bot import Red
 from redbot.core.i18n import Translator
 
-from ..utils import async_http_retry
-from .base import Tournament, Match, Participant, Phase, MatchPhase
+from ...utils import async_http_retry
+from ..base import Tournament, Match, Participant
+from ..enums import Phase, MatchPhase
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)

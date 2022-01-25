@@ -10,9 +10,9 @@ from redbot.core.i18n import Translator
 from redbot.core.utils import menus
 from redbot.core.utils.chat_formatting import pagify
 
-from .abc import MixinMeta
-from .utils import only_phase, prompt_yes_or_no
-from .objects import Tournament, Match, Streamer, Phase, MatchPhase
+from ..abc import MixinMeta
+from ..utils import only_phase, prompt_yes_or_no
+from ..core import Tournament, Match, Streamer, Phase, MatchPhase
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)

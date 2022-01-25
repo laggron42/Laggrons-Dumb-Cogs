@@ -1,4 +1,3 @@
-from collections import namedtuple
 import contextlib
 import discord
 import logging
@@ -8,6 +7,7 @@ import achallonge
 import inspect
 
 from datetime import datetime, timedelta
+from collections import namedtuple
 from typing import Optional
 
 from redbot.core import commands
@@ -19,9 +19,9 @@ from redbot.core.utils.chat_formatting import humanize_timedelta, pagify
 from redbot.core.commands.converter import TimedeltaConverter
 from discord.ext.commands.view import StringView
 
-from .abc import MixinMeta
-from .objects import ChallongeTournament, Phase, MatchPhase
-from .utils import credentials_check, async_http_retry, mod_or_to, prompt_yes_or_no
+from ..abc import MixinMeta
+from ..core import ChallongeTournament, Phase, MatchPhase
+from ..utils import credentials_check, async_http_retry, mod_or_to, prompt_yes_or_no
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)

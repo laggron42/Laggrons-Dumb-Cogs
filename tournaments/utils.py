@@ -10,7 +10,7 @@ from redbot.core.i18n import Translator
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 
-from .objects import Tournament
+from .core import Tournament
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)

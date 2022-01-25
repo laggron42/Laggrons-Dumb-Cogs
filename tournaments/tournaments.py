@@ -15,12 +15,12 @@ from redbot.core.config import Group
 from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import Translator, cog_i18n
 
-from .objects import Tournament, ChallongeTournament, Phase
-from .games import Games
-from .registration import Registration
-from .settings import Settings
-from .streams import Streams
-from .troubleshooting import Troubleshooting
+from .core import Tournament, ChallongeTournament, Phase
+from .commands.games import Games
+from .commands.registration import Registration
+from .commands.settings import Settings
+from .commands.streams import Streams
+from .commands.troubleshooting import Troubleshooting
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
