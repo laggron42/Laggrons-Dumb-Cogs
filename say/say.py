@@ -4,39 +4,36 @@ import discord
 import asyncio
 import logging
 
-from typing import Optional
-from laggron_utils.logging import close_logger, DisabledConsoleOutput
+from discord import app_commands
+
+from typing import TYPE_CHECKING, Optional
+from laggron_utils import close_logger
 
 from redbot.core import checks, commands
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils.tunnel import Tunnel
 
+if TYPE_CHECKING:
+    from redbot.core.bot import Red
+
 log = logging.getLogger("red.laggron.say")
 _ = Translator("Say", __file__)
-BaseCog = getattr(commands, "Cog", object)
-
-# Red 3.0 backwards compatibility, thanks Sinbad
-listener = getattr(commands.Cog, "listener", None)
-if listener is None:
-
-    def listener(name=None):
-        return lambda x: x
 
 
 @cog_i18n(_)
-class Say(BaseCog):
+class Say(commands.Cog):
     """
     Speak as if you were the bot
 
     Documentation: http://laggron.red/say.html
     """
 
-    def __init__(self, bot):
+    def __init__(self, bot: "Red"):
         self.bot = bot
         self.interaction = []
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.6.0"
+    __version__ = "2.0.0"
 
     async def say(
         self,
@@ -53,48 +50,41 @@ class Say(BaseCog):
             await ctx.send_help()
             return
 
-        # preparing context info in case of an error
-        if files != []:
-            error_message = (
-                "Has files: yes\n"
-                f"Number of files: {len(files)}\n"
-                f"Files URL: " + ", ".join([x.url for x in ctx.message.attachments])
-            )
-        else:
-            error_message = "Has files: no"
+        author = ctx.author
+        guild = ctx.guild
 
-        # sending the message
+        # checking perms
+        if not channel.permissions_for(guild.me).send_messages:
+            if channel != ctx.channel:
+                await ctx.send(
+                    _("I am not allowed to send messages in ") + channel.mention,
+                    delete_after=2,
+                )
+            else:
+                await author.send(_("I am not allowed to send messages in ") + channel.mention)
+                # If this fails then fuck the command author
+            return
+
+        if files and not channel.permissions_for(guild.me).attach_files:
+            try:
+                await ctx.send(
+                    _("I am not allowed to upload files in ") + channel.mention, delete_after=2
+                )
+            except discord.errors.Forbidden:
+                await author.send(
+                    _("I am not allowed to upload files in ") + channel.mention,
+                    delete_after=15,
+                )
+            return
+
         try:
             await channel.send(text, files=files, allowed_mentions=mentions, delete_after=delete)
-        except discord.errors.HTTPException as e:
-            author = ctx.author
-            if not ctx.guild.me.permissions_in(channel).send_messages:
-                try:
-                    await ctx.send(
-                        _("I am not allowed to send messages in ") + channel.mention,
-                        delete_after=2,
-                    )
-                except discord.errors.Forbidden:
-                    await author.send(
-                        _("I am not allowed to send messages in ") + channel.mention,
-                        delete_after=15,
-                    )
-                    # If this fails then fuck the command author
-            elif not ctx.guild.me.permissions_in(channel).attach_files:
-                try:
-                    await ctx.send(
-                        _("I am not allowed to upload files in ") + channel.mention, delete_after=2
-                    )
-                except discord.errors.Forbidden:
-                    await author.send(
-                        _("I am not allowed to upload files in ") + channel.mention,
-                        delete_after=15,
-                    )
-            else:
-                log.error(
-                    f"Unknown permissions error when sending a message.\n{error_message}",
-                    exc_info=e,
-                )
+        except discord.errors.HTTPException:
+            try:
+                await ctx.send("An error occured when sending the message.")
+            except discord.errors.HTTPException:
+                pass
+            log.error("Failed to send message.", exc_info=True)
 
     @commands.command(name="say")
     @checks.admin_or_permissions(administrator=True)
@@ -299,25 +289,81 @@ class Say(BaseCog):
             ).format(self)
         )
 
-    @listener()
+    # ----- Slash commands -----
+    @app_commands.command(name="say", description="Make the bot send a message")
+    @app_commands.describe(
+        message="The content of the message you want to send",
+        channel="The channel where you want to send the message (default to current)",
+        delete_delay="Delete the message sent after X seconds",
+        mentions="Allow @everyone, @here and role mentions in your message",
+        file="A file you want to attach to the message sent (message content becomes optional)",
+    )
+    async def slash_say(
+        self,
+        interaction: discord.Interaction,
+        message: Optional[str] = "",
+        channel: Optional[discord.TextChannel] = None,
+        delete_delay: Optional[int] = None,
+        mentions: Optional[bool] = False,
+        file: Optional[discord.Attachment] = None,
+    ):
+        guild = interaction.guild
+        channel = channel or interaction.channel
+
+        if not guild:
+            await interaction.response.send_message(_("This command cannot be used in DM."))
+            return
+
+        if not message and not file:
+            await interaction.response.send_message(
+                _("You cannot send an empty message."), ephemeral=True
+            )
+            return
+
+        if not channel.permissions_for(guild.me).send_messages:
+            await interaction.response.send_message(
+                _("I don't have the permission to send messages there."), ephemeral=True
+            )
+            return
+        if file and not channel.permissions_for(guild.me).attach_files:
+            await interaction.response.send_message(
+                _("I don't have the permission to upload files there."), ephemeral=True
+            )
+            return
+
+        if mentions:
+            mentions = discord.AllowedMentions(
+                everyone=interaction.user.guild_permissions.mention_everyone,
+                roles=interaction.user.guild_permissions.mention_everyone
+                or [x for x in interaction.guild.roles if x.mentionable],
+            )
+        else:
+            mentions = None
+
+        file = await file.to_file(use_cached=True) if file else None
+        try:
+            await channel.send(message, file=file, delete_after=delete_delay)
+        except discord.HTTPException:
+            await interaction.response.send_message(
+                _("An error occured when sending the message."), ephemeral=True
+            )
+            log.error(
+                f"Cannot send message in {channel.name} ({channel.id}) requested by "
+                f"{interaction.user} ({interaction.user.id}). "
+                f"Command: {interaction.message.content}",
+                exc_info=True,
+            )
+        else:
+            # acknowledge the command, but don't actually send an additional message
+            await interaction.response.defer(ephemeral=False)
+            await interaction.followup.delete_message("@original")
+
+    @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         if user in self.interaction:
             channel = reaction.message.channel
             if isinstance(channel, discord.DMChannel):
                 await self.stop_interaction(user)
-
-    @listener()
-    async def on_command_error(self, ctx, error):
-        if not isinstance(error, commands.CommandInvokeError):
-            return
-        if not ctx.command.cog_name == self.__class__.__name__:
-            # That error doesn't belong to the cog
-            return
-        with DisabledConsoleOutput(log):
-            log.error(
-                f"Exception in command '{ctx.command.qualified_name}'.\n\n",
-                exc_info=error.original,
-            )
 
     async def stop_interaction(self, user):
         self.interaction.remove(user)
