@@ -905,6 +905,5 @@ SLASH_COMMANDS = [
         "type": 1,
         "name": "flip",
         "description": "Flip a coin",
-        "default_permission": False,
     },
 ]
