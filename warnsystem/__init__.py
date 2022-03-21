@@ -3,12 +3,8 @@ import importlib.util
 import re
 
 from redbot.core.i18n import Translator
+from redbot.core.errors import CogLoadError
 from datetime import datetime, timedelta
-
-try:
-    from redbot.core.errors import CogLoadError
-except ImportError:
-    CogLoadError = RuntimeError
 
 if not importlib.util.find_spec("dateutil"):
     raise CogLoadError(
@@ -25,7 +21,7 @@ if not importlib.util.find_spec("laggron_utils"):
     )
 
 from laggron_utils import init_logger, close_logger
-from .warnsystem import WarnSystem
+from warnsystem.warnsystem import WarnSystem
 
 _ = Translator("WarnSystem", __file__)
 log = logging.getLogger("red.laggron.warnsystem")
@@ -212,8 +208,5 @@ async def setup(bot):
             "3rd party cog support server, #support_laggrons-dumb-cogs channel)."
         ) from e
     bot.add_cog(n)
-    await n.cache.init_automod_enabled()
     n.task = bot.loop.create_task(n.api._loop_task())
-    if n.cache.automod_enabled:
-        n.api.enable_automod()
     log.debug("Cog successfully loaded on the instance.")

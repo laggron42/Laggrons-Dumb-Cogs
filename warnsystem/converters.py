@@ -1,9 +1,9 @@
 import argparse
-from typing import List
 import discord
 import re
 import logging
 
+from typing import List
 from dateutil import parser
 from discord.ext.commands.converter import RoleConverter, MemberConverter
 
@@ -11,7 +11,7 @@ from redbot.core.commands import BadArgument, Converter, Context
 from redbot.core.commands.converter import TimedeltaConverter
 from redbot.core.i18n import Translator
 
-from .api import UnavailableMember
+from warnsystem.core.api import UnavailableMember
 
 _ = Translator("WarnSystem", __file__)
 log = logging.getLogger("red.laggron.warnsystem")
@@ -443,8 +443,8 @@ class AdvancedMemberSelect:
                 except BadArgument as e:
                     raise BadArgument(
                         _(
-                            "Can't convert `{arg}` from `--time`/`--length` into a valid time object.\n"
-                            "Examples of the format: `20m`, `2h30m`, `7d`, `1d6h30m45s`"
+                            "Can't convert `{arg}` from `--time`/`--length` into a valid time "
+                            "object.\nExamples of the format: `20m`, `2h30m`, `7d`, `1d6h30m45s`"
                         ).format(arg=" ".join(args.time))
                     ) from e
             else:

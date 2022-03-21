@@ -1,20 +1,21 @@
 import discord
 
 from discord.components import SelectOption
-from discord.ui import Button, Select, View
+from discord.ui import Button, Select, Modal, TextInput, View
 from asyncio import TimeoutError as AsyncTimeoutError
 from datetime import datetime
-from typing import Optional, Union, TYPE_CHECKING
+from typing import List, Optional, Union, TYPE_CHECKING
 
 from redbot.core.i18n import Translator
 from redbot.core.utils import predicates, mod
 
-from .api import UnavailableMember
+from warnsystem.core.api import UnavailableMember
+from warnsystem.core.warning import Warning
 
 if TYPE_CHECKING:
     from redbot.core.bot import Red
-    from .api import API
-    from .cache import MemoryCache
+    from warnsystem.core.api import API
+    from warnsystem.core.cache import MemoryCache
 
 _ = Translator("WarnSystem", __file__)
 
@@ -146,6 +147,12 @@ async def prompt_yes_or_no(
             )
 
 
+class EditReasonModal(Modal):
+    def __init__(self, warning):
+        super().__init__(title=_("Edit warning reason"))
+        self.add_item(TextInput(label=_("New reason")))
+
+
 class EditReasonButton(Button):
     def __init__(
         self,
@@ -174,7 +181,7 @@ class EditReasonButton(Button):
         self.case_index = case_index
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+        await interaction.response.send_modal()
         interaction = self.inter
         embed = discord.Embed()
         embed.description = _(
@@ -271,7 +278,7 @@ class WarningsList(Select):
         self,
         bot: "Red",
         user: Union[discord.Member, UnavailableMember],
-        cases: list,
+        cases: List[Warning],
         *,
         row: Optional[int] = None,
     ):
@@ -300,15 +307,15 @@ class WarningsList(Select):
         elif level == 5:
             return (_("Ban"), "🔨")
 
-    def generate_cases(self, cases: list):
+    def generate_cases(self, cases: List[Warning]):
         options = []
         for i, case in enumerate(cases[:24]):
-            name, emote = self._get_label(case["level"])
-            date = pretty_date(self.api._get_datetime(case["time"]))
-            if case["reason"] and len(name) + len(case["reason"]) > 25:
-                reason = case["reason"][:47] + "..."
+            name, emote = self._get_label(case.level)
+            date = pretty_date(case.time)
+            if case.reason and len(name) + len(case.reason) > 25:
+                reason = case.reason[:47] + "..."
             else:
-                reason = case["reason"]
+                reason = case.reason
             option = SelectOption(
                 label=name + " • " + date,
                 value=i,
@@ -330,26 +337,25 @@ class WarningsList(Select):
         guild = interaction.guild
         i = int(interaction.data["values"][0])
         case = self.cases[i]
-        level = case["level"]
-        moderator = guild.get_member(case["author"])
-        moderator = "ID: " + str(case["author"]) if not moderator else moderator.mention
-        time = self.api._get_datetime(case["time"])
+        level = case.level
+        moderator = case.author
+        moderator = case.author.mention
+        time = case.time
         embed = discord.Embed(description=_("Case #{number} informations").format(number=i + 1))
         embed.set_author(name=f"{self.user} | {self.user.id}", icon_url=self.user.avatar.url)
         embed.add_field(
             name=_("Level"), value=f"{warning_str(level, False)} ({level})", inline=True
         )
         embed.add_field(name=_("Moderator"), value=moderator, inline=True)
-        if case["duration"]:
-            duration = self.api._get_timedelta(case["duration"])
+        if case.duration:
             embed.add_field(
                 name=_("Duration"),
                 value=_("{duration}\n(Until {date})").format(
-                    duration=self.api._format_timedelta(duration),
-                    date=self.api._format_datetime(time + duration),
+                    duration=case._format_timedelta(case.duration),
+                    date=case._format_datetime(time + case.duration),
                 ),
             )
-        embed.add_field(name=_("Reason"), value=case["reason"], inline=False),
+        embed.add_field(name=_("Reason"), value=case.reason, inline=False),
         embed.timestamp = time
         embed.colour = await self.ws.data.guild(guild).colors.get_raw(level)
         is_mod = await mod.is_mod_or_superior(self.bot, interaction.user)

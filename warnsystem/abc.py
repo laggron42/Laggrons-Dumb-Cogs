@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from redbot.core import Config
     from redbot.core.bot import Red
-    from .cache import MemoryCache
-    from .api import API
+    from warnsystem.core.cache import MemoryCache
+    from warnsystem.core.api import API
 
 
 class MixinMeta(ABC):

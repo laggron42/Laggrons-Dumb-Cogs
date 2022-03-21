@@ -12,7 +12,7 @@ from redbot.core.i18n import Translator
 from redbot.core.utils import predicates, menus
 from redbot.core.utils.chat_formatting import pagify
 
-from .abc import MixinMeta
+from warnsystem.abc import MixinMeta
 
 log = logging.getLogger("red.laggron.warnsystem")
 _ = Translator("WarnSystem", __file__)
@@ -636,7 +636,8 @@ channels, and prevented from talking in all voice channels.
         """
         Set if the bot should send an invite after a temporary ban.
 
-        If enabled, any unbanned member will receive a DM with an invite to join back to the server.
+        If enabled, any unbanned member will receive a DM with an \
+invite to join back to the server.
         The bot needs to share a server with the member to send a DM.
 
         Invoke the command without arguments to get the current status.
