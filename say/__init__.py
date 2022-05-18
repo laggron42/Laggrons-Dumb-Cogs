@@ -25,27 +25,12 @@ log = logging.getLogger("red.laggron.say")
 
 async def setup(bot: "Red"):
     init_logger(log, "Say")
-    try:
-        if not hasattr(bot, "tree"):
-            bot.tree = app_commands.CommandTree(bot)
-    except AttributeError:
+    if not hasattr(bot, "tree"):
         raise CogLoadError("This cog requires the latest discord.py 2.0.0a.") from None
     n = Say(bot)
-    bot.add_cog(n)
-    asyncio.create_task(_setup(bot))
+    await bot.add_cog(n)
     log.debug("Cog successfully loaded on the instance.")
 
 
-async def _setup(bot: "Red"):
-    if bot.user:
-        assert isinstance(bot.tree, app_commands.CommandTree)
-        log.debug("Added slash command /say, syncing...")
-        await bot.tree.sync(guild=None)
-        log.debug("Slash commands now synced...")
-
-
-def teardown(bot: "Red"):
-    if bot.user:
-        assert isinstance(bot.tree, app_commands.CommandTree)
-        # delay the slash removal a bit in case this is a reload
-        asyncio.get_event_loop().call_later(2, asyncio.create_task, bot.tree.sync(guild=None))
+async def teardown(bot: "Red"):
+    bot.tree.remove_command("say")
