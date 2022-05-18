@@ -305,6 +305,8 @@ class Say(commands.Cog):
         mentions="Allow @everyone, @here and role mentions in your message",
         file="A file you want to attach to the message sent (message content becomes optional)",
     )
+    @app_commands.default_permissions()
+    @app_commands.guild_only()
     async def slash_say(
         self,
         interaction: discord.Interaction,
