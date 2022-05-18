@@ -312,10 +312,6 @@ class Say(commands.Cog):
         guild = interaction.guild
         channel = channel or interaction.channel
 
-        if not guild:
-            await interaction.response.send_message(_("This command cannot be used in DM."))
-            return
-
         if not message and not file:
             await interaction.response.send_message(
                 _("You cannot send an empty message."), ephemeral=True
@@ -371,11 +367,8 @@ class Say(commands.Cog):
         self.interaction.remove(user)
         await user.send(_("Session closed"))
 
-    def __unload(self):
-        self.cog_unload()
-
-    def cog_unload(self):
+    async def cog_unload(self):
         log.debug("Unloading cog...")
         for user in self.interaction:
-            self.bot.loop.create_task(self.stop_interaction(user))
+            await self.stop_interaction(user)
         close_logger(log)
