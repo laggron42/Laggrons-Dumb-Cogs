@@ -6,19 +6,7 @@ The instantcmd folder is added to sys.path only when executing the code on load.
 
 from typing import Callable
 
-
-class Listener:
-    """
-    A class representing a discord.py listener.
-    """
-
-    def __init__(self, function: Callable, name: str):
-        self.func = function
-        self.name = name
-        self.id = id(function)
-
-    def __call__(self, *args, **kwargs):
-        self.func(*args, **kwargs)
+from instantcmd.core.listener import Listener
 
 
 def listener(name: str = None):

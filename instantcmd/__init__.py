@@ -66,5 +66,5 @@ async def setup(bot):
             await ask_reset(bot, commands)
             await n.data.commands.set({})
         await n.data.updated_body.set(True)
-    bot.add_cog(n)
+    await bot.add_cog(n)
     log.debug("Cog successfully loaded on the instance.")
