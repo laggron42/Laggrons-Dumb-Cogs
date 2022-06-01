@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from redbot.core import Config
 
 Awaitable = Callable[..., Awaitable]
-log = logging.getLogger("laggron.instantcmd.core.listener")
+log = logging.getLogger("red.laggron.instantcmd.core.listener")
 
 
 class Listener:
