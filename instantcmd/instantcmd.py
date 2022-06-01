@@ -19,7 +19,7 @@ from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.chat_formatting import pagify
 
 from instantcmd.utils import Listener
-from instantcmd.components import CodeSnippetsList
+from instantcmd.components import CodeSnippetsList, OwnerOnlyView
 from instantcmd.code_runner import cleanup_code, get_code_from_str, find_matching_type
 from instantcmd.core import CodeSnippet, CommandSnippet, ListenerSnippet
 
@@ -268,11 +268,11 @@ cog at this point.
         await ctx.send(f"Successfully added your new {code_snippet.name}.")
 
     @instantcmd.command(name="list")
-    async def _list(self, ctx):
+    async def _list(self, ctx: commands.Context):
         """
         List all existing commands made using Instant Commands.
         """
-        view = View(timeout=300)
+        view = OwnerOnlyView(timeout=300)
         total = 0
         types = (CommandSnippet, ListenerSnippet)
         for type in types:
