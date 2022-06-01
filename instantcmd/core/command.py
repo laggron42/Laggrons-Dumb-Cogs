@@ -42,4 +42,4 @@ class CommandSnippet(CodeSnippet[Command]):
         if self.bot.remove_command(self.value.name) is not None:
             log.debug(f"Removed command {self}")
         else:
-            log.warn(f"Tried to remove command {self} but it was not registered")
+            log.warning(f"Tried to remove command {self} but it was not registered")
