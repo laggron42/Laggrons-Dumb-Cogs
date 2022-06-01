@@ -51,9 +51,12 @@ class CodeSnippet(Generic[T]):
         return code_snippet
 
     async def save(self):
-        await self.config.custom("CODE_SNIPPET", self.name, str(self)).set_raw(
+        await self.data.custom("CODE_SNIPPET", self.name, str(self)).set_raw(
             value={"code": self.source, "enabled": self.enabled}
         )
+
+    async def delete(self):
+        await self.data.custom("CODE_SNIPPET", self.name).clear_raw(str(self))
 
     def get_formatted_code(self) -> Iterator[str]:
         """
