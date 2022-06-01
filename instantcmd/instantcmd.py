@@ -238,7 +238,7 @@ cog at this point.
         function, function_string = await self._extract_code(ctx, command)
         snippet_type = find_matching_type(function)
         # this is a CodeSnippet object (command, listener or whatever is currently supported)
-        code_snippet = snippet_type(self.bot, function, function_string)
+        code_snippet = snippet_type(self.bot, self.data, function, function_string)
 
         # detecting if this name isn't already registered
         for saved_code in self.get_code_snippets(type=snippet_type):
@@ -263,7 +263,7 @@ cog at this point.
             return
 
         code_snippet.registered = True
-        await code_snippet.save(self.data)
+        await code_snippet.save()
         self.code_snippets.append(code_snippet)
         await ctx.send(f"Successfully added your new {code_snippet.name}.")
 

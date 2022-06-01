@@ -6,6 +6,7 @@ from instantcmd.core import CodeSnippet
 
 if TYPE_CHECKING:
     from redbot.core.bot import Red
+    from redbot.core import Config
 
 Awaitable = Callable[..., Awaitable]
 log = logging.getLogger("laggron.instantcmd.core.listener")
@@ -32,8 +33,8 @@ class ListenerSnippet(CodeSnippet[Listener]):
 
     name = "listener"
 
-    def __init__(self, bot: "Red", listener: Listener, source: str):
-        super().__init__(bot, listener, source)
+    def __init__(self, bot: "Red", config: "Config", listener: Listener, source: str):
+        super().__init__(bot, config, listener, source)
 
     def __str__(self) -> str:
         return self.value.func.__name__
