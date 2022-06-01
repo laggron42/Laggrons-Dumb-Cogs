@@ -10,7 +10,7 @@ from instantcmd.core import CodeSnippet
 if TYPE_CHECKING:
     from redbot.core.bot import Red
 
-log = logging.getLogger("laggron.instantcmd.components")
+log = logging.getLogger("red.laggron.instantcmd.components")
 T = TypeVar("T", bound=CodeSnippet)
 
 

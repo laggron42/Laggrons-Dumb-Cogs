@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from redbot.core import Config
 
 Command = TypeVar("Command", bound=commands.Command)
-log = logging.getLogger("laggron.instantcmd.core.command")
+log = logging.getLogger("red.laggron.instantcmd.core.command")
 
 
 class CommandSnippet(CodeSnippet[Command]):
