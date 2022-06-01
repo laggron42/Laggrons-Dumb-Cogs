@@ -21,7 +21,13 @@ from redbot.core.utils.chat_formatting import pagify
 from instantcmd.utils import Listener
 from instantcmd.components import CodeSnippetsList, OwnerOnlyView
 from instantcmd.code_runner import cleanup_code, get_code_from_str, find_matching_type
-from instantcmd.core import CodeSnippet, CommandSnippet, ListenerSnippet
+from instantcmd.core import (
+    CodeSnippet,
+    CommandSnippet,
+    ListenerSnippet,
+    InstantcmdException,
+    ExecutionException,
+)
 
 log = logging.getLogger("red.laggron.instantcmd")
 T = TypeVar("T")
@@ -244,14 +250,10 @@ class InstantCommands(commands.Cog):
 
         try:
             function = get_code_from_str(function_string, self.env)
+        except InstantcmdException:
+            raise  # do not add another step for already commented errors
         except Exception as e:
-            exception = "".join(traceback.format_exception(type(e), e, e.__traceback__))
-            message = (
-                f"An exception has occured while compiling your code:\n```py\n{exception}\n```"
-            )
-            for page in pagify(message):
-                await ctx.send(page)
-            return
+            raise ExecutionException("An exception has occured while compiling your code") from e
         return function, function_string
 
     @checks.is_owner()
@@ -269,8 +271,21 @@ class InstantCommands(commands.Cog):
         You can upload a text file if the command is too long, but you should consider coding a \
 cog at this point.
         """
-        function, function_string = await self._extract_code(ctx, command)
-        snippet_type = find_matching_type(function)
+        try:
+            function, function_string = await self._extract_code(ctx, command)
+            snippet_type = find_matching_type(function)
+        except InstantcmdException as e:
+            message = e.args[0]
+            exc = e.__cause__
+            if exc:
+                message += (
+                    "\n```py\n"
+                    + "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+                    + "\n```"
+                )
+            for page in pagify(message):
+                await ctx.send(page)
+            return
         # this is a CodeSnippet object (command, listener or whatever is currently supported)
         code_snippet = snippet_type(self.bot, self.data, function, function_string)
 

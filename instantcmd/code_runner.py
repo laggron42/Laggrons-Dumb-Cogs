@@ -65,4 +65,10 @@ def find_matching_type(code: T) -> Type[CodeSnippet]:
     for source, dest in OBJECT_TYPES_MAPPING.items():
         if isinstance(code, source):
             return dest
-    raise UnknownType(f'The type "{type(code)}" was not recognized. Did you forget a decorator?')
+    if hasattr(code, "__name__"):
+        raise UnknownType(
+            f"The function `{code.__name__}` needs to be transformed into something. "
+            "Did you forget a decorator?"
+        )
+    else:
+        raise UnknownType(f"The type `{type(code)}` is currently not supported by instantcmd.")
