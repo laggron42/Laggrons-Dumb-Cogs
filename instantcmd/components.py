@@ -21,6 +21,15 @@ def char_limit(text: str, limit: int) -> str:
         return text
 
 
+class OwnerOnlyView(View):
+    """
+    A view where only bot owners are allowed to interact.
+    """
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        return await self.bot.is_owner(interaction.user)
+
+
 class DownloadButton(Button):
     """
     A button to download the source file.
@@ -126,7 +135,7 @@ class DeleteButton(Button):
         # TODO: actually delete lol
 
 
-class CodeSnippetView(View):
+class CodeSnippetView(OwnerOnlyView):
     """
     List of buttons for a single code snippet.
     """
