@@ -272,7 +272,7 @@ cog at this point.
         """
         List all existing commands made using Instant Commands.
         """
-        view = OwnerOnlyView(timeout=300)
+        view = OwnerOnlyView(self.bot, timeout=300)
         total = 0
         types = (CommandSnippet, ListenerSnippet)
         for type in types:

@@ -1,7 +1,7 @@
 import discord
 import logging
 
-from typing import TYPE_CHECKING, TypeVar, Type, List
+from typing import TYPE_CHECKING, Optional, TypeVar, Type, List
 from discord.ui import Select, Button, View
 from redbot.core.utils.chat_formatting import text_to_file
 
@@ -25,6 +25,10 @@ class OwnerOnlyView(View):
     """
     A view where only bot owners are allowed to interact.
     """
+
+    def __init__(self, bot: "Red", *, timeout: Optional[float] = 180):
+        self.bot = bot
+        super().__init__(timeout=timeout)
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         return await self.bot.is_owner(interaction.user)
@@ -60,21 +64,22 @@ class ActivateDeactivateButton(Button):
     """
 
     def __init__(self, code_snippet: T):
+        super().__init__()
         self.code_snippet = code_snippet
-        if code_snippet.enabled:
-            super().__init__(
-                style=discord.ButtonStyle.secondary,
-                label="Disable",
-                emoji="\N{HEAVY MULTIPLICATION X}\N{VARIATION SELECTOR-16}",
-            )
+        self.set_style()
+
+    def set_style(self):
+        if self.code_snippet.enabled:
+            self.style = discord.ButtonStyle.secondary
+            self.label = "Disable"
+            self.emoji = "\N{HEAVY MULTIPLICATION X}\N{VARIATION SELECTOR-16}"
         else:
-            super().__init__(
-                style=discord.ButtonStyle.success,
-                label="Enable",
-                emoji="\N{HEAVY CHECK MARK}\N{VARIATION SELECTOR-16}",
-            )
+            self.style = discord.ButtonStyle.success
+            self.label = "Enable"
+            self.emoji = "\N{HEAVY CHECK MARK}\N{VARIATION SELECTOR-16}"
 
     async def callback(self, interaction: discord.Interaction):
+        # interaction = self.view.og_interaction
         if self.code_snippet.enabled:
             log.info(f"Code snippet {self.code_snippet} disabled.")
             self.code_snippet.enabled = False
@@ -92,9 +97,11 @@ class ActivateDeactivateButton(Button):
                     "It is still deactivated and will not be loaded on next cog load."
                 )
             else:
+                self.set_style()
                 await interaction.response.send_message(
                     "The object was successfully unregistered and will not be loaded again."
                 )
+                await self.view.edit()
         else:
             try:
                 self.code_snippet.register()
@@ -112,9 +119,11 @@ class ActivateDeactivateButton(Button):
                 log.info(f"Code snippet {self.code_snippet} enabled.")
                 # TODO: save
                 self.code_snippet.enabled = True
+                self.set_style()
                 await interaction.response.send_message(
                     "The object was successfully registered and will be loaded on cog load."
                 )
+                await self.view.edit()
 
 
 class DeleteButton(Button):
@@ -140,15 +149,17 @@ class CodeSnippetView(OwnerOnlyView):
     List of buttons for a single code snippet.
     """
 
-    def __init__(self, bot: "Red", code_snippet: T):
-        self.bot = bot
-        super().__init__()
+    def __init__(self, bot: "Red", interaction: discord.Interaction, code_snippet: T):
+        self.code_snippet = code_snippet
+        self.og_interaction = interaction
+        super().__init__(bot)
         self.add_item(DownloadButton(code_snippet))
         self.add_item(ActivateDeactivateButton(code_snippet))
         self.add_item(DeleteButton(code_snippet))
 
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        return await self.bot.is_owner(interaction.user)
+    async def edit(self):
+        # refresh activate/deactivate button
+        await self.og_interaction.followup.edit_message("@original", view=self)
 
 
 class CodeSnippetsList(Select):
@@ -185,4 +196,6 @@ class CodeSnippetsList(Select):
         if selected.verbose_name != str(selected):
             message += f" ({selected.description})"
         message += "\n\n" + next(selected.get_formatted_code())
-        await interaction.response.send_message(message, view=CodeSnippetView(self.bot, selected))
+        await interaction.response.send_message(
+            message, view=CodeSnippetView(self.bot, interaction, selected)
+        )
