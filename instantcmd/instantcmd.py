@@ -6,7 +6,7 @@ import asyncio
 import traceback
 import logging
 
-from typing import TypeVar, Type, Optional, List, Tuple, Iterator
+from typing import TypeVar, Type, Optional, Any, Dict, List, Tuple, Iterator
 from discord.ui import View
 from laggron_utils.logging import close_logger
 
@@ -54,6 +54,43 @@ class InstantCommands(commands.Cog):
     __author__ = ["retke (El Laggron)"]
     __version__ = "2.0.0"
 
+    @property
+    def env(self) -> Dict[str, Any]:
+        return {
+            "bot": self.bot,
+            "discord": discord,
+            "commands": commands,
+            "checks": checks,
+            "asyncio": asyncio,
+            "instantcmd_cog": self,
+        }
+
+    async def _load_code_snippets_from_config(self):
+        types: Dict[str, Type[CodeSnippet]] = {
+            "command": CommandSnippet,
+            "listener": ListenerSnippet,
+        }
+        data: Dict[str, Dict[str, dict]] = await self.data.custom(CODE_SNIPPET).all()
+        for category, code_snippets in data.items():
+            try:
+                snippet_type = types[category]
+            except KeyError:
+                log.critical(
+                    f"Unknown category {category}, skipping {len(code_snippets)} "
+                    "potential code snippets from loading!",
+                    exc_info=True,
+                )
+                continue
+            for name, code_snippet_data in code_snippets.items():
+                try:
+                    value = get_code_from_str(code_snippet_data["code"], self.env)
+                except Exception:
+                    log.error(f"Failed to compile {category} {name}.", exc_info=True)
+                    continue
+                self.code_snippets.append(
+                    snippet_type.from_saved_data(self.bot, self.data, value, code_snippet_data)
+                )
+
     def load_code_snippet(self, code: CodeSnippet):
         """
         Register a code snippet
@@ -73,6 +110,11 @@ class InstantCommands(commands.Cog):
         Reload all code snippets saved.
         This is executed on cog load.
         """
+        try:
+            await self._load_code_snippets_from_config()
+        except Exception:
+            log.critical("Failed to load data from config.", exc_info=True)
+            return
         for code in self.code_snippets:
             self.load_code_snippet(code)
 
@@ -200,16 +242,8 @@ class InstantCommands(commands.Cog):
             else:
                 function_string = cleanup_code(response.content)
 
-        env = {
-            "bot": self.bot,
-            "discord": discord,
-            "commands": commands,
-            "checks": checks,
-            "asyncio": asyncio,
-            "instantcmd_cog": self,
-        }
         try:
-            function = get_code_from_str(function_string, env)
+            function = get_code_from_str(function_string, self.env)
         except Exception as e:
             exception = "".join(traceback.format_exception(type(e), e, e.__traceback__))
             message = (

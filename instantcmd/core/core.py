@@ -45,8 +45,8 @@ class CodeSnippet(Generic[T]):
         self.registered: bool = False
 
     @classmethod
-    def from_saved_data(cls, bot: "Red", value: T, data: dict):
-        code_snippet = cls(bot, value, data["code"])
+    def from_saved_data(cls, bot: "Red", config: "Config", value: T, data: dict):
+        code_snippet = cls(bot, config, value, data["code"])
         code_snippet.enabled = data["enabled"]
         return code_snippet
 
