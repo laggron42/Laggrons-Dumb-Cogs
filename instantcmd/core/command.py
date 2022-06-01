@@ -8,6 +8,7 @@ from instantcmd.core import CodeSnippet
 
 if TYPE_CHECKING:
     from redbot.core.bot import Red
+    from redbot.core import Config
 
 Command = TypeVar("Command", bound=commands.Command)
 log = logging.getLogger("laggron.instantcmd.core.command")
@@ -20,8 +21,8 @@ class CommandSnippet(CodeSnippet[Command]):
 
     name = "command"
 
-    def __init__(self, bot: "Red", command: Command, source: str):
-        super().__init__(bot, command, source)
+    def __init__(self, bot: "Red", config: "Config", command: Command, source: str):
+        super().__init__(bot, config, command, source)
 
     def __str__(self) -> str:
         return self.value.callback.__name__

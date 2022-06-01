@@ -36,8 +36,9 @@ class CodeSnippet(Generic[T]):
 
     name: str = "command"
 
-    def __init__(self, bot: "Red", value: T, source: str):
+    def __init__(self, bot: "Red", config: "Config", value: T, source: str):
         self.bot = bot
+        self.data = config
         self.value = value
         self.source = source
         self.enabled: bool = True
@@ -49,8 +50,8 @@ class CodeSnippet(Generic[T]):
         code_snippet.enabled = data["enabled"]
         return code_snippet
 
-    async def save(self, config: "Config"):
-        await config.custom("CODE_SNIPPET", self.name, str(self)).set_raw(
+    async def save(self):
+        await self.config.custom("CODE_SNIPPET", self.name, str(self)).set_raw(
             value={"code": self.source, "enabled": self.enabled}
         )
 
