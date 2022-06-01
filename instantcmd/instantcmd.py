@@ -24,6 +24,7 @@ from instantcmd.code_runner import cleanup_code, get_code_from_str, find_matchin
 from instantcmd.core import (
     CodeSnippet,
     CommandSnippet,
+    DevEnvSnippet,
     ListenerSnippet,
     InstantcmdException,
     ExecutionException,
@@ -323,7 +324,7 @@ cog at this point.
         """
         view = OwnerOnlyView(self.bot, timeout=300)
         total = 0
-        types = (CommandSnippet, ListenerSnippet)
+        types = (CommandSnippet, ListenerSnippet, DevEnvSnippet)
         for type in types:
             objects = list(self.get_code_snippets(enabled=False, registered=False, type=type))
             if not objects:

@@ -9,16 +9,19 @@ from redbot.core import commands
 from instantcmd.core import (
     CodeSnippet,
     CommandSnippet,
+    DevEnvSnippet,
     ListenerSnippet,
     ExecutionException,
     UnknownType,
 )
 from instantcmd.core.listener import Listener
+from instantcmd.core.dev_env_value import DevEnv
 
 T = TypeVar("T")
 OBJECT_TYPES_MAPPING = {
     commands.Command: CommandSnippet,
     Listener: ListenerSnippet,
+    DevEnv: DevEnvSnippet,
 }
 
 
