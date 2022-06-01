@@ -2,7 +2,7 @@ import logging
 
 from typing import TYPE_CHECKING, Callable, Awaitable
 
-from instantcmd.core.core import CodeSnippet
+from instantcmd.core import CodeSnippet
 
 if TYPE_CHECKING:
     from redbot.core.bot import Red

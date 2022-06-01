@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, TypeVar, Type, List
 from discord.ui import Select, Button, View
 from redbot.core.utils.chat_formatting import text_to_file
 
-from instantcmd.core.core import CodeSnippet
+from instantcmd.core import CodeSnippet
 
 if TYPE_CHECKING:
     from redbot.core.bot import Red

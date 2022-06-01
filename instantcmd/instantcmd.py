@@ -21,9 +21,7 @@ from redbot.core.utils.chat_formatting import pagify
 from instantcmd.utils import Listener
 from instantcmd.components import CodeSnippetsList
 from instantcmd.code_runner import cleanup_code, get_code_from_str, find_matching_type
-from instantcmd.core.core import CodeSnippet
-from instantcmd.core.command import CommandSnippet
-from instantcmd.core.listener import ListenerSnippet
+from instantcmd.core import CodeSnippet, CommandSnippet, ListenerSnippet
 
 log = logging.getLogger("red.laggron.instantcmd")
 T = TypeVar("T")

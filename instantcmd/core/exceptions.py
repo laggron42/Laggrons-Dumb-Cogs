@@ -1,3 +1,11 @@
+__all__ = (
+    "InstantcmdException",
+    "ExecutionException",
+    "UnknownType",
+    "InvalidType",
+)
+
+
 class InstantcmdException(Exception):
     """
     Base error for commands raised within a command snippet.
