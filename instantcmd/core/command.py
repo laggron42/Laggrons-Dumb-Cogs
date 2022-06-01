@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, TypeVar
 
 from redbot.core import commands
 
-from instantcmd.core.core import CodeSnippet
+from instantcmd.core import CodeSnippet
 
 if TYPE_CHECKING:
     from redbot.core.bot import Red

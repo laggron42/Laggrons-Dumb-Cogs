@@ -6,10 +6,14 @@ from typing import TypeVar, Type, Dict, Any
 
 from redbot.core import commands
 
-from instantcmd.core.exceptions import ExecutionException, UnknownType
-from instantcmd.core.core import CodeSnippet
-from instantcmd.core.command import CommandSnippet
-from instantcmd.core.listener import Listener, ListenerSnippet
+from instantcmd.core import (
+    CodeSnippet,
+    CommandSnippet,
+    ListenerSnippet,
+    ExecutionException,
+    UnknownType,
+)
+from instantcmd.core.listener import Listener
 
 T = TypeVar("T")
 OBJECT_TYPES_MAPPING = {
