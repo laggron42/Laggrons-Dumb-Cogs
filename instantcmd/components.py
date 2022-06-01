@@ -83,7 +83,7 @@ class ActivateDeactivateButton(Button):
         if self.code_snippet.enabled:
             log.info(f"Code snippet {self.code_snippet} disabled.")
             self.code_snippet.enabled = False
-            # TODO: save
+            await self.code_snippet.save()
             try:
                 self.code_snippet.unregister()
             except Exception:
@@ -117,8 +117,8 @@ class ActivateDeactivateButton(Button):
                 )
             else:
                 log.info(f"Code snippet {self.code_snippet} enabled.")
-                # TODO: save
                 self.code_snippet.enabled = True
+                await self.code_snippet.save()
                 self.set_style()
                 await interaction.response.send_message(
                     "The object was successfully registered and will be loaded on cog load."
@@ -140,8 +140,23 @@ class DeleteButton(Button):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.send_message("Hmm nope that's staying")
-        # TODO: actually delete lol
+        await self.code_snippet.delete()
+        try:
+            self.code_snippet.unregister()
+        except Exception:
+            log.error(
+                f"Failed to unregister {self.code_snippet} when deletion requested",
+                exc_info=True,
+            )
+            await interaction.response.send_message(
+                "An error occured when trying to unregister this object, you can check for "
+                "details in your logs.\n"
+                "It was still removed and will not be loaded on next cog load."
+            )
+        else:
+            await interaction.response.send_message("Object successfully removed.")
+        finally:
+            self.view.stop()
 
 
 class CodeSnippetView(OwnerOnlyView):
