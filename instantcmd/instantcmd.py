@@ -56,6 +56,8 @@ class InstantCommands(commands.Cog):
         self.data.init_custom(CODE_SNIPPET, 2)
         self.data.register_custom(CODE_SNIPPET, code=None, enabled=True, version=1)
 
+        self.bot.add_dev_env_value("instantcmd", lambda ctx: self)
+
         self.code_snippets: List[CodeSnippet] = []
 
     __author__ = ["retke (El Laggron)"]
@@ -355,6 +357,8 @@ cog at this point.
         log.debug("Unloading cog...")
         # removes commands and listeners
         await self.unload_all_code_snippets()
+
+        self.bot.remove_dev_env_value("instantcmd")
 
         # remove all handlers from the logger, this prevents adding
         # multiple times the same handler if the cog gets reloaded
