@@ -91,12 +91,11 @@ class InstantCommands(commands.Cog):
             for name, code_snippet_data in code_snippets.items():
                 try:
                     value = get_code_from_str(code_snippet_data["code"], self.env)
+                    self.code_snippets.append(
+                        snippet_type.from_saved_data(self.bot, self.data, value, code_snippet_data)
+                    )
                 except Exception:
                     log.error(f"Failed to compile {category} {name}.", exc_info=True)
-                    continue
-                self.code_snippets.append(
-                    snippet_type.from_saved_data(self.bot, self.data, value, code_snippet_data)
-                )
 
     def load_code_snippet(self, code: CodeSnippet):
         """
@@ -275,6 +274,8 @@ cog at this point.
         try:
             function, function_string = await self._extract_code(ctx, command)
             snippet_type = find_matching_type(function)
+            # this is a CodeSnippet object (command, listener or whatever is currently supported)
+            code_snippet = snippet_type(self.bot, self.data, function, function_string)
         except InstantcmdException as e:
             message = e.args[0]
             exc = e.__cause__
@@ -287,8 +288,6 @@ cog at this point.
             for page in pagify(message):
                 await ctx.send(page)
             return
-        # this is a CodeSnippet object (command, listener or whatever is currently supported)
-        code_snippet = snippet_type(self.bot, self.data, function, function_string)
 
         # detecting if this name isn't already registered
         for saved_code in self.get_code_snippets(type=snippet_type):
