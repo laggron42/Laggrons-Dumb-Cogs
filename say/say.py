@@ -197,6 +197,62 @@ class Say(commands.Cog):
             ctx, channel, text, files, mentions=discord.AllowedMentions(everyone=True, roles=True)
         )
 
+    @commands.command(name="editmsg")
+    @checks.is_owner()
+    async def _editmsg(self, ctx: commands.Context, message: discord.Message, *, text: str = ""):
+        """
+        Make the bot modify one of its messages.
+
+        You can specify the link or id of a message.
+
+        Example usage :
+        - `[p]editmsg https://discord.com/channels/0123456789/0123456789/0123456789 hello there`
+        - `[p]editmsg 0123456789 owo I have a file` (a file is attached to the command message)
+        """
+        files = await Tunnel.files_from_attatch(ctx.message)
+        if not message.author.id == ctx.bot.user.id:
+            await ctx.send(
+                _(
+                    "I can't edit anyone else's message but my own. This one was sent by {message.author.display_name}."
+                ).format(message=message)
+            )
+            return
+        if not text and not files:
+            await ctx.send_help()
+            return
+        if ctx.guild is not None:
+            if not message.channel.permissions_for(ctx.guild.me).send_messages:
+                await ctx.send(
+                    _("I am not allowed to send messages in ") + message.channel.mention,
+                    delete_after=2,
+                )
+                return
+            if files and not message.channel.permissions_for(message.guild.me).attach_files:
+                await ctx.send(
+                    _("I am not allowed to upload files in ") + message.channel.mention,
+                    delete_after=2,
+                )
+                return
+        try:
+            await message.edit(content=text, embeds=[], attachments=files)
+        except discord.HTTPException as e:
+            if message.guild is not None:
+                log.error(
+                    f"Error when modifying the {message.id} message in the {message.channel.id} channel on the {message.channel.guild.id} server.",
+                    exc_info=e,
+                )
+            else:
+                log.error(
+                    f"Error when modifying the {message.id} message in the {message.channel.id} DM channel.",
+                    exc_info=e,
+                )
+            await ctx.send(
+                _(
+                    "An error occurred while editing the message. Sorry about that. You can check the error on the bot console."
+                )
+            )
+            return
+
     @commands.command(name="interact")
     @checks.admin_or_permissions(administrator=True)
     async def _interact(self, ctx: commands.Context, channel: discord.TextChannel = None):
