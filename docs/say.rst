@@ -120,6 +120,24 @@ him post your messages in the channel. It will also post every message send in t
     Get the channel ID by enabling the developer mode (under Appearance section in the Discord user parameters), 
     then right click on the channel and copy the ID.
 
+.. _command-sayd:
+    
+~~~~~~~
+editmsg
+~~~~~~~
+
+**Syntax**
+
+.. code-block:: none
+
+    [p]editmsg <message> <text>
+
+**Descripton**
+
+Exact same as :ref:`say <command-say>` command, except it modifies a old message it has sent.
+
+.. warning:: The message must have been sent by the bot and the bot must still have access to the channel in which the message is located.
+
 --------------------------
 Frequently Asked Questions
 --------------------------

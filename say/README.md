@@ -42,6 +42,14 @@ Say is now installed!
 
 Messages sent in #testing will be sent to you in DM. Whatever you say to the bot in DM will be sent in #testing too.
 
+### edit a message
+
+```
+[p]editmsg https://discord.com/channels/0123456789/0123456789/0123456789 Look at this beautiful Pokémon (you can attach a file to your message, not higher than 8mb)
+```
+
+Messages sent in #testing will be sent to you in DM. Whatever you say to the bot in DM will be sent in #testing too.
+
 ## Discord server
 
 If you need support, have bugs to report or suggestions to bring, please join my Discord server and tell me, `El Laggron#0260`, about it!
