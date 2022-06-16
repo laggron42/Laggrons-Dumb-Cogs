@@ -1300,7 +1300,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
         """
         guild = ctx.guild
         try:
-            ban_entry = await guild.fetch_ban(member_id)
+            ban_entry = await guild.fetch_ban(discord.Object(member_id))
         except discord.NotFound:
             await ctx.send(_("That user is not banned."))
             return
