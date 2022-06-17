@@ -1290,18 +1290,21 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             await ctx.send(page)
 
     @commands.command()
+    @commands.bot_has_permissions(ban_members=True)
     @checks.mod_or_permissions(ban_members=True)
-    async def wsunban(self, ctx: commands.Context, member: UnavailableMember):
+    async def wsunban(self, ctx: commands.Context, member_id: int):
         """
         Unban a member banned with WarnSystem.
 
         *wsunban = WarnSystem unban. Feel free to add an alias.*
         """
         guild = ctx.guild
-        bans = await guild.bans()
-        if member.id not in [x.user.id for x in bans]:
+        try:
+            ban_entry = await guild.fetch_ban(discord.Object(member_id))
+        except discord.NotFound:
             await ctx.send(_("That user is not banned."))
             return
+        member = ban_entry.user
         try:
             await guild.unban(member)
         except discord.errors.HTTPException as e:
