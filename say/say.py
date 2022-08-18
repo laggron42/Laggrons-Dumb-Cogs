@@ -3,6 +3,7 @@
 import discord
 import asyncio
 import logging
+import re
 
 from typing import Optional
 from laggron_utils.logging import close_logger, DisabledConsoleOutput
@@ -23,6 +24,9 @@ if listener is None:
         return lambda x: x
 
 
+ROLE_MENTION_REGEX = re.compile(r"<@&(?P<id>[0-9]{17,19})>")
+
+
 @cog_i18n(_)
 class Say(BaseCog):
     """
@@ -36,7 +40,7 @@ class Say(BaseCog):
         self.interaction = []
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.6.0"
+    __version__ = "1.6.1"
 
     async def say(
         self,
@@ -169,40 +173,43 @@ class Say(BaseCog):
         channel = channel or ctx.channel
         guild = channel.guild
         files = await Tunnel.files_from_attach(message)
-        role_mentions = message.role_mentions
-        if not role_mentions and not message.mention_everyone:
+
+        role_mentions = list(
+            filter(
+                None,
+                (ctx.guild.get_role(int(x)) for x in ROLE_MENTION_REGEX.findall(message.content)),
+            )
+        )
+        mention_everyone = "@everyone" in message.content or "@here" in message.content
+        if not role_mentions and not mention_everyone:
             # no mentions, nothing to check
             return await self.say(ctx, channel, text, files)
-        no_mention = [x for x in role_mentions if x.mentionable is False]
-        if guild.me.guild_permissions.administrator is False:
-            if no_mention:
+        non_mentionable_roles = [x for x in role_mentions if x.mentionable is False]
+
+        if not channel.permissions_for(guild.me).mention_everyone:
+            if non_mentionable_roles:
                 await ctx.send(
                     _(
                         "I can't mention the following roles: {roles}\nTurn on "
-                        "mentions or make me an admin on the server.\n"
-                    ).format(roles=", ".join([x.name for x in no_mention]))
+                        "mentions or grant me the correct permissions.\n"
+                    ).format(roles=", ".join([x.name for x in non_mentionable_roles]))
                 )
                 return
-            if (
-                message.mention_everyone
-                and channel.permissions_for(guild.me).mention_everyone is False
-            ):
+            if mention_everyone:
                 await ctx.send(_("I don't have the permission to mention everyone."))
                 return
-        if (
-            message.mention_everyone
-            and channel.permissions_for(ctx.author).mention_everyone is False
-        ):
-            await ctx.send(_("You don't have the permission yourself to do mass mentions."))
-            return
-        if ctx.author.guild_permissions.administrator is False and no_mention:
-            await ctx.send(
-                _(
-                    "You're not allowed to mention the following roles: {roles}\nTurn on "
-                    "mentions for that role or be an admin in the server.\n"
-                ).format(roles=", ".join([x.name for x in no_mention]))
-            )
-            return
+        if not channel.permissions_for(ctx.author).mention_everyone:
+            if non_mentionable_roles:
+                await ctx.send(
+                    _(
+                        "You're not allowed to mention the following roles: {roles}\nTurn on "
+                        "mentions for that role or have the correct permissions.\n"
+                    ).format(roles=", ".join([x.name for x in non_mentionable_roles]))
+                )
+                return
+            if mention_everyone:
+                await ctx.send(_("You don't have the permission yourself to do mass mentions."))
+                return
         await self.say(
             ctx, channel, text, files, mentions=discord.AllowedMentions(everyone=True, roles=True)
         )
