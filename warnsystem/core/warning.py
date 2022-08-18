@@ -77,8 +77,8 @@ class Warning:
             "duration": None if not self.duration else self.duration.total_seconds(),
             "roles": [] if not self.roles else [x.id for x in self.roles],
             "modlog_message": {
-                "channel_id": self.modlog_message.channel.id,
-                "message_id": self.modlog_message.id,
+                "channel_id": self.modlog_message.channel.id if self.modlog_message else None,
+                "message_id": self.modlog_message.id if self.modlog_message else None,
             },
         }
 
@@ -96,13 +96,13 @@ class Warning:
         time = datetime.fromtimestamp(data["time"])
         duration = timedelta(seconds=data["duration"]) if data["duration"] else None
         roles = [guild.get_role(x) for x in data["roles"]]
-        modlog_channel = guild.get_channel(data["modlog_message"]["channel_id"])
-        if modlog_channel:
-            modlog_message = modlog_channel.get_partial_message(
-                data["modlog_message"]["message_id"]
-            )
-        else:
-            modlog_message = None
+        modlog_message = None
+        if "modlog_message" in data:
+            modlog_channel = guild.get_channel(data["modlog_message"]["channel_id"])
+            if modlog_channel:
+                modlog_message = modlog_channel.get_partial_message(
+                    data["modlog_message"]["message_id"]
+                )
         warn = cls(
             config,
             cache,
@@ -178,11 +178,31 @@ class Warning:
             string = strings[0]
         return string
 
+    @staticmethod
+    def get_label_from_level(level: int, plural: bool = False):
+        if level == 1:
+            return _("warns") if plural else _("warn")
+        elif level == 2:
+            return _("mutes") if plural else _("mute")
+        elif level == 3:
+            return _("kicks") if plural else _("kick")
+        elif level == 4:
+            return _("softbans") if plural else _("softban")
+        elif level == 5:
+            return _("bans") if plural else _("ban")
+        else:
+            return _("unknown")
+
+    def get_label(self, plural: bool = False):
+        self.get_label_from_level(self.level, plural)
+
     async def _fetch_message(self) -> bool:
         if isinstance(self.modlog_message, discord.Message):
             return True
         try:
             self.modlog_message = await self.modlog_message.fetch()
+        except AttributeError:
+            return False
         except discord.NotFound:
             log.warn(
                 f"[Guild {self.guild.id}] Modlog message {self.modlog_message.id} "
@@ -243,13 +263,6 @@ class Warning:
         Tuple[discord.Embed, discord.Embed]
             A :py:class:`tuple` with the modlog embed at index 0, and the user embed at index 1.
         """
-        action = {
-            1: (_("warn"), _("warns")),
-            2: (_("mute"), _("mutes")),
-            3: (_("kick"), _("kicks")),
-            4: (_("softban"), _("softbans")),
-            5: (_("ban"), _("bans")),
-        }.get(self.level, _("unknown"))
         mod_message = ""
         reason = self.reason
         if not reason:
@@ -267,7 +280,7 @@ class Warning:
             "total": total_warns,
             "warnings": _("warnings") if total_warns > 1 else _("warning"),
             "total_type": total_type_warns,
-            "action": action[1] if total_type_warns > 1 else action[0],
+            "action": self.get_label(plural=total_type_warns > 1),
         }
         second_person_status = _("You now have {total} {warnings} ({total_type} {action})").format(
             **formatting_args
@@ -321,7 +334,7 @@ class Warning:
             name=f"{self.member.name} | {self.member.id}", icon_url=self.member.avatar.url
         )
         log_embed.title = _("Level {level} warning ({action})").format(
-            level=self.level, action=action[0]
+            level=self.level, action=self.get_label()
         )
         log_embed.description = format_description(log_description)
         log_embed.add_field(name=_("Member"), value=self.member.mention, inline=True)
@@ -358,6 +371,26 @@ class Warning:
             user_embed.remove_field(0)  # called twice, removing moderator field
 
         return (log_embed, user_embed)
+
+    async def get_historical_embed(self):
+        embed = discord.Embed(
+            description=_("Case #{number} informations").format(number=self.index + 1)
+        )
+        embed.set_author(name=f"{self.member} | {self.member.id}", icon_url=self.member.avatar.url)
+        embed.add_field(name=_("Level"), value=f"{self.get_label()} ({self.level})", inline=True)
+        embed.add_field(name=_("Moderator"), value=self.author, inline=True)
+        if self.duration:
+            embed.add_field(
+                name=_("Duration"),
+                value=_("{duration}\n(Until {date})").format(
+                    duration=self._format_timedelta(self.duration),
+                    date=self._format_datetime(self.time + self.duration),
+                ),
+            )
+        embed.add_field(name=_("Reason"), value=self.reason, inline=False),
+        embed.timestamp = self.time
+        embed.colour = await self.data.guild(self.guild).colors.get_raw(self.level)
+        return embed
 
     # ----- public interface for edition -----
 
