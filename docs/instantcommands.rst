@@ -2,7 +2,7 @@
 InstantCommands
 ===============
 
-.. note:: These docs refers to the version **1.3.0**. 
+.. note:: These docs refers to the version **2..0**. 
     Make sure you're under the good version by typing ``[p]cog update``.
 
 This is the guide for the ``instantcmd`` cog. Everything you need is here.
@@ -35,7 +35,7 @@ Finally, you can install the cog::
 Usage
 -----
 
-InstantCommands is designed to create new commands and listeners directly 
+InstantCommands is designed to create new objects, like commands, directly 
 from Discord. You just need basic Python and discord.py knowledge.
 
 You can also edit the Dev's environment added with Red 3.4.6.
@@ -43,6 +43,112 @@ You can also edit the Dev's environment added with Red 3.4.6.
 Here's an example of how it works:
 
 .. image:: .ressources/EXAMPLES/InstantCommands-example.png
+
+From a code snippet in Discord, you can create the following objects:
+
+- :ref:`commands <usage-adding-commands>`
+- listeners
+- dev env values
+
+More objects will come in future releases, like application commands, message
+components, cogs...
+
+To add a code snippet, use :ref:`instantcmd create
+<command-instantcommand-create>` and paste the code you want, following the
+format described below. You can then manage code snippets with :ref:`instantcmd
+list <command-instantcommand-list>`.
+
+.. _usage-adding-commands:
+~~~~~~~~~~~~~~~
+Adding commands
+~~~~~~~~~~~~~~~
+
+Adding a command is very straightforward:
+
+.. code-block:: py
+    @commands.command()
+    async def hello(ctx):
+        await ctx.send(f"Hi {ctx.author.name}!")
+    
+    return hello
+
+.. warning:: Don't forget to always return your object at the end!
+
+.. _usage-adding-listeners:
+~~~~~~~~~~~~~~~~
+Adding listeners
+~~~~~~~~~~~~~~~~
+
+Adding a listener requires a custom decorator:
+
+.. code-block:: py
+    from instantcmd.utils import listener
+
+    @listener()
+    async def on_member_join(member):
+        await member.send("Welcome there new member!")
+    
+    return on_member_join
+
+To prevent conflicts, or name your code snippets better, you can give your
+function a different name and provide the listener name in the decorator:
+
+.. code-block:: py
+    from instantcmd.utils import listener
+
+    @listener("on_member_join")
+    async def member_welcomer(member):
+        await member.send("Welcome there new member!")
+    
+    return member_welcomer
+
+Your code will be saved and referred as "member_welcomer".
+
+.. _usage-adding-dev-values:
+~~~~~~~~~~~~~~~~~~~~~
+Adding dev env values
+~~~~~~~~~~~~~~~~~~~~~
+
+You can add custom dev env values, which will be made available to Red's dev
+cog (``[p]debug``, ``[p]eval`` and ``[p]repl`` commands). For more information,
+see :ref:`Red's documentation <https://docs.discord.red/en/stable/framework_bot.html#redbot.core.bot.RedBase.add_dev_env_value>`.
+
+The format is similar to listeners:
+
+.. code-block:: py
+    from instantcmd.utils import dev_env_value
+
+    @dev_env_value()
+    def fluff_derg(ctx):
+        ID = 215640856839979008
+        if ctx.guild:
+            return ctx.guild.get_member(ID) or bot.get_user(ID)
+        else:
+            return bot.get_user(ID)
+
+    return fluff_derg
+
+Just like listeners, you can give your function a different name and provide
+the dev value name in the decorator:
+
+.. code-block:: py
+    from instantcmd.utils import dev_env_value
+
+    @dev_env_value("fluff_derg")
+    def give_me_a_dragon(ctx):
+        ID = 215640856839979008
+        if ctx.guild:
+            return ctx.guild.get_member(ID) or bot.get_user(ID)
+        else:
+            return bot.get_user(ID)
+
+    return give_me_a_dragon
+
+Your code will be saved and referred as "give_me_a_dragon".
+
+--------
+Commands
+--------
 
 Here's a list of all commands of this cog:
 
@@ -76,89 +182,26 @@ instantcommand create
 Creates a new command/listener from a code snippet.
 
 You will be asked to give a code snippet which will contain your function. 
-It can be a command (you will need to add the ``commands`` decorator) or a listener 
-(your function name must correspond to an existing discord.py listener).
+It can be any supported object as described above.
 
-.. tip:: Here are some examples
-    
-    .. code-block:: python
-    
-        @commands.command()
-        async def command(ctx, *, argument):
-            """Say your text with some magic"""
+.. tip::
 
-            await ctx.send("You excepted to see your text, "
-                            "but it was I, Dio!")
-        
-        return command
-                            
-    .. code-block:: python
-    
-        async def on_reaction_add(reaction, user):
-            if user.bot:
-                return
-            await reaction.message.add_reaction('❤')
-            await reaction.message.channel.send("Here's some love for " + user.mention)
-        
-        return on_reaction_add
-            
-.. note::
-
-    Here are the available values for your code snippet:
+    Here are the available values within your code snippet:
 
     * ``bot`` (client object)
-    
     * ``discord``
-    
+    * ``commands``
+    * ``checks``
     * ``asyncio``
-    
     * ``redbot``
+    * ``instantcmd_cog`` (well, the InstantCommands cog)
 
 If you try to add a new command/listener that already exists, the bot will ask
 you if you want to replace the command/listener, useful for a quick bug fix
 instead of deleting each time.
 
-You can have multiple listeners for the same event but with a different
-function name by using the :func:`instantcmd.utils.listener` decorator. It
-doesn't work like :attr:`discord.ext.commands.Cog.listener`, it only exists so
-you can provide the name of the event you want to listen for.
-
-.. admonition:: Example
-
-    .. code-block:: python
-
-        from instantcmd.utils import listener
-
-        @listener("on_message_without_command")
-        async def my_listener(message: discord.Message):
-            # do your thing
-        
-        return my_listener
-
-    This listener will be registered as ``my_listener`` and be suscribed to the
-    event ``on_message_without_command``.
-    
-.. _command-instantcommand-delete:
-
-~~~~~~~~~~~~~~~~~~~~
-instantcommad delete
-~~~~~~~~~~~~~~~~~~~~
-
-**Syntax**
-
-.. code-block:: none
-
-    [p]instantcommand [delete|del|remove] <name>
-    
-**Description**
-
-Remove an instant command or a listener from what you registered before.
-    
-**Arguments**
-
-* ``<name>`` The name of the command/listener.
-
-.. _command-instantcommand-list:
+The code can be provided in the same message of the command, in a new 
+followup message, or inside an attached text file.
 
 ~~~~~~~~~~~~~~~~~~~
 instantcommand list
@@ -172,123 +215,18 @@ instantcommand list
 
 **Description**
 
-Lists the commands and listeners added with instantcmd.
+Lists the code snippets added with instantcmd.
 
-.. _command-instantcommand-source:
+Multiple select menus will be sent for each type of object, click them and
+select the object you want to edit.
 
-~~~~~~~~~~~~~~~~~~~~~
-instantcommand source
-~~~~~~~~~~~~~~~~~~~~~
-
-**Syntax**
-
-.. code-block:: none
-
-    [p]instantcommand source [command]
-    
-**Description**
-
-Shows the source code of an instantcmd command or listener.
-
-.. note::
-
-    This only works with InstantCommands' commands and listeners.
-    
-**Arguments**
-
-* ``[command]`` The command/listener name to get the source code from.
-
-.. _command-instnatcommand-env:
-
-~~~~~~~~~~~~~~~~~~
-instantcommand env
-~~~~~~~~~~~~~~~~~~
-
-**Syntax**
-
-.. code-block:: none
-
-    [p]instantcommand env
-
-**Description**
-
-This will allow you to add custom values to the dev environment.
-
-Those values will be accessible with any dev command (``[p]debug``,
-``[p]eval``, ``[p]repl``), allowing you to make shortcuts to objects,
-import more libraries by default or having fixed values and functions.
-
-This group subcommand has itself 4 subcommands, similar to the base commands:
-
-*   ``[p]instantcommand env add``: Add a new env value
-*   ``[p]instantcommand env delete``: Remove an env value
-*   ``[p]instantcommand env list``: List all env values registered to Red
-*   ``[p]instantcommand env source``: Show an env value's source code
-
-Use ``[p]instantcmd env add <name>`` to add a new value, then the bot will
-prompt for the code of your value. **You must return a callable taking**
-:class:`ctx <redbot.core.commands.Context>` **as its sole parameter.**
-
-``<name>`` will be the name given to that value.
-
-.. warning:: You must have the dev mode enabled to use this. Make sure you're
-    running Red with the ``--dev`` flag.
-
-Once added, that value will stay available with your dev commands.
-
-For more informations, see the
-:meth:`add_dev_env_value <redbot.core.bot.Red.add_dev_env_value>` method.
-
-.. admonition:: Examples
-
-    *   ``[p]instantcmd env add me return lambda ctx: ctx.guild.me``
-
-    *   ``[p]instantcmd env add inspect import inspect
-        return lambda ctx: inspect``
-    
-    *   ``[p]instantcmd env add conf`` ::
-
-            def get_conf(ctx):
-                return ctx.bot.get_cog("MyCog").config
-
-            return get_conf
-    
-    *   ``[p]instantcmd env add smile`` ::
-
-            def smile(ctx):
-                def make_smile(text):
-                    return "😃" + text + "😃"
-                return make_smile
-            
-            return smile
+Once selected, a new message will be sent containing the source of the
+message and 3 buttons: download the source file, enable/disable this object,
+and delete it.
 
 --------------------------
 Frequently Asked Questions
 --------------------------
-
-.. note:: 
-
-    **Your question is not in the list or you got an unexcpected issue?**
-
-    You should join the `Discord server <https://discord.gg/AVzjfpR>`_ or
-    `post an issue <https://github.com/retke/Laggrons-Dumb-Cogs/issues/new/choose>`_
-    on the repo.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-It's written in the help message that I can add a listener. How can I do so?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Instead of giving a :class:`~discord.ext.commands.Command` object, just
-give a simple function (don't put the command decorator) and make sure
-its name is matching the lowercased `Discord API listeners 
-<https://discordapp.com/developers/docs/topics/gateway#commands-and-events>`_.
-
-.. warning:: **Do not use** the new ``@commands.Cog.listener`` decorator
-    introduced in Red 3.1. The bot uses ``bot.add_listener`` which
-    doesn't need a decorator.
-
-    *Added in 1.1:* InstantCommands now has its own listener decorator. It is
-    optional and used for providing the event name.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 My command was added but doesn't respond when invoked.
@@ -340,9 +278,9 @@ You can use the :class:`~redbot.core.checks` module, like in a normal cog.
         
         return command
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-How can I import a module without problem?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+How can I import a module?
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can import your modules outside the function as you wish.
 
