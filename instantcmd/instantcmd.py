@@ -4,13 +4,11 @@
 import discord
 import asyncio
 import traceback
-import textwrap
 import logging
-import os
-import sys
 
-from typing import Optional
-from laggron_utils.logging import close_logger, DisabledConsoleOutput
+from typing import TypeVar, Type, Optional, Any, Dict, List, Tuple, Iterator
+from discord.ui import View
+from laggron_utils.logging import close_logger
 
 from redbot.core import commands
 from redbot.core import checks
@@ -20,40 +18,31 @@ from redbot.core.utils.predicates import MessagePredicate, ReactionPredicate
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.chat_formatting import pagify
 
-from .utils import Listener
+from instantcmd.utils import Listener
+from instantcmd.components import CodeSnippetsList, OwnerOnlyView
+from instantcmd.code_runner import cleanup_code, get_code_from_str, find_matching_type
+from instantcmd.core import (
+    CodeSnippet,
+    CommandSnippet,
+    DevEnvSnippet,
+    ListenerSnippet,
+    InstantcmdException,
+    ExecutionException,
+)
 
 log = logging.getLogger("red.laggron.instantcmd")
-BaseCog = getattr(commands, "Cog", object)
+T = TypeVar("T")
+CODE_SNIPPET = "CODE_SNIPPET"
 
-# Red 3.0 backwards compatibility, thanks Sinbad
-listener = getattr(commands.Cog, "listener", None)
-if listener is None:
-
-    def listener(name=None):
-        return lambda x: x
-
-
-class FakeListener:
-    """
-    A fake listener used to remove the extra listeners.
-
-    This is needed due to how extra listeners works, and how the cog stores these.
-    When adding a listener to the list, we get its ID. Then, when we need to remove\
-    the listener, we call this fake class with that ID, so discord.py thinks this is\
-    that listener.
-
-    Credit to mikeshardmind for finding this solution. For more info, please look at this issue:
-    https://github.com/Rapptz/discord.py/issues/1284
-    """
-
-    def __init__(self, idx):
-        self.idx = idx
-
-    def __eq__(self, function):
-        return self.idx == id(function)
+# --- Glossary ---
+#
+# "code", "snippet" or "code snippet"
+#   Refers to a block of code written by the user that returns an object
+#   like a command or a listener that we will register. They are usually
+#   objects derived from `instantcmd.core.core.CodeSnippet`
 
 
-class InstantCommands(BaseCog):
+class InstantCommands(commands.Cog):
     """
     Generate a new command from a code snippet, without making a new cog.
 
@@ -64,72 +53,100 @@ class InstantCommands(BaseCog):
         self.bot = bot
         self.data = Config.get_conf(self, 260)
 
-        def_global = {"commands": {}, "dev_values": {}, "updated_body": False}
-        self.data.register_global(**def_global)
-        self.listeners = {}
+        self.data.init_custom(CODE_SNIPPET, 2)
+        self.data.register_custom(CODE_SNIPPET, code=None, enabled=True, version=1)
 
-        # resume all commands and listeners
-        bot.loop.create_task(self.resume_commands())
+        try:
+            self.bot.add_dev_env_value("instantcmd", lambda ctx: self)
+        except RuntimeError:
+            log.warning("Failed to load dev env value", exc_info=True)
+
+        self.code_snippets: List[CodeSnippet] = []
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "1.3.2"
+    __version__ = "2.0.0"
 
-    # def get_config_identifier(self, name):
-    # """
-    # Get a random ID from a string for Config
-    # """
-
-    # random.seed(name)
-    # identifier = random.randint(0, 999999)
-    # self.env["config"] = Config.get_conf(self, identifier)
-
-    def get_function_from_str(self, command, name=None):
-        """
-        Execute a string, and try to get a function from it.
-        """
-
-        # self.get_config_identifier(name)
-        to_compile = "def func():\n%s" % textwrap.indent(command, "  ")
-        sys.path.append(os.path.dirname(__file__))
-        env = {
+    @property
+    def env(self) -> Dict[str, Any]:
+        return {
             "bot": self.bot,
             "discord": discord,
             "commands": commands,
             "checks": checks,
             "asyncio": asyncio,
+            "instantcmd_cog": self,
         }
-        exec(to_compile, env)
-        sys.path.remove(os.path.dirname(__file__))
-        result = env["func"]()
-        if not result:
-            raise RuntimeError("Nothing detected. Make sure to return something")
-        return result
 
-    def load_command_or_listener(self, function):
-        """
-        Add a command to discord.py or create a listener
-        """
-
-        if isinstance(function, commands.Command):
-            self.bot.add_command(function)
-            log.debug(f"Added command {function.name}")
-        else:
-            if not isinstance(function, Listener):
-                function = Listener(function, function.__name__)
-            self.bot.add_listener(function.func, name=function.name)
-            self.listeners[function.func.__name__] = (function.id, function.name)
-            if function.name != function.func.__name__:
-                log.debug(
-                    f"Added listener {function.func.__name__} listening for the "
-                    f"event {function.name} (ID: {function.id})"
+    async def _load_code_snippets_from_config(self):
+        types: Dict[str, Type[CodeSnippet]] = {
+            "command": CommandSnippet,
+            "listener": ListenerSnippet,
+            "dev env value": DevEnvSnippet,
+        }
+        data: Dict[str, Dict[str, dict]] = await self.data.custom(CODE_SNIPPET).all()
+        for category, code_snippets in data.items():
+            try:
+                snippet_type = types[category]
+            except KeyError:
+                log.critical(
+                    f"Unknown category {category}, skipping {len(code_snippets)} "
+                    "potential code snippets from loading!",
+                    exc_info=True,
                 )
-            else:
-                log.debug(f"Added listener {function.name} (ID: {function.id})")
+                continue
+            for name, code_snippet_data in code_snippets.items():
+                try:
+                    value = get_code_from_str(code_snippet_data["code"], self.env)
+                    self.code_snippets.append(
+                        snippet_type.from_saved_data(self.bot, self.data, value, code_snippet_data)
+                    )
+                except Exception:
+                    log.error(f"Failed to compile {category} {name}.", exc_info=True)
 
-    async def resume_commands(self):
+    def load_code_snippet(self, code: CodeSnippet):
         """
-        Load all instant commands made.
-        This is executed on load with __init__
+        Register a code snippet
+        """
+        if code.enabled == False:
+            log.debug(f"Skipping snippet {code} as it is disabled.")
+            return
+        try:
+            code.register()
+        except Exception:
+            log.error(f"Failed to register snippet {code}", exc_info=True)
+        else:
+            code.registered = True
+
+    async def load_all_code_snippets(self):
+        """
+        Reload all code snippets saved.
+        This is executed on cog load.
+        """
+        try:
+            await self._load_code_snippets_from_config()
+        except Exception:
+            log.critical("Failed to load data from config.", exc_info=True)
+            return
+        for code in self.code_snippets:
+            self.load_code_snippet(code)
+
+    def unload_code_snippet(self, code: CodeSnippet):
+        """
+        Unregister a code snippet
+        """
+        if code.registered == False:
+            return
+        try:
+            code.unregister()
+        except Exception:
+            log.error(f"Failed to unregister snippet {code}", exc_info=True)
+        else:
+            code.registered = False
+
+    async def unload_all_code_snippets(self):
+        """
+        Unload all code snippets saved.
+        This is executed on cog unload.
         """
         dev_values = await self.data.dev_values()
         for name, code in dev_values.items():
@@ -140,47 +157,45 @@ class InstantCommands(BaseCog):
             else:
                 self.bot.add_dev_env_value(name, function)
                 log.debug(f"Added dev value %s", name)
+        for code in self.code_snippets:
+            self.unload_code_snippet(code)
 
-        _commands = await self.data.commands()
-        for name, command_string in _commands.items():
-            try:
-                function = self.get_function_from_str(command_string, name)
-            except Exception as e:
-                log.exception("An exception occurred while trying to resume command %s", name)
-            else:
-                self.load_command_or_listener(function)
+    def get_code_snippets(
+        self,
+        enabled: Optional[bool] = True,
+        registered: Optional[bool] = True,
+        type: Optional[Type[CodeSnippet]] = None,
+    ) -> Iterator[CodeSnippet]:
+        """
+        Get all saved code snippets.
 
-    async def remove_commands(self):
-        async with self.data.commands() as _commands:
-            for command in _commands:
-                if command in self.listeners:
-                    # remove a listener
-                    listener_id, name = self.listeners[command]
-                    self.bot.remove_listener(FakeListener(listener_id), name=name)
-                    log.debug(f"Removed listener {command} due to cog unload.")
-                else:
-                    # remove a command
-                    self.bot.remove_command(command)
-                    log.debug(f"Removed command {command} due to cog unload.")
-        async with self.data.dev_values() as values:
-            for name in values:
-                self.bot.remove_dev_env_value(name)
-                log.debug(f"Removed dev value {name} due to cog unload.")
+        Parameters
+        ----------
+        enabled: Optional[bool]
+            If `True`, only return enabled code snippets. Defaults to `True`.
+        registered: Optional[bool]
+            If `True`, only return registered code snippets (excluding the ones that failed to
+            load). Defaults to `True`.
+        type: Optional[Type[CodeSnippet]]
+            Filter the results by the given type.
 
-    # from DEV cog, made by Cog Creators (tekulvw)
-    @staticmethod
-    def cleanup_code(content):
-        """Automatically removes code blocks from the code."""
-        # remove ```py\n```
-        if content.startswith("```") and content.endswith("```"):
-            return "\n".join(content.split("\n")[1:-1])
+        Returns
+        -------
+        Iterator[CodeSnippet]
+            An iterator of the results.
+        """
+        for code in self.code_snippets:
+            if enabled and not code.enabled:
+                continue
+            if registered and not code.registered:
+                continue
+            if type and not isinstance(code, type):
+                continue
+            yield code
 
-        # remove `foo`
-        return content.strip("` \n")
-
-    async def _ask_for_edit(self, ctx: commands.Context, kind: str) -> bool:
+    async def _ask_for_edit(self, ctx: commands.Context, code: CodeSnippet) -> bool:
         msg = await ctx.send(
-            f"That {kind} is already registered with InstantCommands. "
+            f"That {code} is already registered with InstantCommands. "
             "Would you like to replace it?"
         )
         pred = ReactionPredicate.yes_or_no(msg, ctx.author)
@@ -195,7 +210,7 @@ class InstantCommands(BaseCog):
             return False
         return True
 
-    async def _read_from_file(self, ctx: commands.Context, msg: discord.Message):
+    async def _read_from_file(self, ctx: commands.Context, msg: discord.Message) -> str:
         content = await msg.attachments[0].read()
         try:
             function_string = content.decode()
@@ -206,32 +221,23 @@ class InstantCommands(BaseCog):
             )
             function_string = content.decode(errors="replace")
         finally:
-            return self.cleanup_code(function_string)
+            return cleanup_code(function_string)
 
     async def _extract_code(
-        self, ctx: commands.Context, command: Optional[str] = None, is_instantcmd=True
-    ):
+        self, ctx: commands.Context, code_string: Optional[str] = None
+    ) -> Tuple[T, str]:
         if ctx.message.attachments:
-            function_string = await self.read_from_file(ctx, ctx.message)
-        elif command:
-            function_string = self.cleanup_code(command)
+            function_string = await self._read_from_file(ctx, ctx.message)
+        elif code_string:
+            function_string = cleanup_code(code_string)
         else:
             message = (
-                (
-                    "You're about to create a new command.\n"
-                    "Your next message will be the code of the command.\n\n"
-                    "If this is the first time you're adding instant commands, "
-                    "please read the wiki:\n"
-                    "https://laggron.red/instantcommands.html#usage"
-                )
-                if is_instantcmd
-                else (
-                    "You're about to add a new value to the dev environment.\n"
-                    "Your next message will be the code returning that value.\n\n"
-                    "If this is the first time you're editing the dev environment "
-                    "with InstantCommands, please read the wiki:\n"
-                    "https://laggron.red/instantcommands.html#usage"
-                )
+                # TODO: redo this message
+                "You're about to add a new object object to the bot.\n"
+                "Your next message will be the code of your object.\n\n"
+                "If this is the first time you're adding instant commands, "
+                "please read the wiki:\n"
+                "https://laggron.red/instantcommands.html#usage"
             )
             await ctx.send(message)
             pred = MessagePredicate.same_context(ctx)
@@ -244,274 +250,100 @@ class InstantCommands(BaseCog):
                 return
 
             if response.content == "" and response.attachments:
-                function_string = await self.read_from_file(ctx, response)
+                function_string = await self._read_from_file(ctx, response)
             else:
-                function_string = self.cleanup_code(response.content)
+                function_string = cleanup_code(response.content)
 
         try:
-            function = self.get_function_from_str(function_string)
+            function = get_code_from_str(function_string, self.env)
+        except InstantcmdException:
+            raise  # do not add another step for already commented errors
         except Exception as e:
-            exception = "".join(traceback.format_exception(type(e), e, e.__traceback__))
-            message = (
-                f"An exception has occured while compiling your code:\n```py\n{exception}\n```"
-            )
-            for page in pagify(message):
-                await ctx.send(page)
-            return
+            raise ExecutionException("An exception has occured while compiling your code") from e
         return function, function_string
 
     @checks.is_owner()
     @commands.group(aliases=["instacmd", "instantcommand"])
-    async def instantcmd(self, ctx):
+    async def instantcmd(self, ctx: commands.Context):
         """Instant Commands cog management"""
         pass
 
     @instantcmd.command(aliases=["add"])
-    async def create(self, ctx, *, command: str = None):
+    async def create(self, ctx: commands.Context, *, command: str = None):
         """
-        Instantly generate a new command from a code snippet.
+        Instantly generate a new object from a code snippet.
 
-        If you want to make a listener, give its name instead of the command name.
+        The following objects are supported: commands, listeners
         You can upload a text file if the command is too long, but you should consider coding a \
 cog at this point.
         """
-        function = await self._extract_code(ctx, command)
-        if function is None:
-            return
-        function, function_string = function
-        # if the user used the command correctly, we should have one async function
-        if isinstance(function, commands.Command):
-            async with self.data.commands() as _commands:
-                if function.name in _commands:
-                    response = await self._ask_for_edit(ctx, "command")
-                    if response is False:
-                        return
-                    self.bot.remove_command(function.name)
-                    log.debug(f"Removed command {function.name} due to incoming overwrite (edit).")
-            try:
-                self.bot.add_command(function)
-            except Exception as e:
-                exception = "".join(traceback.format_exception(type(e), e, e.__traceback__))
-                message = (
-                    "An expetion has occured while adding the command to discord.py:\n"
-                    f"```py\n{exception}\n```"
-                )
-                for page in pagify(message):
-                    await ctx.send(page)
-                return
-            else:
-                async with self.data.commands() as _commands:
-                    _commands[function.name] = function_string
-                await ctx.send(f"The command `{function.name}` was successfully added.")
-                log.debug(f"Added command {function.name}")
-
-        else:
-            if not isinstance(function, Listener):
-                function = Listener(function, function.__name__)
-            async with self.data.commands() as _commands:
-                if function.func.__name__ in _commands:
-                    response = await self._ask_for_edit(ctx, "listener")
-                    if response is False:
-                        return
-                    listener_id, listener_name = self.listeners[function.func.__name__]
-                    self.bot.remove_listener(FakeListener(listener_id), name=listener_name)
-                    del listener_id, listener_name
-                    log.debug(
-                        f"Removed listener {function.name} due to incoming overwrite (edit)."
-                    )
-            try:
-                self.bot.add_listener(function.func, name=function.name)
-            except Exception as e:
-                exception = "".join(traceback.format_exception(type(e), e, e.__traceback__))
-                message = (
-                    "An expetion has occured while adding the listener to discord.py:\n"
-                    f"```py\n{exception}\n```"
-                )
-                for page in pagify(message):
-                    await ctx.send(page)
-                return
-            else:
-                self.listeners[function.func.__name__] = (function.id, function.name)
-                async with self.data.commands() as _commands:
-                    _commands[function.func.__name__] = function_string
-                if function.name != function.func.__name__:
-                    await ctx.send(
-                        f"The listener `{function.func.__name__}` listening for the "
-                        f"event `{function.name}` was successfully added."
-                    )
-                    log.debug(
-                        f"Added listener {function.func.__name__} listening for the "
-                        f"event {function.name} (ID: {function.id})"
-                    )
-                else:
-                    await ctx.send(f"The listener {function.name} was successfully added.")
-                    log.debug(f"Added listener {function.name} (ID: {function.id})")
-
-    @instantcmd.command(aliases=["del", "remove"])
-    async def delete(self, ctx, command_or_listener: str):
-        """
-        Remove a command or a listener from the registered instant commands.
-        """
-        command = command_or_listener
-        async with self.data.commands() as _commands:
-            if command not in _commands:
-                await ctx.send("That instant command doesn't exist")
-                return
-            if command in self.listeners:
-                text = "listener"
-                function, name = self.listeners[command]
-                self.bot.remove_listener(FakeListener(function), name=name)
-            else:
-                text = "command"
-                self.bot.remove_command(command)
-            _commands.pop(command)
-        await ctx.send(f"The {text} `{command}` was successfully removed.")
-
-    @instantcmd.command(name="list")
-    async def _list(self, ctx):
-        """
-        List all existing commands made using Instant Commands.
-        """
-        message = "List of instant commands:\n" "```Diff\n"
-        _commands = await self.data.commands()
-        for name, command in _commands.items():
-            message += f"+ {name}\n"
-        message += (
-            "```\n"
-            "You can show the command source code by typing "
-            f"`{ctx.prefix}instacmd source <command>`"
-        )
-        if _commands == {}:
-            await ctx.send("No instant command created.")
-            return
-        for page in pagify(message):
-            await ctx.send(page)
-
-    @instantcmd.command()
-    async def source(self, ctx: commands.Context, command: str):
-        """
-        Show the code of an instantcmd command or listener.
-        """
-        _commands = await self.data.commands()
-        if command not in _commands:
-            await ctx.send("Command not found.")
-            return
-        _function = self.get_function_from_str(_commands[command])
-        prefix = ctx.clean_prefix if isinstance(_function, commands.Command) else ""
-        await ctx.send(f"Source code for `{prefix}{command}`:")
-        await ctx.send_interactive(
-            pagify(_commands[command], shorten_by=10), box_lang="py", timeout=60
-        )
-
-    @instantcmd.group()
-    async def env(self, ctx: commands.Context):
-        """
-        Manage Red's dev environment
-
-        This allows you to add custom values to the developer's environement used by the \
-core dev commands (debug, eval, repl).
-        Note that this cannot be used inside instantcommands due to the context requirement. 
-        """
-        pass
-
-    @env.command(name="add")
-    async def env_add(self, ctx: commands.Context, name: str, *, code: str = None):
-        """
-        Add a new value to Red's dev environement.
-
-        The code is in the form of an eval (like instantcmds) and must return a callable that \
-takes the context as its sole parameter.
-        """
-        function = await self._extract_code(ctx, code, False)
-        if function is None:
-            return
-        function, function_string = function
-        # if the user used the command correctly, we should have one async function
-        async with self.data.dev_values() as values:
-            if name in values:
-                response = await self._ask_for_edit(ctx, "dev value")
-                if response is False:
-                    return
-                self.bot.remove_dev_env_value(name)
-                log.debug(f"Removed dev value {name} due to incoming overwrite (edit).")
         try:
-            self.bot.add_dev_env_value(name, function)
+            function, function_string = await self._extract_code(ctx, command)
+            snippet_type = find_matching_type(function)
+            # this is a CodeSnippet object (command, listener or whatever is currently supported)
+            code_snippet = snippet_type(self.bot, self.data, function, function_string)
+        except InstantcmdException as e:
+            message = e.args[0]
+            exc = e.__cause__
+            if exc:
+                message += (
+                    "\n```py\n"
+                    + "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+                    + "\n```"
+                )
+            for page in pagify(message):
+                await ctx.send(page)
+            return
+
+        # detecting if this name isn't already registered
+        for saved_code in self.get_code_snippets(type=snippet_type):
+            if str(saved_code) == str(code_snippet):
+                edit = await self._ask_for_edit(ctx, code_snippet)
+                if not edit:
+                    return
+
+        try:
+            code_snippet.register()
         except Exception as e:
+            log.error(
+                f"Failed to register snippet {code_snippet} given by {ctx.author}", exc_info=e
+            )
             exception = "".join(traceback.format_exception(type(e), e, e.__traceback__))
             message = (
-                "An expetion has occured while adding the value to Red:\n"
+                f"An expetion has occured while registering your {code_snippet} to the bot:\n"
                 f"```py\n{exception}\n```"
             )
             for page in pagify(message):
                 await ctx.send(page)
             return
-        else:
-            async with self.data.dev_values() as values:
-                values[name] = function_string
-            await ctx.send(f"The dev value `{name}` was successfully added.")
-            log.debug(f"Added dev value {name}")
 
-    @env.command(name="delete", aliases=["del", "remove"])
-    async def env_delete(self, ctx: commands.Context, name: str):
-        """
-        Unload and remove a dev value from the registered ones with instantcmd.
-        """
-        async with self.data.dev_values() as values:
-            if name not in values:
-                await ctx.send("That value doesn't exist")
-                return
-            self.bot.remove_dev_env_value(name)
-            values.pop(name)
-        await ctx.send(f"The dev env value `{name}` was successfully removed.")
+        code_snippet.registered = True
+        await code_snippet.save()
+        self.code_snippets.append(code_snippet)
+        await ctx.send(f"Successfully added your new {code_snippet.name}.")
 
-    @env.command(name="list")
-    async def env_list(self, ctx: commands.Context):
+    @instantcmd.command(name="list")
+    async def _list(self, ctx: commands.Context):
         """
-        List all dev env values registered.
+        List all existing commands made using Instant Commands.
         """
-        embed = discord.Embed(name="List of dev env values")
-        dev_cog = self.bot.get_cog("Dev")
-        values = await self.data.dev_values()
-        if not values:
-            message = "Nothing set yet."
-        else:
-            message = "- " + "\n- ".join(values)
-            embed.set_footer(
-                text=(
-                    "You can show the command source code by typing "
-                    f"`{ctx.prefix}instacmd env source <name>`"
-                )
-            )
-        embed.add_field(name="Registered with InstantCommands", value=message, inline=False)
-        if dev_cog:
-            embed.description = "Dev mode is currently enabled"
-            other_values = [x for x in dev_cog.env_extensions if x not in values]
-            if other_values:
-                embed.add_field(
-                    name="Other dev env values",
-                    value="- " + "\n- ".join(other_values),
-                    inline=False,
-                )
-        else:
-            embed.description = "Dev mode is currently disabled"
-        embed.colour = await ctx.embed_colour()
-        await ctx.send(embed=embed)
-
-    @env.command(name="source")
-    async def env_source(self, ctx: commands.Context, name: str):
-        """
-        Show the code of a dev env value.
-        """
-        values = await self.data.dev_values()
-        if name not in values:
-            await ctx.send("Value not found.")
+        view = OwnerOnlyView(self.bot, timeout=300)
+        total = 0
+        types = (CommandSnippet, ListenerSnippet, DevEnvSnippet)
+        for type in types:
+            objects = list(self.get_code_snippets(enabled=False, registered=False, type=type))
+            if not objects:
+                continue
+            total += len(objects)
+            view.add_item(CodeSnippetsList(self.bot, type, objects))
+        if total == 0:
+            await ctx.send("No instant command created.")
             return
-        await ctx.send(f"Source code for `{name}`:")
-        await ctx.send_interactive(pagify(values[name], shorten_by=10), box_lang="py", timeout=60)
+        await ctx.send(f"{total} instant commands created so far!", view=view)
 
     @commands.command(hidden=True)
     @checks.is_owner()
-    async def instantcmdinfo(self, ctx):
+    async def instantcmdinfo(self, ctx: commands.Context):
         """
         Get informations about the cog.
         """
@@ -525,44 +357,16 @@ takes the context as its sole parameter.
             "Support my work on Patreon: https://www.patreon.com/retke"
         ).format(self)
 
-    @listener()
-    async def on_command_error(self, ctx, error):
-        if not isinstance(error, commands.CommandInvokeError):
-            return
-        if not ctx.command.cog_name == self.__class__.__name__:
-            # That error doesn't belong to the cog
-            return
-        async with self.data.commands() as _commands:
-            if ctx.command.name in _commands:
-                log.info(f"Error in instant command {ctx.command.name}.", exc_info=error.original)
-                return
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send(
-                "I need the `Add reactions` and `Manage messages` in the "
-                "current channel if you want to use this command."
-            )
-        with DisabledConsoleOutput(log):
-            log.error(
-                f"Exception in command '{ctx.command.qualified_name}'.\n\n",
-                exc_info=error.original,
-            )
-
-    # correctly unload the cog
-    def __unload(self):
-        self.cog_unload()
-
-    def cog_unload(self):
+    async def cog_unload(self):
         log.debug("Unloading cog...")
+        # removes commands and listeners
+        await self.unload_all_code_snippets()
 
-        async def unload():
-            # removes commands and listeners
-            await self.remove_commands()
+        self.bot.remove_dev_env_value("instantcmd")
 
-            # remove all handlers from the logger, this prevents adding
-            # multiple times the same handler if the cog gets reloaded
-            close_logger(log)
+        # remove all handlers from the logger, this prevents adding
+        # multiple times the same handler if the cog gets reloaded
+        close_logger(log)
 
-        # I am forced to put everything in an async function to execute the remove_commands
-        # function, and then remove the handlers. Using loop.create_task on remove_commands only
-        # executes it after removing the log handlers, while it needs to log...
-        self.bot.loop.create_task(unload())
+    async def cog_load(self):
+        await self.load_all_code_snippets()
