@@ -25,12 +25,6 @@ log = logging.getLogger("red.laggron.say")
 
 async def setup(bot: "Red"):
     init_logger(log, "Say")
-    if not hasattr(bot, "tree"):
-        raise CogLoadError("This cog requires the latest discord.py 2.0.0a.") from None
     n = Say(bot)
     await bot.add_cog(n)
     log.debug("Cog successfully loaded on the instance.")
-
-
-async def teardown(bot: "Red"):
-    bot.tree.remove_command("say")
