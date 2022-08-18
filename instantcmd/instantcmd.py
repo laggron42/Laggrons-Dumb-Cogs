@@ -78,6 +78,7 @@ class InstantCommands(commands.Cog):
         types: Dict[str, Type[CodeSnippet]] = {
             "command": CommandSnippet,
             "listener": ListenerSnippet,
+            "dev env value": DevEnvSnippet,
         }
         data: Dict[str, Dict[str, dict]] = await self.data.custom(CODE_SNIPPET).all()
         for category, code_snippets in data.items():
