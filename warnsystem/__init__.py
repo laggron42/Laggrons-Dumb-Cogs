@@ -5,6 +5,7 @@ import re
 from redbot.core.i18n import Translator
 from redbot.core.errors import CogLoadError
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 if not importlib.util.find_spec("dateutil"):
     raise CogLoadError(
@@ -22,6 +23,9 @@ if not importlib.util.find_spec("laggron_utils"):
 
 from laggron_utils import init_logger, close_logger
 from warnsystem.warnsystem import WarnSystem
+
+if TYPE_CHECKING:
+    from redbot.core.bot import Red
 
 _ = Translator("WarnSystem", __file__)
 log = logging.getLogger("red.laggron.warnsystem")
@@ -180,7 +184,7 @@ async def update_config(bot, config):
         # phew
 
 
-async def setup(bot):
+async def setup(bot: "Red"):
     init_logger(log, "WarnSystem")
     n = WarnSystem(bot)
     # the cog conflicts with the core Warnings cog, we must check that
