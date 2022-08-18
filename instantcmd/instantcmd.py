@@ -56,7 +56,10 @@ class InstantCommands(commands.Cog):
         self.data.init_custom(CODE_SNIPPET, 2)
         self.data.register_custom(CODE_SNIPPET, code=None, enabled=True, version=1)
 
-        self.bot.add_dev_env_value("instantcmd", lambda ctx: self)
+        try:
+            self.bot.add_dev_env_value("instantcmd", lambda ctx: self)
+        except RuntimeError:
+            log.warning("Failed to load dev env value", exc_info=True)
 
         self.code_snippets: List[CodeSnippet] = []
 
