@@ -42,7 +42,7 @@ class FakeRole:
     """
 
     position = 0
-    colour = discord.Embed.Empty
+    colour = None
 
 
 class FakeAsset:
