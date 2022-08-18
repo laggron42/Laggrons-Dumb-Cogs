@@ -692,24 +692,17 @@ class WarnSystem(SettingsMixin, commands.Cog, metaclass=CompositeMetaClass):
     @commands.command()
     @commands.guild_only()
     @commands.cooldown(1, 3, commands.BucketType.member)
-    async def warnings(
-        self, ctx: commands.Context, user: UnavailableMember = None, index: int = 0
-    ):
+    async def warnings(self, ctx: commands.Context, user: UnavailableMember):
         """
         Shows all warnings of a member.
 
         This command can be used by everyone, but only moderators can see other's warnings.
         Moderators can also edit or delete warnings by using the reactions.
         """
-        if not user:
-            await ctx.send_help()
-            return
-        if (
-            not (
-                await mod.is_mod_or_superior(self.bot, ctx.author)
-                or ctx.author.guild_permissions.kick_members
-            )
-            and user != ctx.author
+        if user != ctx.author and not (
+            ctx.author.guild_permissions.kick_members
+            or ctx.author.id == ctx.guild.owner_id
+            or await mod.is_mod_or_superior(self.bot, ctx.author)
         ):
             await ctx.send(_("You are not allowed to see other's warnings!"))
             return
@@ -717,35 +710,11 @@ class WarnSystem(SettingsMixin, commands.Cog, metaclass=CompositeMetaClass):
         if not cases:
             await ctx.send(_("That member was never warned."))
             return
-        if 0 < index < len(cases):
-            await ctx.send(_("That case doesn't exist."))
-            return
 
-        total = lambda level: len([x for x in cases if x.level == level])
-        warning_str = lambda level, plural: {
-            1: (_("Warning"), _("Warnings")),
-            2: (_("Mute"), _("Mutes")),
-            3: (_("Kick"), _("Kicks")),
-            4: (_("Softban"), _("Softbans")),
-            5: (_("Ban"), _("Bans")),
-        }.get(level, _("unknown"))[1 if plural else 0]
-
-        msg = []
-        for i in range(6):
-            total_warns = total(i)
-            if total_warns > 0:
-                msg.append(f"{warning_str(i, total_warns > 1)}: {total_warns}")
-        warn_field = "\n".join(msg) if len(msg) > 1 else msg[0]
-        embed = discord.Embed(description=_("User modlog summary."))
-        embed.set_author(name=f"{user} | {user.id}", icon_url=user.avatar.url)
-        embed.add_field(
-            name=_("Total number of warnings: ") + str(len(cases)), value=warn_field, inline=False
-        )
-        embed.colour = user.top_role.colour
-
+        warning_list = WarningsList(self.bot, user, cases)
         view = View()
-        view.add_item(WarningsList(self.bot, user, cases))
-        await ctx.send(embed=embed, view=view)
+        view.add_item(warning_list)
+        warning_list.message = await ctx.send(embed=warning_list.generate_embed(), view=view)
 
     @commands.command()
     @checks.mod_or_permissions(kick_members=True)

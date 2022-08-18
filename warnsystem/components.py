@@ -15,8 +15,6 @@ from warnsystem.core.warning import Warning
 
 if TYPE_CHECKING:
     from redbot.core.bot import Red
-    from warnsystem.core.api import API
-    from warnsystem.core.cache import MemoryCache
 
 _ = Translator("WarnSystem", __file__)
 
@@ -123,20 +121,13 @@ class EditReasonButton(Button):
 class DeleteWarnButton(Button):
     def __init__(
         self,
-        bot: "Red",
-        interaction: discord.Interaction,
-        *,
-        user: Union[discord.Member, UnavailableMember],
-        case: dict,
-        case_index: int,
+        select_menu: WarningsList,
+        case: Warning,
         disabled: bool = False,
         row: Optional[int] = None,
     ):
-        self.bot = bot
-        self.inter = interaction
-        self.ws = bot.get_cog("WarnSystem")
-        self.api: "API" = self.ws.api
-        self.cache: "MemoryCache" = self.ws.cache
+        self.select_menu = select_menu
+        self.case = case
         super().__init__(
             style=discord.ButtonStyle.danger,
             label=_("Delete case"),
@@ -144,40 +135,24 @@ class DeleteWarnButton(Button):
             emoji="\N{HEAVY MULTIPLICATION X}\N{VARIATION SELECTOR-16}",
             row=row or 0,
         )
-        self.user = user
-        self.case = case
-        self.case_index = case_index
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        interaction = self.inter
-        guild = interaction.guild
-        embed = discord.Embed()
-        can_unmute = False
-        add_roles = False
-        if self.case["level"] == 2:
-            mute_role = guild.get_role(await self.cache.get_mute_role(guild))
-            member = guild.get_member(self.user)
-            if member:
-                if mute_role and mute_role in member.roles:
-                    can_unmute = True
-                add_roles = await self.ws.data.guild(guild).remove_roles()
-        description = _(
-            "Case #{number} deletion.\n**Click on the button to confirm your action.**"
-        ).format(number=self.case_index)
-        if can_unmute or add_roles:
-            description += _("\nNote: Deleting the case will also do the following:")
-            if can_unmute:
-                description += _("\n- unmute the member")
-            if add_roles:
-                description += _("\n- add all roles back to the member")
-        embed.description = description
-        response = await prompt_yes_or_no(self.bot, interaction, embed=embed, clear_after=False)
-        if response is False:
-            return
-        await self.api.delete_case(guild, self.user, self.case_index)
-        await interaction.edit_original_message(
-            content=_("The case was successfully deleted!"), embed=None, view=None
+        await self.case.delete()
+
+        # update the internal values
+        del self.select_menu.cases[self.case.index]
+        try:
+            for case in self.select_menu.cases[self.case.index :]:
+                case.index += 1
+        except KeyError:
+            pass  # reached end of list
+
+        await interaction.response.edit_message(
+            content=_("The warning was deleted."), embed=None, view=None
+        )
+        self.select_menu.refresh_options()
+        await self.select_menu.message.edit(
+            embed=self.select_menu.generate_embed(), view=self.select_menu.view
         )
 
 
@@ -185,23 +160,28 @@ class WarningsList(Select):
     def __init__(
         self,
         bot: "Red",
-        user: Union[discord.Member, UnavailableMember],
+        member: Union[UnavailableMember, discord.Member],
         cases: List[Warning],
         *,
         row: Optional[int] = None,
     ):
         self.bot = bot
-        self.ws = bot.get_cog("WarnSystem")
-        self.api: "API" = self.ws.api
+        self.member = member
+        self.cases = cases
         super().__init__(
             placeholder=_("Click to view the list of warnings."),
             min_values=1,
             max_values=1,
-            options=self.generate_cases(cases),
+            options=self.generate_cases(),
             row=row,
         )
-        self.user = user
-        self.cases = cases
+
+        # the initial message sent by the command, with the options attached
+        self.message: Optional[discord.Message] = None
+
+        # when selectiong an option, a view is created with a new message
+        # to prevent stacking, always cancel the previous view before creating a new one
+        self.launched_view: Optional[View] = None
 
     def _get_label(self, level: int):
         if level == 1:
@@ -215,9 +195,9 @@ class WarningsList(Select):
         elif level == 5:
             return (_("Ban"), "🔨")
 
-    def generate_cases(self, cases: List[Warning]):
+    def generate_cases(self) -> List[SelectOption]:
         options = []
-        for i, case in enumerate(cases[:24]):
+        for i, case in enumerate(self.cases[:24]):
             name, emote = self._get_label(case.level)
             date = pretty_date(case.time)
             if case.reason and len(name) + len(case.reason) > 25:
@@ -233,59 +213,37 @@ class WarningsList(Select):
             options.append(option)
         return options
 
-    async def callback(self, interaction: discord.Interaction):
-        warning_str = lambda level, plural: {
-            1: (_("Warning"), _("Warnings")),
-            2: (_("Mute"), _("Mutes")),
-            3: (_("Kick"), _("Kicks")),
-            4: (_("Softban"), _("Softbans")),
-            5: (_("Ban"), _("Bans")),
-        }.get(level, _("unknown"))[1 if plural else 0]
+    def generate_embed(self) -> discord.Embed:
+        count = {k: 0 for k in range(1, 6)}
+        for warn in self.cases:
+            count[warn.level] += 1
+        msg = []
+        for level, total in filter(lambda x: x[1], count.items()):
+            msg.append(f"{Warning.get_label_from_level(level, plural=total > 1)}: {total}")
+        warn_field = "\n".join(msg)
 
-        guild = interaction.guild
+        avatar = self.member.guild_avatar or self.member.avatar or self.member.default_avatar
+        embed = discord.Embed(description=_("User modlog summary."))
+        embed.set_author(name=f"{self.member} | {self.member.id}", icon_url=avatar.url)
+        embed.add_field(
+            name=_("Total number of warnings: ") + str(len(self.cases)),
+            value=warn_field,
+            inline=False,
+        )
+        embed.colour = self.member.top_role.colour
+        return embed
+
+    def refresh_options(self):
+        self.options = self.generate_cases()
+
+    async def callback(self, interaction: discord.Interaction):
         i = int(interaction.data["values"][0])
         case = self.cases[i]
-        level = case.level
-        moderator = case.author
-        moderator = case.author.mention
-        time = case.time
-        embed = discord.Embed(description=_("Case #{number} informations").format(number=i + 1))
-        embed.set_author(name=f"{self.user} | {self.user.id}", icon_url=self.user.avatar.url)
-        embed.add_field(
-            name=_("Level"), value=f"{warning_str(level, False)} ({level})", inline=True
-        )
-        embed.add_field(name=_("Moderator"), value=moderator, inline=True)
-        if case.duration:
-            embed.add_field(
-                name=_("Duration"),
-                value=_("{duration}\n(Until {date})").format(
-                    duration=case._format_timedelta(case.duration),
-                    date=case._format_datetime(time + case.duration),
-                ),
-            )
-        embed.add_field(name=_("Reason"), value=case.reason, inline=False),
-        embed.timestamp = time
-        embed.colour = await self.ws.data.guild(guild).colors.get_raw(level)
         is_mod = await mod.is_mod_or_superior(self.bot, interaction.user)
-        view = View()
-        view.add_item(
-            EditReasonButton(
-                self.bot,
-                interaction,
-                user=self.user,
-                case=case,
-                case_index=i,
-                disabled=not is_mod,
-            )
-        )
-        view.add_item(
-            DeleteWarnButton(
-                self.bot,
-                interaction,
-                user=self.user,
-                case=case,
-                case_index=i,
-                disabled=not is_mod,
-            )
-        )
-        await interaction.response.send_message(embed=embed, view=view)
+        if self.launched_view:
+            self.launched_view.stop()
+        self.launched_view = view = View()
+        # TODO: permission check for interactions on this view
+        view.add_item(EditReasonButton(self, case=case, disabled=not is_mod))
+        view.add_item(DeleteWarnButton(self, case=case, disabled=not is_mod))
+        await interaction.response.send_message(embed=await case.get_historical_embed(), view=view)
