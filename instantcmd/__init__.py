@@ -79,7 +79,7 @@ async def save_old_commands(bot: "Red", config: "Config", data: Dict[str, Dict[s
         "```py\n"
         "from instantcmd.utils import dev_env_value\n\n"
         "@dev_env_value()\n"
-        "async def fluff_derg(member):\n"
+        "def fluff_derg(ctx):\n"
         "    ID = 215640856839979008\n"
         "    if ctx.guild:\n"
         "        return ctx.guild.get_member(ID) or bot.get_user(ID)\n"
