@@ -1,13 +1,14 @@
+from __future__ import annotations
+
 import discord
 
 from discord.components import SelectOption
 from discord.ui import Button, Select, Modal, TextInput, View
-from asyncio import TimeoutError as AsyncTimeoutError
 from datetime import datetime
 from typing import List, Optional, Union, TYPE_CHECKING
 
 from redbot.core.i18n import Translator
-from redbot.core.utils import predicates, mod
+from redbot.core.utils import mod
 
 from warnsystem.core.api import UnavailableMember
 from warnsystem.core.warning import Warning
@@ -76,99 +77,37 @@ def pretty_date(time: datetime):
     return text(day_diff / 365, units_name[0])
 
 
-async def prompt_yes_or_no(
-    bot: "Red",
-    interaction: discord.Interaction,
-    content: Optional[str] = None,
-    *,
-    embed: Optional[discord.Embed] = None,
-    timeout: int = 30,
-    clear_after: bool = True,
-    negative_response: bool = True,
-) -> bool:
-    """
-    Sends a message and waits for used confirmation, using buttons.
-
-    Credit to TrustyJAID for the stuff with buttons. Source:
-    https://github.com/TrustyJAID/Trusty-cogs/blob/f6ceb28ff592f664070a89282288452d615d7dc5/eventposter/eventposter.py#L750-L777
-
-    Parameters
-    ----------
-    content: Union[str, discord.Embed]
-        Either text or an embed to send.
-    timeout: int
-        Time before timeout. Defaults to 30 seconds.
-    clear_after: bool
-        Should the message have its buttons removed? Defaults to True. Set to false if you will
-        edit later
-    negative_response: bool
-        If the bot should send "Cancelled." after a negative response. Defaults to True.
-
-    Returns
-    -------
-    bool
-        False if the user declined, if the request timed out, or if there are insufficient
-        permissions, else True.
-    """
-    view = discord.ui.View()
-    approve_button = discord.ui.Button(
-        style=discord.ButtonStyle.green,
-        emoji="\N{HEAVY CHECK MARK}\N{VARIATION SELECTOR-16}",
-        custom_id=f"yes-{interaction.message.id}",
-    )
-    deny_button = discord.ui.Button(
-        style=discord.ButtonStyle.red,
-        emoji="\N{HEAVY MULTIPLICATION X}\N{VARIATION SELECTOR-16}",
-        custom_id=f"no-{interaction.message.id}",
-    )
-    view.add_item(approve_button)
-    view.add_item(deny_button)
-    await interaction.edit_original_message(content=content, embed=embed, view=view)
-
-    def check_same_user(inter):
-        return inter.user.id == interaction.user.id
-
-    try:
-        x = await bot.wait_for("interaction", check=check_same_user, timeout=timeout)
-    except AsyncTimeoutError:
-        await interaction.edit_original_message(content=_("Request timed out."))
-        return False
-    else:
-        custom_id = x.data.get("custom_id")
-        if custom_id == f"yes-{interaction.message.id}":
-            return True
-        if negative_response:
-            await interaction.edit_original_message(content=_("Cancelled."), view=None, embed=None)
-        return False
-    finally:
-        if clear_after:
-            await interaction.edit_original_message(
-                content=interaction.message.content, embed=embed, view=None
-            )
-
-
 class EditReasonModal(Modal):
-    def __init__(self, warning):
+    reason = TextInput(
+        label=_("New reason"),
+        placeholder=_("Substitutions works here"),
+        style=discord.TextStyle.paragraph,
+    )
+
+    def __init__(self, select_menu: WarningsList, case: Warning):
         super().__init__(title=_("Edit warning reason"))
-        self.add_item(TextInput(label=_("New reason")))
+        self.select_menu = select_menu
+        self.case = case
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await self.case.edit_reason(self.reason.value)
+        await interaction.response.edit_message(embed=await self.case.get_historical_embed())
+        self.select_menu.refresh_options()
+        await self.select_menu.message.edit(
+            embed=self.select_menu.generate_embed(), view=self.select_menu.view
+        )
 
 
 class EditReasonButton(Button):
     def __init__(
         self,
-        bot: "Red",
-        interaction: discord.Interaction,
-        *,
-        user: Union[discord.Member, UnavailableMember],
-        case: dict,
-        case_index: int,
+        select_menu: WarningsList,
+        case: Warning,
         disabled: bool = False,
         row: Optional[int] = None,
     ):
-        self.bot = bot
-        self.inter = interaction
-        self.ws = bot.get_cog("WarnSystem")
-        self.api: "API" = self.ws.api
+        self.select_menu = select_menu
+        self.case = case
         super().__init__(
             style=discord.ButtonStyle.secondary,
             label=_("Edit reason"),
@@ -176,40 +115,9 @@ class EditReasonButton(Button):
             emoji="✏",
             row=row or 0,
         )
-        self.user = user
-        self.case = case
-        self.case_index = case_index
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.send_modal()
-        interaction = self.inter
-        embed = discord.Embed()
-        embed.description = _(
-            "Case #{number} edition.\n\n**Please type the new reason to set**"
-        ).format(number=self.case_index)
-        embed.set_footer(text=_("You have two minutes to type your text in the chat."))
-        await interaction.edit_original_message(embed=embed, view=None)
-        try:
-            response = await self.bot.wait_for(
-                "message",
-                check=predicates.MessagePredicate.same_context(interaction, user=interaction.user),
-                timeout=120,
-            )
-        except AsyncTimeoutError:
-            await interaction.delete_original_message()
-            return
-        new_reason = await self.api.format_reason(interaction.guild, response.content)
-        embed.description = _("Case #{number} edition.").format(number=self.case_index)
-        embed.add_field(name=_("Old reason"), value=self.case["reason"], inline=False)
-        embed.add_field(name=_("New reason"), value=new_reason, inline=False)
-        embed.set_footer(text=_("Click on ✅ to confirm the changes."))
-        response = await prompt_yes_or_no(self.bot, interaction, embed=embed, clear_after=False)
-        if response is False:
-            return
-        await self.api.edit_case(interaction.guild, self.user, self.case_index, new_reason)
-        await interaction.edit_original_message(
-            content=_("The reason was successfully edited!\n"), embed=None, view=None
-        )
+        await interaction.response.send_modal(EditReasonModal(self.select_menu, self.case))
 
 
 class DeleteWarnButton(Button):
