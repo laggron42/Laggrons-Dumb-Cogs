@@ -3,17 +3,19 @@ import logging
 import discord
 
 from achallonge import ChallongeException
-from typing import Optional
+from discord.ui import Button, View
+from typing import TYPE_CHECKING, Optional, Awaitable, Tuple
 
 from redbot.core import commands
 from redbot.core.i18n import Translator
-from redbot.core.utils.menus import start_adding_reactions
-from redbot.core.utils.predicates import ReactionPredicate
 
 from .core import Tournament
 
 log = logging.getLogger("red.laggron.tournaments")
 _ = Translator("Tournaments", __file__)
+
+if TYPE_CHECKING:
+    from redbot.core.bot import Red
 
 COG_NAME = "Tournaments"
 
@@ -109,14 +111,15 @@ async def async_http_retry(coro):
 
 
 async def prompt_yes_or_no(
-    ctx: commands.Context,
+    bot: "Red",
+    interaction: discord.Interaction,
     content: Optional[str] = None,
     *,
     embed: Optional[discord.Embed] = None,
     timeout: int = 30,
     delete_after: bool = True,
     negative_response: bool = True,
-) -> bool:
+) -> Tuple[bool, discord.Interaction]:
     """
     Sends a message and waits for used confirmation, using buttons.
 
@@ -146,34 +149,42 @@ async def prompt_yes_or_no(
     approve_button = discord.ui.Button(
         style=discord.ButtonStyle.green,
         emoji="\N{HEAVY CHECK MARK}\N{VARIATION SELECTOR-16}",
-        custom_id=f"yes-{ctx.message.id}",
+        custom_id=f"yes-{interaction.id}",
     )
     deny_button = discord.ui.Button(
         style=discord.ButtonStyle.red,
         emoji="\N{HEAVY MULTIPLICATION X}\N{VARIATION SELECTOR-16}",
-        custom_id=f"no-{ctx.message.id}",
+        custom_id=f"no-{interaction.id}",
     )
     view.add_item(approve_button)
     view.add_item(deny_button)
-    message = await ctx.send(content, embed=embed, view=view)
+    send = (
+        interaction.followup.send
+        if interaction.response.is_done()
+        else interaction.response.send_message
+    )
+    await send(content, embed=embed, view=view)
 
-    def check_same_user(interaction):
-        return interaction.user.id == ctx.author.id
+    def check_same_user(inter: discord.Interaction):
+        return inter.user.id == interaction.user.id and inter.data.get("custom_id").endswith(
+            str(interaction.id)
+        )
 
     try:
-        x = await ctx.bot.wait_for("interaction", check=check_same_user, timeout=timeout)
+        x: discord.Interaction = await bot.wait_for(
+            "interaction", check=check_same_user, timeout=timeout
+        )
     except asyncio.TimeoutError:
-        await ctx.send(_("Request timed out."))
-        return False
+        await interaction.followup.edit_message(
+            "@original", content=_("Request timed out."), view=None
+        )
+        return (False, x)
     else:
         custom_id = x.data.get("custom_id")
-        if custom_id == f"yes-{ctx.message.id}":
-            return True
+        if custom_id == f"yes-{interaction.id}":
+            return (True, x)
         if negative_response:
-            await ctx.send(_("Cancelled."))
-        return False
-    finally:
-        if delete_after:
-            await message.delete()
-        else:
-            await message.edit(content=message.content, embed=embed, view=None)
+            await interaction.followup.edit_message(
+                "@original", content=_("Cancelled."), embed=None, view=None
+            )
+        return (False, x)
