@@ -1,6 +1,7 @@
 import logging
 import aiohttp
 import importlib.util
+from typing import TYPE_CHECKING
 
 from redbot.core.errors import CogLoadError
 
@@ -20,6 +21,9 @@ for dependency, package in dependencies.items():
 
 from .tournaments import Tournaments
 from laggron_utils import init_logger, close_logger
+
+if TYPE_CHECKING:
+    from redbot.core.bot import Red
 
 log = logging.getLogger("red.laggron.tournaments")
 
@@ -155,7 +159,7 @@ def check_for_aiodns():
         ) from e
 
 
-async def setup(bot):
+async def setup(bot: "Red"):
     init_logger(log, "Tournaments")
     n = Tournaments(bot)
     check_for_aiodns()
@@ -188,6 +192,6 @@ async def setup(bot):
             "corrupted.** Contacting support is advised (Laggron's support server or official "
             "3rd party cog support server, #support_laggrons-dumb-cogs channel)."
         ) from e
-    bot.add_cog(n)
+    await bot.add_cog(n)
     bot.loop.create_task(restore_tournaments(bot, n))
     log.debug("Cog successfully loaded on the instance.")
