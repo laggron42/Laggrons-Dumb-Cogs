@@ -76,7 +76,6 @@ class Tournaments(
             "limit": None,
             "status": None,
             "tournament_start": None,
-            "bot_prefix": None,
             "participants": [],
             "matches": [],
             "streamers": [],

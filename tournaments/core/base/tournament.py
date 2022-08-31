@@ -141,8 +141,6 @@ class Tournament:
 
             from datetime import datetime
             now = datetime.now(tz=tournament.tz)
-    bot_prefix: str
-        A prefix to use for displaying commands without context.
     cog_version: str
         Current version of Tournaments
 
@@ -217,7 +215,6 @@ class Tournament:
         limit: Optional[int],
         status: str,
         tournament_start: datetime,
-        bot_prefix: str,
         cog_version: str,
         data: dict,
     ):
@@ -234,7 +231,6 @@ class Tournament:
         self.status = status
         self.tz = tournament_start.tzinfo
         self.tournament_start = tournament_start
-        self.bot_prefix = bot_prefix
         self.cog_version = cog_version
 
         # Initialize empty attributes
@@ -459,7 +455,6 @@ class Tournament:
             "limit": self.limit,
             "status": self.status,
             "tournament_start": (int(self.tournament_start.timestamp()), offset),
-            "bot_prefix": self.bot_prefix,
             "participants": [x.to_dict() for x in self.participants],
             "matches": [x.to_dict() for x in self.matches],
             "streamers": [x.to_dict() for x in self.streamers],
@@ -1322,9 +1317,9 @@ class Tournament:
             await self.channels.to.send(
                 _(
                     ":warning: An issue occured when trying to seed and upload participants "
-                    "after registration/checkin close. Try running it manually with `{prefix}"
-                    "upload`, and contact admins if the issue persists."
-                ).format(prefix=self.bot_prefix)
+                    "after registration/checkin close. Try running it manually with `/upload`, "
+                    "and contact admins if the issue persists."
+                )
             )
 
     # starting the tournament...
@@ -1369,16 +1364,16 @@ class Tournament:
             self.channels.announcements: (
                 _(
                     "The tournament **{tournament}** has started!\n\n"
-                    ":white_small_square: Bracket link:`{prefix}bracket`\n"
-                    ":white_small_square: List of streams:`{prefix}streams`\n\n"
+                    ":white_small_square: Bracket link:`/bracket`\n"
+                    ":white_small_square: List of streams:`/streams`\n\n"
                     "{participant} Please read the instructions :\n"
                     ":white_small_square: The winner of a set must report the score **as soon as "
-                    "possible** with the `{prefix}win` command.\n"
+                    "possible** with the `/win` command.\n"
                     ":white_small_square: You can disqualify from the tournament with the "
-                    "`{prefix}dq` command, or just abandon your current set with the `{prefix}ff` "
+                    "`/dq` command, or just abandon your current set with the `/ff` "
                     "command.\n"
                     ":white_small_square: In case of lag making the game unplayable, "
-                    "use the `{prefix}lag` command to call the T.O.\n"
+                    "use the `/lag` command to call the T.O.\n"
                     "{delay}."
                 ).format(
                     tournament=self.name,
@@ -1390,7 +1385,6 @@ class Tournament:
                     ).format(delay=humanize_timedelta(timedelta=self.settings.delay))
                     if self.settings.delay
                     else "",
-                    prefix=self.bot_prefix,
                 ),
                 announcements_view,
             ),
@@ -1402,9 +1396,8 @@ class Tournament:
                     "announced here, and in your channel.\n"
                     ":white_small_square: Any BO5 set will be precised here and in your channel.\n"
                     ":white_small_square: The player beginning the bans is picked and "
-                    "annonced in your channel (you can also use `{prefix}flip`).\n\n{dq}"
+                    "annonced in your channel (you can also use `/flip`).\n\n{dq}"
                 ).format(
-                    prefix=self.bot_prefix,
                     dq=_(
                         ":timer: **You will be disqualified if you were not "
                         "active in your channel** within {delay} after the set launch."
@@ -1546,9 +1539,9 @@ class Tournament:
                         ":warning: **Attention**\nMultiple bugs occured within the loop task. "
                         "It is therefore stopped. The bot will stop refreshing informations "
                         "and launching matches.\nIf you believe the issue is fixed, resume "
-                        "the tournament with `{prefix}tfix resumetask`, else contact bot "
+                        "the tournament with `/tfix resumetask`, else contact bot "
                         "administrators."
-                    ).format(prefix=self.bot_prefix)
+                    )
                 )
             except Exception as e:
                 log.error(f"[Guild {self.guild.id}] Can't tell TOs of the above bug.", exc_info=e)

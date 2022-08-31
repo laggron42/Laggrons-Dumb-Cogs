@@ -181,7 +181,6 @@ class ChallongeTournament(Tournament):
         guild: discord.Guild,
         config: Config,
         custom_config: str,
-        prefix: str,
         cog_version: str,
         data: dict,
         config_data: dict,
@@ -197,8 +196,6 @@ class ChallongeTournament(Tournament):
             The current guild for the tournament
         config: redbot.core.Config
             The cog's Config object
-        prefix: str
-            A prefix to use for displaying commands without context.
         cog_version: str
             Current version of Tournaments
         data: dict
@@ -219,7 +216,6 @@ class ChallongeTournament(Tournament):
             limit=data["signup_cap"],
             status=data["state"],
             tournament_start=data["start_at"],
-            bot_prefix=prefix,
             cog_version=cog_version,
             data=config_data,
         )
@@ -281,8 +277,8 @@ class ChallongeTournament(Tournament):
                         "registration, relied on the existing participants in the bracket, and "
                         "the names doesn't match the members' names in this server.\n"
                         "If this is the case, you may want to roll back the tournament's start "
-                        "with the `{prefix}resetbracket` command, and retry.\n"
-                    ).format(prefix=self.bot_prefix)
+                        "with the `/resetbracket` command, and retry.\n"
+                    )
                 await self.channels.to.send(
                     _(
                         ":warning: Multiple Challonge participants can't be found "
@@ -290,7 +286,6 @@ class ChallongeTournament(Tournament):
                         "{startup}\n"
                         "The following players are disqualified from this tournament:\n{names}"
                     ).format(
-                        prefix=self.bot_prefix,
                         startup=startup,
                         names=", ".join(removed),
                     )

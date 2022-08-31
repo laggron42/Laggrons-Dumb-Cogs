@@ -650,8 +650,8 @@ class Match:
         message = _(
             ":warning: This match is taking a lot of time!\n"
             "As soon as this is finished, set your score using the button "
-            "on the pinned message or with the command `{prefix}win`."
-        ).format(prefix=self.tournament.bot_prefix)
+            "on the pinned message or with the command `/win`."
+        )
         time = self.tournament.settings.time_until_warn["bo5" if self.is_bo5 else "bo3"][1]
         if time:
             message += _(
