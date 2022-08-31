@@ -109,7 +109,7 @@ class CheckInButton(Button):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        player: "Participant" = self.tournament.find_participant(user_id=interaction.user.id)[1]
+        player: "Participant" = self.tournament.find_participant(discord_id=interaction.user.id)[1]
         if player is None:
             await interaction.response.send_message(
                 _("You are not registered for this tournament."), ephemeral=True
