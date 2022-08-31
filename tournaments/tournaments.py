@@ -5,6 +5,7 @@ import discord
 import shutil
 
 from abc import ABC
+from discord import app_commands
 from typing import Mapping, Optional
 from laggron_utils.logging import close_logger
 
@@ -16,6 +17,7 @@ from redbot.core.data_manager import cog_data_path
 from redbot.core.i18n import Translator, cog_i18n
 
 from .core import Tournament, ChallongeTournament, Phase
+from .errors import CommandError
 from .commands.games import Games
 from .commands.registration import Registration
 from .commands.settings import Settings
@@ -248,6 +250,22 @@ class Tournaments(
             log.info(f"Resumed {count} tournaments.")
         else:
             log.info("No tournament had to be resumed.")
+
+    async def cog_app_command_error(
+        self, interaction: discord.Interaction, error: app_commands.AppCommandError
+    ) -> None:
+        send = (
+            interaction.followup.send
+            if interaction.response.is_done()
+            else interaction.response.send_message
+        )
+        if isinstance(error, app_commands.TransformerError) and isinstance(
+            error.__cause__, CommandError
+        ):
+            await send(error.__cause__.args[0])
+            return
+        await send("An error occured.")
+        log.error(f"Error in app command {interaction.command.name}", exc_info=error)
 
     async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
         error_mapping = {
