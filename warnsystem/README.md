@@ -64,12 +64,6 @@ The cog is highly customizable and frequently updated. It's also built with an A
 All done! You can now start to warn members with the `[p]warn` command.
 See the full list of possible settings with `[p]help warnset`.
 
-## Discord server
-
-If you need support, have bugs to report or suggestions to bring, please join my Discord server and tell me, `El Laggron#0260`, about it!
-
-[![Discord server](https://discordapp.com/api/guilds/363008468602454017/embed.png?style=banner3)](https://discord.gg/AVzjfpR)
-
 ## Extensions
 
 As said before, it's possible to develop extensions to WarnSystem. Currently, there aren't any, but some are planned, such as an automod.

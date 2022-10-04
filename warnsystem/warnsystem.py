@@ -129,7 +129,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
     An alternative to the Red core moderation system, providing a different system of moderation\
     similar to Dyno.
 
-    Report a bug or ask a question: https://discord.gg/AVzjfpR
+    Report a bug or ask a question: https://discord.gg/GET4DVk
     Full documentation and FAQ: http://laggron.red/warnsystem.html
     """
 
@@ -1327,7 +1327,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                 "Version: {0.__version__}\n"
                 "Author: {0.__author__[0]}\n\n"
                 "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
-                "Discord server: https://discord.gg/AVzjfpR\n"
+                "Discord server: https://discord.gg/GET4DVk\n"
                 "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n"
                 "Help translating the cog: https://crowdin.com/project/laggrons-dumb-cogs/\n\n"
                 "Support my work on Patreon: https://www.patreon.com/retke"

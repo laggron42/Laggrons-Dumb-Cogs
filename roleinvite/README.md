@@ -27,12 +27,6 @@ The cog is built with an API, allowing you to use RoleInvite without a context o
 
 RoleInvite is now installed! You can create a link with the command `[p]roleinviteset`.
 
-## Discord server
-
-If you need support, have bugs to report or suggestions to bring, please join my Discord server and tell me, `El Laggron#0260`, about it!
-
-[![Discord server](https://discordapp.com/api/guilds/363008468602454017/embed.png?style=banner3)](https://discord.gg/AVzjfpR)
-
 ## [Laggron's Dumb Cogs](https://github.com/retke/Laggrons-Dumb-Cogs)
 
 ![Artwork](https://github.com/retke/Laggrons-Dumb-Cogs/blob/master/.github/RESSOURCES/BANNERS/Base_banner.png)

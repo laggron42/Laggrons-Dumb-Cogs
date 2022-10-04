@@ -170,7 +170,7 @@ class Tournaments(
                 "Version: {0.__version__}\n"
                 "Authors: {0.__author__[0]}, {0.__author__[1]} and {0.__author__[2]}\n\n"
                 "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
-                "Discord server: https://discord.gg/AVzjfpR\n"
+                "Discord server: https://discord.gg/GET4DVk\n"
                 "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n"
                 "Help translating the cog: https://crowdin.com/project/laggrons-dumb-cogs/\n\n"
                 "Support my work on Patreon: https://www.patreon.com/retke"

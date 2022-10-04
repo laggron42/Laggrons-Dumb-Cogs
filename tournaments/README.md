@@ -76,12 +76,6 @@ There is a detailed documentation, covering all commands in details, please read
 
 All done! You can now setup a tournament with `[p]setup` and your Challonge tournament.
 
-## Discord server
-
-If you need support, have bugs to report or suggestions to bring, please join my Discord server and tell me, `El Laggron#0260`, about it!
-
-[![Discord server](https://discordapp.com/api/guilds/363008468602454017/embed.png?style=banner3)](https://discord.gg/AVzjfpR)
-
 ## Future compatibility
 
 Currently, this only supports [Challonge](https://challonge.com/) tournaments, but the cog is built in a way that allows adding more providers easily! I'm planning to add support for [smash.gg](https://smash.gg/) tournaments soon...
