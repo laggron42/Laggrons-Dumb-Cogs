@@ -56,7 +56,7 @@ manage everything:
     the stage list, banning stages/characters...
 
 *   The bot checks activity in the channels. If one player doesn't talk within
-    the first minutes, he will be disqualified.
+    the first minutes, they will be disqualified.
 
 *   Once the players have done their match, they can set their score with a
     command.
@@ -96,7 +96,7 @@ Add to all of this tools for streamers too!
 *   If a match is launched but attached to a streamer, it will be paused until
     it is their turn. They will then receive the informations set above.
 
-*   The streamer has access to the channels, so that he can also communicate
+*   The streamer has access to the channels, so that they can also communicate
     with the players.
 
 This was tested with tournaments up to 256 players, and I can personnaly
@@ -171,8 +171,8 @@ Next step, the roles with ``[p]tset roles``:
 Some additional settings you can set:
 
 *   ``[p]tset delay`` defines when a player is considered AFK and must be
-    disqualified. This only listens for his first message in his channel, once
-    someone spoke, he's safe. Defaults to 10 minutes.
+    disqualified. This only listens for their first message in their channel, once
+    someone spoke, they're safe. Defaults to 10 minutes.
 
 *   ``[p]tset start_bo5`` defines at what point you want to move from BO3
     format to BO5.
@@ -362,8 +362,8 @@ categories.
 
 ----
 
-First thing to note: if a player does not talk in his channel within the 10
-first minutes after the channel creation, he will be disqualified (you can
+First thing to note: if a player does not talk in their channel within the 10
+first minutes after the channel creation, they will be disqualified (you can
 customize or disable this delay with ``[p]tset delay``). You are warned of this
 in the T.O. channel.
 
@@ -383,7 +383,7 @@ being terminated (score set), relaunched (score reset) or even cancelled
 (score reset with child matches ongoing). This will also be announced in the
 T.O. channel.
 
-The winner of a match will set his score with the ``[p]win`` command, inside
+The winner of a match will set their score with the ``[p]win`` command, inside
 the scores channel if set.
 
 Players can use at any time ``[p]ff`` for forfeiting a match (they can still
@@ -571,7 +571,7 @@ task. This is a task launched when you start your tournament that runs every
 *   Launch pending matches
 
 *   Check for AFK players (someone didn't talk within the first 10 minutes in
-    his channel, configurable with ``[p]tset delay``), and delete inactive
+    their channel, configurable with ``[p]tset delay``), and delete inactive
     channels (score reported and no message sent for 5 minutes)
 
 *   Call streams

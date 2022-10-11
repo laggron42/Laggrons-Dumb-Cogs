@@ -111,7 +111,7 @@ class MemberTooHigh(Exception):
 class NotAllowedByHierarchy(Exception):
     """
     The bot is set to respect the role hierarchy; the moderator requested a warn against
-    someone equal or higher than him in the hierarchy, which is not allowed by Discord
+    someone equal or higher than them in the hierarchy, which is not allowed by Discord
     permissions rules.
 
     The moderator **must** have a role higher than the warned member to continue.

@@ -930,10 +930,10 @@ class API:
             can be lost permissions for sending messages to the modlog channel or
             interacting with the mute role.
         ~warnsystem.errors.MemberTooHigh
-            The bot is trying to take actions on someone but his top role is higher
+            The bot is trying to take actions on someone but their top role is higher
             than the bot's top role in the guild's hierarchy.
         ~warnsystem.errors.NotAllowedByHierarchy
-            The moderator trying to warn someone is lower than him in the role hierarchy,
+            The moderator trying to warn someone is lower than them in the role hierarchy,
             while the bot still has permissions to act. This is raised only if the
             hierarchy check is enabled.
         ~warnsystem.errors.MissingPermissions
@@ -1478,7 +1478,7 @@ class API:
             self.antispam[guild.id][channel.id][member.id] = data
             return
         # at this point, user is considered to be spamming
-        # we cleanup his x last messages (max_messages + 1), then either send a text warn
+        # we cleanup their x last messages (max_messages + 1), then either send a text warn
         # or perform an actual warnsystem warn (I'm confusing ik)
         if (
             data.warned is False

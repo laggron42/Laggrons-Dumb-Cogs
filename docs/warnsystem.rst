@@ -69,7 +69,7 @@ the rewrite of the BetterMod cog for Red V3. Here is a quick start guide.
     1.  Simple warning
     2.  Server mute (can be temporary)
     3.  Kick
-    4.  Softban (ban then quickly unban the member, to clean his messages)
+    4.  Softban (ban then quickly unban the member, to clean their messages)
     5.  Ban (can be temporary, and also ban members not on the server)
 
     Each warn will send a DM to the warned member, a log in the modlog channel,
@@ -90,7 +90,7 @@ for your bot:
 
 *   **Role removal:** Discord permissions can be a pain in the ass, and mute
     with role can be a problem. The most common situation is where a member
-    has a role that grants him write access in a channel and the mute role
+    has a role that grants them write access in a channel and the mute role
     cannot overwrite that. This is why this option exists, enable it with
     ``[p]warnset removeroles`` and all roles will be removed and reassigned
     once the mute ends or if the warning is deleted.
@@ -106,7 +106,7 @@ for your bot:
 
 *   **Hierarchy:** To make sure your moderators doesn't abuse with their
     permissions, you can enable hierarchy protection. This means that the bot
-    will block a moderator trying to warn a member higher than him in the role
+    will block a moderator trying to warn a member higher than them in the role
     hierarchy, like with the manual Discord actions.
 
 *   **Multiple modlogs:** If you want to send all warnings, mutes, kicks and
@@ -236,8 +236,8 @@ Mutes the member with a role on the server.
     command to create/assign the role.
 
 The member will get the mute role for the specified time. You can edit this
-role as you like to allow him some channels for example. Removing his role
-manually will cancel his mute without problem, but the warn will still exist.
+role as you like to allow them some channels for example. Removing their role
+manually will cancel the mute without problems, but the warn will still exist.
 Removing the warn with the ``[p]warnings`` command will also remove the role
 if needed.
 
@@ -320,7 +320,7 @@ warn 4
 
 **Description**
 
-Bans the member from the server, then unbans him, to mass delete his messages.
+Bans the member from the server, then unbans them, to mass delete their messages.
 This can be considered as a kick with a massive cleanup of messages.
 
 The bot will delete 7 days of messages by default, this can be changed with the
@@ -797,7 +797,7 @@ Configures the automod based on member's modlog. This allows automatic actions
 based on previous given warnings.
 
 For example, you can make it so if someone receives 3 level 1 warnings within a
-week, he will automatically get a level 3 (kick) warning with the reason you
+week, they will automatically get a level 3 (kick) warning with the reason you
 defined. A lot of options are possible.
 
 Use ``[p]automod warn add`` to add a new rule. This will open an interactive
@@ -1295,10 +1295,10 @@ warnset removeroles
 
 **Description**
 
-Defines if the bot should remove all roles from a member when he gets muted
+Defines if the bot should remove all roles from a member when they get muted
 (warn 2). This can be useful because, in some cases, some channels can still
-be accessible to a muted member (for example, when he has a role that grants
-him access in a private channel).
+be accessible to a muted member (for example, when they have a role that grants
+them access to a private channel).
 
 This behaviour is due to Discord's permissions system ; the mute role is denied
 from sending messages and adding reactions in all text channels, but if another
