@@ -99,7 +99,7 @@ Add to all of this tools for streamers too!
 *   The streamer has access to the channels, so that they can also communicate
     with the players.
 
-This was tested with tournaments up to 256 players, and I can personnaly
+This was tested with tournaments up to 256 players, and I can personally
 confirm this makes the organizers' job way easier.
 
 ^^^^^^^^^^^^^^^^^^

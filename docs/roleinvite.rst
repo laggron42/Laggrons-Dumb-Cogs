@@ -42,7 +42,7 @@ link is linked to one or more roles. This mean that,
 every time a new user join the server, if they used the invite A to
 join the server, they will get the list of roles linked to the invite A.
 
-You can link many roles  to multiple invites, so you can imagine something
+You can link many roles to multiple invites, so you can imagine something
 like "click **here** if you are an engineer, else click **here** if you're
 an architect", and make roleinvite give the engineer or architect roles.
 
@@ -235,7 +235,7 @@ This can happens if the role hierarchy is modified after the roles got linked.
 Remember that a bot/member can only add roles that are below them in the role
 hierarchy. 
 
-Modify the role hirearchy and make sure all necessary roles are **below**
+Modify the role hierarchy and make sure all necessary roles are **below**
 the bot's highest role. If it still doesn't work, try to link the role again.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

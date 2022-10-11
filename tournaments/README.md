@@ -26,7 +26,7 @@ Add to all of this tools for streamers too!
 - If a match is launched but attached to a streamer, it will be paused until it is their turn. They will then receive the informations set above.
 - The streamer has access to the channels, so that they can also communicate with the players.
 
-This was tested with tournaments up to 256 players, and I can personnaly confirm this makes the organizers' job way easier.
+This was tested with tournaments up to 256 players, and I can personally confirm this makes the organizers' job way easier.
 
 There is a detailed documentation, covering all commands in details, please read this if you want to know how commands works in details: https://laggron.red/tournaments.html
 
