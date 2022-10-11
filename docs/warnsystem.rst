@@ -1212,7 +1212,7 @@ warnset mute
 **Description**
 
 Creates a role used for muting the members, or set an existing one as the mute
-role. If you don't provide any role, the bot will create one below his top
+role. If you don't provide any role, the bot will create one below its top
 role, then deny the "Send messages" and "Add reactions" on all text channels.
 **Editing all channels takes a long time, depending on the number of text
 channels you have on the server,** so don't worry if nothing happens for about

@@ -1,6 +1,6 @@
 # Say
 
-This is the Say cog for Red, which allows you to make your bot send text or event upload images. It can also be used as a bridge in DM so you can see what the bot sees, and give him messages to send.
+This is the Say cog for Red, which allows you to make your bot send text or event upload images. It can also be used as a bridge in DM so you can see what the bot sees, and give it messages to send.
 
 There is a detailed documentation, covering all commands in details, please read this if you want to know how commands works in details: https://laggron.red/say.html
 

@@ -221,7 +221,7 @@ This may be available in a future release.
 The bot suddenly stopped adding roles to the new members
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The bot will automatically turn off the autorole system if he lose the ``Manage
+The bot will automatically turn off the autorole system if it loses the ``Manage
 sever`` or the ``Add roles`` permissions, which are absolutely necessary for the cog.
 
 If you added the permissions back, enable the autorole again with the command 

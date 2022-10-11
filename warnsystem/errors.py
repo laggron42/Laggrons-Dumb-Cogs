@@ -124,7 +124,7 @@ class NotAllowedByHierarchy(Exception):
 
 class LostPermissions(Exception):
     """
-    The bot lost a permission he had.
+    The bot lost a permission it had.
 
     This can be the permission to send messages in the modlog channel or use\
     the mute role.
