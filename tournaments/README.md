@@ -9,7 +9,7 @@ The cog supports the registration and check-in of the tournament, including seed
 Then, once the game starts, just sit down and watch ~~the magic~~ the bot manage everything:
 - For each match, a channel will be created with the two players of this match.
 - They have their own place for discussing about the tournament, checking the stage list, banning stages/characters...
-- The bot checks activity in the channels. If one player doesn't talk within the first minutes, he will be disqualified.
+- The bot checks activity in the channels. If one player doesn't talk within the first minutes, they will be disqualified.
 - Once the players have done their match, they can set their score with a command.
 - Players can also forfeit a match, or disqualify themselves.
 - As the tournament goes on, outdated channels will be deleted, and new ones will be created for the upcoming matches, the bot is constantly checking the bracket.
@@ -24,9 +24,9 @@ Add to all of this tools for streamers too!
 - Streamers can add themselves to the tournament (not as a player) and comment some matches
 - They will choose the matches they want to cast, and also provide informations to players (for example, the room code and ID for smash bros)
 - If a match is launched but attached to a streamer, it will be paused until it is their turn. They will then receive the informations set above.
-- The streamer has access to the channels, so that he can also communicate with the players.
+- The streamer has access to the channels, so that they can also communicate with the players.
 
-This was tested with tournaments up to 256 players, and I can personnaly confirm this makes the organizers' job way easier.
+This was tested with tournaments up to 256 players, and I can personally confirm this makes the organizers' job way easier.
 
 There is a detailed documentation, covering all commands in details, please read this if you want to know how commands works in details: https://laggron.red/tournaments.html
 
@@ -115,9 +115,9 @@ Now the interesting part, the `objects` folder:
 - `__init__.py` Nothing lol
 - `base.py` The core of your tournaments. There are 4 classes :
   - `Tournament` The first object created, it contains all the config you set, plus infos from the API. Then there are a lot of various methods, like the loop task ran during a tournament, code for launching the sets, sending messages, checking for timeout, adding a player... Then there are abstract methods, they represent API calls but just do nothing at this point, but we'll define them in the next file. There are also 3 lists for each of the objects described below. If you want to delete an object, remove it from those lists.
-  - `Participant` Represents a participant in the tournament. It inherits from `discord.Member` and adds some attributes and methods useful for our tournament, such as its player ID on the bracket, his current match, and see if he spoke (AFK check). There are once again abstract methods representing API calls, like DQing.
+  - `Participant` Represents a participant in the tournament. It inherits from `discord.Member` and adds some attributes and methods useful for our tournament, such as its player ID on the bracket, their current match, and see if they spoke (AFK check). There are once again abstract methods representing API calls, like DQing.
   - `Match` Represents a match. It is associated to two participants, and contains the stuff for a match (setting scores, announcing changes, checking for DQ)... It is usually associated with a `discord.TextChannel` (if creating the channel failed, we move the stuff in DM). Still more abstract methods for API calls.
-  - `Streamer` Very small object that represents a streamer, and doesn't have API calls (we keep that for ourselves for now). It contains a list of the sets he will comment, and additional info.
+  - `Streamer` Very small object that represents a streamer, and doesn't have API calls (we keep that for ourselves for now). It contains a list of the sets they will comment, and additional info.
 - `challonge.py` This file has 3 classes: `ChallongeTournament`, `ChallongeParticipant` and `ChallongeMatch`. You guessed it, they all inherit from the objects in `base.py` and will define those abstract methods with the actual API calls to Challonge. Stuff in here is specific to Challonge, it treats raw data from the Challonge API and adapts it to the structure of the base objects.
 
 You may have guessed it, using this structure, with base classes that are inherited, allows an easy integration for more services. If you have another great website for tournaments and brackets, create a new file, adapt the API data to the classes, and then there will be very few code to change, everything will work as intended!

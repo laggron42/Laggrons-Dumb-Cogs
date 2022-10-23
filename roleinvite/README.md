@@ -2,7 +2,7 @@
 
 This is the RoleInvite cog for Red. This is a quite different autorole cog, which works depending on the invite the member used to join!
 
-You can set the autorole system so when a member joins with the invite x, he gets the role y. You can also set it so when someone joins with an unlinked invite, he gets another role. There's even a setting to always give a role to new members regardless of the invite used.
+You can set the autorole system so when a member joins with the invite x, they get the role y. You can also set it so when someone joins with an unlinked invite, they get another role. There's even a setting to always give a role to new members regardless of the invite used.
 
 There is a detailed documentation, covering all commands in details, please read this if you want to know how commands works in details: https://laggron.red/roleinvite.html
 

@@ -1336,8 +1336,8 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
 
     @listener()
     async def on_member_unban(self, guild: discord.Guild, user: discord.User):
-        # if a member gets unbanned, we check if he was temp banned with warnsystem
-        # if it was, we remove the case so it won't unban him a second time
+        # if a member gets unbanned, we check if they were temp banned with warnsystem
+        # if it was, we remove the case so it won't unban them a second time
         warns = await self.cache.get_temp_action(guild)
         to_remove = []  # there can be multiple temp bans, let's not question the moderators
         for member, data in warns.items():
@@ -1348,7 +1348,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             await self.cache.bulk_remove_temp_action(guild, to_remove)
             log.info(
                 f"[Guild {guild.id}] The temporary ban of user {user} (ID: {user.id}) "
-                "was cancelled due to his manual unban."
+                "was cancelled due to their manual unban."
             )
 
     @listener()
@@ -1501,7 +1501,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             "- Warn author (responsible moderator. can be the bot in case of automated warns)\n"
             "- Date and time of the warn\n"
             "- Duration of the warn (only in case of a temporary mute/ban)\n"
-            "- List of the roles the member had when he was muted "
+            "- List of the roles the member had when they were muted "
             "(only for mutes since version 1.2)\n\n"
             "A list of files is provided, one for each server. The ID of the server is the name "
             "of the file. Servers without registered warnings are not included.\n\n"

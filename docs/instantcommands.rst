@@ -40,7 +40,7 @@ from Discord. You just need basic Python and discord.py knowledge.
 
 You can also edit the Dev's environment added with Red 3.4.6.
 
-Here's an example of his it works:
+Here's an example of how it works:
 
 .. image:: .ressources/EXAMPLES/InstantCommands-example.png
 

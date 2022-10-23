@@ -39,19 +39,19 @@ Before giving the commands list, I'd like to show you how the cog is working.
 
 The cog works with what I call invite links. Each invite
 link is linked to one or more roles. This mean that,
-every time a new user join the server, if he used the invite A to
-join the server, he will get the list of roles linked to the invite A.
+every time a new user join the server, if they used the invite A to
+join the server, they will get the list of roles linked to the invite A.
 
-You can link many roles  to multiple invites, so you can imagine something
+You can link many roles to multiple invites, so you can imagine something
 like "click **here** if you are an engineer, else click **here** if you're
 an architect", and make roleinvite give the engineer or architect roles.
 
 You can also link roles to default or main autorole.
 If you link roles to the main autorole,
-the new member will get these roles if he
+the new member will get these roles if they
 joined with an unlinked invite. If you link roles
 to the default autorole, new users will always get
-these roles, whatever invite he used.
+these roles, whatever invite they used.
 
 Here's a schema for a better understanding:
 
@@ -221,7 +221,7 @@ This may be available in a future release.
 The bot suddenly stopped adding roles to the new members
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The bot will automatically turn off the autorole system if he lose the ``Manage
+The bot will automatically turn off the autorole system if it loses the ``Manage
 sever`` or the ``Add roles`` permissions, which are absolutely necessary for the cog.
 
 If you added the permissions back, enable the autorole again with the command 
@@ -232,10 +232,10 @@ Some roles are not added to the new members
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This can happens if the role hierarchy is modified after the roles got linked.
-Remember that a bot/member can only add roles that are below him in the role
+Remember that a bot/member can only add roles that are below them in the role
 hierarchy. 
 
-Modify the role hirearchy and make sure all necessary roles are **below**
+Modify the role hierarchy and make sure all necessary roles are **below**
 the bot's highest role. If it still doesn't work, try to link the role again.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

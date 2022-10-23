@@ -190,7 +190,7 @@ class RoleInvite(BaseCog):
             await ctx.send(
                 _(
                     "The role `{}` is now linked to the default autorole system. "
-                    "(new members will always get this role, whatever invite he used.)"
+                    "(new members will always get this role, whatever invite they used.)"
                 ).format(role.name)
             )
             return

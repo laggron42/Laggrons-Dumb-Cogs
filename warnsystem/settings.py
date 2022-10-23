@@ -668,9 +668,9 @@ channels, and prevented from talking in all voice channels.
         """
         Defines if the bot should remove all roles on mute
 
-        If enabled, when you set a level 2 warning on a member, he will be assigned the mute role\
-        as usual, but all of his other roles will also be removed.
-        Once the mute ends, the member will get his roles back.
+        If enabled, when you set a level 2 warning on a member, they will be assigned the mute role\
+        as usual, but all of their other roles will also be removed.
+        Once the mute ends, the member will get their roles back.
         This can be useful for role permissions issues.
         """
         guild = ctx.guild

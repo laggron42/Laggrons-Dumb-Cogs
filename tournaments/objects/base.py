@@ -65,7 +65,7 @@ class Participant(discord.Member):
     match: Optional[Match]
         The player's current match. `None` if not in game.
     spoke: bool
-        Defines if the member spoke once in his channel (used for AFK check)
+        Defines if the member spoke once in their channel (used for AFK check)
     """
 
     def __init__(self, member: discord.Member, tournament: Tournament):
@@ -86,7 +86,7 @@ class Participant(discord.Member):
         self.elo = None  # ranking and seeding stuff
         self.checked_in = False
         self.match: Optional[Match] = None
-        self.spoke = False  # True as soon as the participant sent a message in his channel
+        self.spoke = False  # True as soon as the participant sent a message in their channel
         # used to detect inactivity after the launch of a set
 
     def __repr__(self):
@@ -384,7 +384,7 @@ class Match:
             try:
                 await player.send(message)
             except discord.HTTPException as e:
-                log.warning(f"Can't send a DM to {str(player)} for his set.", exc_info=e)
+                log.warning(f"Can't send a DM to {str(player)} for their set.", exc_info=e)
 
     async def send_message(self, reset: bool = False) -> bool:
         """
@@ -970,8 +970,8 @@ class Match:
         """
         Called when a player in the set forfeits this match.
 
-        This doesn't always mean that the player quits the tournament, he may continue in the
-        loser bracker.
+        This doesn't always mean that the player quits the tournament, as they may continue in the
+        loser bracket.
 
         Sets a score of -1 0
 
@@ -2313,9 +2313,9 @@ class Tournament:
         Parameters
         ----------
         member: discord.Member
-            The member to register. He must be in the server.
+            The member to register. They must be in the server.
         send_dm: bool
-            If the bot should DM the new participant for his registrations. Defaults to `True`.
+            If the bot should DM the new participant for their registrations. Defaults to `True`.
         """
         if self.limit and len(self.participants) >= self.limit:
             raise RuntimeError("Limit reached.")
@@ -2328,8 +2328,8 @@ class Tournament:
             self.participants and self.participants[-1].player_id is not None
         ):
             # either there's no ranking, in which case we always upload on register, or
-            # last registered participant has a player ID, so we should upload him to the bracket
-            # first we seed him, if possible
+            # last registered participant has a player ID, so we should upload them to the bracket
+            # first we seed them, if possible
             try:
                 await self.seed_participants()
             except Exception:
@@ -2358,7 +2358,7 @@ class Tournament:
         """
         Remove a participant.
 
-        If the player is uploaded on the bracket, he will also be removed from there. If the
+        If the player is uploaded on the bracket, they will also be removed from there. If the
         tournament has started, member will be disqualified instead.
 
         This removes roles and DMs the participant.
@@ -2564,7 +2564,7 @@ class Tournament:
                 ":information_source: Management of the scores for the "
                 "tournament **{tournament}** is automated:\n"
                 ":white_small_square: Only **the winner of the set** "
-                "sends his score with the `{prefix}win` command.\n"
+                "sends their score with the `{prefix}win` command.\n"
                 ":white_small_square: You must follow this "
                 "format: `{prefix}win 2-0, 3-2, 3-1, ...`.\n"
                 ":white_small_square: Look at the bracket to **check** the informations: {url}\n"
@@ -2967,7 +2967,7 @@ class Tournament:
         *   New player added (pre game)
 
         .. warning:: A name change on remote is considered as a player removal + addition. If the
-            name doesn't match any member, he will be rejected.
+            name doesn't match any member, they will be rejected.
         """
         raise NotImplementedError
 

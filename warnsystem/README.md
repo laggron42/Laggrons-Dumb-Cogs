@@ -7,7 +7,7 @@ This is the WarnSystem cog for Red, rewrite of the V2 cog, BetterMod. It is an a
 4. softban (ban then unban, which can cleanup the messages of an user up to a week)
 5. ban (can be a temporary ban, or even a hack ban, which allows you to ban on an user not on the server)
 
-When you warn a member, **he receives a DM** with the reason of his warn. It's also logged on your defined modlog. You can keep track of a members' warnings with an interactive menu, and even edit or delete his old warnings.
+When you warn a member, **they receive a DM** with the reason of their warn. It's also logged on your defined modlog. You can keep track of a member's warnings with an interactive menu, and even edit or delete their old warnings.
 
 There is a detailed documentation, covering all commands in details, please read this if you want to know how commands works in details: https://laggron.red/warnsystem.html
 

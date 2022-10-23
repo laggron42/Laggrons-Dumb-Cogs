@@ -964,8 +964,8 @@ moderators and admins.
         else:
             await ctx.send(
                 _(
-                    "Done. If a player doesn't respond in his channel {delay} "
-                    "after its creation, he will automatically be disqualified."
+                    "Done. If a player doesn't respond in their channel {delay} "
+                    "after its creation, they will automatically be disqualified."
                 ).format(delay=humanize_timedelta(timedelta=delay))
             )
 
@@ -1461,7 +1461,7 @@ the start of the tournament, then closing 15 minutes before.
             if len(failed) == 1:
                 text = _(
                     ':warning: Challonge player with name "{name}" can\'t be found on '
-                    "the server. If you continue the setup, he will be disqualified."
+                    "the server. If you continue the setup, they will be disqualified."
                 ).format(name=failed[0])
             else:
                 text = _(

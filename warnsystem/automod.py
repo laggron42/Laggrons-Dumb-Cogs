@@ -280,7 +280,7 @@ class AutomodMixin(MixinMeta):
                 Trigger actions when a member get x warnings within the specified time.
 
         For example, if a member gets 3 warnings within a day, you can make the bot automatically \
-set him a level 3 warning with the given reason.
+set them a level 3 warning with the given reason.
         It is also possible to only include warnings given by the bot when counting.
         """
         pass
@@ -599,7 +599,7 @@ before triggering the antispam.
         await self.cache.update_automod_antispam(guild)
         await ctx.send(
             _(
-                "Done. A member will be considered as spamming if he sends "
+                "Done. A member will be considered as spamming if they sends "
                 "more than {max_messages} within {delay} seconds."
             ).format(max_messages=max_messages, delay=delay)
         )
@@ -610,12 +610,12 @@ before triggering the antispam.
         If antispam is triggered twice within this delay, perform the warn.
 
         Delay in seconds.
-        If the antispam is triggered once, a simple warning is send in the chat, mentionning the\
+        If the antispam is triggered once, a simple warning is send in the chat, mentioning the\
 member. If the same member triggers the antispam system a second time within this delay, there\
 will be an actual warning taken, the one you define with `[p]automod antispam warn`.
 
-        This is a way to tell the member he is close to being sanctioned. Of course you can\
-disable this and immediatly take actions by setting a delay of 0. Default is 60 seconds.
+        This is a way to tell the member they are close to being sanctioned. Of course you can\
+disable this and immediately take actions by setting a delay of 0. Default is 60 seconds.
         """
         guild = ctx.guild
         await self.data.guild(guild).automod.antispam.delay_before_action.set(delay)
@@ -665,7 +665,7 @@ automod infractions, like a mute after 3 warns.
         await self.cache.update_automod_antispam(guild)
         await ctx.send(
             _(
-                "If the antispam is triggered by a member, he will now receive a level "
+                "If the antispam is triggered by a member, they will now receive a level "
                 "{level} warn {duration}for the following reason:\n{reason}"
             ).format(
                 level=level,
