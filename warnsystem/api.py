@@ -677,7 +677,8 @@ class API:
         log_embed.set_thumbnail(url=await self.data.guild(guild).thumbnails.get_raw(level))
         log_embed.colour = await self.data.guild(guild).colors.get_raw(level)
         log_embed.url = await self.data.guild(guild).url()
-        log_embed.set_image(url=link.group() if link else "")
+        if link:
+            log_embed.set_image(url=link.group())
         if not message_sent:
             log_embed.description += _(
                 "\n\n***The message could not be delivered to the user. They may have DMs "
