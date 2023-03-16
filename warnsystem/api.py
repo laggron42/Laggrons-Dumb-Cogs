@@ -1231,22 +1231,23 @@ class API:
                     except discord.errors.Forbidden:
                         log.warn(
                             f"[Guild {guild.id}] I lost required permissions for "
-                            f"ending the timed {action_str}. Member {member} (ID: {member.id}) "
+                            f"ending the timed {action_str}. Member {member} (ID: {member_id}) "
                             "will stay as it is now."
                         )
                     except discord.errors.HTTPException as e:
                         log.warn(
                             f"[Guild {guild.id}] Couldn't end the timed {action_str} of {member} "
-                            f"(ID: {member.id}). He will stay as it is now.",
+                            f"(ID: {member_id}). He will stay as it is now.",
                             exc_info=e,
                         )
                     else:
                         log.debug(
                             f"[Guild {guild.id}] Ended timed {action_str} of {member} (ID: "
-                            f"{member.id}) taken on {self._format_datetime(taken_on)} requested "
-                            f"by {author} (ID: {author.id}) that lasted for "
-                            f"{self._format_timedelta(duration)} for the reason {case_reason}"
-                            f"\nCurrent time: {now}\nExpected end time of warn: "
+                            f"{member_id}) taken on {self._format_datetime(taken_on)} requested "
+                            f"by {author} (ID: {author.id if author else action['author']}) "
+                            f"that lasted for {self._format_timedelta(duration)} for the "
+                            f"reason {case_reason}\n"
+                            f"Current time: {now}\nExpected end time of warn: "
                             f"{self._format_datetime(taken_on + duration)}"
                         )
                     to_remove.append(member)
