@@ -19,5 +19,5 @@ log = logging.getLogger("red.laggron.codmw")
 def setup(bot):
     init_logger(log, CODMW.__class__.__name__)
     n = CODMW(bot)
-    bot.add_cog(n)
+    await bot.add_cog(n)
     log.debug("Cog successfully loaded on the instance.")

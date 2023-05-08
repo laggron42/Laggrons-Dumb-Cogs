@@ -19,5 +19,5 @@ log = logging.getLogger("red.laggron.roleinvite")
 async def setup(bot):
     init_logger(log, RoleInvite.__class__.__name__)
     n = RoleInvite(bot)
-    bot.add_cog(n)
+    await bot.add_cog(n)
     log.debug("Cog successfully loaded on the instance.")

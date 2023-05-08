@@ -188,6 +188,6 @@ async def setup(bot):
             "corrupted.** Contacting support is advised (Laggron's support server or official "
             "3rd party cog support server, #support_laggrons-dumb-cogs channel)."
         ) from e
-    bot.add_cog(n)
+    await bot.add_cog(n)
     bot.loop.create_task(restore_tournaments(bot, n))
     log.debug("Cog successfully loaded on the instance.")
