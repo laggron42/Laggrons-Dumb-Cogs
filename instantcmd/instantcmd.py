@@ -148,15 +148,6 @@ class InstantCommands(commands.Cog):
         Unload all code snippets saved.
         This is executed on cog unload.
         """
-        dev_values = await self.data.dev_values()
-        for name, code in dev_values.items():
-            try:
-                function = self.get_function_from_str(code, name)
-            except Exception as e:
-                log.exception("An exception occurred while trying to resume dev value %s", name)
-            else:
-                self.bot.add_dev_env_value(name, function)
-                log.debug(f"Added dev value %s", name)
         for code in self.code_snippets:
             self.unload_code_snippet(code)
 
