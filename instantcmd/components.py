@@ -2,7 +2,7 @@ import discord
 import logging
 
 from typing import TYPE_CHECKING, Optional, TypeVar, Type, List
-from discord.ui import Select, Button, View
+from discord.ui import Select, View, button
 from redbot.core.utils.chat_formatting import text_to_file
 
 from instantcmd.core import CodeSnippet
@@ -34,20 +34,37 @@ class OwnerOnlyView(View):
         return await self.bot.is_owner(interaction.user)
 
 
-class DownloadButton(Button):
+class CodeSnippetView(OwnerOnlyView):
     """
-    A button to download the source file.
+    List of buttons for a single code snippet.
     """
 
-    def __init__(self, code_snippet: T):
+    def __init__(self, bot: "Red", interaction: discord.Interaction, code_snippet: T):
         self.code_snippet = code_snippet
-        super().__init__(
-            style=discord.ButtonStyle.primary,
-            label="Download source file",
-            emoji="\N{FLOPPY DISK}",
-        )
+        self.og_interaction = interaction
+        super().__init__(bot)
+        self.set_activate_button()
 
-    async def callback(self, interaction: discord.Interaction):
+    async def edit(self):
+        # refresh activate/deactivate button
+        await self.og_interaction.followup.edit_message("@original", view=self)
+
+    def set_activate_button(self):
+        if self.code_snippet.enabled:
+            self.activate_deactivate.style = discord.ButtonStyle.secondary
+            self.activate_deactivate.label = "Disable"
+            self.activate_deactivate.emoji = "\N{HEAVY MULTIPLICATION X}\N{VARIATION SELECTOR-16}"
+        else:
+            self.activate_deactivate.style = discord.ButtonStyle.success
+            self.activate_deactivate.label = "Enable"
+            self.activate_deactivate.emoji = "\N{HEAVY CHECK MARK}\N{VARIATION SELECTOR-16}"
+
+    @button(
+        style=discord.ButtonStyle.primary,
+        label="Download source file",
+        emoji="\N{FLOPPY DISK}",
+    )
+    async def download(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not interaction.channel.permissions_for(interaction.guild.me).attach_files:
             await interaction.response.send_message("I lack the permission to upload files.")
         else:
@@ -57,29 +74,10 @@ class DownloadButton(Button):
             )
             log.debug(f"File download of {self.code_snippet} requested and uploaded.")
 
-
-class ActivateDeactivateButton(Button):
-    """
-    A button to activate or deactivate the code snippet.
-    """
-
-    def __init__(self, code_snippet: T):
-        super().__init__()
-        self.code_snippet = code_snippet
-        self.set_style()
-
-    def set_style(self):
-        if self.code_snippet.enabled:
-            self.style = discord.ButtonStyle.secondary
-            self.label = "Disable"
-            self.emoji = "\N{HEAVY MULTIPLICATION X}\N{VARIATION SELECTOR-16}"
-        else:
-            self.style = discord.ButtonStyle.success
-            self.label = "Enable"
-            self.emoji = "\N{HEAVY CHECK MARK}\N{VARIATION SELECTOR-16}"
-
-    async def callback(self, interaction: discord.Interaction):
-        # interaction = self.view.og_interaction
+    @button()
+    async def activate_deactivate(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         if self.code_snippet.enabled:
             log.info(f"Code snippet {self.code_snippet} disabled.")
             self.code_snippet.enabled = False
@@ -97,11 +95,11 @@ class ActivateDeactivateButton(Button):
                     "It is still deactivated and will not be loaded on next cog load."
                 )
             else:
-                self.set_style()
+                self.set_activate_button()
                 await interaction.response.send_message(
                     "The object was successfully unregistered and will not be loaded again."
                 )
-                await self.view.edit()
+                await self.edit()
         else:
             try:
                 self.code_snippet.register()
@@ -119,27 +117,14 @@ class ActivateDeactivateButton(Button):
                 log.info(f"Code snippet {self.code_snippet} enabled.")
                 self.code_snippet.enabled = True
                 await self.code_snippet.save()
-                self.set_style()
+                self.set_activate_button()
                 await interaction.response.send_message(
                     "The object was successfully registered and will be loaded on cog load."
                 )
-                await self.view.edit()
+                await self.edit()
 
-
-class DeleteButton(Button):
-    """
-    A button to completly suppress an object.
-    """
-
-    def __init__(self, code_snippet: T):
-        self.code_snippet = code_snippet
-        super().__init__(
-            style=discord.ButtonStyle.danger,
-            label="Delete",
-            emoji="\N{OCTAGONAL SIGN}",
-        )
-
-    async def callback(self, interaction: discord.Interaction):
+    @button(style=discord.ButtonStyle.danger, label="Delete", emoji="\N{OCTAGONAL SIGN}")
+    async def delete(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.code_snippet.delete()
         try:
             self.code_snippet.unregister()
@@ -156,25 +141,7 @@ class DeleteButton(Button):
         else:
             await interaction.response.send_message("Object successfully removed.")
         finally:
-            self.view.stop()
-
-
-class CodeSnippetView(OwnerOnlyView):
-    """
-    List of buttons for a single code snippet.
-    """
-
-    def __init__(self, bot: "Red", interaction: discord.Interaction, code_snippet: T):
-        self.code_snippet = code_snippet
-        self.og_interaction = interaction
-        super().__init__(bot)
-        self.add_item(DownloadButton(code_snippet))
-        self.add_item(ActivateDeactivateButton(code_snippet))
-        self.add_item(DeleteButton(code_snippet))
-
-    async def edit(self):
-        # refresh activate/deactivate button
-        await self.og_interaction.followup.edit_message("@original", view=self)
+            self.stop()
 
 
 class CodeSnippetsList(Select):
