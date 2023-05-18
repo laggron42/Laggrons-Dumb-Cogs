@@ -55,7 +55,7 @@ class FakeRole:
     """
 
     position = 0
-    colour = discord.Embed.Empty
+    colour = None
 
 
 class FakeAsset:
@@ -799,7 +799,7 @@ class API:
 
         # embed for the modlog
         log_embed = discord.Embed()
-        log_embed.set_author(name=f"{member.name} | {member.id}", icon_url=member.avatar.url)
+        log_embed.set_author(name=f"{member.name} | {member.id}", icon_url=member.avatar)
         log_embed.title = _("Level {level} warning ({action})").format(
             level=level, action=action[0]
         )

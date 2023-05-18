@@ -335,7 +335,7 @@ class WarningsList(Select):
         moderator = "ID: " + str(case["author"]) if not moderator else moderator.mention
         time = self.api._get_datetime(case["time"])
         embed = discord.Embed(description=_("Case #{number} informations").format(number=i + 1))
-        embed.set_author(name=f"{self.user} | {self.user.id}", icon_url=self.user.avatar.url)
+        embed.set_author(name=f"{self.user} | {self.user.id}", icon_url=self.user.avatar)
         embed.add_field(
             name=_("Level"), value=f"{warning_str(level, False)} ({level})", inline=True
         )
