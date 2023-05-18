@@ -114,4 +114,3 @@ async def setup(bot: "Red"):
             log.critical("Failed to backup and remove data for 2.0 update!", exc_info=True)
             raise CogLoadError("The cog failed to backup data for the 2.0 update!")
     await bot.add_cog(n)
-    log.debug("Cog successfully loaded on the instance.")
