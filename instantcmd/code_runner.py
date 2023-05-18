@@ -1,5 +1,6 @@
 import os
 import sys
+import discord
 import textwrap
 
 from typing import TypeVar, Type, Dict, Any
@@ -11,6 +12,7 @@ from instantcmd.core import (
     CommandSnippet,
     DevEnvSnippet,
     ListenerSnippet,
+    ViewSnippet,
     ExecutionException,
     UnknownType,
 )
@@ -22,6 +24,7 @@ OBJECT_TYPES_MAPPING = {
     commands.Command: CommandSnippet,
     Listener: ListenerSnippet,
     DevEnv: DevEnvSnippet,
+    discord.ui.View: ViewSnippet,
 }
 
 
@@ -66,7 +69,7 @@ def get_code_from_str(content: str, env: Dict[str, Any]) -> T:
 
 def find_matching_type(code: T) -> Type[CodeSnippet]:
     for source, dest in OBJECT_TYPES_MAPPING.items():
-        if isinstance(code, source):
+        if isinstance(code, source) or issubclass(code, source):
             return dest
     if hasattr(code, "__name__"):
         raise UnknownType(

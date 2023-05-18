@@ -26,12 +26,13 @@ from instantcmd.core import (
     CommandSnippet,
     DevEnvSnippet,
     ListenerSnippet,
+    ViewSnippet,
     InstantcmdException,
     ExecutionException,
 )
 
 log = logging.getLogger("red.laggron.instantcmd")
-T = TypeVar("T")
+T = TypeVar("T", bound=CodeSnippet)
 CODE_SNIPPET = "CODE_SNIPPET"
 
 # --- Glossary ---
@@ -75,6 +76,8 @@ class InstantCommands(commands.Cog):
             "checks": checks,
             "asyncio": asyncio,
             "instantcmd_cog": self,
+            "button": discord.ui.button,
+            "select": discord.ui.select,
         }
 
     async def _load_code_snippets_from_config(self):
@@ -82,6 +85,7 @@ class InstantCommands(commands.Cog):
             "command": CommandSnippet,
             "listener": ListenerSnippet,
             "dev env value": DevEnvSnippet,
+            "view": ViewSnippet,
         }
         data: Dict[str, Dict[str, dict]] = await self.data.custom(CODE_SNIPPET).all()
         for category, code_snippets in data.items():
@@ -155,8 +159,8 @@ class InstantCommands(commands.Cog):
         self,
         enabled: Optional[bool] = True,
         registered: Optional[bool] = True,
-        type: Optional[Type[CodeSnippet]] = None,
-    ) -> Iterator[CodeSnippet]:
+        type: Optional[Type[T]] = None,
+    ) -> Iterator[T]:
         """
         Get all saved code snippets.
 
@@ -216,7 +220,7 @@ class InstantCommands(commands.Cog):
 
     async def _extract_code(
         self, ctx: commands.Context, code_string: Optional[str] = None
-    ) -> Tuple[T, str]:
+    ) -> Tuple[Any, str]:
         if ctx.message.attachments:
             function_string = await self._read_from_file(ctx, ctx.message)
         elif code_string:
@@ -320,7 +324,7 @@ cog at this point.
         """
         view = OwnerOnlyView(self.bot, timeout=300)
         total = 0
-        types = (CommandSnippet, ListenerSnippet, DevEnvSnippet)
+        types = (CommandSnippet, ListenerSnippet, DevEnvSnippet, ViewSnippet)
         for type in types:
             objects = list(self.get_code_snippets(enabled=False, registered=False, type=type))
             if not objects:
@@ -331,6 +335,28 @@ cog at this point.
             await ctx.send("No instant command created.")
             return
         await ctx.send(f"{total} instant commands created so far!", view=view)
+
+    @instantcmd.command()
+    async def sendview(
+        self,
+        ctx: commands.Context,
+        view: str,
+        channel: Optional[discord.TextChannel],
+        *,
+        message: str,
+    ):
+        """
+        Send a message with a view.
+        """
+        views = self.get_code_snippets(type=ViewSnippet)
+        _view = None
+        for saved_view in views:
+            if saved_view.value.__name__ == view:
+                _view = saved_view
+        if not _view:
+            await ctx.send(f"View {view} not found")
+        else:
+            await (channel or ctx).send(message, view=_view.value())
 
     @commands.command(hidden=True)
     @checks.is_owner()
