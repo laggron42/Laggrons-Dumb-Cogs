@@ -17,15 +17,7 @@ if not importlib.util.find_spec("dateutil"):
         "Use the command `[p]pipinstall python-dateutil` or type "
         "`pip3 install python-dateutil` in the terminal to install the library."
     )
-if not importlib.util.find_spec("laggron_utils"):
-    raise CogLoadError(
-        "You need the `laggron_utils` package for any cog from Laggron's Dumb Cogs. "
-        "Use the command `[p]pipinstall git+https://github.com/retke/Laggron-utils.git` "
-        "or type `pip3 install -U git+https://github.com/retke/Laggron-utils.git` in the "
-        "terminal to install the library."
-    )
 
-from laggron_utils import init_logger, close_logger
 from .warnsystem import WarnSystem
 
 _ = Translator("WarnSystem", __file__)
@@ -186,11 +178,9 @@ async def update_config(bot, config):
 
 
 async def setup(bot: Red):
-    init_logger(log, "WarnSystem")
     n = WarnSystem(bot)
     # the cog conflicts with the core Warnings cog, we must check that
     if "Warnings" in bot.cogs:
-        close_logger(log)  # still need some cleaning up
         raise CogLoadError(
             "You need to unload the Warnings cog to load "
             "this cog. Type `[p]unload warnings` and try again."
@@ -203,7 +193,6 @@ async def setup(bot: Red):
             "Contact support for further instructions.",
             exc_info=e,
         )
-        close_logger(log)  # still need some cleaning up
         raise CogLoadError(
             "After an update, the cog tried to perform changes to the saved data but an error "
             "occured. Read your console output or warnsystem.log (located over "
