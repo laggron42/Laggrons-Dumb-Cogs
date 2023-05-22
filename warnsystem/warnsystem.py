@@ -10,13 +10,11 @@ from asyncio import TimeoutError as AsyncTimeoutError
 from abc import ABC
 from datetime import datetime, timedelta, timezone
 
-from laggron_utils.logging import close_logger, DisabledConsoleOutput
-
 from redbot.core import commands, Config, checks
 from redbot.core.commands.converter import TimedeltaConverter
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils import predicates, menus, mod
-from redbot.core.utils.chat_formatting import pagify
+from redbot.core.utils.chat_formatting import pagify, text_to_file
 
 from warnsystem.components import WarningsList
 
@@ -29,31 +27,6 @@ from .settings import SettingsMixin
 
 log = logging.getLogger("red.laggron.warnsystem")
 _ = Translator("WarnSystem", __file__)
-BaseCog = getattr(commands, "Cog", object)
-
-# Red 3.0 backwards compatibility, thanks Sinbad
-listener = getattr(commands.Cog, "listener", None)
-if listener is None:
-
-    def listener(name=None):
-        return lambda x: x
-
-
-# Red 3.1 backwards compatibility
-try:
-    from redbot.core.utils.chat_formatting import text_to_file
-except ImportError:
-    from io import BytesIO
-
-    log.warn("Outdated redbot, consider updating.")
-    # I'm the author of this function but it was made for Cog-Creators
-    # Source: https://github.com/Cog-Creators/Red-DiscordBot/blob/V3/develop/redbot/core/utils/chat_formatting.py#L478
-    def text_to_file(
-        text: str, filename: str = "file.txt", *, spoiler: bool = False, encoding: str = "utf-8"
-    ):
-        file = BytesIO(text.encode(encoding))
-        return discord.File(file, filename, spoiler=spoiler)
-
 
 EMBED_MODLOG = lambda x: _("A member got a level {} warning.").format(x)
 EMBED_USER = lambda x: _("The moderation team set you a level {} warning.").format(x)
@@ -71,7 +44,7 @@ class CompositeMetaClass(type(commands.Cog), type(ABC)):
 
 
 @cog_i18n(_)
-class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaClass):
+class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeMetaClass):
     """
     An alternative to the Red core moderation system, providing a different system of moderation\
     similar to Dyno.
@@ -947,7 +920,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             ).format(self)
         )
 
-    @listener()
+    @commands.Cog.listener()
     async def on_member_unban(self, guild: discord.Guild, user: discord.User):
         # if a member gets unbanned, we check if they were temp banned with warnsystem
         # if it was, we remove the case so it won't unban them a second time
@@ -964,7 +937,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                 "was cancelled due to their manual unban."
             )
 
-    @listener()
+    @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         guild = after.guild
         mute_role = guild.get_role(await self.cache.get_mute_role(guild))
@@ -979,7 +952,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                 "was ended due to a manual unmute (role removed)."
             )
 
-    @listener()
+    @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         guild = channel.guild
         if isinstance(channel, discord.VoiceChannel):
@@ -1011,11 +984,11 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                 exc_info=e,
             )
 
-    @listener()
+    @commands.Cog.listener()
     async def on_member_ban(self, guild: discord.Guild, member: discord.Member):
         await self.on_manual_action(guild, member, 5)
 
-    @listener()
+    @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         await self.on_manual_action(member.guild, member, 3)
 
@@ -1079,27 +1052,6 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                             )
                     return
             await asyncio.sleep(300)
-
-    @listener()
-    async def on_command_error(self, ctx, error):
-        if not isinstance(error, commands.CommandInvokeError):
-            return
-        if not ctx.command.cog_name == self.__class__.__name__:
-            # That error doesn't belong to the cog
-            return
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send(
-                _(
-                    "I need the `Add reactions` and `Manage messages` in the "
-                    "current channel if you want to use this command."
-                )
-            )
-            return
-        with DisabledConsoleOutput(log):
-            log.error(
-                f"Exception in command '{ctx.command.qualified_name}'.\n\n",
-                exc_info=error.original,
-            )
 
     async def _red_get_data_for_user(self, *, user_id: int):
         readme = (
@@ -1200,16 +1152,8 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
                     "deletion, which was successfully done."
                 )
 
-    # correctly unload the cog
-    def __unload(self):
-        self.cog_unload()
-
     def cog_unload(self):
         log.debug("Unloading cog...")
-
-        # remove all handlers from the logger, this prevents adding
-        # multiple times the same handler if the cog gets reloaded
-        close_logger(log)
 
         # stop checking for unmute and unban
         self.task.cancel()
