@@ -10,6 +10,7 @@ from typing import Union, Optional, Iterable, Callable, Awaitable
 from datetime import datetime, timedelta, timezone
 from multiprocessing import TimeoutError
 from multiprocessing.pool import Pool
+from discord.asset import Asset
 
 from redbot.core import Config
 from redbot.core.bot import Red
@@ -36,7 +37,6 @@ class SafeMember:
         self.nick = str(member.nick)
         self.id = str(member.id)
         self.mention = str(member.mention)
-        self.discriminator = str(member.discriminator)
         self.color = str(member.color)
         self.colour = str(member.colour)
         self.created_at = str(member.created_at)
@@ -55,14 +55,10 @@ class FakeRole:
     """
 
     position = 0
-    colour = discord.Embed.Empty
+    colour = None
 
 
-class FakeAsset:
-    url = ""
-
-
-class UnavailableMember(discord.abc.User, discord.abc.Messageable):
+class UnavailableMember(discord.Object, discord.abc.Messageable):
     """
     A class that reproduces the behaviour of a discord.Member instance, except
     the member is not in the guild. This is used to prevent calling bot.fetch_info
@@ -70,11 +66,27 @@ class UnavailableMember(discord.abc.User, discord.abc.Messageable):
     """
 
     def __init__(self, bot, state, user_id: int):
+        super().__init__(user_id)
         self.bot = bot
         self._state = state
         self.id = user_id
         self.top_role = FakeRole()
-        self.avatar = FakeAsset()
+        self.nick = None
+        self.joined_at = None
+
+    @property
+    def display_avatar(self) -> Asset:
+        return Asset._from_default_avatar(
+            self._state, (self.id >> 22) % len(discord.enums.DefaultAvatar)
+        )
+
+    @property
+    def colour(self) -> discord.Colour:
+        return self.top_role.colour
+
+    @property
+    def color(self) -> discord.Colour:
+        return self.colour
 
     @classmethod
     def _check_id(cls, member_id):
@@ -799,7 +811,9 @@ class API:
 
         # embed for the modlog
         log_embed = discord.Embed()
-        log_embed.set_author(name=f"{member.name} | {member.id}", icon_url=member.avatar.url)
+        log_embed.set_author(
+            name=f"{member.name} | {member.id}", icon_url=member.display_avatar.url
+        )
         log_embed.title = _("Level {level} warning ({action})").format(
             level=level, action=action[0]
         )
@@ -1154,8 +1168,11 @@ class API:
                         await guild.ban(
                             member,
                             reason=audit_reason,
-                            delete_message_days=ban_days
-                            or await self.data.guild(guild).bandays.softban(),
+                            delete_message_seconds=(
+                                ban_days or await self.data.guild(guild).bandays.softban()
+                            )
+                            * 24
+                            * 3600,
                         )
                         await guild.unban(
                             member,
@@ -1167,8 +1184,11 @@ class API:
                         await guild.ban(
                             member,
                             reason=audit_reason,
-                            delete_message_days=ban_days
-                            or await self.data.guild(guild).bandays.ban(),
+                            delete_message_seconds=(
+                                ban_days or await self.data.guild(guild).bandays.ban()
+                            )
+                            * 24
+                            * 3600,
                         )
                 except discord.errors.HTTPException as e:
                     log.warn(
