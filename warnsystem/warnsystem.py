@@ -981,7 +981,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, BaseCog, metaclass=CompositeMetaCl
             return
         embed = discord.Embed()
         member_id = int(
-            re.match(r"(?:.*#[0-9]{4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1)
+            re.match(r"(?:.*#[0-9]{1,4})(?: \| )([0-9]{15,21})", old_embed.author.name).group(1)
         )
         member = self.bot.get_user(member_id) or UnavailableMember(
             self.bot, guild._state, member_id
