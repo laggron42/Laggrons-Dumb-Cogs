@@ -1,20 +1,22 @@
+from __future__ import annotations
+
 import discord
 
 from discord.components import SelectOption
-from discord.ui import Button, Select, View
+from discord.interactions import Interaction
+from discord.ui import Button, Select, View, Modal, TextInput
 from asyncio import TimeoutError as AsyncTimeoutError
 from datetime import datetime
 from typing import Optional, Union, TYPE_CHECKING
 
 from redbot.core.i18n import Translator
-from redbot.core.utils import predicates, mod
+from redbot.core.utils import mod
 
 from .api import UnavailableMember
 
 if TYPE_CHECKING:
     from redbot.core.bot import Red
     from .api import API
-    from .cache import MemoryCache
 
 _ = Translator("WarnSystem", __file__)
 
@@ -122,76 +124,74 @@ async def prompt_yes_or_no(
     )
     view.add_item(approve_button)
     view.add_item(deny_button)
-    await interaction.edit_original_message(content=content, embed=embed, view=view)
+    await interaction.response.edit_message(content=content, embed=embed, view=view)
 
     def check_same_user(inter):
         return inter.user.id == interaction.user.id
 
     try:
-        x = await bot.wait_for("interaction", check=check_same_user, timeout=timeout)
+        interaction = await bot.wait_for("interaction", check=check_same_user, timeout=timeout)
     except AsyncTimeoutError:
-        await interaction.edit_original_message(content=_("Request timed out."))
+        await interaction.response.edit_message(content=_("Request timed out."))
         return False
     else:
-        custom_id = x.data.get("custom_id")
+        custom_id = interaction.data.get("custom_id")
         if custom_id == f"yes-{interaction.message.id}":
             return True
         if negative_response:
-            await interaction.edit_original_message(content=_("Cancelled."), view=None, embed=None)
+            await interaction.response.edit_message(content=_("Cancelled."), view=None, embed=None)
         return False
     finally:
         if clear_after:
-            await interaction.edit_original_message(
+            await interaction.response.edit_message(
                 content=interaction.message.content, embed=embed, view=None
             )
 
 
-class EditReasonButton(Button):
+class WarningEditionModal(Modal, title="Warning reason edition"):
+    new_reason = TextInput(
+        label=_("New reason"),
+        placeholder=_("Enter the new reason here, substitutions work."),
+        min_length=1,
+        style=discord.TextStyle.long,
+    )
+
+    async def on_submit(self, interaction: Interaction) -> None:
+        self.interaction = interaction
+
+
+class WarningEditionView(View):
     def __init__(
         self,
         bot: "Red",
-        interaction: discord.Interaction,
+        list: WarningsList,
         *,
         user: Union[discord.Member, UnavailableMember],
         case: dict,
         case_index: int,
         disabled: bool = False,
-        row: Optional[int] = None,
     ):
+        super().__init__()
         self.bot = bot
-        self.inter = interaction
+        self.list = list
         self.ws = bot.get_cog("WarnSystem")
         self.api: "API" = self.ws.api
-        super().__init__(
-            style=discord.ButtonStyle.secondary,
-            label=_("Edit reason"),
-            disabled=disabled,
-            emoji="✏",
-            row=row or 0,
-        )
         self.user = user
         self.case = case
         self.case_index = case_index
+        if disabled:
+            self.edit_button.disabled = True
+            self.delete_button.disabled = True
 
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        interaction = self.inter
+    @discord.ui.button(style=discord.ButtonStyle.secondary, label=_("Edit reason"), emoji="✏")
+    async def edit_button(self, interaction: discord.Interaction, button: Button):
+        modal = WarningEditionModal()
+        await interaction.response.send_modal(modal)
+        if await modal.wait():
+            pass  # timed out
+        interaction = modal.interaction
         embed = discord.Embed()
-        embed.description = _(
-            "Case #{number} edition.\n\n**Please type the new reason to set**"
-        ).format(number=self.case_index)
-        embed.set_footer(text=_("You have two minutes to type your text in the chat."))
-        await interaction.edit_original_message(embed=embed, view=None)
-        try:
-            response = await self.bot.wait_for(
-                "message",
-                check=predicates.MessagePredicate.same_context(interaction, user=interaction.user),
-                timeout=120,
-            )
-        except AsyncTimeoutError:
-            await interaction.delete_original_message()
-            return
-        new_reason = await self.api.format_reason(interaction.guild, response.content)
+        new_reason = await self.api.format_reason(interaction.guild, modal.new_reason.value)
         embed.description = _("Case #{number} edition.").format(number=self.case_index)
         embed.add_field(name=_("Old reason"), value=self.case["reason"], inline=False)
         embed.add_field(name=_("New reason"), value=new_reason, inline=False)
@@ -200,42 +200,16 @@ class EditReasonButton(Button):
         if response is False:
             return
         await self.api.edit_case(interaction.guild, self.user, self.case_index, new_reason)
-        await interaction.edit_original_message(
-            content=_("The reason was successfully edited!\n"), embed=None, view=None
+        await interaction.followup.edit_message(
+            "@original", content=_("The reason was successfully edited!\n"), embed=None, view=None
         )
 
-
-class DeleteWarnButton(Button):
-    def __init__(
-        self,
-        bot: "Red",
-        interaction: discord.Interaction,
-        *,
-        user: Union[discord.Member, UnavailableMember],
-        case: dict,
-        case_index: int,
-        disabled: bool = False,
-        row: Optional[int] = None,
-    ):
-        self.bot = bot
-        self.inter = interaction
-        self.ws = bot.get_cog("WarnSystem")
-        self.api: "API" = self.ws.api
-        self.cache: "MemoryCache" = self.ws.cache
-        super().__init__(
-            style=discord.ButtonStyle.danger,
-            label=_("Delete case"),
-            disabled=disabled,
-            emoji="\N{HEAVY MULTIPLICATION X}\N{VARIATION SELECTOR-16}",
-            row=row or 0,
-        )
-        self.user = user
-        self.case = case
-        self.case_index = case_index
-
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        interaction = self.inter
+    @discord.ui.button(
+        style=discord.ButtonStyle.danger,
+        label=_("Delete case"),
+        emoji="\N{HEAVY MULTIPLICATION X}\N{VARIATION SELECTOR-16}",
+    )
+    async def delete_button(self, interaction: discord.Interaction, button: Button):
         guild = interaction.guild
         embed = discord.Embed()
         can_unmute = False
@@ -261,8 +235,9 @@ class DeleteWarnButton(Button):
         if response is False:
             return
         await self.api.delete_case(guild, self.user, self.case_index)
-        await interaction.edit_original_message(
-            content=_("The case was successfully deleted!"), embed=None, view=None
+        self.list.deleted_cases.append(self.case_index)
+        await interaction.followup.edit_message(
+            "@original", content=_("The case was successfully deleted!"), embed=None, view=None
         )
 
 
@@ -287,6 +262,7 @@ class WarningsList(Select):
         )
         self.user = user
         self.cases = cases
+        self.deleted_cases: list[int] = []  # to prevent referencing deleted cases
 
     def _get_label(self, level: int):
         if level == 1:
@@ -329,13 +305,18 @@ class WarningsList(Select):
 
         guild = interaction.guild
         i = int(interaction.data["values"][0])
+        if i in self.deleted_cases:
+            await interaction.response.send_message("This case was deleted.", ephemeral=True)
+            return
         case = self.cases[i]
         level = case["level"]
         moderator = guild.get_member(case["author"])
         moderator = "ID: " + str(case["author"]) if not moderator else moderator.mention
         time = self.api._get_datetime(case["time"])
         embed = discord.Embed(description=_("Case #{number} informations").format(number=i + 1))
-        embed.set_author(name=f"{self.user} | {self.user.id}", icon_url=self.user.avatar.url)
+        embed.set_author(
+            name=f"{self.user} | {self.user.id}", icon_url=self.user.display_avatar.url
+        )
         embed.add_field(
             name=_("Level"), value=f"{warning_str(level, False)} ({level})", inline=True
         )
@@ -353,25 +334,9 @@ class WarningsList(Select):
         embed.timestamp = time
         embed.colour = await self.ws.data.guild(guild).colors.get_raw(level)
         is_mod = await mod.is_mod_or_superior(self.bot, interaction.user)
-        view = View()
-        view.add_item(
-            EditReasonButton(
-                self.bot,
-                interaction,
-                user=self.user,
-                case=case,
-                case_index=i,
-                disabled=not is_mod,
-            )
+        await interaction.response.send_message(
+            embed=embed,
+            view=WarningEditionView(
+                self.bot, self, user=self.user, case=case, case_index=i, disabled=not is_mod
+            ),
         )
-        view.add_item(
-            DeleteWarnButton(
-                self.bot,
-                interaction,
-                user=self.user,
-                case=case,
-                case_index=i,
-                disabled=not is_mod,
-            )
-        )
-        await interaction.response.send_message(embed=embed, view=view)
