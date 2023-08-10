@@ -8,7 +8,6 @@ import logging
 
 from typing import TypeVar, Type, Optional, Any, Dict, List, Tuple, Iterator
 from discord.ui import View
-from laggron_utils.logging import close_logger
 
 from redbot.core import commands
 from redbot.core import checks
@@ -65,7 +64,7 @@ class InstantCommands(commands.Cog):
         self.code_snippets: List[CodeSnippet] = []
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "2.0.0"
+    __version__ = "2.0.1"
 
     @property
     def env(self) -> Dict[str, Any]:
@@ -365,14 +364,15 @@ cog at this point.
         Get informations about the cog.
         """
         await ctx.send(
-            "Laggron's Dumb Cogs V3 - instantcmd\n\n"
-            "Version: {0.__version__}\n"
-            "Author: {0.__author__}\n"
-            "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/tree/v3\n"
-            "Discord server: https://discord.gg/AVzjfpR\n"
-            "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"
-            "Support my work on Patreon: https://www.patreon.com/retke"
-        ).format(self)
+            (
+                "Laggron's Dumb Cogs V3 - instantcmd\n\n"
+                "Version: {0.__version__}\n"
+                "Author: {0.__author__}\n"
+                "Github repository: https://github.com/retke/Laggrons-Dumb-Cogs/\n"
+                "Documentation: http://laggrons-dumb-cogs.readthedocs.io/\n\n"
+                "Support my work on Patreon: https://www.patreon.com/retke"
+            ).format(self)
+        )
 
     async def cog_unload(self):
         log.debug("Unloading cog...")
@@ -380,10 +380,6 @@ cog at this point.
         await self.unload_all_code_snippets()
 
         self.bot.remove_dev_env_value("instantcmd")
-
-        # remove all handlers from the logger, this prevents adding
-        # multiple times the same handler if the cog gets reloaded
-        close_logger(log)
 
     async def cog_load(self):
         await self.load_all_code_snippets()

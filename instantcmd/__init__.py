@@ -1,24 +1,14 @@
 import logging
-import importlib.util
 
 from typing import TYPE_CHECKING, Dict
 from .instantcmd import InstantCommands
 
 from redbot.core.data_manager import cog_data_path
 from redbot.core.errors import CogLoadError
-from laggron_utils import init_logger
 
 if TYPE_CHECKING:
     from redbot.core.bot import Red
     from redbot.core import Config
-
-if not importlib.util.find_spec("laggron_utils"):
-    raise CogLoadError(
-        "You need the `laggron_utils` package for any cog from Laggron's Dumb Cogs. "
-        "Use the command `[p]pipinstall git+https://github.com/retke/Laggron-utils.git` "
-        "or type `pip3 install -U git+https://github.com/retke/Laggron-utils.git` in the "
-        "terminal to install the library."
-    )
 
 log = logging.getLogger("red.laggron.instantcmd")
 
@@ -103,7 +93,6 @@ async def save_old_commands(bot: "Red", config: "Config", data: Dict[str, Dict[s
 
 
 async def setup(bot: "Red"):
-    init_logger(log, InstantCommands.__class__.__name__, "instantcmd")
     n = InstantCommands(bot)
     global_data = await n.data.all()
     if global_data.get("commands", {}) or global_data.get("dev_values", {}):
