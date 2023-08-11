@@ -19,6 +19,7 @@ if not importlib.util.find_spec("dateutil"):
     )
 
 from .warnsystem import WarnSystem
+from .context_menus import context_warn
 
 _ = Translator("WarnSystem", __file__)
 log = logging.getLogger("red.laggron.warnsystem")
@@ -206,4 +207,5 @@ async def setup(bot: Red):
     n.task = bot.loop.create_task(n.api._loop_task())
     if n.cache.automod_enabled:
         n.api.enable_automod()
+    bot.tree.add_command(context_warn)
     log.debug("Cog successfully loaded on the instance.")
