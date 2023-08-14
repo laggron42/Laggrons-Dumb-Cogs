@@ -7,7 +7,7 @@ from discord.interactions import Interaction
 from discord.ui import Button, Select, View, Modal, TextInput
 from asyncio import TimeoutError as AsyncTimeoutError
 from datetime import datetime
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Optional, Union, TYPE_CHECKING, cast
 
 from redbot.core.i18n import Translator
 from redbot.core.utils import mod
@@ -17,6 +17,7 @@ from .api import UnavailableMember
 if TYPE_CHECKING:
     from redbot.core.bot import Red
     from .api import API
+    from .warnsystem import WarnSystem
 
 _ = Translator("WarnSystem", __file__)
 
@@ -174,7 +175,7 @@ class WarningEditionView(View):
         super().__init__()
         self.bot = bot
         self.list = list
-        self.ws = bot.get_cog("WarnSystem")
+        self.ws = cast("WarnSystem", bot.get_cog("WarnSystem"))
         self.api: "API" = self.ws.api
         self.user = user
         self.case = case
@@ -215,7 +216,7 @@ class WarningEditionView(View):
         can_unmute = False
         add_roles = False
         if self.case["level"] == 2:
-            mute_role = guild.get_role(await self.cache.get_mute_role(guild))
+            mute_role = guild.get_role(await self.ws.cache.get_mute_role(guild))
             member = guild.get_member(self.user)
             if member:
                 if mute_role and mute_role in member.roles:
