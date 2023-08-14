@@ -586,11 +586,11 @@ class API:
         add_roles = False
         if case["level"] == 2:
             mute_role = guild.get_role(await self.cache.get_mute_role(guild))
-            member = guild.get_member(self.user)
+            member = guild.get_member(user)
             if member:
                 if mute_role and mute_role in member.roles:
                     can_unmute = True
-                add_roles = await self.ws.data.guild(guild).remove_roles()
+                add_roles = await self.data.guild(guild).remove_roles()
         if can_unmute:
             await member.remove_roles(mute_role, reason=_("Warning deleted."))
         async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
