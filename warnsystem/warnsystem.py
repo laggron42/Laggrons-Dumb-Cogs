@@ -5,7 +5,6 @@ import asyncio
 
 from io import BytesIO
 from typing import Optional, TYPE_CHECKING
-from discord.ui import View
 from asyncio import TimeoutError as AsyncTimeoutError
 from abc import ABC
 from datetime import datetime, timedelta, timezone
@@ -16,7 +15,7 @@ from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils import predicates, menus, mod
 from redbot.core.utils.chat_formatting import pagify, text_to_file
 
-from warnsystem.components import WarningsList
+from warnsystem.components import WarningsSelector
 
 from . import errors
 from .api import API, UnavailableMember
@@ -150,7 +149,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
 
         self.task: asyncio.Task
 
-    __version__ = "1.5.1"
+    __version__ = "1.5.2"
     __author__ = ["retke (El Laggron)"]
 
     # helpers
@@ -777,9 +776,8 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         )
         embed.colour = user.top_role.colour
 
-        view = View()
-        view.add_item(WarningsList(self.bot, user, cases))
-        await ctx.send(embed=embed, view=view)
+        paginator = WarningsSelector(ctx, user, cases)
+        await paginator.start(embed=embed)
 
     @commands.command()
     @checks.mod_or_permissions(kick_members=True)

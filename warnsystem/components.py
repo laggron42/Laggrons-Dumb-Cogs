@@ -4,15 +4,18 @@ import discord
 
 from discord.components import SelectOption
 from discord.interactions import Interaction
-from discord.ui import Button, Select, View, Modal, TextInput
+from discord.ui import Button, View, Modal, TextInput
 from asyncio import TimeoutError as AsyncTimeoutError
-from datetime import datetime
-from typing import Optional, Union, TYPE_CHECKING, cast
+from datetime import datetime, timezone
+from typing import Optional, Union, List, Tuple, TYPE_CHECKING, cast
 
 from redbot.core.i18n import Translator
 from redbot.core.utils import mod
+from redbot.core.commands import Context
+from redbot.vendored.discord.ext import menus
 
 from .api import UnavailableMember
+from .paginator import Pages
 
 if TYPE_CHECKING:
     from redbot.core.bot import Red
@@ -48,7 +51,7 @@ def pretty_date(time: datetime):
         5: (_("minute"), _("minutes")),
         6: (_("second"), _("seconds")),
     }
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     diff = now - time
     second_diff = diff.seconds
     day_diff = diff.days
@@ -165,7 +168,7 @@ class WarningEditionView(View):
     def __init__(
         self,
         bot: "Red",
-        list: WarningsList,
+        list: WarningsSelector,
         *,
         user: Union[discord.Member, UnavailableMember],
         case: dict,
@@ -242,30 +245,26 @@ class WarningEditionView(View):
         )
 
 
-class WarningsList(Select):
-    def __init__(
-        self,
-        bot: "Red",
-        user: Union[discord.Member, UnavailableMember],
-        cases: list,
-        *,
-        row: Optional[int] = None,
-    ):
-        self.bot = bot
-        self.ws = bot.get_cog("WarnSystem")
-        self.api: "API" = self.ws.api
-        super().__init__(
-            placeholder=_("Click to view the list of warnings."),
-            min_values=1,
-            max_values=1,
-            options=self.generate_cases(cases),
-            row=row,
-        )
-        self.user = user
-        self.cases = cases
-        self.deleted_cases: list[int] = []  # to prevent referencing deleted cases
+class WarningsSource(menus.ListPageSource):
+    def __init__(self, entries: List[dict]):
+        super().__init__(entries, per_page=25)
 
-    def _get_label(self, level: int):
+    async def format_page(self, menu: WarningsSelector, balls: List[dict]):
+        menu.set_options(balls)
+        return True  # signal to edit the page
+
+
+class WarningsSelector(Pages[menus.ListPageSource]):
+    def __init__(self, ctx: Context, user: Union[discord.Member, UnavailableMember], warnings: List[dict]):
+        self.user = user
+        self.ws = cast("WarnSystem", ctx.bot.get_cog("WarnSystem"))
+        self.api: "API" = self.ws.api
+        source = WarningsSource(warnings)
+        super().__init__(source, ctx=ctx)
+        self.deleted_cases: list[int] = []  # to prevent referencing deleted cases
+        self.add_item(self.select_warning_menu)
+
+    def _get_label(self, level: int) -> Tuple[str, str]:
         if level == 1:
             return (_("Warning"), "⚠")
         elif level == 2:
@@ -277,9 +276,9 @@ class WarningsList(Select):
         elif level == 5:
             return (_("Ban"), "🔨")
 
-    def generate_cases(self, cases: list):
-        options = []
-        for i, case in enumerate(cases[:24]):
+    def set_options(self, cases: List[dict]):
+        options: List[discord.SelectOption] = []
+        for i, case in enumerate(cases, start=self.source.per_page * self.current_page):
             name, emote = self._get_label(case["level"])
             date = pretty_date(self.api._get_datetime(case["time"]))
             if case["reason"] and len(name) + len(case["reason"]) > 25:
@@ -288,14 +287,15 @@ class WarningsList(Select):
                 reason = case["reason"]
             option = SelectOption(
                 label=name + " • " + date,
-                value=i,
+                value=str(i),
                 emoji=emote,
                 description=reason,
             )
             options.append(option)
-        return options
+        self.select_warning_menu.options = options
 
-    async def callback(self, interaction: discord.Interaction):
+    @discord.ui.select(placeholder="Select a warning to view it.")
+    async def select_warning_menu(self, interaction: discord.Interaction, item:discord.ui.Select):
         warning_str = lambda level, plural: {
             1: (_("Warning"), _("Warnings")),
             2: (_("Mute"), _("Mutes")),
@@ -309,7 +309,7 @@ class WarningsList(Select):
         if i in self.deleted_cases:
             await interaction.response.send_message("This case was deleted.", ephemeral=True)
             return
-        case = self.cases[i]
+        case = self.source.entries[i]
         level = case["level"]
         moderator = guild.get_member(case["author"])
         moderator = "ID: " + str(case["author"]) if not moderator else moderator.mention
@@ -331,7 +331,7 @@ class WarningsList(Select):
                     date=self.api._format_datetime(time + duration),
                 ),
             )
-        embed.add_field(name=_("Reason"), value=case["reason"], inline=False),
+        embed.add_field(name=_("Reason"), value=case["reason"], inline=False)
         embed.timestamp = time
         embed.colour = await self.ws.data.guild(guild).colors.get_raw(level)
         is_mod = await mod.is_mod_or_superior(self.bot, interaction.user)
