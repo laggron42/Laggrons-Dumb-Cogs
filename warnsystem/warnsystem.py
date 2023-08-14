@@ -159,9 +159,9 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         ctx: commands.Context,
         level: int,
         member: discord.Member,
-        reason: str | None = None,
-        time: timedelta | None = None,
-        ban_days: int | None = None,
+        reason: Optional[str] = None,
+        time: Optional[timedelta] = None,
+        ban_days: Optional[int] = None,
     ):
         """No need to repeat, let's do what's common to all 5 warnings."""
         reason = await self.api.format_reason(ctx.guild, reason)
@@ -247,8 +247,8 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         log_modlog: bool,
         log_dm: bool,
         take_action: bool,
-        reason: str | None = None,
-        time: timedelta | None = None,
+        reason: Optional[str] = None,
+        time: Optional[timedelta] = None,
         confirm: bool = False,
     ):
         guild = ctx.guild
@@ -470,7 +470,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         member: discord.Member,
         time: Optional[TimedeltaConverter],
         *,
-        reason: str | None = None,
+        reason: Optional[str] = None,
     ):
         """
         Mute the user in all channels, including voice channels.
@@ -489,7 +489,9 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
 
     @_warn.command(name="3", aliases=["kick"])
     @checks.mod_or_permissions(administrator=True)
-    async def warn_3(self, ctx: commands.Context, member: discord.Member, *, reason: str | None = None):
+    async def warn_3(
+        self, ctx: commands.Context, member: discord.Member, *, reason: Optional[str] = None
+    ):
         """
         Kick the member from the server.
         """
@@ -497,7 +499,9 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
 
     @_warn.command(name="4", aliases=["softban"])
     @checks.mod_or_permissions(administrator=True)
-    async def warn_4(self, ctx: commands.Context, member: discord.Member, *, reason: str | None = None):
+    async def warn_4(
+        self, ctx: commands.Context, member: discord.Member, *, reason: Optional[str] = None
+    ):
         """
         Softban the member from the server.
 
@@ -517,7 +521,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         member: UnavailableMember,
         time: Optional[TimedeltaConverter],
         *,
-        reason: str | None = None,
+        reason: Optional[str] = None,
     ):
         """
         Ban the member from the server.
@@ -723,7 +727,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
     @commands.guild_only()
     @commands.cooldown(1, 3, commands.BucketType.member)
     async def warnings(
-        self, ctx: commands.Context, user: UnavailableMember | None = None, index: int = 0
+        self, ctx: commands.Context, user: Optional[UnavailableMember] = None, index: int = 0
     ):
         """
         Shows all warnings of a member.

@@ -1,12 +1,11 @@
 import discord
 
 from datetime import timedelta
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Optional, cast
 from discord.interactions import Interaction
 from discord.ui import View, Modal, TextInput, button
 
 from redbot.core import app_commands
-from redbot.core import checks
 from redbot.core.i18n import Translator
 from redbot.core.commands import BadArgument, Context
 from redbot.core.commands.converter import parse_timedelta
@@ -52,8 +51,8 @@ class ReasonEntry(Modal, title="Member warn"):
     async def on_submit(self, interaction: Interaction["Red"]) -> None:
         cog = cast("WarnSystem", interaction.client.get_cog("WarnSystem"))
 
-        duration: timedelta | None = None
-        ban_days: int | None = None
+        duration: Optional[timedelta] = None
+        ban_days: Optional[int] = None
         if self.duration.value:
             try:
                 duration = parse_timedelta(self.duration.value)
