@@ -190,7 +190,7 @@ class API:
         self.automod_warn_task: asyncio.Task
 
     def _get_datetime(self, time: int) -> datetime:
-        return datetime.fromtimestamp(int(time))
+        return datetime.fromtimestamp(int(time), tz=timezone.utc)
 
     def _get_timedelta(self, time: int) -> timedelta:
         return timedelta(seconds=int(time))
