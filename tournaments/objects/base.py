@@ -1628,12 +1628,10 @@ class Tournament:
     # some common utils
     @staticmethod
     def _format_datetime(date: datetime, only_time=False):
-        locale = get_babel_locale()
-        _date = format_date(date, format="full", locale=locale)
-        time = format_time(date, format="short", locale=locale)
+        timestamp = int(date.timestamp())
         if only_time:
-            return time
-        return _("{date} at {time}").format(date=_date, time=time)
+            return f"<t:{timestamp}:t>"
+        return f"<t:{timestamp}:F>"
 
     def next_scheduled_event(self) -> Tuple[str, timedelta]:
         """
