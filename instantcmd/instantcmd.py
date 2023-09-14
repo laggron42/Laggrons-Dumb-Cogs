@@ -64,7 +64,7 @@ class InstantCommands(commands.Cog):
         self.code_snippets: List[CodeSnippet] = []
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "2.0.1"
+    __version__ = "2.0.2"
 
     @property
     def env(self) -> Dict[str, Any]:
@@ -189,7 +189,7 @@ class InstantCommands(commands.Cog):
 
     async def _ask_for_edit(self, ctx: commands.Context, code: CodeSnippet) -> bool:
         msg = await ctx.send(
-            f"That {code} is already registered with InstantCommands. "
+            f"That {code.name} is already registered with InstantCommands. "
             "Would you like to replace it?"
         )
         pred = ReactionPredicate.yes_or_no(msg, ctx.author)
@@ -295,6 +295,9 @@ cog at this point.
                 edit = await self._ask_for_edit(ctx, code_snippet)
                 if not edit:
                     return
+                self.code_snippets.remove(saved_code)
+                saved_code.unregister()
+                await saved_code.delete()
 
         try:
             code_snippet.register()
@@ -329,7 +332,7 @@ cog at this point.
             if not objects:
                 continue
             total += len(objects)
-            view.add_item(CodeSnippetsList(self.bot, type, objects))
+            view.add_item(CodeSnippetsList(self.bot, self, type, objects))
         if total == 0:
             await ctx.send("No instant command created.")
             return

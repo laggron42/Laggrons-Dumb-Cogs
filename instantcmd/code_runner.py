@@ -24,7 +24,6 @@ OBJECT_TYPES_MAPPING = {
     commands.Command: CommandSnippet,
     Listener: ListenerSnippet,
     DevEnv: DevEnvSnippet,
-    discord.ui.View: ViewSnippet,
 }
 
 
@@ -68,6 +67,8 @@ def get_code_from_str(content: str, env: Dict[str, Any]) -> T:
 
 
 def find_matching_type(code: T) -> Type[CodeSnippet]:
+    if issubclass(code, discord.ui.View):
+        return ViewSnippet
     for source, dest in OBJECT_TYPES_MAPPING.items():
         if isinstance(code, source):
             return dest

@@ -9,6 +9,7 @@ from instantcmd.core import CodeSnippet
 
 if TYPE_CHECKING:
     from redbot.core.bot import Red
+    from .instantcmd import InstantCommands
 
 log = logging.getLogger("red.laggron.instantcmd.components")
 T = TypeVar("T", bound=CodeSnippet)
@@ -39,7 +40,10 @@ class CodeSnippetView(OwnerOnlyView):
     List of buttons for a single code snippet.
     """
 
-    def __init__(self, bot: "Red", interaction: discord.Interaction, code_snippet: T):
+    def __init__(
+        self, bot: "Red", cog: "InstantCommands", interaction: discord.Interaction, code_snippet: T
+    ):
+        self.cog = cog
         self.code_snippet = code_snippet
         self.og_interaction = interaction
         super().__init__(bot)
@@ -58,21 +62,6 @@ class CodeSnippetView(OwnerOnlyView):
             self.activate_deactivate.style = discord.ButtonStyle.success
             self.activate_deactivate.label = "Enable"
             self.activate_deactivate.emoji = "\N{HEAVY CHECK MARK}\N{VARIATION SELECTOR-16}"
-
-    @button(
-        style=discord.ButtonStyle.primary,
-        label="Download source file",
-        emoji="\N{FLOPPY DISK}",
-    )
-    async def download(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not interaction.channel.permissions_for(interaction.guild.me).attach_files:
-            await interaction.response.send_message("I lack the permission to upload files.")
-        else:
-            await interaction.response.send_message(
-                f"Here is the content of your code snippet.",
-                file=text_to_file(self.code_snippet.source, filename=f"{self.code_snippet}.py"),
-            )
-            log.debug(f"File download of {self.code_snippet} requested and uploaded.")
 
     @button()
     async def activate_deactivate(
@@ -127,6 +116,10 @@ class CodeSnippetView(OwnerOnlyView):
     async def delete(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.code_snippet.delete()
         try:
+            self.cog.code_snippets.remove(self.code_snippet)
+        except ValueError:
+            pass
+        try:
             self.code_snippet.unregister()
         except Exception:
             log.error(
@@ -149,8 +142,9 @@ class CodeSnippetsList(Select):
     A list of items for a specific type of code snippet.
     """
 
-    def __init__(self, bot: "Red", type: Type[T], code_snippets: List[T]):
+    def __init__(self, bot: "Red", cog: "InstantCommands", type: Type[T], code_snippets: List[T]):
         self.bot = bot
+        self.cog = cog
         self.snippet_type = type
         self.code_snippets = code_snippets
 
@@ -177,7 +171,8 @@ class CodeSnippetsList(Select):
         message = f"__{selected.name} `{selected}`__"
         if selected.verbose_name != str(selected):
             message += f" ({selected.description})"
-        message += "\n\n" + next(selected.get_formatted_code())
         await interaction.response.send_message(
-            message, view=CodeSnippetView(self.bot, interaction, selected)
+            message,
+            view=CodeSnippetView(self.bot, self.cog, interaction, selected),
+            file=text_to_file(selected.source, filename=f"{selected}.py"),
         )
