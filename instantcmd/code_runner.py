@@ -67,8 +67,11 @@ def get_code_from_str(content: str, env: Dict[str, Any]) -> T:
 
 
 def find_matching_type(code: T) -> Type[CodeSnippet]:
-    if issubclass(code, discord.ui.View):
-        return ViewSnippet
+    try:
+        if issubclass(code, discord.ui.View):
+            return ViewSnippet
+    except TypeError:  # code is not a class (probably instance)
+        pass
     for source, dest in OBJECT_TYPES_MAPPING.items():
         if isinstance(code, source):
             return dest
