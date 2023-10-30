@@ -238,7 +238,7 @@ class WarningEditionView(View):
         response = await prompt_yes_or_no(self.bot, interaction, embed=embed, clear_after=False)
         if response is False:
             return
-        await self.api.delete_case(guild, self.user, self.case_index)
+        await self.api.delete_case(guild, self.user, self.case_index + 1)  # does not starting at 0
         self.list.deleted_cases.append(self.case_index)
         await interaction.followup.edit_message(
             "@original", content=_("The case was successfully deleted!"), embed=None, view=None
@@ -279,6 +279,7 @@ class WarningsSelector(Pages[menus.ListPageSource]):
     def set_options(self, cases: List[dict]):
         options: List[discord.SelectOption] = []
         for i, case in enumerate(cases, start=self.source.per_page * self.current_page):
+            print(i)
             name, emote = self._get_label(case["level"])
             date = pretty_date(self.api._get_datetime(case["time"]))
             if case["reason"] and len(name) + len(case["reason"]) > 25:
