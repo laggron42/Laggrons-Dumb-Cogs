@@ -8,7 +8,7 @@
         0
     ],
     "description": "Display statistics about your Call of Duty account, including recent matches.",
-    "hidden": false,
+    "hidden": true,
     "install_msg": "Thank you for installing the codmw cog.\nType `[p]help cod` for a quick overview of the commands.",
     "required_cogs": {},
     "requirements": [
