@@ -279,7 +279,6 @@ class WarningsSelector(Pages[menus.ListPageSource]):
     def set_options(self, cases: List[dict]):
         options: List[discord.SelectOption] = []
         for i, case in enumerate(cases, start=self.source.per_page * self.current_page):
-            print(i)
             name, emote = self._get_label(case["level"])
             date = pretty_date(self.api._get_datetime(case["time"]))
             if case["reason"] and len(name) + len(case["reason"]) > 25:
