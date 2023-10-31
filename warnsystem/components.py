@@ -196,14 +196,14 @@ class WarningEditionView(View):
         interaction = modal.interaction
         embed = discord.Embed()
         new_reason = await self.api.format_reason(interaction.guild, modal.new_reason.value)
-        embed.description = _("Case #{number} edition.").format(number=self.case_index)
+        embed.description = _("Case #{number} edition.").format(number=self.case_index + 1)
         embed.add_field(name=_("Old reason"), value=self.case["reason"], inline=False)
         embed.add_field(name=_("New reason"), value=new_reason, inline=False)
         embed.set_footer(text=_("Click on ✅ to confirm the changes."))
         response = await prompt_yes_or_no(self.bot, interaction, embed=embed, clear_after=False)
         if response is False:
             return
-        await self.api.edit_case(interaction.guild, self.user, self.case_index, new_reason)
+        await self.api.edit_case(interaction.guild, self.user, self.case_index + 1, new_reason)
         await interaction.followup.edit_message(
             "@original", content=_("The reason was successfully edited!\n"), embed=None, view=None
         )
@@ -227,7 +227,7 @@ class WarningEditionView(View):
                 add_roles = await self.ws.data.guild(guild).remove_roles()
         description = _(
             "Case #{number} deletion.\n**Click on the button to confirm your action.**"
-        ).format(number=self.case_index)
+        ).format(number=self.case_index + 1)
         if can_unmute or add_roles:
             description += _("\nNote: Deleting the case will also do the following:")
             if can_unmute:
