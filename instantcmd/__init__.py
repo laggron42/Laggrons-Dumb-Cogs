@@ -35,7 +35,7 @@ async def save_old_commands(bot: "Red", config: "Config", data: Dict[str, Dict[s
 
     if dev_values:
         with dev_values_file_path.open("w") as file:
-            for name, content in commands.items():
+            for name, content in dev_values.items():
                 file.write("# ====================================\n")
                 file.write(f'# dev env value "{name}"\n')
                 file.write("# ====================================\n\n")

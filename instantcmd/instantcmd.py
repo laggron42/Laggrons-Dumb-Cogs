@@ -64,7 +64,7 @@ class InstantCommands(commands.Cog):
         self.code_snippets: List[CodeSnippet] = []
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "2.0.2"
+    __version__ = "2.0.3"
 
     @property
     def env(self) -> Dict[str, Any]:
