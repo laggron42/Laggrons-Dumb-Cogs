@@ -1214,6 +1214,15 @@ class API:
                 self.bot.loop.create_task(
                     self.automod_check_for_autowarn(guild, member, author, level)
                 )
+            self.bot.dispatch(
+                "warnsystem_warn",
+                member=member,
+                author=author,
+                level=level,
+                reason=reason,
+                time=time,
+                date=date,
+            )
             i += 1
             if progress_tracker:
                 await progress_tracker(i)

@@ -149,7 +149,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
 
         self.task: asyncio.Task
 
-    __version__ = "1.5.4"
+    __version__ = "1.5.5"
     __author__ = ["retke (El Laggron)"]
 
     # helpers
@@ -1030,9 +1030,11 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         while attempts < 3:
             attempts += 1
             try:
-                entry = await guild.audit_logs(action=action, before=before, after=after).find(
-                    lambda e: e.target.id == member.id and after < e.created_at < before
-                )
+                async for entry in guild.audit_logs(action=action, before=before, after=after):
+                    if entry.target.id == member.id and after < entry.created_at < before:
+                        break
+                else:
+                    break
             except discord.Forbidden:
                 break
             except discord.HTTPException:
