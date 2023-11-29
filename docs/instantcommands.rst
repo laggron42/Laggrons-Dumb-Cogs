@@ -40,15 +40,12 @@ from Discord. You just need basic Python and discord.py knowledge.
 
 You can also edit the Dev's environment added with Red 3.4.6.
 
-Here's an example of how it works:
-
-.. image:: .ressources/EXAMPLES/InstantCommands-example.png
-
 From a code snippet in Discord, you can create the following objects:
 
 - :ref:`commands <usage-adding-commands>`
-- listeners
-- dev env values
+- :ref:`listeners <usage-adding-listeners>`
+- :ref:`dev env values <usage-adding-dev-values>`
+- views
 
 More objects will come in future releases, like application commands, message
 components, cogs...
@@ -146,6 +143,41 @@ the dev value name in the decorator:
 
 Your code will be saved and referred as "give_me_a_dragon".
 
+.. _usage-adding-views:
+~~~~~~~~~~~~
+Adding views
+~~~~~~~~~~~~
+
+You can register views that are then sent using the :ref:`sendview
+<command-instantcommand-sendview>` command.
+
+You do not need to write a function with a decorator, instead it's a class,
+just like a normal view:
+
+.. code-block:: py
+
+    from discord.ui import View, button
+
+    class SecretPing(View):
+        @button(label="Ping", style=discord.ButtonStyle.primary)
+        async def ping(self, interaction, button):
+            await interaction.response.send_message(
+                f"Hi {interaction.user.mention} but in private", ephemeral=True
+            )
+
+    return SecretPing
+
+Then run ``[p]instantcmd sendview SecretPing Some message content`` to make
+the bot send a message with your view attached.
+
+Check out the documentation on :class:`discord.ui.View` and the corresponding
+decorators below.
+
+.. warning:: The default timeout for a view is 180 seconds! You can change it
+    by overriding the default parameters of the view object.
+
+    The cog currently has no support for permanent views.
+
 --------
 Commands
 --------
@@ -203,6 +235,7 @@ instead of deleting each time.
 The code can be provided in the same message of the command, in a new 
 followup message, or inside an attached text file.
 
+.. _command-instantcommand-list:
 ~~~~~~~~~~~~~~~~~~~
 instantcommand list
 ~~~~~~~~~~~~~~~~~~~
@@ -223,6 +256,22 @@ select the object you want to edit.
 Once selected, a new message will be sent containing the source of the
 message and 3 buttons: download the source file, enable/disable this object,
 and delete it.
+
+.. _command-instantcommand-sendview:
+~~~~~~~~~~~~~~~~~~~~~~~
+instantcommand sendview
+~~~~~~~~~~~~~~~~~~~~~~~
+
+**Syntax**::
+
+    [p]instantcommand sendview <view> [channel] <message>
+
+**Description**
+
+Make the bot send a message with content ``<message>``, in ``[channel]``
+or the current channel if not specified.
+
+The instantcmd-registered ``<view>`` will be attached to that message.
 
 --------------------------
 Frequently Asked Questions
