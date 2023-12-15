@@ -1764,7 +1764,7 @@ class API:
         found_warnings = {}  # we fill this list with the valid autowarns, there can be more than 1
         for warn in warns[::-1]:
             to_remove = []  # list of autowarns to remove during the iteration (duration expired)
-            taken_on = datetime.fromtimestamp(warn["time"])
+            taken_on = datetime.fromtimestamp(warn["time"], timezone.utc)
             for i, autowarn in enumerate(autowarns):
                 try:
                     if autowarn["until"] >= taken_on:
