@@ -37,7 +37,7 @@ class Say(commands.Cog):
         self.interaction = []
 
     __author__ = ["retke (El Laggron)"]
-    __version__ = "2.0.0"
+    __version__ = "2.0.1"
 
     async def say(
         self,
@@ -55,10 +55,10 @@ class Say(commands.Cog):
             return
 
         author = ctx.author
-        guild = ctx.guild
+        guild = channel.guild
 
         # checking perms
-        if not channel.permissions_for(guild.me).send_messages:
+        if guild and not channel.permissions_for(guild.me).send_messages:
             if channel != ctx.channel:
                 await ctx.send(
                     _("I am not allowed to send messages in ") + channel.mention,
