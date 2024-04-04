@@ -21,7 +21,6 @@ class MemoryCache:
         self.bot = bot
         self.data = config
 
-        self.mute_roles = {}
         self.temp_actions = {}
         self.automod_enabled = []
         self.automod_antispam = {}
@@ -45,32 +44,17 @@ class MemoryCache:
         This calls a huge part of the Config database and will not load it into the cache.
         """
         config_data = await self.data.all_guilds()
-        mute_roles_cached = len(self.mute_roles)
-        mute_roles = len([x for x in config_data.values() if x["mute_role"] is not None])
         guild_temp_actions_cached = len(self.temp_actions)
         guild_temp_actions = len([x for x in config_data.values() if x["temporary_warns"]])
         temp_actions_cached = sum(len(x) for x in self.temp_actions.values())
         temp_actions = sum((len(x["temporary_warns"]) for x in config_data.values()))
         text = (
             f"Debug info requested\n"
-            f"{mute_roles_cached}/{mute_roles} mute roles loaded in cache.\n"
             f"{guild_temp_actions_cached}/{guild_temp_actions} guilds with temp actions loaded in cache.\n"
             f"{temp_actions_cached}/{temp_actions} temporary actions loaded in cache."
         )
         log.info(text)
         return text
-
-    async def get_mute_role(self, guild: discord.Guild):
-        role_id = self.mute_roles.get(guild.id, False)
-        if role_id is not False:
-            return role_id
-        role_id = await self.data.guild(guild).mute_role()
-        self.mute_roles[guild.id] = role_id
-        return role_id
-
-    async def update_mute_role(self, guild: discord.Guild, role: discord.Role):
-        await self.data.guild(guild).mute_role.set(role.id)
-        self.mute_roles[guild.id] = role.id
 
     async def get_temp_action(self, guild: discord.Guild, member: Optional[discord.Member] = None):
         guild_temp_actions = self.temp_actions.get(guild.id, {})

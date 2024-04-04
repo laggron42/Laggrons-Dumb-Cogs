@@ -88,11 +88,11 @@ class AutomodMixin(MixinMeta):
                 "bot will set a level {level} warning on him{duration} for the reason: {reason}"
             ).format(
                 number=number_of_warns,
-                level_lock=_(" level {level}").format(level=lock_level) if lock_level else "",
+                level_lock=(_(" level {level}").format(level=lock_level) if lock_level else ""),
                 from_bot=_(" from the automod") if only_automod else "",
                 within_time=_(" within {time}").format(time=time_str) if time else "",
                 level=warn_level,
-                duration=_(" during {time}").format(time=duration_str) if duration else "",
+                duration=(_(" during {time}").format(time=duration_str) if duration else ""),
                 reason=warn_reason,
             ),
             inline=False,
@@ -232,16 +232,20 @@ class AutomodMixin(MixinMeta):
         embed = discord.Embed(title=_("Regex trigger: {name}").format(name=name))
         embed.description = _("Regex trigger details.")
         embed.add_field(
-            name=_("Regular expression"), value=box(automod_regex["regex"].pattern), inline=False
+            name=_("Regular expression"),
+            value=box(automod_regex["regex"].pattern),
+            inline=False,
         )
         embed.add_field(
             name=_("Warning"),
             value=_("**Level:** {level}\n**Reason:** {reason}\n**Duration:** {time}").format(
                 level=automod_regex["level"],
                 reason=automod_regex["reason"],
-                time=self.api._format_timedelta(automod_regex["time"])
-                if automod_regex["time"]
-                else _("Not set."),
+                time=(
+                    self.api._format_timedelta(automod_regex["time"])
+                    if automod_regex["time"]
+                    else _("Not set.")
+                ),
             ),
             inline=False,
         )
@@ -323,7 +327,11 @@ set them a level 3 warning with the given reason.
                 else:
                     await ctx.send(_("Level must be between 1 and 5."))
             warn_reason = await self._ask_for_value(
-                ctx, msg, embed, _("What's the reason of the automod's warning?"), optional=True
+                ctx,
+                msg,
+                embed,
+                _("What's the reason of the automod's warning?"),
+                optional=True,
             )
             time: timedelta = await self._ask_for_value(
                 ctx,
@@ -334,7 +342,7 @@ set them a level 3 warning with the given reason.
                     "For example, you can make it trigger if a member got 3 warnings"
                     " __within a day__\nOmitting this value will make the automod look across the "
                     "entire member's modlog without time limit.\n\n"
-                    "Format is the same as temp mutes/bans: `30m` = 30 minutes, `2h` = 2 hours, "
+                    "Format is the same as timeouts/temp bans: `30m` = 30 minutes, `2h` = 2 hours, "
                     "`4d` = 4 days..."
                 ),
                 need="time",
@@ -347,13 +355,13 @@ set them a level 3 warning with the given reason.
                     msg,
                     embed,
                     _(
-                        "Level 2 and 5 warnings can be temporary (unmute or unban "
+                        "Level 2 have to be and Level 5 warnings can be temporary (unban "
                         "after some time). For how long should the the member stay punished?\n"
-                        "Skip this value to make the mute/ban unlimited.\n"
+                        "Skip this value for bans to make it unlimited.\n"
                         "Time format is the same as the previous question."
                     ),
                     need="time",
-                    optional=True,
+                    optional=warn_level == 5,
                 )
             while True:
                 lock_level = await self._ask_for_value(
@@ -652,7 +660,7 @@ disable this and immediately take actions by setting a delay of 0. Default is 60
         Examples: `[p]automod antispam warn 1 Spamming` `[p]automod antispam warn 2 30m Spamming`
 
         You can use the `[p]automod warn` command to configure an automatic warning after multiple\
-automod infractions, like a mute after 3 warns.
+        automod infractions, like a timeout after 3 warns.
         """
         guild = ctx.guild
         await self.data.guild(guild).automod.antispam.warn.set(
@@ -670,11 +678,13 @@ automod infractions, like a mute after 3 warns.
             ).format(
                 level=level,
                 reason=reason,
-                duration=_("that will last for {time} ").format(
-                    time=self.api._format_timedelta(duration)
-                )
-                if duration
-                else "",
+                duration=(
+                    _("that will last for {time} ").format(
+                        time=self.api._format_timedelta(duration)
+                    )
+                    if duration
+                    else ""
+                ),
             )
         )
 
@@ -800,11 +810,13 @@ automod infractions, like a mute after 3 warns.
         reason = antispam_settings["warn"]["reason"]
         if level == 2 or level == 5:
             time = _("Time: {time}\n").format(
-                time=self.api._format_timedelta(
-                    timedelta(seconds=antispam_settings["warn"]["time"])
+                time=(
+                    self.api._format_timedelta(
+                        timedelta(seconds=antispam_settings["warn"]["time"])
+                    )
+                    if antispam_settings["warn"]["time"]
+                    else _("Unlimited.")
                 )
-                if antispam_settings["warn"]["time"]
-                else _("Unlimited.")
             )
         else:
             time = ""

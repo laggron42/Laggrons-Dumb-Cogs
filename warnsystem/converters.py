@@ -91,7 +91,8 @@ class AdvancedMemberSelect:
 
     def parse_arguments(self, arguments: str):
         parser = NoExitParser(
-            description="Mass member selection in a server for WarnSystem.", add_help=False
+            description="Mass member selection in a server for WarnSystem.",
+            add_help=False,
         )
 
         parser.add_argument(
@@ -353,7 +354,10 @@ class AdvancedMemberSelect:
             for role in _roles:
                 try:
                     roles.append(await RoleConverter().convert(self.ctx, role))
-                except (discord.errors.NotFound, discord.ext.commands.errors.BadArgument):
+                except (
+                    discord.errors.NotFound,
+                    discord.ext.commands.errors.BadArgument,
+                ):
                     raise BadArgument(
                         _(
                             "Can't convert `{arg}` from `--{state}` into a "

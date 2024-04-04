@@ -185,7 +185,8 @@ class Pages(discord.ui.View, Generic[_PageSource]):
             and not self.ctx.channel.permissions_for(self.ctx.guild.me).embed_links
         ):
             await self.ctx.send(
-                "Bot does not have embed links permission in this channel.", ephemeral=True
+                "Bot does not have embed links permission in this channel.",
+                ephemeral=True,
             )
             return
 

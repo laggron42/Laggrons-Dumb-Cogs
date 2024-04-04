@@ -29,7 +29,6 @@ If you need to prevent and exception, do it like this:
 __all__ = [
     "InvalidLevel",
     "NotFound",
-    "MissingMuteRole",
     "BadArgument",
     "MissingPermissions",
     "MemberTooHigh",
@@ -60,15 +59,6 @@ class NotFound(Exception):
 class UserNotFound(Exception):
     """
     Cannot find the given user for a hackban.
-    """
-
-    pass
-
-
-class MissingMuteRole(Exception):
-    """
-    You requested a mute warn but the mute role doesn't exist. Call
-    :func:`~warnsystem.api.API.maybe_create_role` to fix this.
     """
 
     pass
@@ -126,8 +116,7 @@ class LostPermissions(Exception):
     """
     The bot lost a permission it had.
 
-    This can be the permission to send messages in the modlog channel or use\
-    the mute role.
+    This can be the permission to send messages in the modlog channel.
     """
 
     pass

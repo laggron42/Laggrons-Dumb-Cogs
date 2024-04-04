@@ -41,7 +41,10 @@ class ReasonEntry(Modal, title="Member warn"):
     )
 
     def __init__(
-        self, og_interaction: discord.Interaction["Red"], level: int, member: discord.Member
+        self,
+        og_interaction: discord.Interaction["Red"],
+        level: int,
+        member: discord.Member,
     ):
         super().__init__()
         self.og_interaction = og_interaction
@@ -114,7 +117,7 @@ class WarnView(View):
         await self.warn(interaction, 1)
 
     @button(
-        label="Mute",
+        label="Timeout",
         style=discord.ButtonStyle.secondary,
         emoji="\N{SPEAKER WITH CANCELLATION STROKE}",
     )

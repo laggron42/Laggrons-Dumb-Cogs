@@ -237,50 +237,11 @@ class API:
         return string
 
     async def _start_timer(self, guild: discord.Guild, member: discord.Member, case: dict) -> bool:
-        """Start the timer for a temporary mute/ban."""
+        """Start the timer for a temporary ban."""
         if not case["duration"]:
             raise errors.BadArgument("No duration for this warning!")
         await self.cache.add_temp_action(guild, member, case)
         return True
-
-    async def _mute(self, member: discord.Member, reason: Optional[str] = None):
-        """Mute an user on the guild."""
-        old_roles = []
-        guild = member.guild
-        mute_role = guild.get_role(await self.cache.get_mute_role(guild))
-        remove_roles = await self.data.guild(guild).remove_roles()
-        if not mute_role:
-            raise errors.MissingMuteRole("You need to create the mute role before doing this.")
-        if remove_roles:
-            old_roles = member.roles.copy()
-            old_roles.remove(guild.default_role)
-            old_roles = [
-                x for x in old_roles if x.position < guild.me.top_role.position and not x.managed
-            ]
-            fails = []
-            for role in old_roles:
-                try:
-                    await member.remove_roles(role, reason=reason)
-                except discord.errors.HTTPException:
-                    fails.append(role)
-            if fails:
-                log.warn(
-                    f"[Guild {guild.id}] Failed to remove roles from {member} (ID: {member.id}) "
-                    f"while muting. Roles: {', '.join([f'{x.name} ({x.id})' for x in fails])}",
-                )
-        await member.add_roles(mute_role, reason=reason)
-        return old_roles
-
-    async def _unmute(self, member: discord.Member, reason: str, old_roles: list = None):
-        """Unmute an user on the guild."""
-        guild = member.guild
-        mute_role = guild.get_role(await self.cache.get_mute_role(guild))
-        if not mute_role:
-            raise errors.MissingMuteRole(
-                f"Lost the mute role on guild {guild.name} (ID: {guild.id}"
-            )
-        await member.remove_roles(mute_role, reason=reason)
-        await member.add_roles(*old_roles, reason=reason)
 
     async def _create_case(
         self,
@@ -291,19 +252,17 @@ class API:
         time: datetime,
         reason: Optional[str] = None,
         duration: Optional[timedelta] = None,
-        roles: Optional[list] = None,
         modlog_message: Optional[discord.Message] = None,
     ) -> dict:
         """Create a new case for a member. Don't call this, call warn instead."""
         data = {
             "level": level,
-            "author": author
-            if not isinstance(author, (discord.User, discord.Member))
-            else author.id,
+            "author": (
+                author if not isinstance(author, (discord.User, discord.Member)) else author.id
+            ),
             "reason": reason,
             "time": int(time.timestamp()),  # seconds since epoch
             "duration": None if not duration else duration.total_seconds(),
-            "roles": [] if not roles else [x.id for x in roles],
         }
         if modlog_message:
             data["modlog_message"] = {
@@ -581,23 +540,7 @@ class API:
                 return False
             return True
 
-        case = await self.get_case(guild, user, index)
-        can_unmute = False
-        add_roles = False
-        if case["level"] == 2:
-            mute_role = guild.get_role(await self.cache.get_mute_role(guild))
-            member = guild.get_member(user)
-            if member:
-                if mute_role and mute_role in member.roles:
-                    can_unmute = True
-                add_roles = await self.data.guild(guild).remove_roles()
-        if can_unmute:
-            await member.remove_roles(mute_role, reason=_("Warning deleted."))
         async with self.data.custom("MODLOGS", guild.id, user.id).x() as logs:
-            try:
-                roles = logs[index - 1]["roles"]
-            except KeyError:
-                roles = []
             try:
                 channel_id, message_id = logs[index - 1]["modlog_message"].values()
             except KeyError:
@@ -605,9 +548,6 @@ class API:
             else:
                 await delete_message(channel_id, message_id)
             logs.remove(logs[index - 1])
-        if add_roles and roles:
-            roles = [guild.get_role(x) for x in roles]
-            await member.add_roles(*roles, reason=_("Adding removed roles back after unmute."))
         log.debug(f"[Guild {guild.id}] Removed case #{index} from member {user} (ID: {user.id}).")
         return True
 
@@ -726,7 +666,7 @@ class API:
         reason: Optional[str]
             The reason of the warning.
         time: Optional[timedelta]
-            The time before the action ends. Only for mute and ban.
+            The time before the action ends. Required for timeouts, optional for bans.
         date: Optional[datetime]
             When the action was taken.
         message_sent: bool
@@ -739,7 +679,7 @@ class API:
         """
         action = {
             1: (_("warn"), _("warns")),
-            2: (_("mute"), _("mutes")),
+            2: (_("timeout"), _("timeouts")),
             3: (_("kick"), _("kicks")),
             4: (_("softban"), _("softbans")),
             5: (_("ban"), _("bans")),
@@ -854,106 +794,6 @@ class API:
 
         return (log_embed, user_embed)
 
-    async def maybe_create_mute_role(self, guild: discord.Guild) -> bool:
-        """
-        Create the mod role for WarnSystem if it doesn't exist.
-        This will also edit all channels to deny the following permissions to this role:
-
-        *   ``send_messages``
-        *   ``add_reactions``
-        *   ``speak``
-
-        Parameters
-        ----------
-        guild: discord.Guild
-            The guild you want to set up the mute in.
-
-        Returns
-        -------
-        Union[bool, list]
-            *   :py:obj:`False` if the role already exists.
-            *   :py:class:`list` if the role was created, with a list of errors for each channel.
-                Empty list means completly successful edition.
-
-        Raises
-        ------
-        ~warnsystem.errors.MissingPermissions
-            The bot lacks the :attr:`discord.Permissions.create_roles` permission.
-        discord.errors.HTTPException
-            Creating the role failed.
-        """
-        role = await self.cache.get_mute_role(guild)
-        role = guild.get_role(role)
-        if role:
-            return False
-
-        if not guild.me.guild_permissions.manage_roles:
-            raise errors.MissingPermissions(
-                _("I can't manage roles, please give me this permission to continue.")
-            )
-
-        # no mod role on this guild, let's create one
-        role = await guild.create_role(
-            name="Muted",
-            reason=_(
-                "WarnSystem mute role. This role will be assigned to the muted members, "
-                "feel free to move it or modify its channel permissions."
-            ),
-        )
-        await asyncio.sleep(0.5)  # prevents an error when repositionning the role
-        await role.edit(
-            position=guild.me.top_role.position - 1,
-            reason=_(
-                "Modifying role's position, keep it under my top role so "
-                "I can add it to muted members."
-            ),
-        )
-        perms = discord.PermissionOverwrite(send_messages=False, add_reactions=False, speak=False)
-        errors = []
-        for channel in guild.channels:
-            try:
-                await channel.set_permissions(
-                    target=role,
-                    overwrite=perms,
-                    reason=_(
-                        "Setting up WarnSystem mute. All muted members will have this role, "
-                        "feel free to edit its permissions."
-                    ),
-                )
-            except discord.errors.Forbidden:
-                errors.append(
-                    _(
-                        "Cannot edit permissions of the channel {channel} because of a "
-                        "permission error (probably enforced permission for `Manage channel`)."
-                    ).format(channel=channel.mention)
-                )
-            except discord.errors.HTTPException as e:
-                errors.append(
-                    _(
-                        "Cannot edit permissions of the channel {channel} because of "
-                        "an unknown error."
-                    ).format(channel=channel.mention)
-                )
-                log.warn(
-                    f"[Guild {guild.id}] Couldn't edit permissions of {channel} (ID: "
-                    f"{channel.id}) for setting up the mute role because of an HTTPException.",
-                    exc_info=e,
-                )
-            except Exception as e:
-                errors.append(
-                    _(
-                        "Cannot edit permissions of the channel {channel} because of "
-                        "an unknown error."
-                    ).format(channel=channel.mention)
-                )
-                log.error(
-                    f"[Guild {guild.id}] Couldn't edit permissions of {channel} (ID: "
-                    f"{channel.id}) for setting up the mute role because of an unknwon error.",
-                    exc_info=e,
-                )
-        await self.cache.update_mute_role(guild, role)
-        return errors
-
     async def format_reason(self, guild: discord.Guild, reason: str = None) -> str:
         """
         Reformat a reason with the substitutions set on the guild.
@@ -1019,14 +859,14 @@ class API:
             An :py:class:`int` between 1 and 5, specifying the warning level:
 
             #.  Simple DM warning
-            #.  Mute (can be temporary)
+            #.  Timeout
             #.  Kick
             #.  Softban
             #.  Ban (can be temporary ban, or hack ban, if the member is not in the server)
         reason: Optional[str]
             The optional reason of the warning. It is strongly recommanded to set one.
         time: Optional[timedelta]
-            The time before cancelling the action. This only works for a mute or a ban.
+            The time before cancelling the action. This only works for a timeout or a ban.
         date: Optional[datetime]
             When the action was taken. Only use if you want to overwrite the current date and time.
         ban_days: Optional[int]
@@ -1037,7 +877,7 @@ class API:
         log_dm: Optional[bool]
             Specify if an embed should be sent to the warned user. Default to :py:obj:`True`.
         take_action: Optional[bool]
-            Specify if the bot should take action on the member (mute, kick, softban, ban). If set
+            Specify if the bot should take action on the member (timeout, kick, softban, ban). If set
             to :py:obj:`False`, the bot will only send a log embed to the member and in the modlog.
             Default to :py:obj:`True`.
         automod: Optional[bool]
@@ -1073,23 +913,16 @@ class API:
             The level must be an :py:class:`int` between 1 and 5.
         ~warnsystem.errors.BadArgument
             You need to provide a valid :class:`discord.Member` object, except for a
-            hackban where a :class:`discord.User` works.
-        ~warnsystem.errors.MissingMuteRole
-            You're trying to mute someone but the mute role was not setup yet.
-            You can fix this by calling :func:`~warnsystem.api.API.maybe_create_mute_role`.
+            hackban where a :class:`discord.User` works or you missing a max. 28 day time
+            when setting a timeout.
         ~warnsystem.errors.LostPermissions
             The bot lost a permission to do something (it had the perm before). This
-            can be lost permissions for sending messages to the modlog channel or
-            interacting with the mute role.
+            can be lost permissions for sending messages to the modlog channel
         ~warnsystem.errors.MemberTooHigh
             The bot is trying to take actions on someone but their top role is higher
             than the bot's top role in the guild's hierarchy.
-        ~warnsystem.errors.NotAllowedByHierarchy
-            The moderator trying to warn someone is lower than them in the role hierarchy,
-            while the bot still has permissions to act. This is raised only if the
-            hierarchy check is enabled.
         ~warnsystem.errors.MissingPermissions
-            The bot lacks a permissions to do something. Can be adding role, kicking
+            The bot lacks a permissions to do something. Can be timeouting, kicking
             or banning members.
         discord.errors.NotFound
             When the user ID provided for hackban isn't recognized by Discord.
@@ -1100,7 +933,6 @@ class API:
 
         async def warn_member(member: Union[discord.Member, UnavailableMember], audit_reason: str):
             nonlocal i
-            roles = []
             # permissions check
             if level > 1 and guild.me.top_role.position <= member.top_role.position:
                 # check if the member is below the bot in the roles's hierarchy
@@ -1122,6 +954,10 @@ class API:
                 return errors.MissingPermissions(
                     _("I can't take actions on the owner of the guild.")
                 )
+            if level == 2 and (not time or time > timedelta(days=28)):
+                return errors.BadArgument(
+                    _("Timeouts require a time to be set up to 28 days maximum.")
+                )
             if member == guild.me:
                 return errors.SuicidePrevention(
                     _(
@@ -1137,6 +973,9 @@ class API:
             if log_dm:
                 try:
                     await member.send(embed=user_e)
+                    ban_appeals_timer = self.bot.get_cog("BanAppealsTimer")
+                    if level == 5 and ban_appeals_timer:
+                        await ban_appeals_timer.send_ban_appeal_link(member, reason)
                 except (discord.errors.Forbidden, errors.UserNotFound):
                     modlog_e = (
                         await self.get_embeds(
@@ -1161,7 +1000,7 @@ class API:
                 audit_reason = audit_reason.format(member=member)
                 try:
                     if level == 2:
-                        roles = await self._mute(member, audit_reason)
+                        await member.timeout(time, reason=audit_reason)
                     elif level == 3:
                         await guild.kick(member, reason=audit_reason)
                     elif level == 4:
@@ -1203,10 +1042,10 @@ class API:
             else:
                 modlog_message = None
             data = await self._create_case(
-                guild, member, author, level, date, reason, time, roles, modlog_message
+                guild, member, author, level, date, reason, time, modlog_message
             )
             # start timer if there is a temporary warning
-            if time and (level == 2 or level == 5):
+            if time and level == 5:
                 await self._start_timer(guild, member, data)
             if automod:
                 # This function can be pretty heavy, and the response can be seriously delayed
@@ -1232,10 +1071,6 @@ class API:
         # we get the modlog channel now to make sure it exists before doing anything
         if log_modlog:
             mod_channel = await self.get_modlog_channel(guild, level)
-        # check if the mute role exists
-        mute_role = guild.get_role(await self.cache.get_mute_role(guild))
-        if not mute_role and level == 2:
-            raise errors.MissingMuteRole("You need to create the mute role before doing this.")
         # we check for all permission problem that can occur before calling the API
         # checks if the bot has send_messages and embed_links permissions in modlog channel
         if not (
@@ -1248,17 +1083,9 @@ class API:
                 ).format(channel=mod_channel.mention)
             )
         if level == 2:
-            # mute with role
-            if not guild.me.guild_permissions.manage_roles:
+            if not guild.me.guild_permissions.moderate_members:
                 raise errors.MissingPermissions(
-                    _("I can't manage roles, please give me this permission to continue.")
-                )
-            if mute_role.position >= guild.me.top_role.position:
-                raise errors.LostPermissions(
-                    _(
-                        "The mute role `{mute_role}` was moved above my top role `{my_role}`. "
-                        "Please move the roles so my top role is above the mute role."
-                    ).format(mute_role=mute_role.name, my_role=guild.me.top_role.name)
+                    _("I can't timeout members, please give me this permission to continue.")
                 )
         if level == 3:
             # kick
@@ -1273,7 +1100,7 @@ class API:
                     _("I can't ban members, please give me this permission to continue.")
                 )
 
-        action = {1: _("warn"), 2: _("mute"), 3: _("kick"), 4: _("softban"), 5: _("ban")}.get(
+        action = {1: _("warn"), 2: _("timeout"), 3: _("kick"), 4: _("softban"), 5: _("ban")}.get(
             level, _("unknown")
         )
         audit_reason = _(
@@ -1362,13 +1189,9 @@ class API:
                 member = guild.get_member(member_id)
                 case_reason = action["reason"]
                 level = action["level"]
-                action_str = _("mute") if level == 2 else _("ban")
+                action_str = _("ban")
                 if not member:
                     member = UnavailableMember(self.bot, guild._state, member_id)
-                    if level == 2:
-                        to_remove.append(member)
-                        continue
-                roles = list(filter(None, [guild.get_role(x) for x in action.get("roles") or []]))
 
                 reason = _(
                     "End of timed {action} of {member} requested by {author} that lasted "
@@ -1383,8 +1206,6 @@ class API:
                 if (taken_on + duration) < now:
                     # end of warn
                     try:
-                        if level == 2:
-                            await self._unmute(member, reason=reason, old_roles=roles)
                         if level == 5:
                             await guild.unban(member, reason=reason)
                             if await self.data.guild(guild).reinvite():
@@ -1423,14 +1244,14 @@ class API:
     async def _loop_task(self):
         """
         This is an infinite loop task started with the cog that will check\
-        if a temporary warn (mute or ban) is over, and cancel the action if it's true.
+        if a temporary warn (ban) is over, and cancel the action if it's true.
 
         The loop runs every 10 seconds.
         """
         await self.bot.wait_until_ready()
         log.debug(
-            "Starting infinite loop for unmutes and unbans. Canel the "
-            'task with bot.get_cog("WarnSystem").task.cancel()'
+            "Starting infinite loop for unbans. Canel the task with "
+            'bot.get_cog("WarnSystem").task.cancel()'
         )
         errors = 0
         while True:
@@ -1441,16 +1262,14 @@ class API:
                 if errors >= 3:
                     # more than 3 errors in our loop, let's shut down the loop
                     log.critical(
-                        "The loop for unmutes and unbans encountered a third error. To prevent "
-                        "more damages, the loop will be cancelled. Timed mutes and bans no longer "
-                        "works for now. Reload the cog to start the loop back. If the problem "
-                        "persists, report the error and update the cog.",
+                        "The loop for unbans encountered a third error. To prevent "
+                        "more damages, the loop will be cancelled. Bans no longer works for "
+                        "now. Reload the cog to start the loop back. If the problem persists, "
+                        "report the error and update the cog.",
                         exc_info=e,
                     )
                     return
-                log.error(
-                    "Error in loop for unmutes and unbans. The loop will be resumed.", exc_info=e
-                )
+                log.error("Error in loop for unbans. The loop will be resumed.", exc_info=e)
             await asyncio.sleep(10)
 
     # automod stuff
@@ -1849,9 +1668,9 @@ class API:
                     # more than 3 errors in our loop, let's shut down the loop
                     log.critical(
                         "The loop for automod warnings encountered a third error. To prevent "
-                        "more damages, the loop will be cancelled. Timed mutes and bans no longer "
-                        "works for now. Reload the cog to start the loop back. If the problem "
-                        "persists, report the error and update the cog.",
+                        "more damages, the loop will be cancelled. Timed bans no longer works for "
+                        "now. Reload the cog to start the loop back. If the problem persists, "
+                        "report the error and update the cog.",
                         exc_info=e,
                     )
                     return
