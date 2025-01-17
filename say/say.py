@@ -347,7 +347,7 @@ class Say(commands.Cog):
 
         file = await file.to_file(use_cached=True) if file else None
         try:
-            await channel.send(message, file=file, delete_after=delete_delay allowed_mentions=mentions)
+            await channel.send(message, file=file, delete_after=delete_delay, allowed_mentions=mentions)
         except discord.HTTPException:
             await interaction.response.send_message(
                 _("An error occured when sending the message."), ephemeral=True
