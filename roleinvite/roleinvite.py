@@ -535,11 +535,7 @@ class RoleInvite(BaseCog):
                 exc_info=error.original,
             )
 
-    def __unload(self):
-        # breaking change __unload -> cog_unload
-        self.cog_unload()
-
-    def cog_unload(self):
+    async def cog_unload(self):
         log.debug("Unloading cog...")
 
         # remove all handlers from the logger, this prevents adding
