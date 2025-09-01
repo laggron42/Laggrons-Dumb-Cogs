@@ -1,18 +1,17 @@
 # WarnSystem by retke, aka El Laggron
-import discord
-import logging
 import asyncio
-
-from io import BytesIO
-from typing import Optional, TYPE_CHECKING
-from asyncio import TimeoutError as AsyncTimeoutError
+import logging
 from abc import ABC
+from asyncio import TimeoutError as AsyncTimeoutError
 from datetime import datetime, timedelta, timezone
+from io import BytesIO
+from typing import TYPE_CHECKING, Optional
 
-from redbot.core import commands, Config, checks
+import discord
+from redbot.core import Config, commands
 from redbot.core.commands.converter import TimedeltaConverter
 from redbot.core.i18n import Translator, cog_i18n
-from redbot.core.utils import predicates, menus, mod
+from redbot.core.utils import menus, mod, predicates
 from redbot.core.utils.chat_formatting import pagify, text_to_file
 
 from warnsystem.components import WarningsSelector
@@ -30,8 +29,13 @@ if TYPE_CHECKING:
 log = logging.getLogger("red.laggron.warnsystem")
 _ = Translator("WarnSystem", __file__)
 
-EMBED_MODLOG = lambda x: _("A member got a level {} warning.").format(x)
-EMBED_USER = lambda x: _("The moderation team set you a level {} warning.").format(x)
+
+def EMBED_MODLOG(x):
+    return _("A member got a level {} warning.").format(x)
+
+
+def EMBED_USER(x):
+    return _("The moderation team set you a level {} warning.").format(x)
 
 
 class CompositeMetaClass(type(commands.Cog), type(ABC)):
@@ -440,7 +444,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
 
     # all warning commands
     @commands.group(invoke_without_command=True, name="warn")
-    @checks.mod_or_permissions(administrator=True)
+    @commands.mod_or_permissions(kick_members=True)
     @commands.guild_only()
     async def _warn(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
@@ -452,7 +456,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         await self.call_warn(ctx, 1, member, reason)
 
     @_warn.command(name="1", aliases=["simple"])
-    @checks.mod_or_permissions(administrator=True)
+    @commands.mod_or_permissions(kick_members=True)
     async def warn_1(self, ctx: commands.Context, member: discord.Member, *, reason: str = None):
         """
         Set a simple warning on a user.
@@ -462,7 +466,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         await self.call_warn(ctx, 1, member, reason)
 
     @_warn.command(name="2", aliases=["mute"])
-    @checks.mod_or_permissions(administrator=True)
+    @commands.mod_or_permissions(manage_roles=True)
     async def warn_2(
         self,
         ctx: commands.Context,
@@ -487,7 +491,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         await self.call_warn(ctx, 2, member, reason, time)
 
     @_warn.command(name="3", aliases=["kick"])
-    @checks.mod_or_permissions(administrator=True)
+    @commands.mod_or_permissions(kick_members=True)
     async def warn_3(
         self, ctx: commands.Context, member: discord.Member, *, reason: Optional[str] = None
     ):
@@ -497,7 +501,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         await self.call_warn(ctx, 3, member, reason)
 
     @_warn.command(name="4", aliases=["softban"])
-    @checks.mod_or_permissions(administrator=True)
+    @commands.mod_or_permissions(ban_members=True)
     async def warn_4(
         self, ctx: commands.Context, member: discord.Member, *, reason: Optional[str] = None
     ):
@@ -513,7 +517,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         await self.call_warn(ctx, 4, member, reason)
 
     @_warn.command(name="5", aliases=["ban"], usage="<member> [time] <reason>")
-    @checks.mod_or_permissions(administrator=True)
+    @commands.mod_or_permissions(ban_members=True)
     async def warn_5(
         self,
         ctx: commands.Context,
@@ -545,7 +549,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
 
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
-    @checks.mod_or_permissions(administrator=True)
+    @commands.mod_or_permissions(kick_members=True)
     @commands.cooldown(1, 10, commands.BucketType.guild)
     async def masswarn(self, ctx: commands.Context, *selection: str):
         """
@@ -582,7 +586,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         )
 
     @masswarn.command(name="1", aliases=["simple"])
-    @checks.mod_or_permissions(administrator=True)
+    @commands.mod_or_permissions(kick_members=True)
     async def masswarn_1(self, ctx: commands.Context, *selection: str):
         """
         Perform a simple mass warning.
@@ -609,7 +613,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         )
 
     @masswarn.command(name="2", aliases=["mute"])
-    @checks.mod_or_permissions(administrator=True)
+    @commands.mod_or_permissions(manage_roles=True)
     async def masswarn_2(self, ctx: commands.Context, *selection: str):
         """
         Perform a mass mute.
@@ -639,7 +643,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         )
 
     @masswarn.command(name="3", aliases=["kick"])
-    @checks.mod_or_permissions(administrator=True)
+    @commands.mod_or_permissions(kick_members=True)
     async def masswarn_3(self, ctx: commands.Context, *selection: str):
         """
         Perform a mass kick.
@@ -666,7 +670,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         )
 
     @masswarn.command(name="4", aliases=["softban"])
-    @checks.mod_or_permissions(administrator=True)
+    @commands.mod_or_permissions(ban_members=True)
     async def masswarn_4(self, ctx: commands.Context, *selection: str):
         """
         Perform a mass softban.
@@ -693,7 +697,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         )
 
     @masswarn.command(name="5", aliases=["ban"])
-    @checks.mod_or_permissions(administrator=True)
+    @commands.mod_or_permissions(ban_members=True)
     async def masswarn_5(self, ctx: commands.Context, *selection: str):
         """
         Perform a mass ban.
@@ -724,6 +728,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
 
     @commands.command()
     @commands.guild_only()
+    @commands.mod_or_permissions(kick_members=True)
     @commands.cooldown(1, 3, commands.BucketType.member)
     async def warnings(
         self, ctx: commands.Context, user: Optional[UnavailableMember] = None, index: int = 0
@@ -737,15 +742,8 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         if not user:
             await ctx.send_help()
             return
-        if (
-            not (
-                await mod.is_mod_or_superior(self.bot, ctx.author)
-                or ctx.author.guild_permissions.kick_members
-            )
-            and user != ctx.author
-        ):
-            await ctx.send(_("You are not allowed to see other's warnings!"))
-            return
+        if user != ctx.author:
+            pass
         cases = await self.api.get_all_cases(ctx.guild, user)
         if not cases:
             await ctx.send(_("That member was never warned."))
@@ -754,14 +752,17 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
             await ctx.send(_("That case doesn't exist."))
             return
 
-        total = lambda level: len([x for x in cases if x["level"] == level])
-        warning_str = lambda level, plural: {
-            1: (_("Warning"), _("Warnings")),
-            2: (_("Mute"), _("Mutes")),
-            3: (_("Kick"), _("Kicks")),
-            4: (_("Softban"), _("Softbans")),
-            5: (_("Ban"), _("Bans")),
-        }.get(level, _("unknown"))[1 if plural else 0]
+        def total(level):
+            return len([x for x in cases if x["level"] == level])
+
+        def warning_str(level, plural):
+            return {
+                1: (_("Warning"), _("Warnings")),
+                2: (_("Mute"), _("Mutes")),
+                3: (_("Kick"), _("Kicks")),
+                4: (_("Softban"), _("Softbans")),
+                5: (_("Ban"), _("Bans")),
+            }.get(level, _("unknown"))[1 if plural else 0]
 
         msg = []
         for i in range(6):
@@ -780,7 +781,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         await paginator.start(embed=embed)
 
     @commands.command()
-    @checks.mod_or_permissions(kick_members=True)
+    @commands.mod_or_permissions(kick_members=True)
     @commands.cooldown(1, 10, commands.BucketType.channel)
     async def warnlist(self, ctx: commands.Context, short: bool = False):
         """
@@ -824,7 +825,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         await menus.menu(ctx=ctx, pages=pages, controls=menus.DEFAULT_CONTROLS, timeout=60)
 
     @commands.command()
-    @checks.mod_or_permissions(manage_roles=True)
+    @commands.mod_or_permissions(manage_roles=True)
     async def wsunmute(self, ctx: commands.Context, member: discord.Member):
         """
         Unmute a member muted with WarnSystem.
@@ -890,7 +891,7 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
 
     @commands.command()
     @commands.bot_has_permissions(ban_members=True)
-    @checks.mod_or_permissions(ban_members=True)
+    @commands.mod_or_permissions(ban_members=True)
     async def wsunban(self, ctx: commands.Context, member_id: int):
         """
         Unban a member banned with WarnSystem.
