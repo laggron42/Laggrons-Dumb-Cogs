@@ -742,8 +742,15 @@ class WarnSystem(SettingsMixin, AutomodMixin, commands.Cog, metaclass=CompositeM
         if not user:
             await ctx.send_help()
             return
-        if user != ctx.author:
-            pass
+        if (
+            not (
+                await mod.is_mod_or_superior(self.bot, ctx.author)
+                or ctx.author.guild_permissions.kick_members
+            )
+            and user != ctx.author
+        ):
+            await ctx.send(_("You are not allowed to see other's warnings!"))
+            return
         cases = await self.api.get_all_cases(ctx.guild, user)
         if not cases:
             await ctx.send(_("That member was never warned."))
