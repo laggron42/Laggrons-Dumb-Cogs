@@ -379,3 +379,83 @@ class Say(commands.Cog):
         for user in self.interaction:
             await self.stop_interaction(user)
         close_logger(log)
+
+
+
+    @app_commands.command(name="interact", description="Start receiving and sending messages as the bot through DM")    @app_commands.describe(
+        channel="The channel you want to link for the interaction session (default to current)"
+    )    @app_commands.default_permissions()    @app_commands.guild_only()
+    async def slash_interact(
+        self,
+        interaction: discord.Interaction,
+        channel: Optional[discord.TextChannel] = None,
+    ):
+        u = interaction.user
+        channel = channel or interaction.channel
+
+        if u in self.interaction:
+            await interaction.response.send_message(
+                _("A session is already running."), ephemeral=True
+            )
+            return
+
+        try:
+            message = await u.send(
+                _(
+                    "I will start sending you messages from {0}.\n"
+                    "Just send me any message and I will send it in that channel.\n"
+                    "React with ❌ on this message to end the session.\n"
+                    "If no message was sent or received in the last 5 minutes, "
+                    "the request will time out and stop."
+                ).format(channel.mention)
+            )
+        except discord.errors.Forbidden:
+            await interaction.response.send_message(
+                _("I couldn't send you a DM. Please check your privacy settings."), ephemeral=True
+            )
+            return
+
+        await message.add_reaction("❌")
+        self.interaction.append(u)
+
+        await interaction.response.send_message(
+            _("Interaction session started. Check your DMs!"), ephemeral=True
+        )
+
+        while True:
+            if u not in self.interaction:
+                return
+
+            try:
+                msg = await self.bot.wait_for("message", timeout=300)
+            except asyncio.TimeoutError:
+                await u.send(_("Request timed out. Session closed"))
+                if u in self.interaction:
+                    self.interaction.remove(u)
+                return
+
+            if msg.author == u and isinstance(msg.channel, discord.DMChannel):
+                files = await Tunnel.files_from_attatch(msg)
+                if msg.content.startswith(tuple(await self.bot.get_valid_prefixes())):
+                    return
+                await channel.send(msg.content, files=files)
+            elif (
+                msg.channel != channel
+                or msg.author == channel.guild.me
+                or msg.author == u
+            ):
+                pass
+            else:
+                embed = discord.Embed()
+                embed.set_author(
+                    name="{} | {}".format(str(msg.author), msg.author.id),
+                    icon_url=msg.author.avatar.url,
+                )
+                embed.set_footer(text=msg.created_at.strftime("%d %b %Y %H:%M"))
+                embed.description = msg.content
+                embed.colour = msg.author.color
+
+                if msg.attachments != []:
+                    embed.set_image(url=msg.attachments[0].url)
+
+                await u.send(embed=embed)
