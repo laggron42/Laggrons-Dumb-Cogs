@@ -382,9 +382,17 @@ class Say(commands.Cog):
 
 
 
-    @app_commands.command(name="interact", description="Start receiving and sending messages as the bot through DM")    @app_commands.describe(
+
+
+    @app_commands.command(
+        name="interact",
+        description="Start receiving and sending messages as the bot through DM"
+    )
+    @app_commands.describe(
         channel="The channel you want to link for the interaction session (default to current)"
-    )    @app_commands.default_permissions()    @app_commands.guild_only()
+    )
+    @app_commands.default_permissions()
+    @app_commands.guild_only()
     async def slash_interact(
         self,
         interaction: discord.Interaction,
